@@ -97,7 +97,7 @@ class CompanyKYC(models.Model):
 
 def create_kyc(sender, instance, created, **kwargs):
     if created:
-        CompanyKYC.objects.create(user=instance,company_name=instance.company_name)
+        CompanyKYC.objects.create(user=instance) #,company_name=instance.company_name)
 
 def save_kyc(sender, instance,**kwargs):
     instance.companykyc.save()
@@ -116,10 +116,85 @@ def create_account(sender, instance, created, **kwargs):
         Wallet.objects.create(
             user=instance, 
             wallet_type = "PRIMARY",
-            currency=currency
+            currency='KES'
         )
 @receiver(post_save, sender=User)
 def save_account(sender, instance, **kwargs):
     # Ensure wallet is saved
     if hasattr(instance, 'wallet'):
         instance.wallet.save()
+
+
+TRANSACTION_TYPE = (
+    ("transfer", "Transfer"),
+    ("received", "Received"),
+    ("deposit", "Deposit"),
+    ("withdraw", "Withdraw"),
+    ("refund", "Refund"),
+    ("request", "Payment Request"),
+    ("none", "None")
+)
+
+TRANSACTION_STATUS = (
+    ("failed", "failed"),
+    ("completed", "completed"),
+    ("pending", "pending"),
+    ("processing", "processing"),
+    ("request_sent", "request_sent"),
+    ("request_settled", "request settled"),
+    ("request_processing", "request processing"),
+
+)
+
+
+NOTIFICATION_TYPE = (
+    ("None", "None"),
+    ("Transfer", "Transfer"),
+    ("Sent Expense request", "Sent Expense request"),
+    ("Approved Expense request", "Approved Expense request"),
+    ("Sent Payment Request", "Sent Payment Request"),
+    ("Received Payment Request", "Received Payment Request"),
+
+)
+
+class Transaction(models.Model):
+    transaction_id = ShortUUIDField(unique=True, length=15, max_length=20, prefix="TRN")
+   
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="user")
+    amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    description = models.CharField(max_length=1000, null=True, blank=True)
+   
+    reciever = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="reciever")
+    sender = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="sender")
+   
+    reciever_wallet = models.ForeignKey(Wallet, on_delete=models.SET_NULL, null=True, related_name="reciever_wallet")
+    sender_wallet = models.ForeignKey(Wallet, on_delete=models.SET_NULL, null=True, related_name="sender_wallet")
+
+    status = models.CharField(choices=TRANSACTION_STATUS, max_length=100, default="pending")
+    transaction_type = models.CharField(choices=TRANSACTION_TYPE, max_length=100, default="none")
+
+    date = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now_add=False, null=True, blank=True)
+
+    def __str__(self):
+        try:
+            return f"{self.user}"
+        except:
+            return f"Transaction"
+
+
+
+class Notification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    notification_type = models.CharField(max_length=100, choices=NOTIFICATION_TYPE, default="none")
+    amount = models.IntegerField(default=0)
+    is_read = models.BooleanField(default=False)
+    date = models.DateTimeField(auto_now_add=True)
+    nid = ShortUUIDField(length=10, max_length=25, alphabet="abcdefghijklmnopqrstuvxyz")
+    
+    class Meta:
+        ordering = ["-date"]
+        verbose_name_plural = "Notification"
+
+    def __str__(self):
+        return f"{self.user} - {self.notification_type}"
