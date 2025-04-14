@@ -3,8 +3,7 @@ from account.models import KYC, Account
 from account.forms import KYCForm
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from core.forms import CreditCardForm
-from wallet.models import Wallet, Notification, Transaction
+from wallet.models import Wallet, Notification, Transaction,CompanyKYC
 
 
 
@@ -12,29 +11,29 @@ from wallet.models import Wallet, Notification, Transaction
 def wallet(request):
     if request.user.is_authenticated:
         try:
-            kyc = KYC.objects.get(user=request.user)
+            kyc = CompanyKYC.objects.get(user=request.user)
         except:
             messages.warning(request, "You need to submit your kyc")
             return redirect("account:kyc-reg")
         
-        account = Wallet.objects.get(user=request.user)
+        wallet = Wallet.objects.get(user=request.user)
     else:
         messages.warning(request, "You need to login to access the dashboard")
         return redirect("userauths:sign-in")
 
     context = {
         "kyc":kyc,
-        "account":account,
+        "account":wallet,
     }
     return render(request, "account/account.html", context)
 
 @login_required
 def kyc_registration(request):
     user = request.user
-    account = Account.objects.get(user=user)
+    wallet = Wallet.objects.get(user=user)
 
     try:
-        kyc = KYC.objects.get(user=user)
+        kyc = CompanyKYC.objects.get(user=user)
     except:
         kyc = None
     
@@ -43,14 +42,13 @@ def kyc_registration(request):
         if form.is_valid():
             new_form = form.save(commit=False)
             new_form.user = user
-            new_form.account = account
             new_form.save()
             messages.success(request, "KYC Form submitted successfully, In review now.")
             return redirect("account:account")
     else:
         form = KYCForm(instance=kyc)
     context = {
-        "account": account,
+        "account": wallet,
         "form": form,
         "kyc": kyc,
     }
@@ -60,7 +58,7 @@ def kyc_registration(request):
 def dashboard(request):
     if request.user.is_authenticated:
         try:
-            kyc = KYC.objects.get(user=request.user)
+            kyc = CompanyKYC.objects.get(user=request.user)
         except:
             messages.warning(request, "You need to submit your kyc")
             return redirect("account:kyc-reg")
@@ -76,26 +74,7 @@ def dashboard(request):
         request_reciever_transaction = Transaction.objects.filter(reciever=request.user, transaction_type="request")
         
         
-        account = Account.objects.get(user=request.user)
-        credit_card = CreditCard.objects.filter(user=request.user).order_by("-id")
-
-        if request.method == "POST":
-            form = CreditCardForm(request.POST)
-            if form.is_valid():
-                new_form = form.save(commit=False)
-                new_form.user = request.user 
-                new_form.save()
-                
-                Notification.objects.create(
-                    user=request.user,
-                    notification_type="Added Credit Card"
-                )
-                
-                card_id = new_form.card_id
-                messages.success(request, "Card Added Successfully.")
-                return redirect("account:dashboard")
-        else:
-            form = CreditCardForm()
+        wallet = Wallet.objects.get(user=request.user)
 
     else:
         messages.warning(request, "You need to login to access the dashboard")
@@ -103,9 +82,8 @@ def dashboard(request):
 
     context = {
         "kyc":kyc,
-        "account":account,
+        "account":wallet,
         "form":form,
-        "credit_card":credit_card,
         "sender_transaction":sender_transaction,
         "reciever_transaction":reciever_transaction,
 
