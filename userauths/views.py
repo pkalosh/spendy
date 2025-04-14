@@ -11,18 +11,18 @@ def RegisterView(request):
         if form.is_valid():
             # form.save()
             new_user = form.save() # new_user.email
-            username = form.cleaned_data.get("username")
+            username = form.cleaned_data.get("email")
             # username = request.POST.get("username")
             messages.success(request, f"Hey {username}, your account was created successfully.")
             # new_user = authenticate(username=form.cleaned_data.get('email'))
-            new_user = authenticate(username=form.cleaned_data['email'],
+            new_user = authenticate(email=form.cleaned_data['email'],
                                     password=form.cleaned_data['password1'])
             login(request, new_user)
-            return redirect("account:account")
+            return redirect("wallet:wallet")
     
     if request.user.is_authenticated:
         messages.warning(request, f"You are already logged in.")
-        return redirect("account:account")
+        return redirect("wallet:wallet")
 
 
     else:
@@ -45,7 +45,7 @@ def LoginView(request):
             if user is not None: # if there is a user
                 login(request, user)
                 messages.success(request, "You are logged.")
-                return redirect("account:account")
+                return redirect("wallet:wallet")
             else:
                 messages.warning(request, "Username or password does not exist")
                 return redirect("userauths:sign-in")

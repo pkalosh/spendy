@@ -15,12 +15,11 @@
                     </div>
                     <div class="col-xl-5">
                         <div class="section-text text-center">
-                            <h5 class="sub-title">Account</h5>
-                            <h2 class="title">Welcome to CashEx</h2>
-                            <p class="dont-acc">Already have an account? <a href="{% url 'users:sign-in' %}">Login</a></p>
+                            <h4 class="title">Welcome to Spendy</h4>
+                            <p class="dont-acc">Already have an account? <a href="{% url 'userauths:sign-in' %}">Login</a></p>
                             
                         </div>
-                        <form method="POST" accept="{% url 'users:sign-up' %}">
+                        <form method="POST" accept="{% url 'userauths:sign-up' %}">
                             {% csrf_token %}
                             <div class="row">
                                 <div class="col-12">
@@ -35,6 +34,9 @@
                                     </div>
                                     <div class="single-input">
                                         {{form.last_name}}
+                                    </div>
+                                    <div class="single-input">
+                                        {{form.company_name}}
                                     </div>
                                     <div class="single-input">
                                         {{form.country}}

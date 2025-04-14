@@ -44,10 +44,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
-    'wallet',
+    'django.contrib.humanize',
+
     # 'expense',
     # 'reports',
     'userauths',
+    'wallet',
+
 ]
 
 MIDDLEWARE = [

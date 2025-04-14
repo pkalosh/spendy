@@ -1,6 +1,5 @@
 from django.shortcuts import render, redirect
-from account.models import KYC, Account
-from account.forms import KYCForm
+from wallet.forms import KYCForm
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from wallet.models import Wallet, Notification, Transaction,CompanyKYC
@@ -12,21 +11,40 @@ def wallet(request):
     if request.user.is_authenticated:
         try:
             kyc = CompanyKYC.objects.get(user=request.user)
-        except:
-            messages.warning(request, "You need to submit your kyc")
-            return redirect("account:kyc-reg")
-        
-        wallet = Wallet.objects.get(user=request.user)
+            
+            # Check if all required fields are filled
+            required_fields = [
+                kyc.company_name,
+                kyc.logo,
+                kyc.kra_pin,
+                kyc.registration_certificate,
+                kyc.country,
+                kyc.county,
+                kyc.city,
+                kyc.address,
+                kyc.mobile
+            ]
+            
+            if not all(required_fields) or not kyc.kyc_submitted:
+                messages.warning(request, "Your KYC is incomplete. Please fill all required fields.")
+                return redirect("wallet:kyc-reg")
+                
+            wallet = Wallet.objects.get(user=request.user)
+        except CompanyKYC.DoesNotExist:
+            messages.warning(request, "You need to submit your KYC")
+            return redirect("wallet:kyc-reg")
+        except Wallet.DoesNotExist:
+            messages.error(request, "Wallet not found")
+            return redirect("userauths:sign-up")
     else:
         messages.warning(request, "You need to login to access the dashboard")
         return redirect("userauths:sign-in")
-
+    
     context = {
-        "kyc":kyc,
-        "account":wallet,
+        "kyc": kyc,
+        "account": wallet,
     }
     return render(request, "account/account.html", context)
-
 @login_required
 def kyc_registration(request):
     user = request.user
@@ -44,7 +62,7 @@ def kyc_registration(request):
             new_form.user = user
             new_form.save()
             messages.success(request, "KYC Form submitted successfully, In review now.")
-            return redirect("account:account")
+            return redirect("wallet:wallet")
     else:
         form = KYCForm(instance=kyc)
     context = {
@@ -57,11 +75,30 @@ def kyc_registration(request):
 
 def dashboard(request):
     if request.user.is_authenticated:
+        form = KYCForm()
         try:
             kyc = CompanyKYC.objects.get(user=request.user)
-        except:
-            messages.warning(request, "You need to submit your kyc")
-            return redirect("account:kyc-reg")
+            
+            # Check if all required fields are filled
+            required_fields = [
+                kyc.company_name,
+                kyc.logo,
+                kyc.kra_pin,
+                kyc.registration_certificate,
+                kyc.country,
+                kyc.county,
+                kyc.city,
+                kyc.address,
+                kyc.mobile
+            ]
+            
+            if not all(required_fields) or not kyc.kyc_submitted:
+                messages.warning(request, "Your KYC is incomplete. Please fill all required fields.")
+                return redirect("wallet:kyc-reg")
+                
+        except CompanyKYC.DoesNotExist:
+            messages.warning(request, "You need to submit your KYC")
+            return redirect("wallet:kyc-reg")
         
         recent_transfer = Transaction.objects.filter(sender=request.user, transaction_type="transfer", status="completed").order_by("-id")[:1]
         recent_recieved_transfer = Transaction.objects.filter(reciever=request.user, transaction_type="transfer").order_by("-id")[:1]

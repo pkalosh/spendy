@@ -46,8 +46,8 @@ class User(AbstractUser):
 
     objects = CustomUserManager()
 
-    USERNAME_FIELD = 'phone_number'  # Use email as the username field
-    REQUIRED_FIELDS = ['first_name', 'last_name', 'email']  # Required fields for createsuperuser
+    USERNAME_FIELD = 'email'  # Use email as the username field
+    REQUIRED_FIELDS = ['first_name', 'last_name', 'phone_number']  # Required fields for createsuperuser
 
 
     class Meta:

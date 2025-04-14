@@ -7,9 +7,9 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>CashEx - Money Exchange Made Easy</title>
+    <title>Spendy -Expense Management Made Easy</title>
 
-    <link rel="shortcut icon" href="{% static 'assets1/images/favicon.png' %}" type="image/x-icon">
+    <link rel="shortcut icon" href="{% static 'assets1/images/fav.png' %}" type="image/x-icon">
     <link rel="stylesheet" href="{% static 'assets1/css/bootstrap.min.css' %}">
     <link rel="stylesheet" href="{% static 'assets1/css/fontawesome.min.css' %}">
     <link rel="stylesheet" href="{% static 'assets1/css/jquery-ui.css' %}">
@@ -127,13 +127,13 @@
                                     </div>
                                     <ul>
                                         <li class="border-area">
-                                            <a href="{% url 'users:dashboard' %}"><i class="fas fa-user"></i>Dashboard</a>
+                                            <a href="{% url 'wallet:dashboard' %}"><i class="fas fa-user"></i>Dashboard</a>
                                         </li>
                                         <li class="border-area">
-                                            <a href="{% url 'users:profile' %}"><i class="fas fa-cog"></i>Profile</a>
+                                            <a href="{% url 'wallet:wallet' %}"><i class="fas fa-cog"></i>Profile</a>
                                         </li>
                                         <li>
-                                            <a href="{% url 'users:sign-out' %}"><i class="fas fa-sign-out"></i>Logout</a>
+                                            <a href="{% url 'userauths:sign-out' %}"><i class="fas fa-sign-out"></i>Logout</a>
                                         </li>
                                     </ul>
                                 </div>
@@ -145,25 +145,20 @@
                             <i class="fa-solid fa-xmark"></i>
                         </div>
                         <div class="sidebar-logo">
-                            <a href="{% url 'users:dashboard' %}"><img src="{% static 'assets1/images/x.png' %}" alt="logo"></a>
+                            <a href="{% url 'wallet:dashboard' %}"><img src="{% static 'assets1/images/fav.png' %}" alt="logo"></a>
                         </div>
                         <ul>
                             <li>
-                                <a href="{% url 'users:dashboard' %}">
+                                <a href="{% url 'wallet:dashboard' %}">
                                     <img src="{% static 'assets1/images/icon/dashboard.png' %}" alt="Dashboard"> <span>Dashboard</span>
                                 </a>
                             </li>
                             <li>
-                                <a href="{% url 'wallet:transaction_history' %}">
+                                <a href="#">
                                     <img src="{% static 'assets1/images/icon/transactions.png' %}" alt="Transactions"> <span>Transactions</span>
                                 </a>
                             </li>
                         
-                            <li>
-                                <a href="{% url 'wallet:calculator' %}">
-                                    <img src="{% static 'assets1/images/icon/exchange.png' %}" alt="Exchange"> <span>Exchange Calculator</span>
-                                </a>
-                            </li>
                                                      
 
                         </ul>

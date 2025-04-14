@@ -56,8 +56,8 @@
                                 </div>
                                 <div class="bottom-area">
                                     <div class="left-side">
-                                        <a href="{% url 'core:search-account' %}" class="cmn-btn">Transfer Money</a>
-                                        <a href="{% url 'core:request-search-account' %}" class="cmn-btn">Receive Money</a>
+                                        <a href="" class="cmn-btn">Transfer Money</a>
+                                        <a href="" class="cmn-btn">Receive Money</a>
                                         <a href="withdraw-money-step-1.html" class="cmn-btn">All Cards</a>
                                     </div>
                                     <div class="right-side">
@@ -93,7 +93,7 @@
                                         </li>
                                     </ul>
                                     <div class="view-all d-flex align-items-center">
-                                        <a href="{% url 'core:transactions' %}">View All</a>
+                                        <a href="">View All</a>
                                         <img src="{% static 'assets1/images/icon/right-arrow.png' %}" alt="icon">
                                     </div>
                                 </div>
@@ -140,7 +140,7 @@
                                                                 <p>-${{s.amount|intcomma}}</p>
                                                             </td>
                                                             <td>
-                                                                <a href="{% url 'core:transaction-detail' s.transaction_id %}" class=""><i class="fas fa-eye"></i></a>
+                                                                <a href="" class=""><i class="fas fa-eye"></i></a>
 
                                                             </td>
                                                         </tr>
@@ -192,7 +192,7 @@
                                                                 <p>+${{s.amount|intcomma}}</p>
                                                             </td>
                                                             <td>
-                                                                <a href="{% url 'core:transaction-detail' s.transaction_id %}" class=""><i class="fas fa-eye"></i></a>
+                                                                <a href="" class=""><i class="fas fa-eye"></i></a>
                                                             </td>
                                                         </tr>
                                                     {% endfor %}
@@ -253,13 +253,13 @@
                                                             </td>
                                                             <td>
                                                                 {% if s.status == "request_sent" %}
-                                                                <a href="{% url 'core:transaction-detail' s.transaction_id %}" class="btn btn-primary"><i class="fas fa-eye"></i> View</a>
-                                                                <a href="{% url 'core:delete-request' s.sender.account.account_number s.transaction_id %}" class=" btn btn-danger"> <i class="fas fa-x"></i> Delete</a>
+                                                                <a href="" class="btn btn-primary"><i class="fas fa-eye"></i> View</a>
+                                                                <a href="" class=" btn btn-danger"> <i class="fas fa-x"></i> Delete</a>
                                                                 {% endif %}
 
                                                                 {% if s.status == "request_processing" %}
-                                                                <a href="{% url 'core:transaction-detail' s.transaction_id %}" class="btn btn-primary"><i class="fas fa-eye"></i> View</a>
-                                                                <a href="{% url 'core:delete-request' s.sender.account.account_number s.transaction_id %}" class=" btn btn-danger"> <i class="fas fa-x"></i> Delete</a>
+                                                                <a href="" class="btn btn-primary"><i class="fas fa-eye"></i> View</a>
+                                                                <a href="" class=" btn btn-danger"> <i class="fas fa-x"></i> Delete</a>
                                                                 {% endif %}
 
                                                                 {% if s.status == "request_settled" %}
@@ -327,8 +327,8 @@
                                                             <td>
                                                                 
                                                                 {% if s.status == "request_sent" %}
-                                                                    <a href="{% url 'core:settlement-confirmation' s.sender.account.account_number s.transaction_id %}" class="btn btn-primary"><i class="fas fa-check-circle"></i> Settle</a>
-                                                                    <a href="{% url 'core:transaction-detail' s.transaction_id %}" class=" btn btn-danger"> <i class="fas fa-x"></i> Cancel</a>
+                                                                    <a href="" class="btn btn-primary"><i class="fas fa-check-circle"></i> Settle</a>
+                                                                    <a href="" class=" btn btn-danger"> <i class="fas fa-x"></i> Cancel</a>
                                                                 {% endif %}
 
                                                                 {% if s.status == "request_settled" %}
@@ -369,7 +369,7 @@
                                     
                                     
                                     {% for c in credit_card %}
-                                        <a href="{% url 'core:card-detail' c.card_id %}">
+                                        <a href="">
                                             <div class="col-12">
                                                 <div class="card__main">
                                                     <div class="{% if c.card_type == 'verve' %}Front_card{% endif %}    {% if c.card_type == 'master' %}masterCard{% endif %}    {% if c.card_type == 'visa' %}visaCard{% endif %}">
