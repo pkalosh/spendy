@@ -4,8 +4,10 @@ from decimal import Decimal
 from django.core.validators import MinValueValidator
 from django.core.exceptions import ValidationError
 from django.db.models.signals import post_save
+from django.dispatch import receiver
+import uuid
 from shortuuid.django_fields import ShortUUIDField
-
+from userauths.models import User
 class TransactionError(Exception):
     pass
 
@@ -52,3 +54,72 @@ class Wallet(models.Model):
             raise ValidationError("Transaction amount must be positive")
         if amount > Decimal('1000000'):  # Example maximum transaction limit
             raise ValidationError("Transaction amount exceeds maximum limit")
+
+def user_directory_path(instance, filename):
+    ext = filename.split(".")[-1]
+    filename = "%s_%s" % (instance.id, ext)
+    return "user_{0}/{1}".format(instance.user.id, filename)
+
+
+    
+class CompanyKYC(models.Model):
+    id = models.UUIDField(primary_key=True, unique=True, default=uuid.uuid4, editable=False)
+    user =  models.OneToOneField(User, on_delete=models.CASCADE)
+    company_name = models.CharField(max_length=1000)
+    logo = models.ImageField(upload_to="kyc", default="default.jpg")
+    kra_pin = models.ImageField(upload_to="kyc", null=True, blank=True)
+    registration_certificate = models.ImageField(upload_to="kyc", null=True, blank=True)
+
+    # Address
+    country = models.CharField(max_length=100, null=True, blank=True)
+    county = models.CharField(max_length=100, null=True, blank=True)
+    city = models.CharField(max_length=100, null=True, blank=True)
+    address = models.CharField(max_length=200, null=True, blank=True)
+
+    # Contact Detail
+    mobile = models.CharField(max_length=100, null=True, blank=True)
+    fax = models.CharField(max_length=100, null=True, blank=True)
+    date = models.DateTimeField(auto_now_add=True)
+
+    kyc_submitted = models.BooleanField(default=False)
+    kyc_confirmed = models.BooleanField(default=False)
+    recommended_by = models.ForeignKey(User, on_delete=models.DO_NOTHING, blank=True, null=True, related_name="recommended_by")
+    review = models.CharField(max_length=100, null=True, blank=True, default="Review")
+    
+    def __str__(self):
+        return f"{self.user}"    
+
+    
+    class Meta:
+        ordering = ['-date']
+
+
+
+def create_kyc(sender, instance, created, **kwargs):
+    if created:
+        CompanyKYC.objects.create(user=instance,company_name=instance.company_name)
+
+def save_kyc(sender, instance,**kwargs):
+    instance.companykyc.save()
+
+post_save.connect(create_kyc, sender=User)
+post_save.connect(save_kyc, sender=User)
+
+
+@receiver(post_save, sender=User)
+def create_account(sender, instance, created, **kwargs):
+    if created:
+        # Determine currency based on country
+        currency = 'KES' if instance.country == 'KENYA' else "None"
+        
+        # Create wallet with the determined currency
+        Wallet.objects.create(
+            user=instance, 
+            wallet_type = "PRIMARY",
+            currency=currency
+        )
+@receiver(post_save, sender=User)
+def save_account(sender, instance, **kwargs):
+    # Ensure wallet is saved
+    if hasattr(instance, 'wallet'):
+        instance.wallet.save()

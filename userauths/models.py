@@ -1,9 +1,9 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+import uuid
 from django.contrib.auth.base_user import BaseUserManager
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from wallet.models import Wallet
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         if not email:
@@ -31,6 +31,7 @@ class User(AbstractUser):
     phone_number = models.CharField(max_length=15, unique=True)
     country = models.CharField(max_length=15,blank=True, null=True)
     email = models.EmailField(unique=True)
+    company_name = models.CharField(max_length=250,blank=True, null=True)
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     is_staff = models.BooleanField(default=False)
@@ -56,21 +57,4 @@ class User(AbstractUser):
         return self.email
 
 
-@receiver(post_save, sender=User)
-def create_account(sender, instance, created, **kwargs):
-    if created:
-        # Determine currency based on country
-        currency = 'KES' if instance.country == 'KENYA' else "None"
-        
-        # Create wallet with the determined currency
-        Wallet.objects.create(
-            user=instance, 
-            wallet_type = "PRIMARY",
-            currency=currency
-        )
 
-@receiver(post_save, sender=User)
-def save_account(sender, instance, **kwargs):
-    # Ensure wallet is saved
-    if hasattr(instance, 'wallet'):
-        instance.wallet.save()
