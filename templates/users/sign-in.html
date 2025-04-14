@@ -1,0 +1,50 @@
+
+
+{% extends 'partials/base.html' %}
+{% load static %}
+{% block content %}
+      <!-- Login Reg start -->
+      <section class="login-reg">
+        <div class="overlay pt-120">
+            <div class="container">
+                <div class="row align-items-center justify-content-center">
+                    <div class="col-xl-6 order-xl-0 order-1">
+                        <div class="sec-img d-rtl">
+                            <img src="{% static 'assets/images/login-reg-bg.png' %}" class="max-un" alt="image">
+                        </div>
+                    </div>
+                    <div class="col-xl-5">
+                        <div class="section-text text-center">
+                            <h5 class="sub-title">Welcome to CashEx</h5>
+                            <h2 class="title">Sign In</h2>
+                            <p class="dont-acc">Don't have an account yet? <a href="{% url 'users:sign-up' %}">Sign Up</a></p>
+                   
+                        </div>
+                        
+                        {% if messages %}
+                            {% for message in messages %}
+                                <strong>{{ message }}</strong>
+                            {% endfor %}
+                        {% endif %}
+                            
+                        <form method="POST">
+                            {% csrf_token %}
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="single-input">
+                                        <input type="text" required name="phone_number" id="phone" placeholder="Enter Your phone number">
+                                    </div>
+                                    <div class="single-input">
+                                        <input type="password" required name="password" id="passsword" placeholder="Enter Your Password">
+                                    </div>
+                                    <button class="cmn-btn w-100" type="submit">Login</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Login Reg end -->
+ {% endblock content %}
