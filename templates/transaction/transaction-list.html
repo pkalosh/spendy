@@ -1,0 +1,102 @@
+{% extends "partials/dashboard-base.html" %}
+{% load static %}
+{% load humanize %}
+{% block content %}
+    <!-- Dashboard Section start -->
+    <section class="dashboard-section body-collapse">
+        <div class="overlay pt-120">
+            <div class="container-fruid">
+                <div class="row">
+                    <div class="col-xl-12 col-lg-12">
+                        <div class="section-content">
+                            
+                            <div class="transactions-area">
+                                <div class="section-text">
+                                    <h5>Transactions</h5>
+                                    <p>Updated every several minutes</p>
+                                </div>
+                                <div class="top-area d-flex align-items-center justify-content-between">
+                                    <ul class="nav nav-tabs" role="tablist">
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link active" id="latest-tab" data-bs-toggle="tab" data-bs-target="#latest" type="button" role="tab" aria-controls="latest" aria-selected="true">Transactions</button>
+                                        </li>
+                                        
+                                      
+                                    </ul>
+                                    <div class="view-all d-flex align-items-center">
+                                        <a href="javascript:void(0)">View All</a>
+                                        <img src="{% static 'assets1/images/icon/right-arrow.png' %}" alt="icon">
+                                    </div>
+                                </div>
+                                <div class="tab-content mt-40">
+                                    <div class="tab-pane fade show active" id="latest" role="tabpanel" aria-labelledby="latest-tab">
+                                        <div class="table-responsive">
+                                            <table class="table">
+                                                <thead>
+                                                    <tr>
+                                                        <th scope="col">Sender</th>
+                                                        <th scope="col">Recipient</th>
+                                                        <th scope="col">Country</th>
+                                                        <th scope="col">Amount</th>
+                                                        <th scope="col">Status</th>
+                                                        <th scope="col">Action</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for s in transactions %}
+                                                
+                                                        <tr data-bs-toggle="modal" data-bs-target="#transactionsMod">
+                                                            <th scope="row">
+                                                                <p class="mdr">{{s.wallet.user.first_name|title}} {{s.wallet.user.last_name|title}} - {{s.wallet.wallet_number}}</p>
+                                                            </th>
+                                                            <th scope="row">
+                                                                <p class="mdr">{{s.recipient.user.first_name|title}} {{s.recipient.user.last_name|title}} - {{s.recipient.wallet_number}}</p>
+                                                            </th>
+                                                        <td>
+                                                            <p class="mdr">{{s.wallet.user.country|title}}</p>
+                                                        </td>
+                
+                                                        
+                                                        <td>
+                                                            <p> - {{s.wallet.currency}} {{s.amount|intcomma}}</p>
+                                                        </td>
+                                                            <td>
+                                                                {% if s.status == 'COMPLETED' %}
+                                                                    <p class="text-success">{{s.status|title}}</p>
+                                                                {% endif %}
+                                                                {% if s.status == 'PENDING' %}
+                                                                    <p class="inprogress">{{s.status|title}}</p>
+                                                                {% endif %}
+                                                                {% if s.status == 'FAILED' %}
+                                                                    <p class="danger">{{s.status|title}}</p>
+                                                                {% endif %}
+                                                                {% if s.status == 'CANCELLED' %}
+                                                                    <p class="danger">{{s.status|title}}</p>
+                                                                {% endif %}
+                                                            </td>
+                                                            
+                                                            <td>
+                                                                <a href="{% url 'wallet:transaction-detail' s.id %}" class=""><i class="fas fa-eye"></i></a>
+
+                                                            </td>
+                                                        </tr>
+                                                        {% endfor %}
+                                               
+                                                    
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                   
+                                 
+                                 
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+    </section>
+    {% endblock content %}
