@@ -142,6 +142,7 @@
                                     aria-labelledby="account-tab">
                                     <form method="POST" enctype="multipart/form-data">
                                         {% csrf_token %}
+                                        
                                         <div class="upload-avatar">
                                             <div class="avatar-left d-flex align-items-center">
                                                 <div class="profile-img">
@@ -153,154 +154,69 @@
                                                 </div>
                                             </div>
                                             <div class="avatar-right">
-                                                {{form.image}}
+                                                {{form.logo}}
                                             </div>
                                         </div>
                                     
                                         <div class="row justify-content-center">
                                             <div class="col-md-6">
                                                 <div class="single-input">
-                                                    <label for="fName">Full Name</label>
-                                                   {{form.full_name}}
+                                                    <label for="city">Company Name</label>
+                                                   {{form.company_name}}
                                                 </div>
                                             </div>
                                             
                                             <div class="col-md-6">
                                                 <div class="single-input">
-                                                    <label for="fName">Mobile Number</label>
-                                                   {{form.mobile}}
+                                                    <label for="kra">KRA PIN</label>
+                                                   {{form.kra_pin}}
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
                                                 <div class="single-input">
-                                                    <label for="fName">Country</label>
+                                                    <label for="ccName">Certificate of Incorporation</label>
+                                                   {{form.registration_certificate}}
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="single-input">
+                                                    <label for="country">Country</label>
                                                    {{form.country}}
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
                                                 <div class="single-input">
-                                                    <label for="fName">State</label>
-                                                   {{form.state}}
+                                                    <label for="county">County</label>
+                                                   {{form.county}}
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
                                                 <div class="single-input">
-                                                    <label for="fName">City</label>
+                                                    <label for="city">City</label>
                                                    {{form.city}}
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
                                                 <div class="single-input">
-                                                    <label for="fName">Fax</label>
+                                                    <label for="fName">Address</label>
+                                                   {{form.address}}
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="single-input">
+                                                    <label for="mobile">Mobile</label>
+                                                   {{form.mobile}}
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="single-input">
+                                                    <label for="fax">Fax</label>
                                                    {{form.fax}}
                                                 </div>
                                             </div>
-                                            <div class="col-md-12">
-                                                <div class="single-input">
-                                                    <label for="fName">Date Of Birth</label>
-                                                   {{form.date_of_birth}}
-                                                </div>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <div class="single-input">
-                                                   {{form.gender}}
-                                                </div>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <div class="single-input">
-                                                   {{form.marrital_status}}
-                                                </div>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <div class="single-input">
-                                                   {{form.identity_type}}
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6 " style="padding-top: 50px;">
-                                                <div class="single-input">
-                                                    <label for="fName">Select Identity Image</label>
-
-                                                    {{form.identity_image}}
-                                                    {% if kyc.identity_image %}
-                                                        <img src="{{ kyc.identity_image.url }}" style="width: 100%; height: 200px; border-radius: 10px; object-fit: cover; padding-top: 10px;" alt="">
-                                                    {% endif %}
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6" style="padding-top: 50px;">
-                                                <div class="single-input">
-                                                    <label for="fName">Select Signature Image</label>
-
-                                                    {{form.signature}}
-                                                    {% if kyc.signature %}
-                                                        <img src="{{ kyc.signature.url }}" style="width: 100%; height: 200px; border-radius: 10px; object-fit: cover; padding-top: 10px;" alt="">
-                                                    {% endif %}
-                                                </div>
-                                            </div>
+                                        
                                             <br><br>
 
-
-
-
-
-
-
-
-<!--                                             
-                                            <div class="col-md-6">
-                                                <div class="single-input">
-                                                    <label for="email">Email</label>
-                                                    <div class="row input-status d-flex align-items-center">
-                                                        <div class="col-6">
-                                                            <input type="text" id="email" placeholder="alfred6598@gmail.com">
-                                                        </div>
-                                                        <div class="col-6">
-                                                            <span class="pending">
-                                                                <img src="{% static 'assets1/images/icon/pending.png' %}" alt="icon">
-                                                                E-mail confirmation in pending
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-12">
-                                                <div class="single-input">
-                                                    <label for="phone">Phone</label>
-                                                    <div class="row input-status d-flex align-items-center">
-                                                        <div class="col-6">
-                                                            <input type="text" id="phone" placeholder="(316) 555-0116">
-                                                        </div>
-                                                        <div class="col-6">
-                                                            <span class="confirm">
-                                                                <img src="{% static 'assets1/images/icon/confirm.png' %}" alt="icon">
-                                                                Phone number confirm
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-12">
-                                                <div class="single-input file">
-                                                    <label>ID Confirmation documents</label>
-                                                    <div class="row input-status d-flex align-items-center">
-                                                        <div class="col-6">
-                                                            <div class="file-upload">
-                                                                <div class="right-area">
-                                                                    <label class="file">
-                                                                        <input type="file">
-                                                                        <span class="file-custom"></span>
-                                                                    </label>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-6">
-                                                            <span class="notconfirm">
-                                                                <img src="{% static 'assets1/images/icon/not-confirm.png' %}" alt="icon">
-                                                                Person not confirmed
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div> -->
                                             
                                             <div class="col-md-12">
                                                 <div class="btn-border">
@@ -359,84 +275,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="single-content additional-security">
-                                        <h5>Additional security</h5>
-                                        <div class="single-setting">
-                                            <div class="left">
-                                                <h6>SMS recovery</h6>
-                                                <p>Number ending with 1234</p>
-                                            </div>
-                                            <div class="right">
-                                                <button class="active">Disable SMS</button>
-                                            </div>
-                                        </div>
-                                        <div class="single-setting">
-                                            <div class="left">
-                                                <h6>Autheticator App</h6>
-                                                <p>Google Authenticator</p>
-                                            </div>
-                                            <div class="right">
-                                                <button>Configure</button>
-                                            </div>
-                                        </div>
-                                        <div class="single-setting">
-                                            <div class="left">
-                                                <h6>SSL Certificate</h6>
-                                                <p>Secure Sockets Layer</p>
-                                            </div>
-                                            <div class="right">
-                                                <button>Configure</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="single-content your-devices">
-                                        <div class="head-item d-flex align-items-center justify-content-between">
-                                            <h5>Your devices</h5>
-                                            <a href="javascript:void(0)">Log out on all devices</a>
-                                        </div>
-                                        <div class="single-setting">
-                                            <div class="left">
-                                                <div class="icon-area">
-                                                    <img src="{% static 'assets1/images/icon/iphone.png' %}" alt="icon">
-                                                </div>
-                                                <div class="text-area">
-                                                    <h6>Iphone 13 Pro Max</h6>
-                                                    <p>New York City · June 20 at 14:00</p>
-                                                </div>
-                                            </div>
-                                            <div class="right">
-                                                <button>Log out</button>
-                                            </div>
-                                        </div>
-                                        <div class="single-setting">
-                                            <div class="left">
-                                                <div class="icon-area">
-                                                    <img src="{% static 'assets1/images/icon/ipad.png' %}" alt="icon">
-                                                </div>
-                                                <div class="text-area">
-                                                    <h6>iPad Pro</h6>
-                                                    <p>New York City · June 20 at 14:00</p>
-                                                </div>
-                                            </div>
-                                            <div class="right">
-                                                <button>Log out</button>
-                                            </div>
-                                        </div>
-                                        <div class="single-setting">
-                                            <div class="left">
-                                                <div class="icon-area">
-                                                    <img src="{% static 'assets1/images/icon/imac.png' %}" alt="icon">
-                                                </div>
-                                                <div class="text-area">
-                                                    <h6>iMac OSX</h6>
-                                                    <p>New York City · June 20 at 14:00</p>
-                                                </div>
-                                            </div>
-                                            <div class="right">
-                                                <button>Log out</button>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    
                                 </div>
                                 <div class="tab-pane pb-120 fade" id="payment" role="tabpanel"
                                     aria-labelledby="payment-tab">

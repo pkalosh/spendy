@@ -67,8 +67,8 @@ class CompanyKYC(models.Model):
     user =  models.OneToOneField(User, on_delete=models.CASCADE)
     company_name = models.CharField(max_length=1000)
     logo = models.ImageField(upload_to="kyc", default="default.jpg")
-    kra_pin = models.ImageField(upload_to="kyc", null=True, blank=True)
-    registration_certificate = models.ImageField(upload_to="kyc", null=True, blank=True)
+    kra_pin = models.FileField(upload_to="kyc", null=True, blank=True)
+    registration_certificate = models.FileField(upload_to="kyc", null=True, blank=True)
 
     # Address
     country = models.CharField(max_length=100, null=True, blank=True)

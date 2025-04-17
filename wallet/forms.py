@@ -9,4 +9,4 @@ class KYCForm(forms.ModelForm):
 
     class Meta:
         model = CompanyKYC
-        fields = ['company_name']
+        fields = ['company_name','logo','kra_pin','registration_certificate','country','county','city','address','mobile','fax']
