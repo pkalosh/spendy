@@ -155,27 +155,41 @@
                             </li>
                             <li>
                                 <a href="#">
-                                    <img src="{% static 'assets1/images/icon/transactions.png' %}" alt="Transactions"> <span>Transactions</span>
+                                    <img src="{% static 'assets1/images/icon/transactions.png' %}" alt="Transactions"> <span>Wallets</span>
                                 </a>
                             </li>
-                        
-                                                     
+                            <li>
+                                <a href="#">
+                                    <img src="{% static 'assets1/images/icon/transactions.png' %}" alt="Transactions"> <span>Approvals</span>
+                                </a>
+                            </li>                      
+                            <li>
+                                <a href="{% url 'wallet:dashboard' %}">
+                                    <img src="{% static 'assets1/images/icon/dashboard.png' %}" alt="Dashboard"> <span>Expenses</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <img src="{% static 'assets1/images/icon/transactions.png' %}" alt="Transactions"> <span>Analytics</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <img src="{% static 'assets1/images/icon/transactions.png' %}" alt="Transactions"> <span>Reports</span>
+                                </a>
+                            </li>                                 
 
                         </ul>
                         <ul class="bottom-item">
-                            <li class="active">
-                                <a href="">
-                                    <img src="{% static 'assets1/images/icon/account.png' %}" alt="Account"> <span>Account</span>
+
+                            <li>
+                                <a href="javascript:void(0)">
+                                    <img src="{% static 'assets1/images/icon/support.png' %}" alt="Support"> <span>Settings</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="javascript:void(0)">
-                                    <img src="{% static 'assets1/images/icon/support.png' %}" alt="Support"> <span>Support</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="javascript:void(0)">
-                                    <img src="{% static 'assets1/images/icon/quit.png' %}" alt="Quit"> <span>Quit</span>
+                                    <img src="{% static 'assets1/images/icon/quit.png' %}" alt="Quit"> <span>Logout</span>
                                 </a>
                             </li>
                         </ul>

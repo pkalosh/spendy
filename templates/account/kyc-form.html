@@ -3,85 +3,7 @@
 {% block content %}
     <!-- Dashboard Section start -->
     <head>
-        <style>
-            #id_image{
-                background-color: #432f9f;
-                /* border: 1px solid #e2e9f3; */
-                border-radius: 4px;
-                height: 50px;
-                width: 100%;
-                color: #ffffff;
-            }
-            #id_image::file-selector-button{
-                border: none;
-                border-radius: 7px;
-                color: 432f9f;
-                background-color: #ffffff;
-                /* border: 1px solid #595ef1bd; */
-                height: 30px;
-                cursor: pointer;
-                transition: all .25s ease-in;
-            }
-            #id_image::file-selector-button:hover,
-            #id_identity_type::file-selector-button:hover{
-                background-color: #fff;
-                color: #565A90;
-                transition: all .25s ease-in;
-            }
-    
-    
-            #id_identity_image{
-                background-color: #432f9f;
-                /* border: 1px solid #e2e9f3; */
-                border-radius: 4px;
-                height: 50px;
-                width: 100%;
-                color: #ffffff;
-            }
-            #id_identity_image::file-selector-button{
-                border: none;
-                border-radius: 7px;
-                color: 432f9f;
-                background-color: #ffffff;
-                /* border: 1px solid #595ef1bd; */
-                height: 30px;
-                cursor: pointer;
-                transition: all .25s ease-in;
-            }
-            #id_identity_image::file-selector-button:hover{
-                background-color: #fff;
-                color: #565A90;
-                transition: all .25s ease-in;
-            }
-    
-    
-    
-    
-            
-            #id_signature{
-                background-color: #432f9f;
-                /* border: 1px solid #e2e9f3; */
-                border-radius: 4px;
-                height: 50px;
-                width: 100%;
-                color: #ffffff;
-            }
-            #id_signature::file-selector-button{
-                border: none;
-                border-radius: 7px;
-                color: 432f9f;
-                background-color: #ffffff;
-                /* border: 1px solid #595ef1bd; */
-                height: 30px;
-                cursor: pointer;
-                transition: all .25s ease-in;
-            }
-            #id_signature::file-selector-button:hover{
-                background-color: #fff;
-                color: #565A90;
-                transition: all .25s ease-in;
-            }
-        </style>
+
     </head>
 <section class="dashboard-section body-collapse account">
     <div class="overlay pt-120">
@@ -92,10 +14,10 @@
                         <div class="owner-details">
                             <div class="profile-area">
                                 <div class="profile-img">
-                                    <img src="{% static 'assets1/images/default.jpg' %}" style="border-radius: 50%; width: 100px; height: 100px; " alt="image">
+                                    <img src="{{ kyc.logo.url }}" style="border-radius: 50%; width: 100px; height: 100px; " alt="image">
                                 </div>
                                 <div class="name-area">
-                                    <h6>{{request.user.username|title}}</h6>
+                                    <h6>{{request.user.company_name|title}}</h6>
                                     <p class="text-danger">{{ request.user.account.account_status|title }}</p>
                                 </div>
                             </div>
@@ -111,7 +33,7 @@
                                     </li>
                                     <li>
                                         <p>Confirm status:</p>
-                                        <span class="mdr">10%</span>
+                                        <span class="mdr">100%</span>
                                     </li>
                                 </ul>
                             </div>
@@ -137,226 +59,121 @@
                                 </li>
                                 
                             </ul>
+
+                       
                             <div class="tab-content mt-40">
-                                <div class="tab-pane fade show active" id="account" role="tabpanel"
-                                    aria-labelledby="account-tab">
-                                    <form method="POST" enctype="multipart/form-data">
-                                        {% csrf_token %}
-                                        
-                                        <div class="upload-avatar">
-                                            <div class="avatar-left d-flex align-items-center">
-                                                <div class="profile-img">
-                                                    <img src="{% static 'assets1/images/default.jpg' %}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover;" alt="image">
+                                <div class="tab-pane fade show active" id="account" role="tabpanel" aria-labelledby="account-tab">
+                            
+                                    <!-- Always show KYC summary if it exists -->
+                                    {% if kyc %}
+                                        <div class="mb-4">
+                                            <h5 class="mb-3">✅ KYC Details Submitted</h5>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <p><strong>Status:</strong> 
+                                                        {% if kyc.status %}
+                                                            <span class="badge 
+                                                                {% if kyc.status == 'approved' %} bg-success 
+                                                                {% elif kyc.status == 'pending' %} bg-warning text-dark 
+                                                                {% else %} bg-danger {% endif %}">
+                                                                {{ kyc.status|capfirst }}
+                                                            </span>
+                                                        {% else %}
+                                                            <span class="badge bg-secondary">Not Available</span>
+                                                        {% endif %}
+                                                    </p>
+                                                    <p><strong>Company Name:</strong> {{ kyc.company_name }}</p>
+                                                    <p><strong>KRA PIN:</strong> {{ kyc.kra_pin }}</p>
+                                                    <p><strong>Country:</strong> {{ kyc.country }}</p>
+                                                    <p><strong>County:</strong> {{ kyc.county }}</p>
+                                                    <p><strong>City:</strong> {{ kyc.city }}</p>
+                                                    <p><strong>Address:</strong> {{ kyc.address }}</p>
+                                                    <p><strong>Mobile:</strong> {{ kyc.mobile }}</p>
+                                                    <p><strong>Fax:</strong> {{ kyc.fax }}</p>
                                                 </div>
-                                                <div class="instraction">
-                                                    <h6>Your Avatar</h6>
-                                                    <!-- <p>Profile picture size: 400px x 400px</p> -->
+                                                <div class="col-md-6">
+                                                    <p><strong>Certificate of Incorporation:</strong> 
+                                                        {% if kyc.registration_certificate %}
+                                                            <a href="{{ kyc.registration_certificate.url }}" target="_blank" class="btn btn-sm btn-outline-primary">View Document</a>
+                                                        {% else %}
+                                                            <span class="text-muted">Not Uploaded</span>
+                                                        {% endif %}
+                                                    </p>
+                                                    <p><strong>Logo:</strong><br>
+                                                        {% if kyc.logo %}
+                                                            <img src="{{ kyc.logo.url }}" alt="Logo" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover;">
+                                                        {% else %}
+                                                            <span class="text-muted">Not Uploaded</span>
+                                                        {% endif %}
+                                                    </p>
                                                 </div>
                                             </div>
-                                            <div class="avatar-right">
-                                                {{form.logo}}
+                                            <div class="mt-3">
+                                                <button class="btn btn-sm btn-outline-secondary" disabled>Update KYC (Restricted)</button>
+                                                <!-- You can make this a real button if you want them to request updates -->
                                             </div>
                                         </div>
-                                    
-                                        <div class="row justify-content-center">
-                                            <div class="col-md-6">
-                                                <div class="single-input">
-                                                    <label for="city">Company Name</label>
-                                                   {{form.company_name}}
-                                                </div>
-                                            </div>
-                                            
-                                            <div class="col-md-6">
-                                                <div class="single-input">
-                                                    <label for="kra">KRA PIN</label>
-                                                   {{form.kra_pin}}
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="single-input">
-                                                    <label for="ccName">Certificate of Incorporation</label>
-                                                   {{form.registration_certificate}}
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="single-input">
-                                                    <label for="country">Country</label>
-                                                   {{form.country}}
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="single-input">
-                                                    <label for="county">County</label>
-                                                   {{form.county}}
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="single-input">
-                                                    <label for="city">City</label>
-                                                   {{form.city}}
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="single-input">
-                                                    <label for="fName">Address</label>
-                                                   {{form.address}}
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="single-input">
-                                                    <label for="mobile">Mobile</label>
-                                                   {{form.mobile}}
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="single-input">
-                                                    <label for="fax">Fax</label>
-                                                   {{form.fax}}
-                                                </div>
-                                            </div>
-                                        
-                                            <br><br>
-
-                                            
-                                            <div class="col-md-12">
-                                                <div class="btn-border">
-                                                    <button class="cmn-btn" type="submit">Submit KYC</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </form>
-                                </div>
-                                <div class="tab-pane fade" id="security" role="tabpanel"
-                                    aria-labelledby="security-tab">
-                                    <div class="single-content authentication d-flex align-items-center justify-content-between">
-                                        <div class="left">
-                                            <h5>Two Factor Authentication</h5>
-                                            <p>Two-Factor Authentication (2FA) can be used to help protect your account</p>
-                                        </div>
-                                        <div class="right">
-                                            <button>Enable</button>
-                                        </div>
-                                    </div>
-                                    <div class="change-pass mb-40">
-                                        <div class="row">
-                                            <div class="col-sm-6">
-                                                <h5>Change Password</h5>
-                                                <p>You can always change your password for security reasons or reset your password in case you forgot it.</p>
-                                                <a href="javascript:void(0)">Forgot password?</a>
-                                            </div>
-                                            <div class="col-sm-6">
-                                                <form action="#">
-                                                    <div class="row justify-content-center">
-                                                        <div class="col-md-12">
-                                                            <div class="single-input">
-                                                                <label for="current-password">Current password</label>
-                                                                <input type="text" id="current-password" placeholder="Current password">
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-md-12">
-                                                            <div class="single-input">
-                                                                <label for="new-password">New password</label>
-                                                                <input type="text" id="new-password" placeholder="New password">
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-md-12">
-                                                            <div class="single-input">
-                                                                <label for="confirm-password">Confirm New password</label>
-                                                                <input type="text" id="confirm-password" placeholder="Confirm New password">
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-md-12">
-                                                            <div class="btn-border w-100">
-                                                                <button class="cmn-btn w-100">Update password</button>
-                                                            </div>
-                                                        </div>
+                                    {% endif %}
+                            
+                                    <!-- Show form only if KYC not submitted -->
+                                    {% if not kyc %}
+                                        <form method="POST" enctype="multipart/form-data">
+                                            {% csrf_token %}
+                                            <div class="upload-avatar">
+                                                <div class="avatar-left d-flex align-items-center">
+                                                    <div class="profile-img">
+                                                        <img src="{% static 'assets1/images/default.jpg' %}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover;" alt="image">
                                                     </div>
-                                                </form>
+                                                    <div class="instraction">
+                                                        <h6>Your Avatar</h6>
+                                                    </div>
+                                                </div>
+                                                <div class="avatar-right">
+                                                    {{ form.logo }}
+                                                </div>
                                             </div>
-                                        </div>
-                                    </div>
-                                    
-                                </div>
-                                <div class="tab-pane pb-120 fade" id="payment" role="tabpanel"
-                                    aria-labelledby="payment-tab">
-                                    <div class="card-area">
-                                        <h6>Linked Payment system</h6>
-                                        <div class="card-content d-flex flex-wrap">
-                                            <div class="single-card">
-                                                <button type="button" class="reg w-100" data-bs-toggle="modal" data-bs-target="#transactionsMod">
-                                                    <img src="{% static 'assets1/images/visa-card.png' %}" alt="image" class="w-100">
-                                                </button>
+                            
+                                            <div class="row justify-content-center">
+                                                <div class="col-md-6">
+                                                    <div class="single-input"><label>Company Name</label>{{ form.company_name }}</div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="single-input"><label>KRA PIN</label>{{ form.kra_pin }}</div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="single-input"><label>Certificate</label>{{ form.registration_certificate }}</div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="single-input"><label>Country</label>{{ form.country }}</div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="single-input"><label>County</label>{{ form.county }}</div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="single-input"><label>City</label>{{ form.city }}</div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="single-input"><label>Address</label>{{ form.address }}</div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="single-input"><label>Mobile</label>{{ form.mobile }}</div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="single-input"><label>Fax</label>{{ form.fax }}</div>
+                                                </div>
+                                                <div class="col-md-12 mt-4">
+                                                    <div class="btn-border">
+                                                        <button class="cmn-btn" type="submit">Submit KYC</button>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div class="single-card">
-                                                <button type="button" class="reg w-100" data-bs-toggle="modal" data-bs-target="#transactionsMod">
-                                                    <img src="{% static 'assets1/images/paylio-card.png' %}" alt="image" class="w-100">
-                                                </button>
-                                            </div>
-                                            <div class="single-card">
-                                                <button type="button" class="reg w-100" data-bs-toggle="modal" data-bs-target="#transactionsMod">
-                                                    <img src="{% static 'assets1/images/paypal-card.png' %}" alt="image" class="w-100">
-                                                </button>
-                                            </div>
-                                            <div class="single-card">
-                                                <button type="button" class="reg w-100" data-bs-toggle="modal" data-bs-target="#transactionsMod">
-                                                    <img src="{% static 'assets1/images/blockchain-card.png' %}" alt="image" class="w-100">
-                                                </button>
-                                            </div>
-                                            <div class="single-card">
-                                                <button type="button" class="reg w-100" data-bs-toggle="modal" data-bs-target="#addcardMod">
-                                                    <img src="{% static 'assets1/images/add-new.png' %}" alt="image" class="w-100">
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="tab-pane fade" id="notification" role="tabpanel"
-                                    aria-labelledby="notification-tab">
-
-                                    <div class="notification-single">
-                                        <h6>Announcements</h6>
-                                        <label class="switch">
-                                            <input type="checkbox" checked>
-                                            <span class="slider round"></span>
-                                        </label>
-                                    </div>
-                                    <div class="notification-single">
-                                        <h6>Send payment</h6>
-                                        <label class="switch">
-                                            <input type="checkbox" checked>
-                                            <span class="slider round"></span>
-                                        </label>
-                                    </div>
-                                    <div class="notification-single">
-                                        <h6>Receive a payment</h6>
-                                        <label class="switch">
-                                            <input type="checkbox" checked>
-                                            <span class="slider round"></span>
-                                        </label>
-                                    </div>
-                                    <div class="notification-single">
-                                        <h6>Request payment</h6>
-                                        <label class="switch">
-                                            <input type="checkbox" checked>
-                                            <span class="slider round"></span>
-                                        </label>
-                                    </div>
-                                    <div class="notification-single">
-                                        <h6>Have a problem with a payment</h6>
-                                        <label class="switch">
-                                            <input type="checkbox">
-                                            <span class="slider round"></span>
-                                        </label>
-                                    </div>
-                                    <div class="notification-single">
-                                        <h6>Special Offers</h6>
-                                        <label class="switch">
-                                            <input type="checkbox" checked>
-                                            <span class="slider round"></span>
-                                        </label>
-                                    </div>
+                                        </form>
+                                    {% endif %}
                                 </div>
                             </div>
+                            
+ 
+
                         </div>
                     </div>
                 </div>
@@ -366,127 +183,6 @@
 </section>
 <!-- Dashboard Section end -->
 
-<!-- Add Card Popup start -->
-<div class="add-card">
-    <div class="container-fruid">
-        <div class="row">
-            <div class="col-lg-6">
-                <div class="modal fade" id="addcardMod" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content">
-                            <div class="modal-header justify-content-between">
-                                <h6>Add Card</h6>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
-                            </div>
-                            <form action="#">
-                                <div class="row justify-content-center">
-                                    <div class="col-md-12">
-                                        <div class="single-input">
-                                            <label for="cardNumber">Card Number</label>
-                                            <input type="text" id="cardNumber" placeholder="5890 - 6858 - 6332 - 9843">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-12">
-                                        <div class="single-input">
-                                            <label for="cardHolder">Card Holder</label>
-                                            <input type="text" id="cardHolder" placeholder="Alfred Davis">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="single-input">
-                                            <label for="month">Month</label>
-                                            <input type="text" id="month" placeholder="12">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="single-input">
-                                            <label for="year">Year</label>
-                                            <input type="text" id="year" placeholder="2025">
-                                        </div>
-                                    </div>
-                                    <div class="col-12">
-                                        <div class="btn-border w-100">
-                                            <button class="cmn-btn w-100">Add Card</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-<!-- Add Card Popup start -->
 
-<!-- My Card Popup start -->
-<div class="transactions-popup mycard">
-    <div class="container-fruid">
-        <div class="row">
-            <div class="col-lg-6">
-                <div class="modal fade" id="transactionsMod" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content">
-                            <div class="modal-header justify-content-between">
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
-                            </div>
-                            <div class="main-content">
-                                <div class="row">
-                                    <div class="col-sm-4">
-                                        <h5>My Cards</h5>
-                                        <div class="icon-area">
-                                            <img src="{% static 'assets1/images/popup-card.png' %}" alt="image" class="w-100">
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-8">
-                                        <div class="right-area">
-                                            <div class="top-area d-flex align-items-center justify-content-between">
-                                                <div class="card-details d-flex align-items-center">
-                                                    <img src="{% static 'assets1/images/icon/mastercard.png' %}" alt="image">
-                                                    <span>5880 **** **** 8854</span>
-                                                </div>
-                                                <a href="javascript:void(0)">
-                                                    <i class="icon-h-edit"></i>
-                                                    Edit
-                                                </a>
-                                            </div>
-                                            <ul class="payment-details">
-                                                <li>
-                                                    <span>Card Type:</span>
-                                                    <span>Visa</span>
-                                                </li>
-                                                <li>
-                                                    <span>Card Holder:</span>
-                                                    <span>Alfred Davis</span>
-                                                </li>
-                                                <li>
-                                                    <span>Expires:</span>
-                                                    <span>12/19</span>
-                                                </li>
-                                                <li>
-                                                    <span>Card Number:</span>
-                                                    <span>5880 5087 3288 8854</span>
-                                                </li>
-                                                <li>
-                                                    <span>Total Balance:</span>
-                                                    <span>80,700.00</span>
-                                                </li>
-                                                <li>
-                                                    <span>Total Debt:</span>
-                                                    <span>8,250.00</span>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 <!-- My Card Popup start -->
     {% endblock content %}

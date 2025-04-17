@@ -30,6 +30,9 @@ def wallet(request):
                 return redirect("wallet:kyc-reg")
                 
             wallet = Wallet.objects.get(user=request.user)
+            if not kyc.kyc_confirmed:
+                messages.warning(request, "Your KYC is Under Review.")
+                return redirect("wallet:kyc-reg")
         except CompanyKYC.DoesNotExist:
             messages.warning(request, "You need to submit your KYC")
             return redirect("wallet:kyc-reg")
@@ -60,6 +63,7 @@ def kyc_registration(request):
         if form.is_valid():
             new_form = form.save(commit=False)
             new_form.user = user
+            new_form.status = "pending"
             new_form.save()
             messages.success(request, "KYC Form submitted successfully, In review now.")
             return redirect("wallet:wallet")
@@ -95,7 +99,9 @@ def dashboard(request):
             if not all(required_fields) or not kyc.kyc_submitted:
                 messages.warning(request, "Your KYC is incomplete. Please fill all required fields.")
                 return redirect("wallet:kyc-reg")
-                
+            if not kyc.kyc_confirmed and not kyc.status == "approved":
+                messages.warning(request, "Your KYC is Under Review.")
+                return redirect("wallet:kyc-reg")
         except CompanyKYC.DoesNotExist:
             messages.warning(request, "You need to submit your KYC")
             return redirect("wallet:kyc-reg")
