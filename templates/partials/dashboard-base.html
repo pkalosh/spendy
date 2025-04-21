@@ -111,26 +111,16 @@
                                     <i class="fa-solid fa-sort-down"></i>
                                 </div>
                                 <div class="main-area user-content">
-                                    <div class="head-area d-flex align-items-center">
-                                        <div class="profile-img">
-                                            <!-- <img src="{% static 'assets1/images/avatar-2.png' %}" alt="User"> -->
-                                        
-                                            <img src="{% static 'assets1/images/default.jpg' %}"  style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;" alt="">
-                                         
-
-                                        </div>
-                                        <div class="profile-head">
-                                        
-                                            <p class="wallet-id"><small>Full Name: {{ request.user.first_name }}  {{ request.user.last_name }}</small></p>
-                                            <p class="wallet-id"><small>Balance {{ request.user.wallet.currency }}: {{ request.user.wallet.balance }}</small></p>
-                                        </div>
-                                    </div>
+                           
                                     <ul>
                                         <li class="border-area">
-                                            <a href="{% url 'wallet:dashboard' %}"><i class="fas fa-user"></i>Dashboard</a>
+                                            <a href="{% url 'wallet:dashboard' %}"><i class="fas fa-home"></i>Dashboard</a>
                                         </li>
                                         <li class="border-area">
-                                            <a href="{% url 'wallet:wallet' %}"><i class="fas fa-cog"></i>Profile</a>
+                                            <a href="{% url 'wallet:wallet' %}"><i class="fas fa-user"></i>Profile</a>
+                                        </li>
+                                        <li class="border-area">
+                                            <a href="{% url 'wallet:wallet' %}"><i class="fas fa-cog"></i>Settings</a>
                                         </li>
                                         <li>
                                             <a href="{% url 'userauths:sign-out' %}"><i class="fas fa-sign-out"></i>Logout</a>
@@ -154,12 +144,12 @@
                                 </a>
                             </li>
                             <li>
-                                <a href="#">
+                                <a href="{% url 'wallet:wallet' %}">
                                     <img src="{% static 'assets1/images/icon/transactions.png' %}" alt="Transactions"> <span>Wallets</span>
                                 </a>
                             </li>
                             <li>
-                                <a href="#">
+                                <a href="{% url 'wallet:pending_expenses' %}">
                                     <img src="{% static 'assets1/images/icon/transactions.png' %}" alt="Transactions"> <span>Approvals</span>
                                 </a>
                             </li>                      
@@ -179,6 +169,11 @@
                                 </a>
                             </li>                                 
 
+                            <li>
+                                <a href="#">
+                                    <img src="{% static 'assets1/images/icon/transactions.png' %}" alt="Transactions"> <span>Users</span>
+                                </a>
+                            </li>       
                         </ul>
                         <ul class="bottom-item">
 

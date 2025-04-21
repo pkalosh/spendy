@@ -46,7 +46,7 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'django.contrib.humanize',
 
-    # 'expense',
+    'expense',
     # 'reports',
     'userauths',
     'wallet',

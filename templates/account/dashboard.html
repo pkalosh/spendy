@@ -18,47 +18,22 @@
                             <div class="acc-details">
                                 <div class="top-area">
                                     <div class="left-side">
-                                        <h5>Hi, {{kyc.full_name|title}}!</h5>
+                                        <h5>Hi, {{kyc.company_name|title}}!</h5>
                                         <h2>${{account.account_balance|intcomma}}</h2>
-                                        
-                                        {% for recent_recieved_transfer in recent_recieved_transfer %}
-                                        <h5 class="receive">Last Received <span>${{recent_recieved_transfer.amount|intcomma}}</span></h5>
-                                            
-                                        {% endfor %}
+                                       
                                             
                                     </div>
                                     <div class="right-side">
-                                        <div class="right-top">
-                                            <select>
-                                                <option value="1">US Dollar</option>
-                                                <option value="2">US Dollar</option>
-                                                <option value="3">US Dollar</option>
-                                            </select>
-                                            <div class="dropdown-area">
-                                                <button type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                                                    <img src="{% static 'assets1/images/icon/option.png' %}" alt="icon">
-                                                </button>
-                                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                                    <li><a class="dropdown-item" href="#">Fiat Currency</a></li>
-                                                    <li><a class="dropdown-item" href="#">crypto Currency</a></li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                        <div class="right-bottom">
-                                            
-                                            {% for recent_transfer in recent_transfer %}
-                                                <h4><small>${{recent_transfer.amount|intcomma}}</small></h4>
-                                            {% endfor %}
-                                            <h5><small>Recent Transfer</small></h5>
-                                        </div>
+                                      
                                         
                                     </div>
                                 </div>
                                 <div class="bottom-area">
                                     <div class="left-side">
-                                        <a href="" class="cmn-btn">Transfer Money</a>
-                                        <a href="" class="cmn-btn">Receive Money</a>
-                                        <a href="withdraw-money-step-1.html" class="cmn-btn">All Cards</a>
+                                        <a href="" class="cmn-btn">Send Money</a>
+                                        <a href="" class="cmn-btn">Pay</a>
+                                        <a href="" class="cmn-btn">send expense request</a>
+                                        <a href="{% url 'wallet:wallet' %}" class="cmn-btn">All Wallets</a>
                                     </div>
                                     <div class="right-side">
                                         <div class="dropdown-area">

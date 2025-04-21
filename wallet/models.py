@@ -8,6 +8,7 @@ from django.dispatch import receiver
 import uuid
 from shortuuid.django_fields import ShortUUIDField
 from userauths.models import User
+from django.core.validators import FileExtensionValidator
 class TransactionError(Exception):
     pass
 
@@ -66,9 +67,9 @@ class CompanyKYC(models.Model):
     id = models.UUIDField(primary_key=True, unique=True, default=uuid.uuid4, editable=False)
     user =  models.OneToOneField(User, on_delete=models.CASCADE)
     company_name = models.CharField(max_length=1000)
-    logo = models.ImageField(upload_to="kyc", default="default.jpg")
-    kra_pin = models.FileField(upload_to="kyc", null=True, blank=True)
-    registration_certificate = models.FileField(upload_to="kyc", null=True, blank=True)
+    logo = models.ImageField(upload_to="kyc", default="default.jpg",validators=[FileExtensionValidator(['jpg', 'jpeg', 'png'])])
+    kra_pin = models.FileField(upload_to="kyc", null=True, blank=True,validators=[FileExtensionValidator(['pdf'])])
+    registration_certificate = models.FileField(upload_to="kyc", null=True, blank=True,validators=[FileExtensionValidator(['pdf'])])
 
     # Address
     country = models.CharField(max_length=100, null=True, blank=True)

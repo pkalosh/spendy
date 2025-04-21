@@ -77,6 +77,34 @@ def kyc_registration(request):
     return render(request, "account/kyc-form.html", context)
 
 
+@login_required
+def pending_expenses(request):
+    user = request.user
+    wallet = Wallet.objects.get(user=user)
+
+    try:
+        kyc = CompanyKYC.objects.get(user=user)
+    except:
+        kyc = None
+    
+    if request.method == "POST":
+        form = KYCForm(request.POST, request.FILES, instance=kyc)
+        if form.is_valid():
+            new_form = form.save(commit=False)
+            new_form.user = user
+            new_form.status = "pending"
+            new_form.save()
+            messages.success(request, "KYC Form submitted successfully, In review now.")
+            return redirect("wallet:wallet")
+    else:
+        form = KYCForm(instance=kyc)
+    context = {
+        "account": wallet,
+        "form": form,
+        "kyc": kyc,
+    }
+    return render(request, "account/kyc-form.html", context)
+
 def dashboard(request):
     if request.user.is_authenticated:
         form = KYCForm()
