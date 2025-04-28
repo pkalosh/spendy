@@ -116,11 +116,12 @@
                                         <li class="border-area">
                                             <a href="{% url 'wallet:dashboard' %}"><i class="fas fa-home"></i>Dashboard</a>
                                         </li>
+                                  
                                         <li class="border-area">
-                                            <a href="{% url 'wallet:wallet' %}"><i class="fas fa-user"></i>Profile</a>
+                                            <a href="{% url 'wallet:wallet' %}"><i class="fas fa-user"></i>Wallets</a>
                                         </li>
                                         <li class="border-area">
-                                            <a href="{% url 'wallet:wallet' %}"><i class="fas fa-cog"></i>Settings</a>
+                                            <a href="{% url 'wallet:settings_view' %}"><i class="fas fa-cog"></i>Settings</a>
                                         </li>
                                         <li>
                                             <a href="{% url 'userauths:sign-out' %}"><i class="fas fa-sign-out"></i>Logout</a>
@@ -148,13 +149,9 @@
                                     <img src="{% static 'assets1/images/icon/transactions.png' %}" alt="Transactions"> <span>Wallets</span>
                                 </a>
                             </li>
+                    
                             <li>
-                                <a href="{% url 'wallet:pending_expenses' %}">
-                                    <img src="{% static 'assets1/images/icon/transactions.png' %}" alt="Transactions"> <span>Approvals</span>
-                                </a>
-                            </li>                      
-                            <li>
-                                <a href="{% url 'wallet:dashboard' %}">
+                                <a href="{% url 'wallet:expenses' %}">
                                     <img src="{% static 'assets1/images/icon/dashboard.png' %}" alt="Dashboard"> <span>Expenses</span>
                                 </a>
                             </li>
@@ -170,7 +167,7 @@
                             </li>                                 
 
                             <li>
-                                <a href="#">
+                                <a href="{% url 'wallet:staff-list' %}">
                                     <img src="{% static 'assets1/images/icon/transactions.png' %}" alt="Transactions"> <span>Users</span>
                                 </a>
                             </li>       
@@ -178,7 +175,7 @@
                         <ul class="bottom-item">
 
                             <li>
-                                <a href="javascript:void(0)">
+                                <a href="{% url 'wallet:settings_view' %}">
                                     <img src="{% static 'assets1/images/icon/support.png' %}" alt="Support"> <span>Settings</span>
                                 </a>
                             </li>

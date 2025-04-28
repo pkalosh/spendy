@@ -1,0 +1,79 @@
+{% extends "partials/dashboard-base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block content %}
+<section class="dashboard-section body-collapse">
+    <div class="overlay pt-120">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-xl-10 offset-xl-1">
+                    <div class="section-content">
+                        {% if form.errors %}
+                            <div class="alert alert-danger">
+                                <strong>{{ form.errors }}</strong>
+                            </div>
+                        {% endif %}
+
+                        <h2 class="mb-4">{% if staff %}Edit{% else %}Create{% endif %} Staff</h2>
+                        <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+                            {% csrf_token %}
+
+                            <!-- Unified Staff Form Card -->
+                            <div class="card mb-4 shadow-sm rounded-4">
+                                <div class="card-header bg-info text-white">
+                                    <h5 class="mb-0">Staff Form</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-3">
+                                        <!-- User Fields -->
+                                        <div class="col-md-6">
+                                            {{ user_form.first_name.label_tag }} {{ user_form.first_name }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            {{ user_form.last_name.label_tag }} {{ user_form.last_name }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            {{ user_form.email.label_tag }} {{ user_form.email }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            {{ user_form.phone_number.label_tag }} {{ user_form.phone_number }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            {{ user_form.country.label_tag }} {{ user_form.country }}
+                                        </div>
+
+                                        <!-- Profile Fields -->
+                                        <div class="col-md-6">
+                                            {{ profile_form.company.label_tag }} {{ profile_form.company }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            {{ profile_form.profile_image.label_tag }} {{ profile_form.profile_image }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            {{ profile_form.role.label_tag }} {{ profile_form.role }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            {{ profile_form.is_active.label_tag }} {{ profile_form.is_active }}
+                                        </div>
+                                        <div class="col-md-12">
+                                            {{ profile_form.assigned_modules.label_tag }} {{ profile_form.assigned_modules }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="text-end">
+                                <button type="submit" class="btn btn-success px-4 py-2">
+                                    <i class="bi bi-save"></i> Save
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}

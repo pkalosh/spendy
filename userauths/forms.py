@@ -74,6 +74,8 @@ class UserRegisterForm(UserCreationForm):
         user = super().save(commit=False)
         user.is_customer = True
         user.is_verified = True
+        user.is_org_user = True
+        user.is_admin = True
         user.phone_number = self.cleaned_data['phone_number']
         user.first_name = self.cleaned_data['first_name']
         user.last_name = self.cleaned_data['last_name']

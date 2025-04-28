@@ -38,7 +38,7 @@ class User(AbstractUser):
     is_org_user = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
     is_admin = models.BooleanField(default=False)
-    is_super_admin = models.BooleanField(default=False)
+    is_org_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_verified = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -55,6 +55,4 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.email
-
-
 

@@ -1,0 +1,76 @@
+{% extends "partials/dashboard-base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block content %}
+<section class="dashboard-section body-collapse">
+    <div class="overlay pt-120">
+        <div class="container-fluid">
+            <div class="row justify-content-center">
+                <div class="col-xl-10">
+                    {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <strong>{{ form.errors }}</strong>
+                        </div>
+                    {% endif %}
+
+                    <div class="card shadow-sm rounded-4 overflow-hidden">
+                        <div class="row g-0">
+                            <!-- Left Section: Profile Image & Basic Info -->
+                            <div class="col-md-4 bg-light p-4 text-center d-flex flex-column justify-content-center align-items-center">
+                                {% if staff.profile_image %}
+                                    <img src="{{ staff.profile_image.url }}" alt="Profile" class="img-fluid rounded-circle mb-3" style="width: 120px; height: 120px; object-fit: cover;">
+                                {% else %}
+                                    <div class="bg-secondary text-white rounded-circle mb-3 d-flex align-items-center justify-content-center" style="width: 120px; height: 120px;">
+                                        <span>No Image</span>
+                                    </div>
+                                {% endif %}
+                                <h4 class="mb-0">{{ staff.user.first_name }} {{ staff.user.last_name }}</h4>
+                                <p class="text-muted mb-1">{{ staff.role }}</p>
+                                {% if staff.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Inactive</span>
+                                {% endif %}
+                            </div>
+
+                            <!-- Right Section: Details -->
+                            <div class="col-md-8">
+                                <div class="card-body p-4">
+                                    <h5 class="mb-3 text-primary">Staff Details</h5>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6"><strong>Email:</strong> {{ staff.user.email }}</div>
+                                        <div class="col-md-6"><strong>Phone:</strong> {{ staff.user.phone_number }}</div>
+                                        <div class="col-md-6"><strong>Country:</strong> {{ staff.user.country }}</div>
+                                        <div class="col-md-6"><strong>Company:</strong> {{ staff.company }}</div>
+                                    </div>
+
+                                    <hr>
+
+                                    <h6 class="text-primary mb-2">Assigned Modules</h6>
+                                    {% if staff.assigned_modules.all %}
+                                        <ul class="list-unstyled">
+                                            {% for module in staff.assigned_modules.all %}
+                                                <li>✅ {{ module }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% else %}
+                                        <p class="text-muted">No modules assigned.</p>
+                                    {% endif %}
+
+                                    <hr>
+
+                                    <h6 class="text-primary mb-2">Recent Activity / Transactions</h6>
+                                    <p class="text-muted">This section can include recent actions, system logs, or transactions related to the staff member.</p>
+                                    <!-- Optional: Add real txn data later -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}

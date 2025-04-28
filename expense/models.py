@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils import timezone
-from wallet.models import Wallet
+from wallet.models import Wallet, CompanyKYC
 from django.conf import settings
 
 class ExpenseGroup(models.TextChoices):
@@ -9,6 +9,7 @@ class ExpenseGroup(models.TextChoices):
 
 class CategoryBase(models.Model):
     name = models.CharField(max_length=100)
+    company = models.ForeignKey(CompanyKYC, on_delete=models.SET_NULL, null=True, blank=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="%(class)s_created")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -37,6 +38,7 @@ class ExpenseCategory(CategoryBase):
 class Event(models.Model):
     name = models.CharField(max_length=255)
     category = models.ForeignKey(EventCategory, on_delete=models.CASCADE, related_name='events')
+    company = models.ForeignKey(CompanyKYC, on_delete=models.SET_NULL, null=True, blank=True)
     start_date = models.DateField()
     end_date = models.DateField()
     budget = models.DecimalField(max_digits=10, decimal_places=2)
@@ -52,6 +54,7 @@ class Event(models.Model):
 class Operation(models.Model):
     name = models.CharField(max_length=255)
     category = models.ForeignKey(OperationCategory, on_delete=models.CASCADE, related_name='operations')
+    company = models.ForeignKey(CompanyKYC, on_delete=models.SET_NULL, null=True, blank=True)
     budget = models.DecimalField(max_digits=10, decimal_places=2)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='operations')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -64,16 +67,20 @@ class Expense(models.Model):
     wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE, related_name='expenses')
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     expense_group = models.CharField(max_length=50, choices=ExpenseGroup.choices)
-    category = models.ForeignKey(ExpenseCategory, on_delete=models.CASCADE, related_name='expenses', null=True, blank=True)
+    # category = models.ForeignKey(ExpenseCategory, on_delete=models.CASCADE, related_name='expenses', null=True, blank=True)
     event = models.ForeignKey(Event, on_delete=models.CASCADE, null=True, blank=True, related_name='expenses')
     operation = models.ForeignKey(Operation, on_delete=models.CASCADE, null=True, blank=True, related_name='expenses')
+    company = models.ForeignKey(CompanyKYC, on_delete=models.SET_NULL, null=True, blank=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='expenses')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
+    approved = models.BooleanField(default=False)
+    declined = models.BooleanField(default=False)
+    approved_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='approved_by', blank=True, null=True)
+    decline_reason = models.TextField( null=True, blank=True)
     def __str__(self):
         related_item = self.event if self.expense_group == ExpenseGroup.EVENT else self.operation
-        return f"{self.category.name if self.category else ''} expense: {self.amount} for {related_item if related_item else 'N/A'}"
+        return f"Expense: {self.amount} for {related_item if related_item else 'N/A'}"
 
     def clean(self):
         from django.core.exceptions import ValidationError

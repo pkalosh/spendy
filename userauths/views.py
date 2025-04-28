@@ -44,8 +44,8 @@ def LoginView(request):
 
             if user is not None: # if there is a user
                 login(request, user)
-                messages.success(request, "You are logged.")
-                return redirect("wallet:wallet")
+                messages.success(request, "Welcome Back!.")
+                return redirect("wallet:dashboard")
             else:
                 messages.warning(request, "Username or password does not exist")
                 return redirect("userauths:sign-in")
@@ -54,7 +54,7 @@ def LoginView(request):
 
     if request.user.is_authenticated:
         messages.warning(request, "You are already logged In")
-        return redirect("wallet:wallet")
+        return redirect("wallet:dashboard")
         
     return render(request, "users/sign-in.html")
 

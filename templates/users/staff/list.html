@@ -1,0 +1,123 @@
+{% extends "partials/dashboard-base.html" %}
+{% load static %}
+{% load humanize %}
+{% block content %}
+    <!-- Dashboard Section start -->
+    <section class="dashboard-section body-collapse">
+        <div class="overlay pt-120">
+            <div class="container-fruid">
+                <div class="row">
+                    <div class="col-xl-12 col-lg-12">
+                        <div class="section-content">
+                            
+                            <!-- Transactions Area -->
+                            <div class="transactions-area">
+                             
+                                <div class="top-area d-flex align-items-center justify-content-between">
+                                    <ul class="nav nav-tabs" role="tablist">
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link active" id="latest-tab" data-bs-toggle="tab" data-bs-target="#latest" type="button" role="tab" aria-controls="latest" aria-selected="true">Staff Members</button>
+                                        </li>
+                                        
+                                    </ul>
+                                    
+                          
+                                    <div>
+                                        <a href="{% url 'wallet:staff-create' %}" class="btn btn-primary me-2">
+                                            <i class="bi bi-plus-circle"></i> New User
+                                        </a>
+                                        <a href="{% url 'wallet:staff-create' %}" class="btn btn-primary me-2">
+                                            <i class="bi bi-plus-circle"></i> Roles
+                                        </a>
+                                    
+                                    </div>
+                                </div>
+                                <div class="tab-content mt-40">
+                                    <div class="tab-pane fade show active" id="latest" role="tabpanel" aria-labelledby="latest-tab">
+                                        <div class="table-responsive">
+                                            <table class="table">
+                                                <thead>
+                                                    <tr>
+                                                        <th scope="col">Full Name</th>
+                                                        <th scope="col">Email</th>
+                                                        <th scope="col">Phone</th>
+                                                        <th scope="col">Role</th>
+                                                        <th scope="col">Active</th>
+                                                        <th scope="col">Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for staff in staffs %}
+                                                    <tr>
+                                                       
+                                                        <td>{{ staff.user.get_full_name }}</td>
+                                                        <td>{{ staff.user.email }}</td>
+                                                        <td>{{ staff.user.phone_number }}</td>
+                                                        <td>{{ staff.role|title }}</td>
+                                                        <td>
+                                                            {% if staff.is_active %}
+                                                                <span class="badge bg-success">Yes</span>
+                                                            {% else %}
+                                                                <span class="badge bg-danger">No</span>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>
+                                                            <a href="{% url 'wallet:staff-detail' staff.pk %}" class="btn btn-sm btn-info">View</a>
+                                                            <a href="{% url 'wallet:staff-update' staff.pk %}" class="btn btn-sm btn-warning">Edit</a>
+                                                        </td>
+                                                    </tr>
+                                                {% empty %}
+                                                    <tr>
+                                                        <td colspan="7" class="text-center">No staff members found.</td>
+                                                    </tr>
+                                                {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                           <!-- Pagination -->
+                                {% if staffs.has_other_pages %}
+                                <nav aria-label="Page navigation">
+                                    <ul class="pagination justify-content-center mt-4">
+                                        {% if staffs.has_previous %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ staffs.previous_page_number }}" aria-label="Previous">
+                                                    &laquo;
+                                                </a>
+                                            </li>
+                                        {% else %}
+                                            <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                                        {% endif %}
+
+                                        {% for num in staffs.paginator.page_range %}
+                                            {% if staffs.number == num %}
+                                                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                                            {% else %}
+                                                <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                                            {% endif %}
+                                        {% endfor %}
+
+                                        {% if staffs.has_next %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ staffs.next_page_number }}" aria-label="Next">
+                                                    &raquo;
+                                                </a>
+                                            </li>
+                                        {% else %}
+                                            <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                                        {% endif %}
+                                    </ul>
+                                </nav>
+                            {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                        
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock content %}

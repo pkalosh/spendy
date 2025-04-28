@@ -7,15 +7,15 @@ from django.utils.html import format_html
 
 class UserAdmin(BaseUserAdmin):
     list_display = (
-        'email', 'first_name', 'last_name', 'phone_number',
+        'email', 'first_name', 'last_name', 'phone_number','company_name',
          'verified_status', 'created_at'
     )
     list_filter = ('is_staff', 'is_admin', 'is_verified', 'created_at')
-    search_fields = ('email', 'first_name', 'last_name', 'phone_number')
+    search_fields = ('email', 'first_name', 'last_name', 'phone_number','company_name')
     ordering = ('email','first_name','last_name','phone_number','created_at')
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
-        ('Personal Information', {'fields': ('first_name', 'last_name', 'phone_number', 'country')}),
+        ('Personal Information', {'fields': ('first_name', 'last_name', 'phone_number', 'country','company_name')}),
         ('Permissions', {'fields': ('is_staff', 'is_superuser', 'is_admin', 'is_verified')}),
         ('Important dates', {'fields': ('last_login', 'created_at', 'updated_at')}),
         ('Groups & Permissions', {'fields': ('groups', 'user_permissions')}),
@@ -23,7 +23,7 @@ class UserAdmin(BaseUserAdmin):
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('email', 'first_name', 'last_name', 'password1', 'password2', 'is_staff', 'is_superuser', 'is_admin', 'is_verified')}
+            'fields': ('email', 'first_name', 'last_name','company_name', 'password1', 'password2', 'is_staff', 'is_superuser', 'is_admin', 'is_verified')}
         ),
     )
 

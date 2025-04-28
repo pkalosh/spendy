@@ -44,7 +44,7 @@ class Wallet(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.user.first_name}-{self.user.first_name}-{self.user.phone_number}'s {self.currency} wallet:Balance--:{self.balance}"
+        return f"{self.user.first_name}-{self.user.company_name}-{self.wallet_type}'s {self.currency} wallet:Balance--:{self.balance}"
 
     def validate_sufficient_funds(self, amount):
         if self.balance < amount:
@@ -94,42 +94,39 @@ class CompanyKYC(models.Model):
     review = models.CharField(max_length=100, null=True, blank=True, default="Review")
     
     def __str__(self):
-        return f"{self.user}"    
+        return f"{self.company_name} - {self.user.first_name} {self.user.last_name}"    
 
     
     class Meta:
         ordering = ['-date']
 
 
-
+@receiver(post_save, sender=User)
 def create_kyc(sender, instance, created, **kwargs):
-    if created:
-        CompanyKYC.objects.create(user=instance) #,company_name=instance.company_name)
-
-def save_kyc(sender, instance,**kwargs):
-    instance.companykyc.save()
-
-post_save.connect(create_kyc, sender=User)
-post_save.connect(save_kyc, sender=User)
-
+    # Only create KYC if NOT staff (i.e., either flag is False)
+    if created and not (instance.is_staff and instance.is_org_staff):
+        CompanyKYC.objects.create(user=instance)
 
 @receiver(post_save, sender=User)
-def create_account(sender, instance, created, **kwargs):
-    if created:
-        # Determine currency based on country
-        currency = 'KES' if instance.country == 'KENYA' else "None"
-        
-        # Create wallet with the determined currency
+def save_kyc(sender, instance, **kwargs):
+    if not (instance.is_staff and instance.is_org_staff) and hasattr(instance, 'companykyc'):
+        instance.companykyc.save()
+
+@receiver(post_save, sender=User)
+def create_wallet(sender, instance, created, **kwargs):
+    if created and not (instance.is_staff and instance.is_org_staff):
+        currency = 'KES' if instance.country == 'KENYA' else 'None'
         Wallet.objects.create(
-            user=instance, 
-            wallet_type = "PRIMARY",
-            currency='KES'
+            user=instance,
+            wallet_type='PRIMARY',
+            currency=currency
         )
+
 @receiver(post_save, sender=User)
-def save_account(sender, instance, **kwargs):
-    # Ensure wallet is saved
-    if hasattr(instance, 'wallet'):
+def save_wallet(sender, instance, **kwargs):
+    if not (instance.is_staff and instance.is_org_staff) and hasattr(instance, 'wallet'):
         instance.wallet.save()
+
 
 
 TRANSACTION_TYPE = (
@@ -166,7 +163,7 @@ NOTIFICATION_TYPE = (
 
 class Transaction(models.Model):
     transaction_id = ShortUUIDField(unique=True, length=15, max_length=20, prefix="TRN")
-   
+    company = models.ForeignKey(CompanyKYC, on_delete=models.SET_NULL, blank=True, null=True)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="user")
     amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     description = models.CharField(max_length=1000, null=True, blank=True)
@@ -205,3 +202,47 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"{self.user} - {self.notification_type}"
+
+class Module(models.Model):
+    """Model to define different system modules/functions"""
+    name = models.CharField(max_length=100)
+    code = models.CharField(max_length=50, unique=True)
+    description = models.TextField(blank=True)
+    
+    def __str__(self):
+        return self.name
+
+class Role(models.Model):
+    """Model to define staff roles with default module permissions"""
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    is_admin = models.BooleanField(default=False)
+    default_modules = models.ManyToManyField(Module, null=True, blank=True)
+    def __str__(self):
+        return self.name
+
+class StaffProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    company = models.ForeignKey(CompanyKYC, on_delete=models.SET_NULL, null=True, blank=True)
+    profile_image = models.ImageField(upload_to='profile_images/',blank=True, null=True, default='default_profile_image.jpg')
+    role = models.ForeignKey(Role, on_delete=models.PROTECT,blank=True, null=True)
+    assigned_modules = models.ManyToManyField(Module, blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"{self.user.first_name} {self.user.last_name}"
+    
+    def has_module_access(self, module_code):
+        """Check if staff has access to a specific module"""
+        # Check if user has direct module assignment
+        if self.assigned_modules.filter(code=module_code).exists():
+            return True
+        # Check if role has admin privileges
+        if self.role.is_admin:
+            return True
+        # Check if module is in role's default modules
+        if self.role.default_modules.filter(code=module_code).exists():
+            return True
+        return False
