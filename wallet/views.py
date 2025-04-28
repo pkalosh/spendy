@@ -144,7 +144,7 @@ def delete_category(request):
 @login_required
 @user_passes_test(is_admin)
 def list_staff_profiles(request):
-    staff_list = StaffProfile.objects.select_related('user').all()
+    staff_list = StaffProfile.objects.filter(company=request.user.companykyc).all()
     paginator = Paginator(staff_list, 10)  # 10 per page
     page_number = request.GET.get('page')
     staffs = paginator.get_page(page_number)
