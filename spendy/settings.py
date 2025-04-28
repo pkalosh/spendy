@@ -30,7 +30,7 @@ SECRET_KEY = 'django-insecure-(l9rl!48izpso!ltoi4c_^9*&ddu9iii$r!9gvo6#^bt=yp$jx
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*','127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['*','127.0.0.1', 'localhost','spendy.africa']
 
 
 # Application definition
@@ -90,11 +90,11 @@ WSGI_APPLICATION = 'spendy.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOST'),
-        'PORT': os.getenv('DB_PORT'),
+        'NAME': 'spendy',
+        'USER': 'root',
+        'PASSWORD': 'Sp3ndy.2o25',
+        'HOST': 'localhost',
+        'PORT': '3306',
     }
 }
 

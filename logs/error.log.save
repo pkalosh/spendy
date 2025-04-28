@@ -1,0 +1,806 @@
++[Mon Apr 28 11:19:02.716808 2025] [authz_core:error] [pid 109672:tid 140557191980608] [client 157.245.204.205:60706] AH01630: client denied by server configuration: /var/www/html/server-status
+[Mon Apr 28 11:21:05.936434 2025] [authz_core:error] [pid 109765:tid 140118123861568] [client 102.213.48.6:50664] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:06.150328 2025] [authz_core:error] [pid 109765:tid 140118140646976] [client 102.213.48.6:50664] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:06.317873 2025] [authz_core:error] [pid 109765:tid 140118107076160] [client 102.213.48.6:50664] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:06.361197 2025] [authz_core:error] [pid 109764:tid 140118140646976] [client 102.213.48.10:50704] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:06.362148 2025] [authz_core:error] [pid 109764:tid 140118132254272] [client 102.213.48.10:50694] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:06.362949 2025] [authz_core:error] [pid 109765:tid 140118115468864] [client 102.213.48.10:50680] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:06.363316 2025] [authz_core:error] [pid 109765:tid 140118230836800] [client 102.213.48.10:50686] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:06.364023 2025] [authz_core:error] [pid 109764:tid 140118123861568] [client 102.213.48.10:50692] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:06.559145 2025] [authz_core:error] [pid 109765:tid 140118098683456] [client 102.213.48.6:50664] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:06.569710 2025] [authz_core:error] [pid 109764:tid 140118222444096] [client 102.213.48.10:50704] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:06.570157 2025] [authz_core:error] [pid 109764:tid 140118115468864] [client 102.213.48.10:50694] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:06.573530 2025] [authz_core:error] [pid 109764:tid 140118107076160] [client 102.213.48.10:50692] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:06.573874 2025] [authz_core:error] [pid 109765:tid 140118090290752] [client 102.213.48.10:50680] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:06.574032 2025] [authz_core:error] [pid 109765:tid 140118090290752] [client 102.213.48.10:50686] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:06.766662 2025] [authz_core:error] [pid 109764:tid 140118098683456] [client 102.213.48.10:50704] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:06.766928 2025] [authz_core:error] [pid 109764:tid 140118098683456] [client 102.213.48.10:50694] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:06.767132 2025] [authz_core:error] [pid 109765:tid 140118239229504] [client 102.213.48.6:50664] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:06.768724 2025] [authz_core:error] [pid 109764:tid 140118090290752] [client 102.213.48.10:50692] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:06.769150 2025] [authz_core:error] [pid 109765:tid 140118073505344] [client 102.213.48.10:50686] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:06.769469 2025] [authz_core:error] [pid 109765:tid 140118065112640] [client 102.213.48.10:50680] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:06.968263 2025] [authz_core:error] [pid 109764:tid 140118081898048] [client 102.213.48.10:50704] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:06.968456 2025] [authz_core:error] [pid 109764:tid 140118081898048] [client 102.213.48.10:50694] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:06.968622 2025] [authz_core:error] [pid 109765:tid 140118056719936] [client 102.213.48.6:50664] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:07.208430 2025] [authz_core:error] [pid 109765:tid 140118048327232] [client 102.213.48.6:50664] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:07.490645 2025] [authz_core:error] [pid 109765:tid 140118039934528] [client 102.213.48.6:50664] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:07.702148 2025] [authz_core:error] [pid 109765:tid 140118031541824] [client 102.213.48.6:50664] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:07.902715 2025] [authz_core:error] [pid 109765:tid 140118023149120] [client 102.213.48.6:50664] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:08.068127 2025] [authz_core:error] [pid 109765:tid 140118014756416] [client 102.213.48.6:50664] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:08.332607 2025] [authz_core:error] [pid 109765:tid 140118247622208] [client 102.213.48.6:50664] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:08.521817 2025] [authz_core:error] [pid 109765:tid 140118006363712] [client 102.213.48.6:50664] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:08.736297 2025] [authz_core:error] [pid 109765:tid 140117989578304] [client 102.213.48.6:50664] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:08.918047 2025] [authz_core:error] [pid 109765:tid 140118264407616] [client 102.213.48.6:50664] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:09.131098 2025] [authz_core:error] [pid 109765:tid 140118222444096] [client 102.213.48.6:50664] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:09.333792 2025] [authz_core:error] [pid 109765:tid 140118132254272] [client 102.213.48.6:50664] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:09.566659 2025] [authz_core:error] [pid 109765:tid 140118123861568] [client 102.213.48.6:50664] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:11.580723 2025] [authz_core:error] [pid 109765:tid 140118107076160] [client 102.213.48.6:50664] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:11.581232 2025] [authz_core:error] [pid 109764:tid 140118065112640] [client 102.213.48.10:50692] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:11.581511 2025] [authz_core:error] [pid 109764:tid 140118056719936] [client 102.213.48.10:50704] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:11.582152 2025] [authz_core:error] [pid 109765:tid 140118115468864] [client 102.213.48.10:50680] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:11.582411 2025] [authz_core:error] [pid 109764:tid 140118239229504] [client 102.213.48.10:50694] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:11.588396 2025] [authz_core:error] [pid 109765:tid 140118230836800] [client 102.213.48.10:50686] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:11.782130 2025] [authz_core:error] [pid 109765:tid 140118098683456] [client 102.213.48.6:50664] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:11.797565 2025] [authz_core:error] [pid 109764:tid 140118048327232] [client 102.213.48.10:50704] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:11.803768 2025] [authz_core:error] [pid 109765:tid 140118090290752] [client 102.213.48.10:50680] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:11.804888 2025] [authz_core:error] [pid 109764:tid 140118039934528] [client 102.213.48.10:50692] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:11.823355 2025] [authz_core:error] [pid 109764:tid 140118031541824] [client 102.213.48.10:50694] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:11.830467 2025] [authz_core:error] [pid 109765:tid 140118081898048] [client 102.213.48.10:50686] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:11.976334 2025] [authz_core:error] [pid 109765:tid 140118239229504] [client 102.213.48.6:50664] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:11.977456 2025] [authz_core:error] [pid 109764:tid 140118023149120] [client 102.213.48.10:50704] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:11.978496 2025] [authz_core:error] [pid 109765:tid 140118073505344] [client 102.213.48.10:50680] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:11.979977 2025] [authz_core:error] [pid 109764:tid 140118014756416] [client 102.213.48.10:50692] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:11.984068 2025] [authz_core:error] [pid 109764:tid 140118006363712] [client 102.213.48.10:50694] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:11.995776 2025] [authz_core:error] [pid 109765:tid 140118065112640] [client 102.213.48.10:50686] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:12.190346 2025] [authz_core:error] [pid 109764:tid 140117997971008] [client 102.213.48.10:50704] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:12.191474 2025] [authz_core:error] [pid 109765:tid 140118056719936] [client 102.213.48.6:50664] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:12.193798 2025] [authz_core:error] [pid 109765:tid 140118048327232] [client 102.213.48.10:50680] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:12.396380 2025] [authz_core:error] [pid 109765:tid 140118039934528] [client 102.213.48.6:50664] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:12.428236 2025] [authz_core:error] [pid 109764:tid 140117989578304] [client 102.213.48.10:50694] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:12.631086 2025] [authz_core:error] [pid 109765:tid 140118031541824] [client 102.213.48.6:50664] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:12.814319 2025] [authz_core:error] [pid 109765:tid 140118023149120] [client 102.213.48.6:50664] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:13.018866 2025] [authz_core:error] [pid 109765:tid 140118014756416] [client 102.213.48.6:50664] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:13.224982 2025] [authz_core:error] [pid 109765:tid 140118247622208] [client 102.213.48.6:50664] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:13.461389 2025] [authz_core:error] [pid 109765:tid 140118006363712] [client 102.213.48.6:50664] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:13.758905 2025] [authz_core:error] [pid 109765:tid 140117997971008] [client 102.213.48.6:50664] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:13.946885 2025] [authz_core:error] [pid 109765:tid 140117989578304] [client 102.213.48.6:50664] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:14.146769 2025] [authz_core:error] [pid 109765:tid 140118256014912] [client 102.213.48.6:50664] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:14.352401 2025] [authz_core:error] [pid 109765:tid 140118264407616] [client 102.213.48.6:50664] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:14.549927 2025] [authz_core:error] [pid 109765:tid 140118222444096] [client 102.213.48.6:50664] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 11:21:14.703381 2025] [authz_core:error] [pid 109765:tid 140118132254272] [client 102.213.48.6:50664] AH01630: client denied by server configuration: /home/spendy/staticfiles, referer: https://spendy.africa/
+[Mon Apr 28 14:22:22.249349 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818] Internal Server Error: /admin/login/
+[Mon Apr 28 14:22:22.249423 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818] Traceback (most recent call last):
+[Mon Apr 28 14:22:22.249429 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]   File "/home/spendy/venv/lib/python3.10/site-packages/django/core/handlers/exception.py", line 55, in inner
+[Mon Apr 28 14:22:22.249435 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]     response = get_response(request)
+[Mon Apr 28 14:22:22.249440 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]   File "/home/spendy/venv/lib/python3.10/site-packages/django/core/handlers/base.py", line 197, in _get_response
+[Mon Apr 28 14:22:22.249444 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]     response = wrapped_callback(request, *callback_args, **callback_kwargs)
+[Mon Apr 28 14:22:22.249464 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/decorators.py", line 48, in _wrapper
+[Mon Apr 28 14:22:22.249469 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]     return bound_method(*args, **kwargs)
+[Mon Apr 28 14:22:22.249473 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]   File "/home/spendy/venv/lib/python3.10/site-packages/django/views/decorators/cache.py", line 80, in _view_wrapper
+[Mon Apr 28 14:22:22.249478 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]     response = view_func(request, *args, **kwargs)
+[Mon Apr 28 14:22:22.249483 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]   File "/home/spendy/venv/lib/python3.10/site-packages/django/contrib/admin/sites.py", line 449, in login
+[Mon Apr 28 14:22:22.249488 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]     return LoginView.as_view(**defaults)(request)
+[Mon Apr 28 14:22:22.249493 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]   File "/home/spendy/venv/lib/python3.10/site-packages/django/views/generic/base.py", line 104, in view
+[Mon Apr 28 14:22:22.249497 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]     return self.dispatch(request, *args, **kwargs)
+[Mon Apr 28 14:22:22.249502 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/decorators.py", line 48, in _wrapper
+[Mon Apr 28 14:22:22.249507 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]     return bound_method(*args, **kwargs)
+[Mon Apr 28 14:22:22.249511 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/decorators.py", line 48, in _wrapper
+[Mon Apr 28 14:22:22.249516 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]     return bound_method(*args, **kwargs)
+[Mon Apr 28 14:22:22.249521 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]   File "/home/spendy/venv/lib/python3.10/site-packages/django/views/decorators/debug.py", line 143, in sensitive_post_parameters_wrapper
+[Mon Apr 28 14:22:22.249526 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]     return view(request, *args, **kwargs)
+[Mon Apr 28 14:22:22.249530 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/decorators.py", line 48, in _wrapper
+[Mon Apr 28 14:22:22.249535 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]     return bound_method(*args, **kwargs)
+[Mon Apr 28 14:22:22.249540 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/decorators.py", line 192, in _view_wrapper
+[Mon Apr 28 14:22:22.249544 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]     result = _process_exception(request, e)
+[Mon Apr 28 14:22:22.249549 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/decorators.py", line 190, in _view_wrapper
+[Mon Apr 28 14:22:22.249554 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]     response = view_func(request, *args, **kwargs)
+[Mon Apr 28 14:22:22.249558 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/decorators.py", line 48, in _wrapper
+[Mon Apr 28 14:22:22.249562 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]     return bound_method(*args, **kwargs)
+[Mon Apr 28 14:22:22.249571 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]   File "/home/spendy/venv/lib/python3.10/site-packages/django/views/decorators/cache.py", line 80, in _view_wrapper
+[Mon Apr 28 14:22:22.249576 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]     response = view_func(request, *args, **kwargs)
+[Mon Apr 28 14:22:22.249581 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]   File "/home/spendy/venv/lib/python3.10/site-packages/django/contrib/auth/views.py", line 89, in dispatch
+[Mon Apr 28 14:22:22.249585 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]     return super().dispatch(request, *args, **kwargs)
+[Mon Apr 28 14:22:22.249590 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]   File "/home/spendy/venv/lib/python3.10/site-packages/django/views/generic/base.py", line 143, in dispatch
+[Mon Apr 28 14:22:22.249594 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]     return handler(request, *args, **kwargs)
+[Mon Apr 28 14:22:22.249599 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]   File "/home/spendy/venv/lib/python3.10/site-packages/django/views/generic/edit.py", line 142, in get
+[Mon Apr 28 14:22:22.249604 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]     return self.render_to_response(self.get_context_data())
+[Mon Apr 28 14:22:22.249608 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]   File "/home/spendy/venv/lib/python3.10/site-packages/django/contrib/auth/views.py", line 113, in get_context_data
+[Mon Apr 28 14:22:22.249613 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]     current_site = get_current_site(self.request)
+[Mon Apr 28 14:22:22.249618 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]   File "/home/spendy/venv/lib/python3.10/site-packages/django/contrib/sites/shortcuts.py", line 16, in get_current_site
+[Mon Apr 28 14:22:22.249622 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]     return Site.objects.get_current(request)
+[Mon Apr 28 14:22:22.249626 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]   File "/home/spendy/venv/lib/python3.10/site-packages/django/contrib/sites/models.py", line 59, in get_current
+[Mon Apr 28 14:22:22.249631 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]     return self._get_site_by_id(site_id)
+[Mon Apr 28 14:22:22.249635 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]   File "/home/spendy/venv/lib/python3.10/site-packages/django/contrib/sites/models.py", line 30, in _get_site_by_id
+[Mon Apr 28 14:22:22.249640 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]     site = self.get(pk=site_id)
+[Mon Apr 28 14:22:22.249645 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/manager.py", line 87, in manager_method
+[Mon Apr 28 14:22:22.249649 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]     return getattr(self.get_queryset(), name)(*args, **kwargs)
+[Mon Apr 28 14:22:22.249654 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/query.py", line 629, in get
+[Mon Apr 28 14:22:22.249658 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]     num = len(clone)
+[Mon Apr 28 14:22:22.249663 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/query.py", line 366, in __len__
+[Mon Apr 28 14:22:22.249667 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]     self._fetch_all()
+[Mon Apr 28 14:22:22.249675 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/query.py", line 1935, in _fetch_all
+[Mon Apr 28 14:22:22.249680 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]     self._result_cache = list(self._iterable_class(self))
+[Mon Apr 28 14:22:22.249685 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/query.py", line 91, in __iter__
+[Mon Apr 28 14:22:22.249689 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]     results = compiler.execute_sql(
+[Mon Apr 28 14:22:22.249693 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/sql/compiler.py", line 1620, in execute_sql
+[Mon Apr 28 14:22:22.249698 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]     cursor = self.connection.cursor()
+[Mon Apr 28 14:22:22.249703 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/asyncio.py", line 26, in inner
+[Mon Apr 28 14:22:22.249707 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]     return func(*args, **kwargs)
+[Mon Apr 28 14:22:22.249711 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 320, in cursor
+[Mon Apr 28 14:22:22.249716 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]     return self._cursor()
+[Mon Apr 28 14:22:22.249720 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 296, in _cursor
+[Mon Apr 28 14:22:22.249725 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]     self.ensure_connection()
+[Mon Apr 28 14:22:22.249729 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/asyncio.py", line 26, in inner
+[Mon Apr 28 14:22:22.249734 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]     return func(*args, **kwargs)
+[Mon Apr 28 14:22:22.249738 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 279, in ensure_connection
+[Mon Apr 28 14:22:22.249743 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]     self.connect()
+[Mon Apr 28 14:22:22.249747 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/asyncio.py", line 26, in inner
+[Mon Apr 28 14:22:22.249752 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]     return func(*args, **kwargs)
+[Mon Apr 28 14:22:22.249756 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 255, in connect
+[Mon Apr 28 14:22:22.249761 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]     conn_params = self.get_connection_params()
+[Mon Apr 28 14:22:22.249766 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/mysql/base.py", line 227, in get_connection_params
+[Mon Apr 28 14:22:22.249771 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818]     if settings_dict["HOST"].startswith("/"):
+[Mon Apr 28 14:22:22.249776 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:46818] AttributeError: 'NoneType' object has no attribute 'startswith'
+[Mon Apr 28 14:22:22.495082 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:46824] Not Found: /favicon.ico
+[Mon Apr 28 14:22:40.154370 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202] Internal Server Error: /admin/login/
+[Mon Apr 28 14:22:40.154438 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202] Traceback (most recent call last):
+[Mon Apr 28 14:22:40.154444 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]   File "/home/spendy/venv/lib/python3.10/site-packages/django/core/handlers/exception.py", line 55, in inner
+[Mon Apr 28 14:22:40.154449 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]     response = get_response(request)
+[Mon Apr 28 14:22:40.154454 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]   File "/home/spendy/venv/lib/python3.10/site-packages/django/core/handlers/base.py", line 197, in _get_response
+[Mon Apr 28 14:22:40.154459 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]     response = wrapped_callback(request, *callback_args, **callback_kwargs)
+[Mon Apr 28 14:22:40.154464 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/decorators.py", line 48, in _wrapper
+[Mon Apr 28 14:22:40.154469 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]     return bound_method(*args, **kwargs)
+[Mon Apr 28 14:22:40.154474 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]   File "/home/spendy/venv/lib/python3.10/site-packages/django/views/decorators/cache.py", line 80, in _view_wrapper
+[Mon Apr 28 14:22:40.154479 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]     response = view_func(request, *args, **kwargs)
+[Mon Apr 28 14:22:40.154484 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]   File "/home/spendy/venv/lib/python3.10/site-packages/django/contrib/admin/sites.py", line 449, in login
+[Mon Apr 28 14:22:40.154489 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]     return LoginView.as_view(**defaults)(request)
+[Mon Apr 28 14:22:40.154494 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]   File "/home/spendy/venv/lib/python3.10/site-packages/django/views/generic/base.py", line 104, in view
+[Mon Apr 28 14:22:40.154499 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]     return self.dispatch(request, *args, **kwargs)
+[Mon Apr 28 14:22:40.154515 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/decorators.py", line 48, in _wrapper
+[Mon Apr 28 14:22:40.154520 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]     return bound_method(*args, **kwargs)
+[Mon Apr 28 14:22:40.154524 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/decorators.py", line 48, in _wrapper
+[Mon Apr 28 14:22:40.154529 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]     return bound_method(*args, **kwargs)
+[Mon Apr 28 14:22:40.154534 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]   File "/home/spendy/venv/lib/python3.10/site-packages/django/views/decorators/debug.py", line 143, in sensitive_post_parameters_wrapper
+[Mon Apr 28 14:22:40.154555 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]     return view(request, *args, **kwargs)
+[Mon Apr 28 14:22:40.154560 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/decorators.py", line 48, in _wrapper
+[Mon Apr 28 14:22:40.154582 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]     return bound_method(*args, **kwargs)
+[Mon Apr 28 14:22:40.154587 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/decorators.py", line 192, in _view_wrapper
+[Mon Apr 28 14:22:40.154592 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]     result = _process_exception(request, e)
+[Mon Apr 28 14:22:40.154596 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/decorators.py", line 190, in _view_wrapper
+[Mon Apr 28 14:22:40.154601 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]     response = view_func(request, *args, **kwargs)
+[Mon Apr 28 14:22:40.154605 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/decorators.py", line 48, in _wrapper
+[Mon Apr 28 14:22:40.154610 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]     return bound_method(*args, **kwargs)
+[Mon Apr 28 14:22:40.154615 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]   File "/home/spendy/venv/lib/python3.10/site-packages/django/views/decorators/cache.py", line 80, in _view_wrapper
+[Mon Apr 28 14:22:40.154620 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]     response = view_func(request, *args, **kwargs)
+[Mon Apr 28 14:22:40.154624 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]   File "/home/spendy/venv/lib/python3.10/site-packages/django/contrib/auth/views.py", line 89, in dispatch
+[Mon Apr 28 14:22:40.154629 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]     return super().dispatch(request, *args, **kwargs)
+[Mon Apr 28 14:22:40.154634 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]   File "/home/spendy/venv/lib/python3.10/site-packages/django/views/generic/base.py", line 143, in dispatch
+[Mon Apr 28 14:22:40.154639 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]     return handler(request, *args, **kwargs)
+[Mon Apr 28 14:22:40.154643 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]   File "/home/spendy/venv/lib/python3.10/site-packages/django/views/generic/edit.py", line 142, in get
+[Mon Apr 28 14:22:40.154648 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]     return self.render_to_response(self.get_context_data())
+[Mon Apr 28 14:22:40.154652 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]   File "/home/spendy/venv/lib/python3.10/site-packages/django/contrib/auth/views.py", line 113, in get_context_data
+[Mon Apr 28 14:22:40.154657 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]     current_site = get_current_site(self.request)
+[Mon Apr 28 14:22:40.154662 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]   File "/home/spendy/venv/lib/python3.10/site-packages/django/contrib/sites/shortcuts.py", line 16, in get_current_site
+[Mon Apr 28 14:22:40.154666 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]     return Site.objects.get_current(request)
+[Mon Apr 28 14:22:40.154671 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]   File "/home/spendy/venv/lib/python3.10/site-packages/django/contrib/sites/models.py", line 59, in get_current
+[Mon Apr 28 14:22:40.154676 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]     return self._get_site_by_id(site_id)
+[Mon Apr 28 14:22:40.154681 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]   File "/home/spendy/venv/lib/python3.10/site-packages/django/contrib/sites/models.py", line 30, in _get_site_by_id
+[Mon Apr 28 14:22:40.154690 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]     site = self.get(pk=site_id)
+[Mon Apr 28 14:22:40.154694 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/manager.py", line 87, in manager_method
+[Mon Apr 28 14:22:40.154699 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]     return getattr(self.get_queryset(), name)(*args, **kwargs)
+[Mon Apr 28 14:22:40.154704 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/query.py", line 629, in get
+[Mon Apr 28 14:22:40.154709 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]     num = len(clone)
+[Mon Apr 28 14:22:40.154713 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/query.py", line 366, in __len__
+[Mon Apr 28 14:22:40.154718 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]     self._fetch_all()
+[Mon Apr 28 14:22:40.154722 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/query.py", line 1935, in _fetch_all
+[Mon Apr 28 14:22:40.154727 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]     self._result_cache = list(self._iterable_class(self))
+[Mon Apr 28 14:22:40.154732 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/query.py", line 91, in __iter__
+[Mon Apr 28 14:22:40.154736 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]     results = compiler.execute_sql(
+[Mon Apr 28 14:22:40.154741 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/sql/compiler.py", line 1620, in execute_sql
+[Mon Apr 28 14:22:40.154745 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]     cursor = self.connection.cursor()
+[Mon Apr 28 14:22:40.154750 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/asyncio.py", line 26, in inner
+[Mon Apr 28 14:22:40.154754 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]     return func(*args, **kwargs)
+[Mon Apr 28 14:22:40.154759 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 320, in cursor
+[Mon Apr 28 14:22:40.154764 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]     return self._cursor()
+[Mon Apr 28 14:22:40.154768 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 296, in _cursor
+[Mon Apr 28 14:22:40.154773 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]     self.ensure_connection()
+[Mon Apr 28 14:22:40.154777 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/asyncio.py", line 26, in inner
+[Mon Apr 28 14:22:40.154782 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]     return func(*args, **kwargs)
+[Mon Apr 28 14:22:40.154787 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 279, in ensure_connection
+[Mon Apr 28 14:22:40.154792 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]     self.connect()
+[Mon Apr 28 14:22:40.154800 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/asyncio.py", line 26, in inner
+[Mon Apr 28 14:22:40.154805 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]     return func(*args, **kwargs)
+[Mon Apr 28 14:22:40.154810 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 255, in connect
+[Mon Apr 28 14:22:40.154815 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]     conn_params = self.get_connection_params()
+[Mon Apr 28 14:22:40.154820 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/mysql/base.py", line 227, in get_connection_params
+[Mon Apr 28 14:22:40.154825 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202]     if settings_dict["HOST"].startswith("/"):
+[Mon Apr 28 14:22:40.154830 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:54202] AttributeError: 'NoneType' object has no attribute 'startswith'
+[Mon Apr 28 14:23:17.738080 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 172.71.246.111:49828] Not Found: /wp-admin/setup-config.php
+[Mon Apr 28 14:23:55.153245 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:43110] Internal Server Error: /sign-up/
+[Mon Apr 28 14:23:55.153318 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:43110] Traceback (most recent call last):
+[Mon Apr 28 14:23:55.153325 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:43110]   File "/home/spendy/venv/lib/python3.10/site-packages/django/core/handlers/exception.py", line 55, in inner
+[Mon Apr 28 14:23:55.153331 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:43110]     response = get_response(request)
+[Mon Apr 28 14:23:55.153335 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:43110]   File "/home/spendy/venv/lib/python3.10/site-packages/django/core/handlers/base.py", line 197, in _get_response
+[Mon Apr 28 14:23:55.153340 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:43110]     response = wrapped_callback(request, *callback_args, **callback_kwargs)
+[Mon Apr 28 14:23:55.153345 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:43110]   File "/home/spendy/userauths/views.py", line 11, in RegisterView
+[Mon Apr 28 14:23:55.153350 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:43110]     if form.is_valid():
+[Mon Apr 28 14:23:55.153355 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:43110]   File "/home/spendy/venv/lib/python3.10/site-packages/django/forms/forms.py", line 206, in is_valid
+[Mon Apr 28 14:23:55.153360 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:43110]     return self.is_bound and not self.errors
+[Mon Apr 28 14:23:55.153364 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:43110]   File "/home/spendy/venv/lib/python3.10/site-packages/django/forms/forms.py", line 201, in errors
+[Mon Apr 28 14:23:55.153368 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:43110]     self.full_clean()
+[Mon Apr 28 14:23:55.153372 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:43110]   File "/home/spendy/venv/lib/python3.10/site-packages/django/forms/forms.py", line 337, in full_clean
+[Mon Apr 28 14:23:55.153375 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:43110]     self._clean_fields()
+[Mon Apr 28 14:23:55.153378 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:43110]   File "/home/spendy/venv/lib/python3.10/site-packages/django/forms/forms.py", line 347, in _clean_fields
+[Mon Apr 28 14:23:55.153381 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:43110]     value = getattr(self, "clean_%s" % name)()
+[Mon Apr 28 14:23:55.153399 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:43110]   File "/home/spendy/userauths/forms.py", line 63, in clean_phone_number
+[Mon Apr 28 14:23:55.153402 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:43110]     if User.objects.filter(phone_number=phone_number).exists():
+[Mon Apr 28 14:23:55.153405 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:43110]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/query.py", line 1293, in exists
+[Mon Apr 28 14:23:55.153408 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:43110]     return self.query.has_results(using=self.db)
+[Mon Apr 28 14:23:55.153411 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:43110]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/sql/query.py", line 674, in has_results
+[Mon Apr 28 14:23:55.153415 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:43110]     return compiler.has_results()
+[Mon Apr 28 14:23:55.153418 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:43110]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/sql/compiler.py", line 1590, in has_results
+[Mon Apr 28 14:23:55.153421 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:43110]     return bool(self.execute_sql(SINGLE))
+[Mon Apr 28 14:23:55.153424 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:43110]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/sql/compiler.py", line 1620, in execute_sql
+[Mon Apr 28 14:23:55.153427 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:43110]     cursor = self.connection.cursor()
+[Mon Apr 28 14:23:55.153430 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:43110]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/asyncio.py", line 26, in inner
+[Mon Apr 28 14:23:55.153433 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:43110]     return func(*args, **kwargs)
+[Mon Apr 28 14:23:55.153436 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:43110]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 320, in cursor
+[Mon Apr 28 14:23:55.153439 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:43110]     return self._cursor()
+[Mon Apr 28 14:23:55.153442 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:43110]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 296, in _cursor
+[Mon Apr 28 14:23:55.153445 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:43110]     self.ensure_connection()
+[Mon Apr 28 14:23:55.153448 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:43110]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/asyncio.py", line 26, in inner
+[Mon Apr 28 14:23:55.153451 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:43110]     return func(*args, **kwargs)
+[Mon Apr 28 14:23:55.153454 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:43110]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 279, in ensure_connection
+[Mon Apr 28 14:23:55.153458 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:43110]     self.connect()
+[Mon Apr 28 14:23:55.153461 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:43110]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/asyncio.py", line 26, in inner
+[Mon Apr 28 14:23:55.153464 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:43110]     return func(*args, **kwargs)
+[Mon Apr 28 14:23:55.153468 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:43110]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 255, in connect
+[Mon Apr 28 14:23:55.153478 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:43110]     conn_params = self.get_connection_params()
+[Mon Apr 28 14:23:55.153484 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:43110]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/mysql/base.py", line 227, in get_connection_params
+[Mon Apr 28 14:23:55.153490 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:43110]     if settings_dict["HOST"].startswith("/"):
+[Mon Apr 28 14:23:55.153494 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:43110] AttributeError: 'NoneType' object has no attribute 'startswith'
+[Mon Apr 28 14:24:05.998821 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 162.158.87.220:46296] Not Found: /wordpress/wp-admin/setup-config.php
+[Mon Apr 28 14:25:46.476012 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:57972] Internal Server Error: /sign-up/
+[Mon Apr 28 14:25:46.476074 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:57972] Traceback (most recent call last):
+[Mon Apr 28 14:25:46.476080 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:57972]   File "/home/spendy/venv/lib/python3.10/site-packages/django/core/handlers/exception.py", line 55, in inner
+[Mon Apr 28 14:25:46.476086 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:57972]     response = get_response(request)
+[Mon Apr 28 14:25:46.476090 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:57972]   File "/home/spendy/venv/lib/python3.10/site-packages/django/core/handlers/base.py", line 197, in _get_response
+[Mon Apr 28 14:25:46.476095 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:57972]     response = wrapped_callback(request, *callback_args, **callback_kwargs)
+[Mon Apr 28 14:25:46.476099 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:57972]   File "/home/spendy/userauths/views.py", line 11, in RegisterView
+[Mon Apr 28 14:25:46.476104 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:57972]     if form.is_valid():
+[Mon Apr 28 14:25:46.476108 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:57972]   File "/home/spendy/venv/lib/python3.10/site-packages/django/forms/forms.py", line 206, in is_valid
+[Mon Apr 28 14:25:46.476112 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:57972]     return self.is_bound and not self.errors
+[Mon Apr 28 14:25:46.476117 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:57972]   File "/home/spendy/venv/lib/python3.10/site-packages/django/forms/forms.py", line 201, in errors
+[Mon Apr 28 14:25:46.476121 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:57972]     self.full_clean()
+[Mon Apr 28 14:25:46.476125 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:57972]   File "/home/spendy/venv/lib/python3.10/site-packages/django/forms/forms.py", line 337, in full_clean
+[Mon Apr 28 14:25:46.476130 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:57972]     self._clean_fields()
+[Mon Apr 28 14:25:46.476134 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:57972]   File "/home/spendy/venv/lib/python3.10/site-packages/django/forms/forms.py", line 347, in _clean_fields
+[Mon Apr 28 14:25:46.476138 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:57972]     value = getattr(self, "clean_%s" % name)()
+[Mon Apr 28 14:25:46.476143 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:57972]   File "/home/spendy/userauths/forms.py", line 63, in clean_phone_number
+[Mon Apr 28 14:25:46.476147 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:57972]     if User.objects.filter(phone_number=phone_number).exists():
+[Mon Apr 28 14:25:46.476187 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:57972]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/query.py", line 1293, in exists
+[Mon Apr 28 14:25:46.476192 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:57972]     return self.query.has_results(using=self.db)
+[Mon Apr 28 14:25:46.476196 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:57972]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/sql/query.py", line 674, in has_results
+[Mon Apr 28 14:25:46.476201 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:57972]     return compiler.has_results()
+[Mon Apr 28 14:25:46.476205 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:57972]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/sql/compiler.py", line 1590, in has_results
+[Mon Apr 28 14:25:46.476209 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:57972]     return bool(self.execute_sql(SINGLE))
+[Mon Apr 28 14:25:46.476213 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:57972]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/sql/compiler.py", line 1620, in execute_sql
+[Mon Apr 28 14:25:46.476217 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:57972]     cursor = self.connection.cursor()
+[Mon Apr 28 14:25:46.476221 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:57972]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/asyncio.py", line 26, in inner
+[Mon Apr 28 14:25:46.476225 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:57972]     return func(*args, **kwargs)
+[Mon Apr 28 14:25:46.476229 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:57972]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 320, in cursor
+[Mon Apr 28 14:25:46.476233 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:57972]     return self._cursor()
+[Mon Apr 28 14:25:46.476237 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:57972]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 296, in _cursor
+[Mon Apr 28 14:25:46.476242 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:57972]     self.ensure_connection()
+[Mon Apr 28 14:25:46.476246 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:57972]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/asyncio.py", line 26, in inner
+[Mon Apr 28 14:25:46.476250 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:57972]     return func(*args, **kwargs)
+[Mon Apr 28 14:25:46.476254 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:57972]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 279, in ensure_connection
+[Mon Apr 28 14:25:46.476258 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:57972]     self.connect()
+[Mon Apr 28 14:25:46.476262 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:57972]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/asyncio.py", line 26, in inner
+[Mon Apr 28 14:25:46.476266 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:57972]     return func(*args, **kwargs)
+[Mon Apr 28 14:25:46.476270 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:57972]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 255, in connect
+[Mon Apr 28 14:25:46.476274 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:57972]     conn_params = self.get_connection_params()
+[Mon Apr 28 14:25:46.476278 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:57972]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/mysql/base.py", line 227, in get_connection_params
+[Mon Apr 28 14:25:46.476289 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:57972]     if settings_dict["HOST"].startswith("/"):
+[Mon Apr 28 14:25:46.476293 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.6:57972] AttributeError: 'NoneType' object has no attribute 'startswith'
+[Mon Apr 28 14:25:46.507161 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 162.158.87.100:37532] Not Found: /wp-admin/setup-config.php
+[Mon Apr 28 14:25:47.774986 2025] [wsgi:error] [pid 109853:tid 140354822563392] [remote 102.213.48.10:57984] Not Found: /favicon.ico
+[Mon Apr 28 14:25:51.194112 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 172.70.240.65:10688] Not Found: /wordpress/wp-admin/setup-config.php
+[Mon Apr 28 14:27:08.666003 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522] Internal Server Error: /admin/login/
+[Mon Apr 28 14:27:08.666065 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522] Traceback (most recent call last):
+[Mon Apr 28 14:27:08.666071 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]   File "/home/spendy/venv/lib/python3.10/site-packages/django/core/handlers/exception.py", line 55, in inner
+[Mon Apr 28 14:27:08.666076 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]     response = get_response(request)
+[Mon Apr 28 14:27:08.666081 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]   File "/home/spendy/venv/lib/python3.10/site-packages/django/core/handlers/base.py", line 197, in _get_response
+[Mon Apr 28 14:27:08.666085 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]     response = wrapped_callback(request, *callback_args, **callback_kwargs)
+[Mon Apr 28 14:27:08.666090 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/decorators.py", line 48, in _wrapper
+[Mon Apr 28 14:27:08.666095 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]     return bound_method(*args, **kwargs)
+[Mon Apr 28 14:27:08.666099 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]   File "/home/spendy/venv/lib/python3.10/site-packages/django/views/decorators/cache.py", line 80, in _view_wrapper
+[Mon Apr 28 14:27:08.666104 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]     response = view_func(request, *args, **kwargs)
+[Mon Apr 28 14:27:08.666108 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]   File "/home/spendy/venv/lib/python3.10/site-packages/django/contrib/admin/sites.py", line 449, in login
+[Mon Apr 28 14:27:08.666113 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]     return LoginView.as_view(**defaults)(request)
+[Mon Apr 28 14:27:08.666118 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]   File "/home/spendy/venv/lib/python3.10/site-packages/django/views/generic/base.py", line 104, in view
+[Mon Apr 28 14:27:08.666123 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]     return self.dispatch(request, *args, **kwargs)
+[Mon Apr 28 14:27:08.666127 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/decorators.py", line 48, in _wrapper
+[Mon Apr 28 14:27:08.666131 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]     return bound_method(*args, **kwargs)
+[Mon Apr 28 14:27:08.666135 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/decorators.py", line 48, in _wrapper
+[Mon Apr 28 14:27:08.666140 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]     return bound_method(*args, **kwargs)
+[Mon Apr 28 14:27:08.666160 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]   File "/home/spendy/venv/lib/python3.10/site-packages/django/views/decorators/debug.py", line 143, in sensitive_post_parameters_wrapper
+[Mon Apr 28 14:27:08.666166 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]     return view(request, *args, **kwargs)
+[Mon Apr 28 14:27:08.666170 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/decorators.py", line 48, in _wrapper
+[Mon Apr 28 14:27:08.666175 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]     return bound_method(*args, **kwargs)
+[Mon Apr 28 14:27:08.666179 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/decorators.py", line 192, in _view_wrapper
+[Mon Apr 28 14:27:08.666183 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]     result = _process_exception(request, e)
+[Mon Apr 28 14:27:08.666187 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/decorators.py", line 190, in _view_wrapper
+[Mon Apr 28 14:27:08.666192 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]     response = view_func(request, *args, **kwargs)
+[Mon Apr 28 14:27:08.666196 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/decorators.py", line 48, in _wrapper
+[Mon Apr 28 14:27:08.666200 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]     return bound_method(*args, **kwargs)
+[Mon Apr 28 14:27:08.666204 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]   File "/home/spendy/venv/lib/python3.10/site-packages/django/views/decorators/cache.py", line 80, in _view_wrapper
+[Mon Apr 28 14:27:08.666209 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]     response = view_func(request, *args, **kwargs)
+[Mon Apr 28 14:27:08.666213 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]   File "/home/spendy/venv/lib/python3.10/site-packages/django/contrib/auth/views.py", line 89, in dispatch
+[Mon Apr 28 14:27:08.666217 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]     return super().dispatch(request, *args, **kwargs)
+[Mon Apr 28 14:27:08.666221 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]   File "/home/spendy/venv/lib/python3.10/site-packages/django/views/generic/base.py", line 143, in dispatch
+[Mon Apr 28 14:27:08.666226 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]     return handler(request, *args, **kwargs)
+[Mon Apr 28 14:27:08.666230 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]   File "/home/spendy/venv/lib/python3.10/site-packages/django/views/generic/edit.py", line 142, in get
+[Mon Apr 28 14:27:08.666235 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]     return self.render_to_response(self.get_context_data())
+[Mon Apr 28 14:27:08.666239 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]   File "/home/spendy/venv/lib/python3.10/site-packages/django/contrib/auth/views.py", line 113, in get_context_data
+[Mon Apr 28 14:27:08.666243 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]     current_site = get_current_site(self.request)
+[Mon Apr 28 14:27:08.666247 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]   File "/home/spendy/venv/lib/python3.10/site-packages/django/contrib/sites/shortcuts.py", line 16, in get_current_site
+[Mon Apr 28 14:27:08.666252 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]     return Site.objects.get_current(request)
+[Mon Apr 28 14:27:08.666263 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]   File "/home/spendy/venv/lib/python3.10/site-packages/django/contrib/sites/models.py", line 59, in get_current
+[Mon Apr 28 14:27:08.666268 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]     return self._get_site_by_id(site_id)
+[Mon Apr 28 14:27:08.666272 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]   File "/home/spendy/venv/lib/python3.10/site-packages/django/contrib/sites/models.py", line 30, in _get_site_by_id
+[Mon Apr 28 14:27:08.666276 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]     site = self.get(pk=site_id)
+[Mon Apr 28 14:27:08.666280 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/manager.py", line 87, in manager_method
+[Mon Apr 28 14:27:08.666285 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]     return getattr(self.get_queryset(), name)(*args, **kwargs)
+[Mon Apr 28 14:27:08.666290 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/query.py", line 629, in get
+[Mon Apr 28 14:27:08.666294 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]     num = len(clone)
+[Mon Apr 28 14:27:08.666298 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/query.py", line 366, in __len__
+[Mon Apr 28 14:27:08.666303 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]     self._fetch_all()
+[Mon Apr 28 14:27:08.666307 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/query.py", line 1935, in _fetch_all
+[Mon Apr 28 14:27:08.666311 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]     self._result_cache = list(self._iterable_class(self))
+[Mon Apr 28 14:27:08.666316 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/query.py", line 91, in __iter__
+[Mon Apr 28 14:27:08.666320 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]     results = compiler.execute_sql(
+[Mon Apr 28 14:27:08.666324 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/sql/compiler.py", line 1620, in execute_sql
+[Mon Apr 28 14:27:08.666329 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]     cursor = self.connection.cursor()
+[Mon Apr 28 14:27:08.666333 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/asyncio.py", line 26, in inner
+[Mon Apr 28 14:27:08.666337 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]     return func(*args, **kwargs)
+[Mon Apr 28 14:27:08.666341 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 320, in cursor
+[Mon Apr 28 14:27:08.666346 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]     return self._cursor()
+[Mon Apr 28 14:27:08.666350 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 296, in _cursor
+[Mon Apr 28 14:27:08.666354 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]     self.ensure_connection()
+[Mon Apr 28 14:27:08.666363 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/asyncio.py", line 26, in inner
+[Mon Apr 28 14:27:08.666368 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]     return func(*args, **kwargs)
+[Mon Apr 28 14:27:08.666372 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 279, in ensure_connection
+[Mon Apr 28 14:27:08.666377 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]     self.connect()
+[Mon Apr 28 14:27:08.666381 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/asyncio.py", line 26, in inner
+[Mon Apr 28 14:27:08.666385 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]     return func(*args, **kwargs)
+[Mon Apr 28 14:27:08.666389 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 255, in connect
+[Mon Apr 28 14:27:08.666394 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]     conn_params = self.get_connection_params()
+[Mon Apr 28 14:27:08.666399 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/mysql/base.py", line 227, in get_connection_params
+[Mon Apr 28 14:27:08.666403 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522]     if settings_dict["HOST"].startswith("/"):
+[Mon Apr 28 14:27:08.666407 2025] [wsgi:error] [pid 109853:tid 140354914883136] [remote 102.213.48.6:47522] AttributeError: 'NoneType' object has no attribute 'startswith'
+[Mon Apr 28 14:30:48.526087 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622] Internal Server Error: /admin/login/
+[Mon Apr 28 14:30:48.526168 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622] Traceback (most recent call last):
+[Mon Apr 28 14:30:48.526175 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]   File "/home/spendy/venv/lib/python3.10/site-packages/django/core/handlers/exception.py", line 55, in inner
+[Mon Apr 28 14:30:48.526181 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]     response = get_response(request)
+[Mon Apr 28 14:30:48.526186 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]   File "/home/spendy/venv/lib/python3.10/site-packages/django/core/handlers/base.py", line 197, in _get_response
+[Mon Apr 28 14:30:48.526191 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]     response = wrapped_callback(request, *callback_args, **callback_kwargs)
+[Mon Apr 28 14:30:48.526196 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/decorators.py", line 48, in _wrapper
+[Mon Apr 28 14:30:48.526202 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]     return bound_method(*args, **kwargs)
+[Mon Apr 28 14:30:48.526207 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]   File "/home/spendy/venv/lib/python3.10/site-packages/django/views/decorators/cache.py", line 80, in _view_wrapper
+[Mon Apr 28 14:30:48.526212 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]     response = view_func(request, *args, **kwargs)
+[Mon Apr 28 14:30:48.526216 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]   File "/home/spendy/venv/lib/python3.10/site-packages/django/contrib/admin/sites.py", line 449, in login
+[Mon Apr 28 14:30:48.526221 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]     return LoginView.as_view(**defaults)(request)
+[Mon Apr 28 14:30:48.526241 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]   File "/home/spendy/venv/lib/python3.10/site-packages/django/views/generic/base.py", line 104, in view
+[Mon Apr 28 14:30:48.526246 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]     return self.dispatch(request, *args, **kwargs)
+[Mon Apr 28 14:30:48.526250 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/decorators.py", line 48, in _wrapper
+[Mon Apr 28 14:30:48.526255 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]     return bound_method(*args, **kwargs)
+[Mon Apr 28 14:30:48.526260 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/decorators.py", line 48, in _wrapper
+[Mon Apr 28 14:30:48.526265 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]     return bound_method(*args, **kwargs)
+[Mon Apr 28 14:30:48.526270 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]   File "/home/spendy/venv/lib/python3.10/site-packages/django/views/decorators/debug.py", line 143, in sensitive_post_parameters_wrapper
+[Mon Apr 28 14:30:48.526275 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]     return view(request, *args, **kwargs)
+[Mon Apr 28 14:30:48.526280 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/decorators.py", line 48, in _wrapper
+[Mon Apr 28 14:30:48.526285 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]     return bound_method(*args, **kwargs)
+[Mon Apr 28 14:30:48.526290 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/decorators.py", line 192, in _view_wrapper
+[Mon Apr 28 14:30:48.526295 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]     result = _process_exception(request, e)
+[Mon Apr 28 14:30:48.526299 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/decorators.py", line 190, in _view_wrapper
+[Mon Apr 28 14:30:48.526304 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]     response = view_func(request, *args, **kwargs)
+[Mon Apr 28 14:30:48.526309 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/decorators.py", line 48, in _wrapper
+[Mon Apr 28 14:30:48.526314 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]     return bound_method(*args, **kwargs)
+[Mon Apr 28 14:30:48.526319 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]   File "/home/spendy/venv/lib/python3.10/site-packages/django/views/decorators/cache.py", line 80, in _view_wrapper
+[Mon Apr 28 14:30:48.526324 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]     response = view_func(request, *args, **kwargs)
+[Mon Apr 28 14:30:48.526328 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]   File "/home/spendy/venv/lib/python3.10/site-packages/django/contrib/auth/views.py", line 89, in dispatch
+[Mon Apr 28 14:30:48.526333 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]     return super().dispatch(request, *args, **kwargs)
+[Mon Apr 28 14:30:48.526338 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]   File "/home/spendy/venv/lib/python3.10/site-packages/django/views/generic/base.py", line 143, in dispatch
+[Mon Apr 28 14:30:48.526343 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]     return handler(request, *args, **kwargs)
+[Mon Apr 28 14:30:48.526352 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]   File "/home/spendy/venv/lib/python3.10/site-packages/django/views/generic/edit.py", line 142, in get
+[Mon Apr 28 14:30:48.526357 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]     return self.render_to_response(self.get_context_data())
+[Mon Apr 28 14:30:48.526361 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]   File "/home/spendy/venv/lib/python3.10/site-packages/django/contrib/auth/views.py", line 113, in get_context_data
+[Mon Apr 28 14:30:48.526366 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]     current_site = get_current_site(self.request)
+[Mon Apr 28 14:30:48.526371 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]   File "/home/spendy/venv/lib/python3.10/site-packages/django/contrib/sites/shortcuts.py", line 16, in get_current_site
+[Mon Apr 28 14:30:48.526376 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]     return Site.objects.get_current(request)
+[Mon Apr 28 14:30:48.526381 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]   File "/home/spendy/venv/lib/python3.10/site-packages/django/contrib/sites/models.py", line 59, in get_current
+[Mon Apr 28 14:30:48.526385 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]     return self._get_site_by_id(site_id)
+[Mon Apr 28 14:30:48.526390 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]   File "/home/spendy/venv/lib/python3.10/site-packages/django/contrib/sites/models.py", line 30, in _get_site_by_id
+[Mon Apr 28 14:30:48.526395 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]     site = self.get(pk=site_id)
+[Mon Apr 28 14:30:48.526400 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/manager.py", line 87, in manager_method
+[Mon Apr 28 14:30:48.526405 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]     return getattr(self.get_queryset(), name)(*args, **kwargs)
+[Mon Apr 28 14:30:48.526409 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/query.py", line 629, in get
+[Mon Apr 28 14:30:48.526415 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]     num = len(clone)
+[Mon Apr 28 14:30:48.526419 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/query.py", line 366, in __len__
+[Mon Apr 28 14:30:48.526424 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]     self._fetch_all()
+[Mon Apr 28 14:30:48.526428 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/query.py", line 1935, in _fetch_all
+[Mon Apr 28 14:30:48.526433 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]     self._result_cache = list(self._iterable_class(self))
+[Mon Apr 28 14:30:48.526438 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/query.py", line 91, in __iter__
+[Mon Apr 28 14:30:48.526442 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]     results = compiler.execute_sql(
+[Mon Apr 28 14:30:48.526447 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/sql/compiler.py", line 1620, in execute_sql
+[Mon Apr 28 14:30:48.526452 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]     cursor = self.connection.cursor()
+[Mon Apr 28 14:30:48.526461 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/asyncio.py", line 26, in inner
+[Mon Apr 28 14:30:48.526466 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]     return func(*args, **kwargs)
+[Mon Apr 28 14:30:48.526471 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 320, in cursor
+[Mon Apr 28 14:30:48.526475 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]     return self._cursor()
+[Mon Apr 28 14:30:48.526480 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 296, in _cursor
+[Mon Apr 28 14:30:48.526484 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]     self.ensure_connection()
+[Mon Apr 28 14:30:48.526489 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/asyncio.py", line 26, in inner
+[Mon Apr 28 14:30:48.526494 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]     return func(*args, **kwargs)
+[Mon Apr 28 14:30:48.526498 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 279, in ensure_connection
+[Mon Apr 28 14:30:48.526503 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]     self.connect()
+[Mon Apr 28 14:30:48.526507 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/asyncio.py", line 26, in inner
+[Mon Apr 28 14:30:48.526512 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]     return func(*args, **kwargs)
+[Mon Apr 28 14:30:48.526516 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 255, in connect
+[Mon Apr 28 14:30:48.526521 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]     conn_params = self.get_connection_params()
+[Mon Apr 28 14:30:48.526526 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/mysql/base.py", line 227, in get_connection_params
+[Mon Apr 28 14:30:48.526531 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622]     if settings_dict["HOST"].startswith("/"):
+[Mon Apr 28 14:30:48.526536 2025] [wsgi:error] [pid 109975:tid 140444345939520] [remote 102.213.48.10:48622] AttributeError: 'NoneType' object has no attribute 'startswith'
+[Mon Apr 28 14:33:04.429272 2025] [wsgi:error] [pid 109975:tid 140444463437376] [remote 102.213.48.6:33492] Internal Server Error: /sign-up/
+[Mon Apr 28 14:33:04.429336 2025] [wsgi:error] [pid 109975:tid 140444463437376] [remote 102.213.48.6:33492] Traceback (most recent call last):
+[Mon Apr 28 14:33:04.429343 2025] [wsgi:error] [pid 109975:tid 140444463437376] [remote 102.213.48.6:33492]   File "/home/spendy/venv/lib/python3.10/site-packages/django/core/handlers/exception.py", line 55, in inner
+[Mon Apr 28 14:33:04.429348 2025] [wsgi:error] [pid 109975:tid 140444463437376] [remote 102.213.48.6:33492]     response = get_response(request)
+[Mon Apr 28 14:33:04.429352 2025] [wsgi:error] [pid 109975:tid 140444463437376] [remote 102.213.48.6:33492]   File "/home/spendy/venv/lib/python3.10/site-packages/django/core/handlers/base.py", line 197, in _get_response
+[Mon Apr 28 14:33:04.429357 2025] [wsgi:error] [pid 109975:tid 140444463437376] [remote 102.213.48.6:33492]     response = wrapped_callback(request, *callback_args, **callback_kwargs)
+[Mon Apr 28 14:33:04.429375 2025] [wsgi:error] [pid 109975:tid 140444463437376] [remote 102.213.48.6:33492]   File "/home/spendy/userauths/views.py", line 11, in RegisterView
+[Mon Apr 28 14:33:04.429380 2025] [wsgi:error] [pid 109975:tid 140444463437376] [remote 102.213.48.6:33492]     if form.is_valid():
+[Mon Apr 28 14:33:04.429384 2025] [wsgi:error] [pid 109975:tid 140444463437376] [remote 102.213.48.6:33492]   File "/home/spendy/venv/lib/python3.10/site-packages/django/forms/forms.py", line 206, in is_valid
+[Mon Apr 28 14:33:04.429389 2025] [wsgi:error] [pid 109975:tid 140444463437376] [remote 102.213.48.6:33492]     return self.is_bound and not self.errors
+[Mon Apr 28 14:33:04.429394 2025] [wsgi:error] [pid 109975:tid 140444463437376] [remote 102.213.48.6:33492]   File "/home/spendy/venv/lib/python3.10/site-packages/django/forms/forms.py", line 201, in errors
+[Mon Apr 28 14:33:04.429398 2025] [wsgi:error] [pid 109975:tid 140444463437376] [remote 102.213.48.6:33492]     self.full_clean()
+[Mon Apr 28 14:33:04.429402 2025] [wsgi:error] [pid 109975:tid 140444463437376] [remote 102.213.48.6:33492]   File "/home/spendy/venv/lib/python3.10/site-packages/django/forms/forms.py", line 337, in full_clean
+[Mon Apr 28 14:33:04.429407 2025] [wsgi:error] [pid 109975:tid 140444463437376] [remote 102.213.48.6:33492]     self._clean_fields()
+[Mon Apr 28 14:33:04.429411 2025] [wsgi:error] [pid 109975:tid 140444463437376] [remote 102.213.48.6:33492]   File "/home/spendy/venv/lib/python3.10/site-packages/django/forms/forms.py", line 347, in _clean_fields
+[Mon Apr 28 14:33:04.429416 2025] [wsgi:error] [pid 109975:tid 140444463437376] [remote 102.213.48.6:33492]     value = getattr(self, "clean_%s" % name)()
+[Mon Apr 28 14:33:04.429420 2025] [wsgi:error] [pid 109975:tid 140444463437376] [remote 102.213.48.6:33492]   File "/home/spendy/userauths/forms.py", line 63, in clean_phone_number
+[Mon Apr 28 14:33:04.429424 2025] [wsgi:error] [pid 109975:tid 140444463437376] [remote 102.213.48.6:33492]     if User.objects.filter(phone_number=phone_number).exists():
+[Mon Apr 28 14:33:04.429429 2025] [wsgi:error] [pid 109975:tid 140444463437376] [remote 102.213.48.6:33492]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/query.py", line 1293, in exists
+[Mon Apr 28 14:33:04.429433 2025] [wsgi:error] [pid 109975:tid 140444463437376] [remote 102.213.48.6:33492]     return self.query.has_results(using=self.db)
+[Mon Apr 28 14:33:04.429437 2025] [wsgi:error] [pid 109975:tid 140444463437376] [remote 102.213.48.6:33492]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/sql/query.py", line 674, in has_results
+[Mon Apr 28 14:33:04.429442 2025] [wsgi:error] [pid 109975:tid 140444463437376] [remote 102.213.48.6:33492]     return compiler.has_results()
+[Mon Apr 28 14:33:04.429446 2025] [wsgi:error] [pid 109975:tid 140444463437376] [remote 102.213.48.6:33492]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/sql/compiler.py", line 1590, in has_results
+[Mon Apr 28 14:33:04.429451 2025] [wsgi:error] [pid 109975:tid 140444463437376] [remote 102.213.48.6:33492]     return bool(self.execute_sql(SINGLE))
+[Mon Apr 28 14:33:04.429455 2025] [wsgi:error] [pid 109975:tid 140444463437376] [remote 102.213.48.6:33492]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/sql/compiler.py", line 1620, in execute_sql
+[Mon Apr 28 14:33:04.429460 2025] [wsgi:error] [pid 109975:tid 140444463437376] [remote 102.213.48.6:33492]     cursor = self.connection.cursor()
+[Mon Apr 28 14:33:04.429464 2025] [wsgi:error] [pid 109975:tid 140444463437376] [remote 102.213.48.6:33492]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/asyncio.py", line 26, in inner
+[Mon Apr 28 14:33:04.429468 2025] [wsgi:error] [pid 109975:tid 140444463437376] [remote 102.213.48.6:33492]     return func(*args, **kwargs)
+[Mon Apr 28 14:33:04.429473 2025] [wsgi:error] [pid 109975:tid 140444463437376] [remote 102.213.48.6:33492]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 320, in cursor
+[Mon Apr 28 14:33:04.429483 2025] [wsgi:error] [pid 109975:tid 140444463437376] [remote 102.213.48.6:33492]     return self._cursor()
+[Mon Apr 28 14:33:04.429487 2025] [wsgi:error] [pid 109975:tid 140444463437376] [remote 102.213.48.6:33492]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 296, in _cursor
+[Mon Apr 28 14:33:04.429492 2025] [wsgi:error] [pid 109975:tid 140444463437376] [remote 102.213.48.6:33492]     self.ensure_connection()
+[Mon Apr 28 14:33:04.429497 2025] [wsgi:error] [pid 109975:tid 140444463437376] [remote 102.213.48.6:33492]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/asyncio.py", line 26, in inner
+[Mon Apr 28 14:33:04.429501 2025] [wsgi:error] [pid 109975:tid 140444463437376] [remote 102.213.48.6:33492]     return func(*args, **kwargs)
+[Mon Apr 28 14:33:04.429506 2025] [wsgi:error] [pid 109975:tid 140444463437376] [remote 102.213.48.6:33492]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 279, in ensure_connection
+[Mon Apr 28 14:33:04.429510 2025] [wsgi:error] [pid 109975:tid 140444463437376] [remote 102.213.48.6:33492]     self.connect()
+[Mon Apr 28 14:33:04.429515 2025] [wsgi:error] [pid 109975:tid 140444463437376] [remote 102.213.48.6:33492]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/asyncio.py", line 26, in inner
+[Mon Apr 28 14:33:04.429520 2025] [wsgi:error] [pid 109975:tid 140444463437376] [remote 102.213.48.6:33492]     return func(*args, **kwargs)
+[Mon Apr 28 14:33:04.429524 2025] [wsgi:error] [pid 109975:tid 140444463437376] [remote 102.213.48.6:33492]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 255, in connect
+[Mon Apr 28 14:33:04.429529 2025] [wsgi:error] [pid 109975:tid 140444463437376] [remote 102.213.48.6:33492]     conn_params = self.get_connection_params()
+[Mon Apr 28 14:33:04.429534 2025] [wsgi:error] [pid 109975:tid 140444463437376] [remote 102.213.48.6:33492]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/mysql/base.py", line 227, in get_connection_params
+[Mon Apr 28 14:33:04.429538 2025] [wsgi:error] [pid 109975:tid 140444463437376] [remote 102.213.48.6:33492]     if settings_dict["HOST"].startswith("/"):
+[Mon Apr 28 14:33:04.429543 2025] [wsgi:error] [pid 109975:tid 140444463437376] [remote 102.213.48.6:33492] AttributeError: 'NoneType' object has no attribute 'startswith'
+[Mon Apr 28 14:36:31.621570 2025] [wsgi:error] [pid 110097:tid 140507071944256] [remote 102.213.48.10:33954] Internal Server Error: /sign-up/
+[Mon Apr 28 14:36:31.621653 2025] [wsgi:error] [pid 110097:tid 140507071944256] [remote 102.213.48.10:33954] Traceback (most recent call last):
+[Mon Apr 28 14:36:31.621659 2025] [wsgi:error] [pid 110097:tid 140507071944256] [remote 102.213.48.10:33954]   File "/home/spendy/venv/lib/python3.10/site-packages/django/core/handlers/exception.py", line 55, in inner
+[Mon Apr 28 14:36:31.621664 2025] [wsgi:error] [pid 110097:tid 140507071944256] [remote 102.213.48.10:33954]     response = get_response(request)
+[Mon Apr 28 14:36:31.621669 2025] [wsgi:error] [pid 110097:tid 140507071944256] [remote 102.213.48.10:33954]   File "/home/spendy/venv/lib/python3.10/site-packages/django/core/handlers/base.py", line 197, in _get_response
+[Mon Apr 28 14:36:31.621674 2025] [wsgi:error] [pid 110097:tid 140507071944256] [remote 102.213.48.10:33954]     response = wrapped_callback(request, *callback_args, **callback_kwargs)
+[Mon Apr 28 14:36:31.621679 2025] [wsgi:error] [pid 110097:tid 140507071944256] [remote 102.213.48.10:33954]   File "/home/spendy/userauths/views.py", line 11, in RegisterView
+[Mon Apr 28 14:36:31.621684 2025] [wsgi:error] [pid 110097:tid 140507071944256] [remote 102.213.48.10:33954]     if form.is_valid():
+[Mon Apr 28 14:36:31.621688 2025] [wsgi:error] [pid 110097:tid 140507071944256] [remote 102.213.48.10:33954]   File "/home/spendy/venv/lib/python3.10/site-packages/django/forms/forms.py", line 206, in is_valid
+[Mon Apr 28 14:36:31.621708 2025] [wsgi:error] [pid 110097:tid 140507071944256] [remote 102.213.48.10:33954]     return self.is_bound and not self.errors
+[Mon Apr 28 14:36:31.621712 2025] [wsgi:error] [pid 110097:tid 140507071944256] [remote 102.213.48.10:33954]   File "/home/spendy/venv/lib/python3.10/site-packages/django/forms/forms.py", line 201, in errors
+[Mon Apr 28 14:36:31.621717 2025] [wsgi:error] [pid 110097:tid 140507071944256] [remote 102.213.48.10:33954]     self.full_clean()
+[Mon Apr 28 14:36:31.621722 2025] [wsgi:error] [pid 110097:tid 140507071944256] [remote 102.213.48.10:33954]   File "/home/spendy/venv/lib/python3.10/site-packages/django/forms/forms.py", line 337, in full_clean
+[Mon Apr 28 14:36:31.621727 2025] [wsgi:error] [pid 110097:tid 140507071944256] [remote 102.213.48.10:33954]     self._clean_fields()
+[Mon Apr 28 14:36:31.621731 2025] [wsgi:error] [pid 110097:tid 140507071944256] [remote 102.213.48.10:33954]   File "/home/spendy/venv/lib/python3.10/site-packages/django/forms/forms.py", line 347, in _clean_fields
+[Mon Apr 28 14:36:31.621736 2025] [wsgi:error] [pid 110097:tid 140507071944256] [remote 102.213.48.10:33954]     value = getattr(self, "clean_%s" % name)()
+[Mon Apr 28 14:36:31.621741 2025] [wsgi:error] [pid 110097:tid 140507071944256] [remote 102.213.48.10:33954]   File "/home/spendy/userauths/forms.py", line 63, in clean_phone_number
+[Mon Apr 28 14:36:31.621746 2025] [wsgi:error] [pid 110097:tid 140507071944256] [remote 102.213.48.10:33954]     if User.objects.filter(phone_number=phone_number).exists():
+[Mon Apr 28 14:36:31.621751 2025] [wsgi:error] [pid 110097:tid 140507071944256] [remote 102.213.48.10:33954]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/query.py", line 1293, in exists
+[Mon Apr 28 14:36:31.621756 2025] [wsgi:error] [pid 110097:tid 140507071944256] [remote 102.213.48.10:33954]     return self.query.has_results(using=self.db)
+[Mon Apr 28 14:36:31.621760 2025] [wsgi:error] [pid 110097:tid 140507071944256] [remote 102.213.48.10:33954]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/sql/query.py", line 674, in has_results
+[Mon Apr 28 14:36:31.621765 2025] [wsgi:error] [pid 110097:tid 140507071944256] [remote 102.213.48.10:33954]     return compiler.has_results()
+[Mon Apr 28 14:36:31.621770 2025] [wsgi:error] [pid 110097:tid 140507071944256] [remote 102.213.48.10:33954]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/sql/compiler.py", line 1590, in has_results
+[Mon Apr 28 14:36:31.621774 2025] [wsgi:error] [pid 110097:tid 140507071944256] [remote 102.213.48.10:33954]     return bool(self.execute_sql(SINGLE))
+[Mon Apr 28 14:36:31.621779 2025] [wsgi:error] [pid 110097:tid 140507071944256] [remote 102.213.48.10:33954]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/sql/compiler.py", line 1620, in execute_sql
+[Mon Apr 28 14:36:31.621784 2025] [wsgi:error] [pid 110097:tid 140507071944256] [remote 102.213.48.10:33954]     cursor = self.connection.cursor()
+[Mon Apr 28 14:36:31.621789 2025] [wsgi:error] [pid 110097:tid 140507071944256] [remote 102.213.48.10:33954]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/asyncio.py", line 26, in inner
+[Mon Apr 28 14:36:31.621794 2025] [wsgi:error] [pid 110097:tid 140507071944256] [remote 102.213.48.10:33954]     return func(*args, **kwargs)
+[Mon Apr 28 14:36:31.621799 2025] [wsgi:error] [pid 110097:tid 140507071944256] [remote 102.213.48.10:33954]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 320, in cursor
+[Mon Apr 28 14:36:31.621804 2025] [wsgi:error] [pid 110097:tid 140507071944256] [remote 102.213.48.10:33954]     return self._cursor()
+[Mon Apr 28 14:36:31.621809 2025] [wsgi:error] [pid 110097:tid 140507071944256] [remote 102.213.48.10:33954]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 296, in _cursor
+[Mon Apr 28 14:36:31.621813 2025] [wsgi:error] [pid 110097:tid 140507071944256] [remote 102.213.48.10:33954]     self.ensure_connection()
+[Mon Apr 28 14:36:31.621824 2025] [wsgi:error] [pid 110097:tid 140507071944256] [remote 102.213.48.10:33954]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/asyncio.py", line 26, in inner
+[Mon Apr 28 14:36:31.621829 2025] [wsgi:error] [pid 110097:tid 140507071944256] [remote 102.213.48.10:33954]     return func(*args, **kwargs)
+[Mon Apr 28 14:36:31.621833 2025] [wsgi:error] [pid 110097:tid 140507071944256] [remote 102.213.48.10:33954]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 279, in ensure_connection
+[Mon Apr 28 14:36:31.621838 2025] [wsgi:error] [pid 110097:tid 140507071944256] [remote 102.213.48.10:33954]     self.connect()
+[Mon Apr 28 14:36:31.621843 2025] [wsgi:error] [pid 110097:tid 140507071944256] [remote 102.213.48.10:33954]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/asyncio.py", line 26, in inner
+[Mon Apr 28 14:36:31.621848 2025] [wsgi:error] [pid 110097:tid 140507071944256] [remote 102.213.48.10:33954]     return func(*args, **kwargs)
+[Mon Apr 28 14:36:31.621852 2025] [wsgi:error] [pid 110097:tid 140507071944256] [remote 102.213.48.10:33954]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 255, in connect
+[Mon Apr 28 14:36:31.621857 2025] [wsgi:error] [pid 110097:tid 140507071944256] [remote 102.213.48.10:33954]     conn_params = self.get_connection_params()
+[Mon Apr 28 14:36:31.621862 2025] [wsgi:error] [pid 110097:tid 140507071944256] [remote 102.213.48.10:33954]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/mysql/base.py", line 227, in get_connection_params
+[Mon Apr 28 14:36:31.621867 2025] [wsgi:error] [pid 110097:tid 140507071944256] [remote 102.213.48.10:33954]     if settings_dict["HOST"].startswith("/"):
+[Mon Apr 28 14:36:31.621871 2025] [wsgi:error] [pid 110097:tid 140507071944256] [remote 102.213.48.10:33954] AttributeError: 'NoneType' object has no attribute 'startswith'
+[Mon Apr 28 14:39:28.332192 2025] [wsgi:error] [pid 110097:tid 140506962839104] [remote 172.71.148.94:25022] Not Found: /wp-admin/setup-config.php
+[Mon Apr 28 14:39:59.479523 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 102.213.48.10:48172] Internal Server Error: /sign-up/
+[Mon Apr 28 14:39:59.479600 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 102.213.48.10:48172] Traceback (most recent call last):
+[Mon Apr 28 14:39:59.479606 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 102.213.48.10:48172]   File "/home/spendy/venv/lib/python3.10/site-packages/django/core/handlers/exception.py", line 55, in inner
+[Mon Apr 28 14:39:59.479611 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 102.213.48.10:48172]     response = get_response(request)
+[Mon Apr 28 14:39:59.479615 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 102.213.48.10:48172]   File "/home/spendy/venv/lib/python3.10/site-packages/django/core/handlers/base.py", line 197, in _get_response
+[Mon Apr 28 14:39:59.479620 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 102.213.48.10:48172]     response = wrapped_callback(request, *callback_args, **callback_kwargs)
+[Mon Apr 28 14:39:59.479626 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 102.213.48.10:48172]   File "/home/spendy/userauths/views.py", line 11, in RegisterView
+[Mon Apr 28 14:39:59.479631 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 102.213.48.10:48172]     if form.is_valid():
+[Mon Apr 28 14:39:59.479635 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 102.213.48.10:48172]   File "/home/spendy/venv/lib/python3.10/site-packages/django/forms/forms.py", line 206, in is_valid
+[Mon Apr 28 14:39:59.479641 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 102.213.48.10:48172]     return self.is_bound and not self.errors
+[Mon Apr 28 14:39:59.479645 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 102.213.48.10:48172]   File "/home/spendy/venv/lib/python3.10/site-packages/django/forms/forms.py", line 201, in errors
+[Mon Apr 28 14:39:59.479662 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 102.213.48.10:48172]     self.full_clean()
+[Mon Apr 28 14:39:59.479667 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 102.213.48.10:48172]   File "/home/spendy/venv/lib/python3.10/site-packages/django/forms/forms.py", line 337, in full_clean
+[Mon Apr 28 14:39:59.479672 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 102.213.48.10:48172]     self._clean_fields()
+[Mon Apr 28 14:39:59.479676 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 102.213.48.10:48172]   File "/home/spendy/venv/lib/python3.10/site-packages/django/forms/forms.py", line 347, in _clean_fields
+[Mon Apr 28 14:39:59.479681 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 102.213.48.10:48172]     value = getattr(self, "clean_%s" % name)()
+[Mon Apr 28 14:39:59.479686 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 102.213.48.10:48172]   File "/home/spendy/userauths/forms.py", line 63, in clean_phone_number
+[Mon Apr 28 14:39:59.479690 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 102.213.48.10:48172]     if User.objects.filter(phone_number=phone_number).exists():
+[Mon Apr 28 14:39:59.479695 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 102.213.48.10:48172]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/query.py", line 1293, in exists
+[Mon Apr 28 14:39:59.479700 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 102.213.48.10:48172]     return self.query.has_results(using=self.db)
+[Mon Apr 28 14:39:59.479704 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 102.213.48.10:48172]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/sql/query.py", line 674, in has_results
+[Mon Apr 28 14:39:59.479709 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 102.213.48.10:48172]     return compiler.has_results()
+[Mon Apr 28 14:39:59.479714 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 102.213.48.10:48172]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/sql/compiler.py", line 1590, in has_results
+[Mon Apr 28 14:39:59.479718 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 102.213.48.10:48172]     return bool(self.execute_sql(SINGLE))
+[Mon Apr 28 14:39:59.479723 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 102.213.48.10:48172]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/sql/compiler.py", line 1620, in execute_sql
+[Mon Apr 28 14:39:59.479728 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 102.213.48.10:48172]     cursor = self.connection.cursor()
+[Mon Apr 28 14:39:59.479732 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 102.213.48.10:48172]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/asyncio.py", line 26, in inner
+[Mon Apr 28 14:39:59.479737 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 102.213.48.10:48172]     return func(*args, **kwargs)
+[Mon Apr 28 14:39:59.479741 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 102.213.48.10:48172]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 320, in cursor
+[Mon Apr 28 14:39:59.479746 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 102.213.48.10:48172]     return self._cursor()
+[Mon Apr 28 14:39:59.479750 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 102.213.48.10:48172]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 296, in _cursor
+[Mon Apr 28 14:39:59.479755 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 102.213.48.10:48172]     self.ensure_connection()
+[Mon Apr 28 14:39:59.479759 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 102.213.48.10:48172]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/asyncio.py", line 26, in inner
+[Mon Apr 28 14:39:59.479764 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 102.213.48.10:48172]     return func(*args, **kwargs)
+[Mon Apr 28 14:39:59.479773 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 102.213.48.10:48172]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 279, in ensure_connection
+[Mon Apr 28 14:39:59.479778 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 102.213.48.10:48172]     self.connect()
+[Mon Apr 28 14:39:59.479782 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 102.213.48.10:48172]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/asyncio.py", line 26, in inner
+[Mon Apr 28 14:39:59.479787 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 102.213.48.10:48172]     return func(*args, **kwargs)
+[Mon Apr 28 14:39:59.479791 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 102.213.48.10:48172]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 255, in connect
+[Mon Apr 28 14:39:59.479796 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 102.213.48.10:48172]     conn_params = self.get_connection_params()
+[Mon Apr 28 14:39:59.479803 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 102.213.48.10:48172]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/mysql/base.py", line 227, in get_connection_params
+[Mon Apr 28 14:39:59.479808 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 102.213.48.10:48172]     if settings_dict["HOST"].startswith("/"):
+[Mon Apr 28 14:39:59.479813 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 102.213.48.10:48172] AttributeError: 'NoneType' object has no attribute 'startswith'
+[Mon Apr 28 14:40:30.676376 2025] [wsgi:error] [pid 110217:tid 140292605523520] [remote 172.71.148.152:27908] Not Found: /wp-admin/setup-config.php
+[Mon Apr 28 14:40:55.105544 2025] [wsgi:error] [pid 110217:tid 140292714628672] [remote 172.71.164.230:49746] Not Found: /wordpress/wp-admin/setup-config.php
+[Mon Apr 28 14:41:19.844708 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314] Internal Server Error: /sign-up/
+[Mon Apr 28 14:41:19.844780 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314] Traceback (most recent call last):
+[Mon Apr 28 14:41:19.844786 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]   File "/home/spendy/venv/lib/python3.10/site-packages/django/core/handlers/exception.py", line 55, in inner
+[Mon Apr 28 14:41:19.844792 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]     response = get_response(request)
+[Mon Apr 28 14:41:19.844797 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]   File "/home/spendy/venv/lib/python3.10/site-packages/django/core/handlers/base.py", line 197, in _get_response
+[Mon Apr 28 14:41:19.844803 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]     response = wrapped_callback(request, *callback_args, **callback_kwargs)
+[Mon Apr 28 14:41:19.844808 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]   File "/home/spendy/userauths/views.py", line 11, in RegisterView
+[Mon Apr 28 14:41:19.844813 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]     if form.is_valid():
+[Mon Apr 28 14:41:19.844818 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]   File "/home/spendy/venv/lib/python3.10/site-packages/django/forms/forms.py", line 206, in is_valid
+[Mon Apr 28 14:41:19.844823 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]     return self.is_bound and not self.errors
+[Mon Apr 28 14:41:19.844828 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]   File "/home/spendy/venv/lib/python3.10/site-packages/django/forms/forms.py", line 201, in errors
+[Mon Apr 28 14:41:19.844833 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]     self.full_clean()
+[Mon Apr 28 14:41:19.844838 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]   File "/home/spendy/venv/lib/python3.10/site-packages/django/forms/forms.py", line 339, in full_clean
+[Mon Apr 28 14:41:19.844857 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]     self._post_clean()
+[Mon Apr 28 14:41:19.844862 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]   File "/home/spendy/venv/lib/python3.10/site-packages/django/contrib/auth/forms.py", line 258, in _post_clean
+[Mon Apr 28 14:41:19.844867 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]     super()._post_clean()
+[Mon Apr 28 14:41:19.844872 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]   File "/home/spendy/venv/lib/python3.10/site-packages/django/forms/models.py", line 504, in _post_clean
+[Mon Apr 28 14:41:19.844877 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]     self.validate_unique()
+[Mon Apr 28 14:41:19.844882 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]   File "/home/spendy/venv/lib/python3.10/site-packages/django/forms/models.py", line 513, in validate_unique
+[Mon Apr 28 14:41:19.844887 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]     self.instance.validate_unique(exclude=exclude)
+[Mon Apr 28 14:41:19.844892 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/base.py", line 1401, in validate_unique
+[Mon Apr 28 14:41:19.844897 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]     errors = self._perform_unique_checks(unique_checks)
+[Mon Apr 28 14:41:19.844901 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/base.py", line 1516, in _perform_unique_checks
+[Mon Apr 28 14:41:19.844906 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]     if qs.exists():
+[Mon Apr 28 14:41:19.844911 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/query.py", line 1293, in exists
+[Mon Apr 28 14:41:19.844916 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]     return self.query.has_results(using=self.db)
+[Mon Apr 28 14:41:19.844920 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/sql/query.py", line 674, in has_results
+[Mon Apr 28 14:41:19.844926 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]     return compiler.has_results()
+[Mon Apr 28 14:41:19.844930 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/sql/compiler.py", line 1590, in has_results
+[Mon Apr 28 14:41:19.844935 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]     return bool(self.execute_sql(SINGLE))
+[Mon Apr 28 14:41:19.844940 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/sql/compiler.py", line 1620, in execute_sql
+[Mon Apr 28 14:41:19.844945 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]     cursor = self.connection.cursor()
+[Mon Apr 28 14:41:19.844950 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/asyncio.py", line 26, in inner
+[Mon Apr 28 14:41:19.844955 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]     return func(*args, **kwargs)
+[Mon Apr 28 14:41:19.844960 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 320, in cursor
+[Mon Apr 28 14:41:19.844970 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]     return self._cursor()
+[Mon Apr 28 14:41:19.844974 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 296, in _cursor
+[Mon Apr 28 14:41:19.844979 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]     self.ensure_connection()
+[Mon Apr 28 14:41:19.844984 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/asyncio.py", line 26, in inner
+[Mon Apr 28 14:41:19.844989 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]     return func(*args, **kwargs)
+[Mon Apr 28 14:41:19.844994 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 279, in ensure_connection
+[Mon Apr 28 14:41:19.844999 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]     self.connect()
+[Mon Apr 28 14:41:19.845004 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/asyncio.py", line 26, in inner
+[Mon Apr 28 14:41:19.845009 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]     return func(*args, **kwargs)
+[Mon Apr 28 14:41:19.845014 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 255, in connect
+[Mon Apr 28 14:41:19.845019 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]     conn_params = self.get_connection_params()
+[Mon Apr 28 14:41:19.845024 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/mysql/base.py", line 227, in get_connection_params
+[Mon Apr 28 14:41:19.845029 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314]     if settings_dict["HOST"].startswith("/"):
+[Mon Apr 28 14:41:19.845034 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.6:59314] AttributeError: 'NoneType' object has no attribute 'startswith'
+[Mon Apr 28 14:41:56.831784 2025] [wsgi:error] [pid 110315:tid 140618535069248] [remote 162.158.95.28:42348] Not Found: /wordpress/wp-admin/setup-config.php
+[Mon Apr 28 14:43:12.175709 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 4.227.36.31:33010] Not Found: /robots.txt
+[Mon Apr 28 11:43:52.656387 2025] [core:error] [pid 110316:tid 140618529482304] [client 20.171.207.29:20070] AH10244: invalid URI path (/static/assets/js/plugin/%url%)
+[Mon Apr 28 14:43:54.147197 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 20.171.207.29:61592] Not Found: /accounts/login/
+[Mon Apr 28 14:47:18.942156 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430] Internal Server Error: /sign-up/
+[Mon Apr 28 14:47:18.942231 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430] Traceback (most recent call last):
+[Mon Apr 28 14:47:18.942238 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]   File "/home/spendy/venv/lib/python3.10/site-packages/django/core/handlers/exception.py", line 55, in inner
+[Mon Apr 28 14:47:18.942243 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]     response = get_response(request)
+[Mon Apr 28 14:47:18.942248 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]   File "/home/spendy/venv/lib/python3.10/site-packages/django/core/handlers/base.py", line 197, in _get_response
+[Mon Apr 28 14:47:18.942253 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]     response = wrapped_callback(request, *callback_args, **callback_kwargs)
+[Mon Apr 28 14:47:18.942276 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]   File "/home/spendy/userauths/views.py", line 11, in RegisterView
+[Mon Apr 28 14:47:18.942282 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]     if form.is_valid():
+[Mon Apr 28 14:47:18.942286 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]   File "/home/spendy/venv/lib/python3.10/site-packages/django/forms/forms.py", line 206, in is_valid
+[Mon Apr 28 14:47:18.942291 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]     return self.is_bound and not self.errors
+[Mon Apr 28 14:47:18.942295 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]   File "/home/spendy/venv/lib/python3.10/site-packages/django/forms/forms.py", line 201, in errors
+[Mon Apr 28 14:47:18.942300 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]     self.full_clean()
+[Mon Apr 28 14:47:18.942304 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]   File "/home/spendy/venv/lib/python3.10/site-packages/django/forms/forms.py", line 339, in full_clean
+[Mon Apr 28 14:47:18.942308 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]     self._post_clean()
+[Mon Apr 28 14:47:18.942312 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]   File "/home/spendy/venv/lib/python3.10/site-packages/django/contrib/auth/forms.py", line 258, in _post_clean
+[Mon Apr 28 14:47:18.942317 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]     super()._post_clean()
+[Mon Apr 28 14:47:18.942322 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]   File "/home/spendy/venv/lib/python3.10/site-packages/django/forms/models.py", line 504, in _post_clean
+[Mon Apr 28 14:47:18.942326 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]     self.validate_unique()
+[Mon Apr 28 14:47:18.942330 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]   File "/home/spendy/venv/lib/python3.10/site-packages/django/forms/models.py", line 513, in validate_unique
+[Mon Apr 28 14:47:18.942335 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]     self.instance.validate_unique(exclude=exclude)
+[Mon Apr 28 14:47:18.942339 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/base.py", line 1401, in validate_unique
+[Mon Apr 28 14:47:18.942343 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]     errors = self._perform_unique_checks(unique_checks)
+[Mon Apr 28 14:47:18.942347 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/base.py", line 1516, in _perform_unique_checks
+[Mon Apr 28 14:47:18.942352 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]     if qs.exists():
+[Mon Apr 28 14:47:18.942356 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/query.py", line 1293, in exists
+[Mon Apr 28 14:47:18.942361 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]     return self.query.has_results(using=self.db)
+[Mon Apr 28 14:47:18.942365 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/sql/query.py", line 674, in has_results
+[Mon Apr 28 14:47:18.942369 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]     return compiler.has_results()
+[Mon Apr 28 14:47:18.942373 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/sql/compiler.py", line 1590, in has_results
+[Mon Apr 28 14:47:18.942384 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]     return bool(self.execute_sql(SINGLE))
+[Mon Apr 28 14:47:18.942388 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/sql/compiler.py", line 1620, in execute_sql
+[Mon Apr 28 14:47:18.942393 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]     cursor = self.connection.cursor()
+[Mon Apr 28 14:47:18.942398 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/asyncio.py", line 26, in inner
+[Mon Apr 28 14:47:18.942403 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]     return func(*args, **kwargs)
+[Mon Apr 28 14:47:18.942407 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 320, in cursor
+[Mon Apr 28 14:47:18.942412 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]     return self._cursor()
+[Mon Apr 28 14:47:18.942417 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 296, in _cursor
+[Mon Apr 28 14:47:18.942421 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]     self.ensure_connection()
+[Mon Apr 28 14:47:18.942425 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/asyncio.py", line 26, in inner
+[Mon Apr 28 14:47:18.942430 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]     return func(*args, **kwargs)
+[Mon Apr 28 14:47:18.942434 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 279, in ensure_connection
+[Mon Apr 28 14:47:18.942439 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]     self.connect()
+[Mon Apr 28 14:47:18.942443 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]   File "/home/spendy/venv/lib/python3.10/site-packages/django/utils/asyncio.py", line 26, in inner
+[Mon Apr 28 14:47:18.942447 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]     return func(*args, **kwargs)
+[Mon Apr 28 14:47:18.942452 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/base/base.py", line 255, in connect
+[Mon Apr 28 14:47:18.942456 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]     conn_params = self.get_connection_params()
+[Mon Apr 28 14:47:18.942473 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/backends/mysql/base.py", line 227, in get_connection_params
+[Mon Apr 28 14:47:18.942478 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430]     if settings_dict["HOST"].startswith("/"):
+[Mon Apr 28 14:47:18.942482 2025] [wsgi:error] [pid 110315:tid 140618644174400] [remote 102.213.48.10:60430] AttributeError: 'NoneType' object has no attribute 'startswith'
+[Mon Apr 28 11:52:09.481787 2025] [authz_core:error] [pid 110443:tid 139801395103296] [client 102.213.48.10:35812] AH01630: client denied by server configuration: /home/spendy/media, referer: https://spendy.africa/kyc-reg/
+[Mon Apr 28 11:52:36.343502 2025] [authz_core:error] [pid 110444:tid 139801487423040] [client 102.213.48.10:43028] AH01630: client denied by server configuration: /home/spendy/media, referer: https://spendy.africa/kyc-reg/
+[Mon Apr 28 11:52:38.670766 2025] [authz_core:error] [pid 110444:tid 139801462244928] [client 102.213.48.10:43028] AH01630: client denied by server configuration: /home/spendy/media, referer: https://spendy.africa/kyc-reg/
+[Mon Apr 28 14:52:40.028214 2025] [wsgi:error] [pid 110442:tid 139801529579072] [remote 102.213.48.10:43006] <QuerySet []>
+[Mon Apr 28 14:52:40.176754 2025] [wsgi:error] [pid 110442:tid 139801537971776] [remote 52.16.245.145:45356] Not Found: /favicon.ico
+[Mon Apr 28 14:52:55.357692 2025] [wsgi:error] [pid 110442:tid 139801537971776] [remote 102.213.48.10:49580] /home/spendy/wallet/views.py:148: UnorderedObjectListWarning: Pagination may yield inconsistent results with an unordered object_list: <class 'wallet.models.StaffProfile'> QuerySet.
+[Mon Apr 28 14:52:55.357759 2025] [wsgi:error] [pid 110442:tid 139801537971776] [remote 102.213.48.10:49580]   paginator = Paginator(staff_list, 10)  # 10 per page
+[Mon Apr 28 11:53:03.991120 2025] [authz_core:error] [pid 110444:tid 139801437066816] [client 102.213.48.10:56564] AH01630: client denied by server configuration: /home/spendy/media, referer: https://spendy.africa/kyc-reg/
+[Mon Apr 28 14:53:43.727065 2025] [wsgi:error] [pid 110442:tid 139801537971776] [remote 102.213.48.10:44344] Internal Server Error: /kyc-reg/
+[Mon Apr 28 14:53:43.727128 2025] [wsgi:error] [pid 110442:tid 139801537971776] [remote 102.213.48.10:44344] Traceback (most recent call last):
+[Mon Apr 28 14:53:43.727134 2025] [wsgi:error] [pid 110442:tid 139801537971776] [remote 102.213.48.10:44344]   File "/home/spendy/venv/lib/python3.10/site-packages/django/core/handlers/exception.py", line 55, in inner
+[Mon Apr 28 14:53:43.727139 2025] [wsgi:error] [pid 110442:tid 139801537971776] [remote 102.213.48.10:44344]     response = get_response(request)
+[Mon Apr 28 14:53:43.727143 2025] [wsgi:error] [pid 110442:tid 139801537971776] [remote 102.213.48.10:44344]   File "/home/spendy/venv/lib/python3.10/site-packages/django/core/handlers/base.py", line 197, in _get_response
+[Mon Apr 28 14:53:43.727148 2025] [wsgi:error] [pid 110442:tid 139801537971776] [remote 102.213.48.10:44344]     response = wrapped_callback(request, *callback_args, **callback_kwargs)
+[Mon Apr 28 14:53:43.727153 2025] [wsgi:error] [pid 110442:tid 139801537971776] [remote 102.213.48.10:44344]   File "/home/spendy/venv/lib/python3.10/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+[Mon Apr 28 14:53:43.727158 2025] [wsgi:error] [pid 110442:tid 139801537971776] [remote 102.213.48.10:44344]     return view_func(request, *args, **kwargs)
+[Mon Apr 28 14:53:43.727162 2025] [wsgi:error] [pid 110442:tid 139801537971776] [remote 102.213.48.10:44344]   File "/home/spendy/wallet/views.py", line 320, in kyc_registration
+[Mon Apr 28 14:53:43.727167 2025] [wsgi:error] [pid 110442:tid 139801537971776] [remote 102.213.48.10:44344]     new_form.save()
+[Mon Apr 28 14:53:43.727171 2025] [wsgi:error] [pid 110442:tid 139801537971776] [remote 102.213.48.10:44344]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/base.py", line 902, in save
+[Mon Apr 28 14:53:43.727176 2025] [wsgi:error] [pid 110442:tid 139801537971776] [remote 102.213.48.10:44344]     self.save_base(
+[Mon Apr 28 14:53:43.727180 2025] [wsgi:error] [pid 110442:tid 139801537971776] [remote 102.213.48.10:44344]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/base.py", line 1008, in save_base
+[Mon Apr 28 14:53:43.727185 2025] [wsgi:error] [pid 110442:tid 139801537971776] [remote 102.213.48.10:44344]     updated = self._save_table(
+[Mon Apr 28 14:53:43.727189 2025] [wsgi:error] [pid 110442:tid 139801537971776] [remote 102.213.48.10:44344]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/base.py", line 1128, in _save_table
+[Mon Apr 28 14:53:43.727194 2025] [wsgi:error] [pid 110442:tid 139801537971776] [remote 102.213.48.10:44344]     values = [
+[Mon Apr 28 14:53:43.727198 2025] [wsgi:error] [pid 110442:tid 139801537971776] [remote 102.213.48.10:44344]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/base.py", line 1132, in <listcomp>
+[Mon Apr 28 14:53:43.727218 2025] [wsgi:error] [pid 110442:tid 139801537971776] [remote 102.213.48.10:44344]     (getattr(self, f.attname) if raw else f.pre_save(self, False)),
+[Mon Apr 28 14:53:43.727222 2025] [wsgi:error] [pid 110442:tid 139801537971776] [remote 102.213.48.10:44344]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/fields/files.py", line 338, in pre_save
+[Mon Apr 28 14:53:43.727227 2025] [wsgi:error] [pid 110442:tid 139801537971776] [remote 102.213.48.10:44344]     file.save(file.name, file.file, save=False)
+[Mon Apr 28 14:53:43.727231 2025] [wsgi:error] [pid 110442:tid 139801537971776] [remote 102.213.48.10:44344]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/fields/files.py", line 99, in save
+[Mon Apr 28 14:53:43.727236 2025] [wsgi:error] [pid 110442:tid 139801537971776] [remote 102.213.48.10:44344]     self.name = self.storage.save(name, content, max_length=self.field.max_length)
+[Mon Apr 28 14:53:43.727240 2025] [wsgi:error] [pid 110442:tid 139801537971776] [remote 102.213.48.10:44344]   File "/home/spendy/venv/lib/python3.10/site-packages/django/core/files/storage/base.py", line 49, in save
+[Mon Apr 28 14:53:43.727244 2025] [wsgi:error] [pid 110442:tid 139801537971776] [remote 102.213.48.10:44344]     name = self._save(name, content)
+[Mon Apr 28 14:53:43.727248 2025] [wsgi:error] [pid 110442:tid 139801537971776] [remote 102.213.48.10:44344]   File "/home/spendy/venv/lib/python3.10/site-packages/django/core/files/storage/filesystem.py", line 100, in _save
+[Mon Apr 28 14:53:43.727253 2025] [wsgi:error] [pid 110442:tid 139801537971776] [remote 102.213.48.10:44344]     os.makedirs(directory, exist_ok=True)
+[Mon Apr 28 14:53:43.727257 2025] [wsgi:error] [pid 110442:tid 139801537971776] [remote 102.213.48.10:44344]   File "/usr/lib/python3.10/os.py", line 215, in makedirs
+[Mon Apr 28 14:53:43.727261 2025] [wsgi:error] [pid 110442:tid 139801537971776] [remote 102.213.48.10:44344]     makedirs(head, exist_ok=exist_ok)
+[Mon Apr 28 14:53:43.727265 2025] [wsgi:error] [pid 110442:tid 139801537971776] [remote 102.213.48.10:44344]   File "/usr/lib/python3.10/os.py", line 225, in makedirs
+[Mon Apr 28 14:53:43.727269 2025] [wsgi:error] [pid 110442:tid 139801537971776] [remote 102.213.48.10:44344]     mkdir(name, mode)
+[Mon Apr 28 14:53:43.727273 2025] [wsgi:error] [pid 110442:tid 139801537971776] [remote 102.213.48.10:44344] PermissionError: [Errno 13] Permission denied: '/home/spendy/media'
+[Mon Apr 28 14:54:10.900628 2025] [wsgi:error] [pid 110442:tid 139801529579072] [remote 172.70.242.145:11948] Not Found: /wp-admin/setup-config.php
+[Mon Apr 28 14:55:20.404449 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.6:55194] Internal Server Error: /kyc-reg/
+[Mon Apr 28 14:55:20.404537 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.6:55194] Traceback (most recent call last):
+[Mon Apr 28 14:55:20.404541 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.6:55194]   File "/home/spendy/venv/lib/python3.10/site-packages/django/core/handlers/exception.py", line 55, in inner
+[Mon Apr 28 14:55:20.404547 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.6:55194]     response = get_response(request)
+[Mon Apr 28 14:55:20.404551 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.6:55194]   File "/home/spendy/venv/lib/python3.10/site-packages/django/core/handlers/base.py", line 197, in _get_response
+[Mon Apr 28 14:55:20.404556 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.6:55194]     response = wrapped_callback(request, *callback_args, **callback_kwargs)
+[Mon Apr 28 14:55:20.404561 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.6:55194]   File "/home/spendy/venv/lib/python3.10/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+[Mon Apr 28 14:55:20.404566 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.6:55194]     return view_func(request, *args, **kwargs)
+[Mon Apr 28 14:55:20.404587 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.6:55194]   File "/home/spendy/wallet/views.py", line 320, in kyc_registration
+[Mon Apr 28 14:55:20.404591 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.6:55194]     new_form.save()
+[Mon Apr 28 14:55:20.404597 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.6:55194]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/base.py", line 902, in save
+[Mon Apr 28 14:55:20.404601 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.6:55194]     self.save_base(
+[Mon Apr 28 14:55:20.404605 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.6:55194]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/base.py", line 1008, in save_base
+[Mon Apr 28 14:55:20.404610 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.6:55194]     updated = self._save_table(
+[Mon Apr 28 14:55:20.404614 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.6:55194]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/base.py", line 1128, in _save_table
+[Mon Apr 28 14:55:20.404619 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.6:55194]     values = [
+[Mon Apr 28 14:55:20.404623 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.6:55194]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/base.py", line 1132, in <listcomp>
+[Mon Apr 28 14:55:20.404628 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.6:55194]     (getattr(self, f.attname) if raw else f.pre_save(self, False)),
+[Mon Apr 28 14:55:20.404632 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.6:55194]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/fields/files.py", line 338, in pre_save
+[Mon Apr 28 14:55:20.404637 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.6:55194]     file.save(file.name, file.file, save=False)
+[Mon Apr 28 14:55:20.404641 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.6:55194]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/fields/files.py", line 99, in save
+[Mon Apr 28 14:55:20.404645 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.6:55194]     self.name = self.storage.save(name, content, max_length=self.field.max_length)
+[Mon Apr 28 14:55:20.404650 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.6:55194]   File "/home/spendy/venv/lib/python3.10/site-packages/django/core/files/storage/base.py", line 49, in save
+[Mon Apr 28 14:55:20.404654 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.6:55194]     name = self._save(name, content)
+[Mon Apr 28 14:55:20.404659 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.6:55194]   File "/home/spendy/venv/lib/python3.10/site-packages/django/core/files/storage/filesystem.py", line 100, in _save
+[Mon Apr 28 14:55:20.404663 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.6:55194]     os.makedirs(directory, exist_ok=True)
+[Mon Apr 28 14:55:20.404667 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.6:55194]   File "/usr/lib/python3.10/os.py", line 225, in makedirs
+[Mon Apr 28 14:55:20.404672 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.6:55194]     mkdir(name, mode)
+[Mon Apr 28 14:55:20.404676 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.6:55194] PermissionError: [Errno 13] Permission denied: '/home/spendy/media/kyc'
+[Mon Apr 28 14:55:30.769380 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.10:44074] Internal Server Error: /kyc-reg/
+[Mon Apr 28 14:55:30.769836 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.10:44074] Traceback (most recent call last):
+[Mon Apr 28 14:55:30.769855 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.10:44074]   File "/home/spendy/venv/lib/python3.10/site-packages/django/core/handlers/exception.py", line 55, in inner
+[Mon Apr 28 14:55:30.769874 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.10:44074]     response = get_response(request)
+[Mon Apr 28 14:55:30.769879 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.10:44074]   File "/home/spendy/venv/lib/python3.10/site-packages/django/core/handlers/base.py", line 197, in _get_response
+[Mon Apr 28 14:55:30.769884 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.10:44074]     response = wrapped_callback(request, *callback_args, **callback_kwargs)
+[Mon Apr 28 14:55:30.769890 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.10:44074]   File "/home/spendy/venv/lib/python3.10/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+[Mon Apr 28 14:55:30.769895 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.10:44074]     return view_func(request, *args, **kwargs)
+[Mon Apr 28 14:55:30.769899 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.10:44074]   File "/home/spendy/wallet/views.py", line 320, in kyc_registration
+[Mon Apr 28 14:55:30.769904 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.10:44074]     new_form.save()
+[Mon Apr 28 14:55:30.769908 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.10:44074]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/base.py", line 902, in save
+[Mon Apr 28 14:55:30.769913 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.10:44074]     self.save_base(
+[Mon Apr 28 14:55:30.769918 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.10:44074]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/base.py", line 1008, in save_base
+[Mon Apr 28 14:55:30.769922 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.10:44074]     updated = self._save_table(
+[Mon Apr 28 14:55:30.769927 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.10:44074]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/base.py", line 1128, in _save_table
+[Mon Apr 28 14:55:30.769944 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.10:44074]     values = [
+[Mon Apr 28 14:55:30.769948 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.10:44074]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/base.py", line 1132, in <listcomp>
+[Mon Apr 28 14:55:30.769953 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.10:44074]     (getattr(self, f.attname) if raw else f.pre_save(self, False)),
+[Mon Apr 28 14:55:30.769957 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.10:44074]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/fields/files.py", line 338, in pre_save
+[Mon Apr 28 14:55:30.769961 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.10:44074]     file.save(file.name, file.file, save=False)
+[Mon Apr 28 14:55:30.769964 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.10:44074]   File "/home/spendy/venv/lib/python3.10/site-packages/django/db/models/fields/files.py", line 99, in save
+[Mon Apr 28 14:55:30.769968 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.10:44074]     self.name = self.storage.save(name, content, max_length=self.field.max_length)
+[Mon Apr 28 14:55:30.769971 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.10:44074]   File "/home/spendy/venv/lib/python3.10/site-packages/django/core/files/storage/base.py", line 49, in save
+[Mon Apr 28 14:55:30.769995 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.10:44074]     name = self._save(name, content)
+[Mon Apr 28 14:55:30.769998 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.10:44074]   File "/home/spendy/venv/lib/python3.10/site-packages/django/core/files/storage/filesystem.py", line 100, in _save
+[Mon Apr 28 14:55:30.770007 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.10:44074]     os.makedirs(directory, exist_ok=True)
+[Mon Apr 28 14:55:30.770010 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.10:44074]   File "/usr/lib/python3.10/os.py", line 225, in makedirs
+[Mon Apr 28 14:55:30.770013 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.10:44074]     mkdir(name, mode)
+[Mon Apr 28 14:55:30.770016 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 102.213.48.10:44074] PermissionError: [Errno 13] Permission denied: '/home/spendy/media/kyc'
+[Mon Apr 28 14:55:36.451562 2025] [wsgi:error] [pid 110554:tid 140490103576128] [remote 172.70.243.98:17616] Not Found: /wordpress/wp-admin/setup-config.php
+[Mon Apr 28 14:56:24.464495 2025] [wsgi:error] [pid 110554:tid 140490103576128] [remote 172.70.243.81:20028] Not Found: /wordpress/wp-admin/setup-config.php
+[Mon Apr 28 14:56:36.038510 2025] [wsgi:error] [pid 110554:tid 140490204288576] [remote 23.137.100.26:64214] Not Found: /.env
+[Mon Apr 28 14:56:36.168906 2025] [wsgi:error] [pid 110554:tid 140490103576128] [remote 23.137.100.26:64260] Not Found: /wp-content/
+[Mon Apr 28 14:57:25.977302 2025] [wsgi:error] [pid 110554:tid 140490103576128] [remote 172.70.248.61:24200] Not Found: /wp-admin/setup-config.php
+[Mon Apr 28 14:58:09.270127 2025] [wsgi:error] [pid 110752:tid 139624602527296] [remote 102.213.48.6:37392] <QuerySet []>
+[Mon Apr 28 14:58:44.393364 2025] [wsgi:error] [pid 110752:tid 139624602527296] [remote 102.213.48.10:47308] admi-cc-PRIMARY's KES wallet:Balance--:0.00
+[Mon Apr 28 14:58:44.396266 2025] [wsgi:error] [pid 110752:tid 139624602527296] [remote 102.213.48.10:47308] <QuerySet []>
+[Mon Apr 28 14:58:52.901280 2025] [wsgi:error] [pid 110752:tid 139624602527296] [remote 102.213.48.10:32944] admi-cc-PRIMARY's KES wallet:Balance--:0.00
+[Mon Apr 28 14:58:52.902767 2025] [wsgi:error] [pid 110752:tid 139624602527296] [remote 102.213.48.10:32944] <QuerySet []>
+[Mon Apr 28 15:00:19.950327 2025] [wsgi:error] [pid 110752:tid 139624602527296] [remote 102.213.48.10:51362] topa-None-PRIMARY's None wallet:Balance--:0.00
+[Mon Apr 28 15:00:19.952796 2025] [wsgi:error] [pid 110752:tid 139624602527296] [remote 102.213.48.10:51362] <QuerySet []>
+[Mon Apr 28 15:01:47.658467 2025] [wsgi:error] [pid 110752:tid 139624485029440] [remote 102.213.48.10:48722] topa-None-PRIMARY's None wallet:Balance--:0.00
+[Mon Apr 28 15:01:47.660992 2025] [wsgi:error] [pid 110752:tid 139624485029440] [remote 102.213.48.10:48722] <QuerySet []>
+[Mon Apr 28 15:02:15.482261 2025] [wsgi:error] [pid 110752:tid 139624602527296] [remote 102.213.48.6:50274] <QuerySet []>
+[Mon Apr 28 15:02:22.846351 2025] [wsgi:error] [pid 110752:tid 139624602527296] [remote 102.213.48.6:50274] /home/spendy/wallet/views.py:148: UnorderedObjectListWarning: Pagination may yield inconsistent results with an unordered object_list: <class 'wallet.models.StaffProfile'> QuerySet.
+[Mon Apr 28 15:02:22.846409 2025] [wsgi:error] [pid 110752:tid 139624602527296] [remote 102.213.48.6:50274]   paginator = Paginator(staff_list, 10)  # 10 per page
+[Mon Apr 28 15:08:58.472778 2025] [wsgi:error] [pid 110752:tid 139624485029440] [remote 102.213.48.10:34768] Generated password for mike@gmail.com: GFKY3SVI3Yqy
+[Mon Apr 28 15:09:05.729562 2025] [wsgi:error] [pid 110752:tid 139624485029440] [remote 102.213.48.10:55470] Current user: None
+[Mon Apr 28 15:09:05.730988 2025] [wsgi:error] [pid 110752:tid 139624485029440] [remote 102.213.48.10:55470] Has staffprofile: False
