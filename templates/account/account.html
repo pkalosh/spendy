@@ -155,7 +155,7 @@
                                     Company KYC Details
                                 </button>
                             </h2>
-                            <div id="companyKycCollapse" class="accordion-collapse collapse show" aria-labelledby="companyKycHeading" data-bs-parent="#companyKycAccordion">
+                            <div id="companyKycCollapse" class="accordion-collapse collapse" aria-labelledby="companyKycHeading" data-bs-parent="#companyKycAccordion">
                                 <div class="accordion-body">
                                     {% if kyc %}
                                     <div class="row">
@@ -218,7 +218,7 @@
 
 <!-- Create Wallet Modal -->
 <div class="modal fade" id="createWalletModal" tabindex="-1" aria-labelledby="createWalletModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog" style="margin-top: 80px;">
         <div class="modal-content">
             <form method="post" action="">
                 {% csrf_token %}
@@ -246,7 +246,7 @@
 
 <!-- Edit Account Modal -->
 <div class="modal fade" id="editAccountModal" tabindex="-1" aria-labelledby="editAccountModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog" style="margin-top: 80px;">
         <div class="modal-content">
             <!-- You can put Edit Account form here -->
         </div>
@@ -256,7 +256,7 @@
 <!-- Send Money Modal -->
 <!-- Send Money Modal -->
 <div class="modal fade" id="sendMoneyModal" tabindex="-1" aria-labelledby="sendMoneyModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog" style="margin-top: 80px;">
       <div class="modal-content">
   
         <div class="modal-header">
@@ -307,7 +307,7 @@
 <!-- Fund Wallet Modal -->
 <!-- Fund Wallet Modal -->
 <div class="modal fade" id="fundWalletModal" tabindex="-1" aria-labelledby="fundWalletModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog" style="margin-top: 80px;">
       <div class="modal-content">
   
         <div class="modal-header">

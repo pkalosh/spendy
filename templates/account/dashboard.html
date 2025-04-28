@@ -2,7 +2,20 @@
 {% load static %}
 {% load humanize %}
 {% block content %}
+<style>
+    .custom-dropdown-menu {
+    z-index: 1051; /* Make sure this is higher than the modal's z-index */
+}
 
+.modal-content {
+    overflow-y: auto; /* Ensures modal content is scrollable */
+}
+
+.modal-body {
+    overflow-y: auto; /* Keeps content scrollable if it exceeds the height */
+}
+
+</style>
 <section class="dashboard-section body-collapse">
     <div class="overlay pt-120">
         <div class="container-fluid">
@@ -11,6 +24,7 @@
                     <strong>{{ form.errors }}</strong>
                 </div>
             {% endif %}
+
             <div class="row g-4">
                 <!-- Left Section -->
                 <div class="col-lg-8">
@@ -26,9 +40,9 @@
                             </div>
                         </div>
                         <div class="mt-4 d-flex flex-wrap gap-2">
-                            <a href="#" class="btn btn-primary">Pay</a>
-                            <a href="#" class="btn btn-success">Send</a>
-                            <a href="#" class="btn btn-warning">New Request</a>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#payModal">Pay</button>
+                            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#sendModal">Send</button>
+                            <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#expenseModal">New Expense</button>
                         </div>
                     </div>
 
@@ -36,7 +50,7 @@
                     <div class="card p-4 mt-4 shadow-sm rounded-4">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h5 class="mb-0">Payments</h5>
-                            <a href="#" class="text-decoration-none">View All <img src="{% static 'assets1/images/icon/right-arrow.png' %}" alt="icon"></a>
+                            <a href="{% url 'wallet:transactions' %}" class="text-decoration-none">View All <img src="{% static 'assets1/images/icon/right-arrow.png' %}" alt="View All Icon"></a>
                         </div>
                         <div class="table-responsive">
                             <table class="table align-middle">
@@ -46,30 +60,45 @@
                                         <th>Date</th>
                                         <th>Status</th>
                                         <th>Amount</th>
-                                        <th>Action</th>
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% for s in sender_transaction %}
-                                        <tr data-bs-toggle="modal" data-bs-target="#transactionsMod">
-                                            <td>
-                                                <strong>{{ s.reciever.kyc.full_name|title }}</strong><br>
-                                                <span class="text-muted">{{ s.transaction_type|title }}</span>
-                                            </td>
-                                            <td>
-                                                <small>{{ s.date|date:"h:i A" }}</small><br>
-                                                <span class="text-muted">{{ s.date|date:"d M, Y" }}</span>
-                                            </td>
-                                            <td>
-                                                <span class="{% if s.status == 'completed' %}text-success
-                                                              {% elif s.status == 'pending' or s.status == 'processing' %}text-warning
-                                                              {% else %}text-danger{% endif %}">
-                                                    {{ s.status|title }}
-                                                </span>
-                                            </td>
-                                            <td class="text-danger">-${{ s.amount|intcomma }}</td>
-                                            <td><a href="#" class="text-dark"><i class="fas fa-eye"></i></a></td>
-                                        </tr>
+                                    <tr>
+                                        <td>
+                                            <strong>{{ s.reciever.kyc.full_name|title }}</strong><br>
+                                            <small class="text-muted">{{ s.transaction_type|title }}</small>
+                                        </td>
+                                        <td>
+                                            <small>{{ s.date|date:"h:i A" }}</small><br>
+                                            <small class="text-muted">{{ s.date|date:"d M, Y" }}</small>
+                                        </td>
+                                        <td>
+                                            <span class="{% if s.status == 'completed' %}text-success
+                                                        {% elif s.status in 'pending processing' %}text-warning
+                                                        {% else %}text-danger{% endif %}">
+                                                {{ s.status|title }}
+                                            </span>
+                                        </td>
+                                        <td class="text-danger">-${{ s.amount|intcomma }}</td>
+                                        <td>
+                                            <div class="dropdown">
+                                                <button class="btn btn-link text-dark" type="button" id="dropdownMenuButton{{ s.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="fas fa-ellipsis-v"></i>
+                                                </button>
+                                                <ul class="dropdown-menu custom-dropdown-menu" aria-labelledby="dropdownMenuButton{{ s.id }}">
+                                                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#viewTransactionModal{{ s.id }}">View</a></li>
+                                                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#approveTransactionModal{{ s.id }}">Approve</a></li>
+                                                    <li><a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#rejectTransactionModal{{ s.id }}">Reject</a></li>
+                                                </ul>
+                                            </div>
+                                        </td>
+                                        
+                                    </tr>
+
+                                    <!-- Modals for each transaction -->
+                                    {% include 'partials/transaction_modals.html' with transaction=s %}
                                     {% endfor %}
                                 </tbody>
                             </table>
@@ -87,12 +116,14 @@
 
                         </div>
                         <div class="row g-2">
-                            {% for c in credit_card %}
+                            {% for c in wallets %}
                                 <!-- Card Preview Loop -->
                                 <div class="col-4">
                                     <div class="bg-light p-2 rounded-3 text-center">
                                         <img src="{% static 'assets1/images/icon/card.png' %}" alt="Card" class="w-100 rounded">
+                                        {{c.balance}}
                                     </div>
+                                   
                                 </div>
                             {% endfor %}
                             <div class="col-4">
@@ -148,5 +179,45 @@
         </div>
     </div>
 </section>
+<!-- Add Wallet Modal -->
+<div class="modal fade" id="addcardMod" tabindex="-1" aria-labelledby="addcardModLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addcardModLabel">Add New Wallet</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="walletName" class="form-label">Wallet Name</label>
+                        <input type="text" name="wallet_name" id="walletName" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="initialBalance" class="form-label">Initial Balance</label>
+                        <input type="number" name="initial_balance" id="initialBalance" class="form-control" required step="0.01" min="0">
+                    </div>
+                    <div class="mb-3">
+                        <label for="currency" class="form-label">Currency</label>
+                        <select name="currency" id="currency" class="form-select" required>
+ 
+                            <option value="KES">KES</option>
+                            <!-- Add more currencies as needed -->
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill">Add Wallet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modals -->
+{% include 'partials/pay_modal.html' %}
+{% include 'partials/send_modal.html' %}
+{% include 'partials/expense_modal.html' %}
 
 {% endblock content %}

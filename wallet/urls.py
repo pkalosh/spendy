@@ -6,10 +6,11 @@ app_name = "wallet"
 urlpatterns = [
     path("dashboard/", views.dashboard, name="dashboard"),
     path("wallets/", views.wallet, name="wallet"),
-    path("pending-expense/", views.pending_expenses, name="pending_expenses"),
+    # path("pending-expense/", views.pending_expenses, name="pending_expenses"),
     path("kyc-reg/", views.kyc_registration, name="kyc-reg"),
     path("expenses/", views.expenses, name="expenses"),
     path("expenses/create/", views.create_expenses, name="create-expenses"),
+    path("transactions/", views.transactions, name="transactions"),
 
     path('roles/', views.list_roles ,name='staff-roles'),
     path('staff/', views.list_staff_profiles, name='staff-list'),

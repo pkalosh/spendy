@@ -334,9 +334,9 @@ def kyc_registration(request):
 
 
 @login_required
-def pending_expenses(request):
+def transactions(request):
     user = request.user
-    txn = Transaction.objects.all()
+    txn = Transaction.objects.filter(company= get_object_or_404(CompanyKYC, user=request.user))
 
     context = {
         "transactions": txn,
@@ -413,19 +413,11 @@ def dashboard(request):
         except CompanyKYC.DoesNotExist:
             messages.warning(request, "You need to submit your KYC")
             return redirect("wallet:kyc-reg")
-        
-        recent_transfer = Transaction.objects.filter(sender=request.user, transaction_type="transfer", status="completed").order_by("-id")[:1]
-        recent_recieved_transfer = Transaction.objects.filter(reciever=request.user, transaction_type="transfer").order_by("-id")[:1]
+    
 
-
-        sender_transaction = Transaction.objects.filter(sender=request.user, transaction_type="transfer").order_by("-id")
-        reciever_transaction = Transaction.objects.filter(reciever=request.user, transaction_type="transfer").order_by("-id")
-
-        request_sender_transaction = Transaction.objects.filter(sender=request.user, transaction_type="request")
-        request_reciever_transaction = Transaction.objects.filter(reciever=request.user, transaction_type="request")
+        sender_transaction = Transaction.objects.filter(sender=request.user).order_by("-id")
         
-        
-        wallet = Wallet.objects.filter(user=request.user)
+        wallets = Wallet.objects.filter(user=request.user)
 
     else:
         messages.warning(request, "You need to login to access the dashboard")
@@ -433,15 +425,9 @@ def dashboard(request):
 
     context = {
         "kyc":kyc,
-        "account":wallet,
+        "wallets":wallets,
         "form":form,
-        "sender_transaction":sender_transaction,
-        "reciever_transaction":reciever_transaction,
-
-        'request_sender_transaction':request_sender_transaction,
-        'request_reciever_transaction':request_reciever_transaction,
-        'recent_transfer':recent_transfer,
-        'recent_recieved_transfer':recent_recieved_transfer,
+        "sender_transaction":sender_transaction
     }
     return render(request, "account/dashboard.html", context)
     
