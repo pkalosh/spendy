@@ -15,46 +15,6 @@ class TransactionError(Exception):
 class InsufficientFunds(TransactionError):
     pass
 
-class Wallet(models.Model):
-    CURRENCY_CHOICES = [
-        ('KES', 'KES'),
-        ('UGX', 'UGX'),
-    ]
-    WALLET_TYPES = [
-        ('PRIMARY', 'PRIMARY'),
-        ('EVENT', 'EVENT'),
-        ('OPERATIONS', 'OPERATIONS'),
-        ('EMERGENCY', 'EMERGENCY'),
-
-    ]
-    wallet_number = ShortUUIDField(length=7,blank=True, null=True, max_length=25, prefix="SPDY", alphabet="1234567890") #2175893745837
-
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    wallet_type = models.CharField(max_length=10, choices=WALLET_TYPES, default='PRIMARY')
-    balance = models.DecimalField(max_digits=15, decimal_places=2, default=0,
-                                validators=[MinValueValidator(Decimal('0.00'))])
-    currency = models.CharField(max_length=10, choices=CURRENCY_CHOICES, blank=True, null=True)
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        indexes = [
-            models.Index(fields=['user', 'currency']),
-        ]
-
-    def __str__(self):
-        return f"{self.user.first_name}-{self.user.company_name}-{self.wallet_type}'s {self.currency} wallet:Balance--:{self.balance}"
-
-    def validate_sufficient_funds(self, amount):
-        if self.balance < amount:
-            raise InsufficientFunds(f"Insufficient funds. Current balance: {self.balance} {self.currency}")
-
-    def validate_transaction_amount(self, amount):
-        if amount <= 0:
-            raise ValidationError("Transaction amount must be positive")
-        if amount > Decimal('1000000'):  # Example maximum transaction limit
-            raise ValidationError("Transaction amount exceeds maximum limit")
 
 def user_directory_path(instance, filename):
     ext = filename.split(".")[-1]
@@ -101,32 +61,48 @@ class CompanyKYC(models.Model):
         ordering = ['-date']
 
 
-@receiver(post_save, sender=User)
-def create_kyc(sender, instance, created, **kwargs):
-    # Only create KYC if NOT staff (i.e., either flag is False)
-    if created and not (instance.is_staff and instance.is_org_staff):
-        CompanyKYC.objects.create(user=instance)
+class Wallet(models.Model):
+    CURRENCY_CHOICES = [
+        ('KES', 'KES'),
+        ('UGX', 'UGX'),
+    ]
+    WALLET_TYPES = [
+        ('PRIMARY', 'PRIMARY'),
+        ('EVENT', 'EVENT'),
+        ('OPERATIONS', 'OPERATIONS'),
+        ('EMERGENCY', 'EMERGENCY'),
 
-@receiver(post_save, sender=User)
-def save_kyc(sender, instance, **kwargs):
-    if not (instance.is_staff and instance.is_org_staff) and hasattr(instance, 'companykyc'):
-        instance.companykyc.save()
+    ]
+    wallet_number = ShortUUIDField(length=7,blank=True, null=True, max_length=25, prefix="SPDY", alphabet="1234567890") #2175893745837
+    company = models.ForeignKey(CompanyKYC, on_delete=models.SET_NULL, blank=True, null=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    wallet_type = models.CharField(max_length=10, choices=WALLET_TYPES, default='PRIMARY')
+    balance = models.DecimalField(max_digits=15, decimal_places=2, default=0,
+                                validators=[MinValueValidator(Decimal('0.00'))])
+    currency = models.CharField(max_length=10, choices=CURRENCY_CHOICES, blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
-@receiver(post_save, sender=User)
-def create_wallet(sender, instance, created, **kwargs):
-    if created and not (instance.is_staff and instance.is_org_staff):
-        currency = 'KES' if instance.country == 'KENYA' else 'None'
-        Wallet.objects.create(
-            user=instance,
-            wallet_type='PRIMARY',
-            currency=currency
-        )
+    class Meta:
+        indexes = [
+            models.Index(fields=['user', 'currency']),
+        ]
 
-@receiver(post_save, sender=User)
-def save_wallet(sender, instance, **kwargs):
-    if not (instance.is_staff and instance.is_org_staff) and hasattr(instance, 'wallet'):
-        instance.wallet.save()
+    def __str__(self):
+        company_name = self.company.company_name if self.company else "NoCompany"
+        return f"{self.user.first_name}-{company_name}-{self.wallet_type} Wallet: {self.balance} {self.currency}"
 
+
+    def validate_sufficient_funds(self, amount):
+        if self.balance < amount:
+            raise InsufficientFunds(f"Insufficient funds. Current balance: {self.balance} {self.currency}")
+
+    def validate_transaction_amount(self, amount):
+        if amount <= 0:
+            raise ValidationError("Transaction amount must be positive")
+        if amount > Decimal('1000000'):  # Example maximum transaction limit
+            raise ValidationError("Transaction amount exceeds maximum limit")
 
 
 TRANSACTION_TYPE = (

@@ -431,3 +431,23 @@ def dashboard(request):
     }
     return render(request, "account/dashboard.html", context)
     
+
+@login_required
+def staff_dashboard(request):
+    if request.user.is_authenticated:
+
+        transactions = Transaction.objects.filter(sender=request.user).order_by("-id")
+        print(request.user.staffprofile.company)
+        wallets = Wallet.objects.filter(company = request.user.staffprofile.company)
+        print(wallets)
+
+    else:
+        messages.warning(request, "You need to login to access the dashboard")
+        return redirect("userauths:sign-in")
+
+    context = {
+        "wallets":wallets,
+        "transactions":transactions
+    }
+    return render(request, "users/staff/staff.html", context)
+    

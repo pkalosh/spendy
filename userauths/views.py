@@ -33,6 +33,7 @@ def RegisterView(request):
     return render(request, "users/sign-up.html", context)
 
 
+
 def LoginView(request):
     if request.method == "POST":
         email = request.POST.get("email")
@@ -42,21 +43,32 @@ def LoginView(request):
             user = User.objects.get(email=email)
             user = authenticate(request, email=email, password=password)
 
-            if user is not None: # if there is a user
+            if user is not None:
                 login(request, user)
-                messages.success(request, "Welcome Back!.")
-                return redirect("wallet:dashboard")
+                messages.success(request, "Welcome Back!")
+
+                # Now check roles
+                if user.is_admin and hasattr(user, 'staffprofile') and user.staffprofile.role.is_admin:
+                    return redirect("wallet:dashboard")
+                elif user.is_staff or (hasattr(user, 'staffprofile') and user.staffprofile.role in ["staff", "org_staff"]):
+                    return redirect("wallet:staff-dashboard")
+                else:
+                    messages.warning(request, "Unauthorized role.")
+                    return redirect("userauths:sign-in")
             else:
                 messages.warning(request, "Username or password does not exist")
                 return redirect("userauths:sign-in")
-        except:
+
+        except User.DoesNotExist:
             messages.warning(request, "User does not exist")
+            return redirect("userauths:sign-in")
 
     if request.user.is_authenticated:
         messages.warning(request, "You are already logged In")
         return redirect("wallet:dashboard")
-        
+
     return render(request, "users/sign-in.html")
+
 
 def logoutView(request):
     logout(request)
