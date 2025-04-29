@@ -75,6 +75,7 @@ class Expense(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     approved = models.BooleanField(default=False)
+    paid = models.BooleanField(default=False)
     declined = models.BooleanField(default=False)
     approved_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='approved_by', blank=True, null=True)
     decline_reason = models.TextField( null=True, blank=True)

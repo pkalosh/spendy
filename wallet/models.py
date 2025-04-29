@@ -74,6 +74,7 @@ class Wallet(models.Model):
 
     ]
     wallet_number = ShortUUIDField(length=7,blank=True, null=True, max_length=25, prefix="SPDY", alphabet="1234567890") #2175893745837
+    wallet_name = models.CharField(blank=True, null=True, max_length=50) #2175893745837
     company = models.ForeignKey(CompanyKYC, on_delete=models.SET_NULL, blank=True, null=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     wallet_type = models.CharField(max_length=10, choices=WALLET_TYPES, default='PRIMARY')
@@ -91,7 +92,7 @@ class Wallet(models.Model):
 
     def __str__(self):
         company_name = self.company.company_name if self.company else "NoCompany"
-        return f"{self.user.first_name}-{company_name}-{self.wallet_type} Wallet: {self.balance} {self.currency}"
+        return f"{self.wallet_name}-{company_name}-{self.wallet_type} Wallet: {self.balance} {self.currency}"
 
 
     def validate_sufficient_funds(self, amount):

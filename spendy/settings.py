@@ -163,9 +163,9 @@ CACHES = {
     }
 }
 
-# LOGIN_URL = "users:sign-in"
-# # LOGIN_REDIRECT_URL = "users:sign-in"
-# LOGOUT_REDIRECT_URL = "users:sign-in"
+LOGIN_URL = "userauths:sign-in"
+LOGIN_REDIRECT_URL = "userauths:sign-in"
+LOGOUT_REDIRECT_URL = "userauths:sign-in"
 
 
 

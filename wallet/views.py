@@ -13,6 +13,8 @@ from django.contrib.auth.base_user import BaseUserManager
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from expense.models import Expense
+from django.core.exceptions import ObjectDoesNotExist
+
 def is_admin(user):
     return user.is_authenticated and user.is_admin
 
@@ -150,9 +152,7 @@ def list_staff_profiles(request):
     staffs = paginator.get_page(page_number)
     return render(request, 'users/staff/list.html', {'staffs': staffs})
 
-# def get_staff_profile(request, pk):
-#     staff = get_object_or_404(StaffProfile, pk=pk)
-#     return render(request, 'users/staff/detail.html', {'staff': staff})
+
 
 @login_required
 def get_staff_profile(request, pk):
@@ -432,22 +432,51 @@ def dashboard(request):
     return render(request, "account/dashboard.html", context)
     
 
+from django.http import HttpResponse, JsonResponse
+from expense.models import Expense, Wallet, Event, Operation, ExpenseGroup
+from expense.forms import ExpenseRequestForm, ExpenseApprovalForm, PaymentForm
 @login_required
 def staff_dashboard(request):
-    if request.user.is_authenticated:
-
+    """
+    Staff dashboard view showing user transactions and company wallets.
+    Requires authentication and proper staff profile.
+    """
+    context = {}
+    user = request.user
+    try:
+        # Get staff profile
+        company = StaffProfile.objects.get(user=request.user)
+        
+        # Get transactions and wallets
         transactions = Transaction.objects.filter(sender=request.user).order_by("-id")
-        print(request.user.staffprofile.company)
-        wallets = Wallet.objects.filter(company = request.user.staffprofile.company)
-        print(wallets)
+        wallets = Wallet.objects.filter(company=company.company).order_by("-id")  # Added proper ordering
+        
+        # Add to context
+        context["transactions"] = transactions
+        context["wallets"] = wallets
+        expenses = Expense.objects.filter(company=company.company).order_by('-created_at')
 
-    else:
-        messages.warning(request, "You need to login to access the dashboard")
-        return redirect("userauths:sign-in")
+        pending_expenses = expenses.filter(approved=False, declined=False)
+        approved_expenses = expenses.filter(approved=True)
+        declined_expenses = expenses.filter(declined=True)
+        
+        # Initialize forms
+        expense_form = ExpenseRequestForm(user=user, company=company.company)
+        payment_form = PaymentForm(user=user,company=company.company)
+        context["pending_expenses"] = pending_expenses
+        context["approved_expenses"] = approved_expenses
+        context["declined_expenses"] = declined_expenses
+        context["expense_form"] = expense_form
+        context["payment_form"] = payment_form
 
-    context = {
-        "wallets":wallets,
-        "transactions":transactions
-    }
-    return render(request, "users/staff/staff.html", context)
-    
+        return render(request, "users/staff/staff.html", context)
+        
+    except StaffProfile.DoesNotExist as e:
+        # Log the error
+        print(f"Staff profile error: {e}")
+        
+        # Add error message to be displayed on the page
+        messages.error(request, "Staff profile not found. Please contact administrator.")
+        
+        # Return to a simple error template or the login page
+        return render(request, "error_template.html", {"error": "Staff profile not found"}, status=404)
