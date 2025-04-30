@@ -4,9 +4,9 @@ from django.contrib import messages
 from django.http import JsonResponse, HttpResponseForbidden
 from django.db import transaction
 from django.urls import reverse
-from .models import Expense, Wallet, Event, Operation, ExpenseGroup
+from .models import Expense, Event, Operation, ExpenseGroup
 from .forms import ExpenseRequestForm, ExpenseApprovalForm, PaymentForm
-from wallet.models import Transaction, CompanyKYC
+from wallet.models import Transaction, CompanyKYC, Wallet
 def is_admin(user):
     """Check if user is admin either through Django admin or through StaffProfile"""
     if user.is_staff or user.is_superuser:

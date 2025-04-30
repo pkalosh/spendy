@@ -2,31 +2,30 @@
 {% load static %}
 {% load humanize %}
 {% block content %}
-<!-- Dashboard Section start -->
+
 <section class="dashboard-section body-collapse">
     <div class="overlay pt-120">
         <div class="container-fruid">
             <div class="row">
                 <div class="col-xl-12 col-lg-12">
                     <div class="section-content">
-                        
+
                         <div class="transactions-area">
                             <div class="section-text d-flex justify-content-between align-items-center">
                                 <div>
                                     <h5>Expense</h5>
                                     <p>View transactions pending approvals, as well as historical expenses.</p>
                                 </div>
-                                <!-- Button to create expense -->
                                 <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createExpenseModal">Create Expense</button>
                             </div>
 
                             <div class="top-area d-flex align-items-center justify-content-between mt-3">
                                 <ul class="nav nav-tabs" role="tablist">
-                                    <li class="nav-item" role="presentation">
-                                        <button class="nav-link active" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button" role="tab" aria-controls="pending" aria-selected="true">Pending</button>
+                                    <li class="nav-item">
+                                        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#pending" type="button" role="tab">Pending</button>
                                     </li>
-                                    <li class="nav-item" role="presentation">
-                                        <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab" aria-controls="history" aria-selected="false">History</button>
+                                    <li class="nav-item">
+                                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab">History</button>
                                     </li>
                                 </ul>
                                 <div class="search-area">
@@ -38,8 +37,7 @@
                             </div>
 
                             <div class="tab-content mt-40">
-                                <!-- PENDING TAB -->
-                                <div class="tab-pane fade show active" id="pending" role="tabpanel" aria-labelledby="pending-tab">
+                                <div class="tab-pane fade show active" id="pending" role="tabpanel">
                                     <div class="table-responsive">
                                         <table class="table">
                                             <thead>
@@ -58,9 +56,9 @@
                                             <tbody>
                                                 {% for s in transactions %}
                                                     <tr>
-                                                        <td>{{ s.event.name}}</td>
-                                                        <td>{{s.expense_group}}</td>
-                                                        <td>{{s.event.category.name}}</td>
+                                                        <td>{{ s.event.name }}</td>
+                                                        <td>{{ s.expense_group }}</td>
+                                                        <td>{{ s.event.category.name }}</td>
                                                         <td>{{ s.wallet.currency }} {{ s.amount|intcomma }}</td>
                                                         <td>{{ s.created_at|date:"M d, Y" }}</td>
                                                         <td><span class="badge bg-warning">{{ s.approved|title }}</span></td>
@@ -71,21 +69,26 @@
                                                         </td>
                                                     </tr>
 
-                                                    <!-- View Transaction Modal for PENDING -->
-                                                    <div class="modal fade" id="viewTransactionModal{{ s.id }}" tabindex="-1" aria-labelledby="viewTransactionLabel{{ s.id }}" aria-hidden="true">
-                                                        <div class="modal-dialog">
+                                                    <!-- View Modal -->
+                                                    <div class="modal fade" id="viewTransactionModal{{ s.id }}" tabindex="-1" aria-hidden="true">
+                                                        <div class="modal-dialog modal-lg" style="margin-top: 80px;">
                                                             <div class="modal-content">
                                                                 <div class="modal-header">
-                                                                    <h5 class="modal-title" id="viewTransactionLabel{{ s.id }}">Transaction Details</h5>
-                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                    <h5 class="modal-title">Transaction Details</h5>
+                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                                 </div>
                                                                 <div class="modal-body">
-                                                                    <p><strong>Expense Name:</strong> {{ s.description }}</p>
+                                                                    <p><strong>Expense Name:</strong> {{ s.event.name }}</p>
                                                                     <p><strong>Amount:</strong> {{ s.wallet.currency }} {{ s.amount|intcomma }}</p>
                                                                     <p><strong>Requested By:</strong> {{ s.wallet.user.get_full_name }}</p>
                                                                     <p><strong>Date:</strong> {{ s.created_at|date:"M d, Y" }}</p>
                                                                     <div class="d-flex gap-2">
-                                                                        <button class="btn btn-success w-50" onclick="approveTransaction('{{ s.id }}')">Approve</button>
+                                                                        <form action="{% url 'wallet:expenses' %}" method="post" class="w-50">
+                                                                            {% csrf_token %}
+                                                                            <input type="hidden" name="action" value="approve">
+                                                                            <input type="hidden" name="expense_id" value="{{ s.id }}">
+                                                                            <button type="submit" class="btn btn-success w-100">Approve</button>
+                                                                        </form>
                                                                         <button class="btn btn-danger w-50" data-bs-toggle="modal" data-bs-target="#declineModal{{ s.id }}">Decline</button>
                                                                     </div>
                                                                 </div>
@@ -93,19 +96,22 @@
                                                         </div>
                                                     </div>
 
-                                                    <!-- Decline Reason Modal -->
-                                                    <div class="modal fade" id="declineModal{{ s.id }}" tabindex="-1" aria-labelledby="declineLabel{{ s.id }}" aria-hidden="true">
-                                                        <div class="modal-dialog">
+                                                    <!-- Decline Modal -->
+                                                    <div class="modal fade" id="declineModal{{ s.id }}" tabindex="-1" aria-hidden="true">
+                                                        <div class="modal-dialog modal-lg" style="margin-top: 80px;">
                                                             <div class="modal-content">
                                                                 <div class="modal-header">
-                                                                    <h5 class="modal-title" id="declineLabel{{ s.id }}">Decline Transaction</h5>
-                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                    <h5 class="modal-title">Decline Transaction</h5>
+                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                                 </div>
                                                                 <div class="modal-body">
-                                                                    <form onsubmit="declineTransaction('{{ s.id }}'); return false;">
+                                                                    <form action="{% url 'wallet:expenses' %}" method="post" onsubmit="return validateDeclineReason('{{ s.id }}');">
+                                                                        {% csrf_token %}
+                                                                        <input type="hidden" name="action" value="reject">
+                                                                        <input type="hidden" name="expense_id" value="{{ s.id }}">
                                                                         <div class="mb-3">
                                                                             <label for="declineReason{{ s.id }}" class="form-label">Reason</label>
-                                                                            <textarea class="form-control" id="declineReason{{ s.id }}" rows="3" required></textarea>
+                                                                            <textarea class="form-control" id="declineReason{{ s.id }}" name="reason" rows="3" required></textarea>
                                                                         </div>
                                                                         <button type="submit" class="btn btn-danger w-100">Submit Decline</button>
                                                                     </form>
@@ -121,82 +127,12 @@
                                         </table>
                                     </div>
                                 </div>
-
-                                <!-- HISTORY TAB -->
-                                <div class="tab-pane fade" id="history" role="tabpanel" aria-labelledby="history-tab">
-                                    <div class="table-responsive">
-                                        <table class="table">
-                                            <thead>
-                                                <tr>
-                                                    <th>Expense Name</th>
-                                                    <th>Group</th>
-                                                    <th>Category</th>
-                                                    <th>Budget</th>
-                                                    <th>Date</th>
-                                                    <th>Status</th>
-                                                    <th>Requested By</th>
-                                                    <th>Approved By</th>
-                                                    <th>Action</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {% for s in transactions %}
-                                                    {% if s.approved == 'True' %}
-                                                    <tr>
-                                                        <td>{{ s.description|default:"Transfer" }}</td>
-                                                        <td>Event/Operation</td>
-                                                        <td>Category</td>
-                                                        <td>{{ s.wallet.currency }} {{ s.amount|intcomma }}</td>
-                                                        <td>{{ s.created_at|date:"M d, Y" }}</td>
-                                                        <td>
-                                                            {% if s.status == 'completed' %}
-                                                                <span class="badge bg-success">{{ s.status|title }}</span>
-                                                            {% elif s.status == 'failed' or s.status == 'cancelled' %}
-                                                                <span class="badge bg-danger">{{ s.status|title }}</span>
-                                                            {% endif %}
-                                                        </td>
-                                                        <td>{{ s.wallet.user.get_full_name }}</td>
-                                                        <td>
-                                                            {% if s.approved_by %}
-                                                                {{ s.approved_by.get_full_name }}
-                                                            {% else %}
-                                                                -
-                                                            {% endif %}
-                                                        </td>
-                                                        <td>
-                                                            <button class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#viewTransactionHistoryModal{{ s.id }}">View</button>
-                                                        </td>
-                                                    </tr>
-
-                                                    <!-- View Transaction Modal for HISTORY -->
-                                                    <div class="modal fade" id="viewTransactionHistoryModal{{ s.id }}" tabindex="-1" aria-labelledby="viewTransactionHistoryLabel{{ s.id }}" aria-hidden="true">
-                                                        <div class="modal-dialog">
-                                                            <div class="modal-content">
-                                                                <div class="modal-header">
-                                                                    <h5 class="modal-title" id="viewTransactionHistoryLabel{{ s.id }}">Transaction Details</h5>
-                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                                </div>
-                                                                <div class="modal-body">
-                                                                    <p><strong>Expense Name:</strong> {{ s.description }}</p>
-                                                                    <p><strong>Amount:</strong> {{ s.wallet.currency }} {{ s.amount|intcomma }}</p>
-                                                                    <p><strong>Requested By:</strong> {{ s.wallet.user.get_full_name }}</p>
-                                                                    <p><strong>Approved By:</strong> {% if s.approved_by %}{{ s.approved_by.get_full_name }}{% else %}-{% endif %}</p>
-                                                                    <p><strong>Date:</strong> {{ s.created_at|date:"M d, Y" }}</p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    {% endif %}
-                                                {% endfor %}
-                                                {% if not transactions %}
-                                                    <tr><td colspan="9" class="text-center">No data available</td></tr>
-                                                {% endif %}
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                <div class="tab-pane fade" id="history" role="tabpanel">
+                                    <!-- Optional: History view content -->
                                 </div>
                             </div>
-                        </div> <!-- end transactions-area -->
+
+                        </div> <!-- transactions-area -->
 
                     </div>
                 </div>
@@ -206,36 +142,37 @@
 </section>
 
 <!-- Create Expense Modal -->
-<div class="modal fade" id="createExpenseModal" tabindex="-1" aria-labelledby="createExpenseLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+<div class="modal fade" id="createExpenseModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg" style="margin-top: 80px;">
         <div class="modal-content p-4">
             <div class="modal-header">
-                <h5 class="modal-title" id="createExpenseLabel">Create Expense</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title">Create Expense</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                {% comment %} Include your full create expense form here, as you provided earlier {% endcomment %}
+                <form action="{% url 'wallet:expenses' %}" method="post">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <input type="hidden" name="action" value="create">
+                    <button type="submit" class="btn btn-primary w-100">Create Expense</button>
+                </form>
             </div>
         </div>
     </div>
 </div>
 
-<script>
-function approveTransaction(id) {
-    if (confirm('Are you sure you want to approve this transaction?')) {
-        // Perform AJAX call or redirect
-        console.log('Transaction Approved:', id);
-    }
-}
+<!-- Bootstrap Bundle JS (ensure only one instance loaded) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-function declineTransaction(id) {
-    var reason = document.getElementById('declineReason' + id).value;
+<script>
+function validateDeclineReason(expenseId) {
+    const reason = document.getElementById('declineReason' + expenseId).value;
     if (reason.trim() === '') {
         alert('Reason is required!');
-        return;
+        return false;
     }
-    // Perform AJAX call or redirect
-    console.log('Transaction Declined:', id, 'Reason:', reason);
+    return true;
 }
 </script>
+
 {% endblock content %}

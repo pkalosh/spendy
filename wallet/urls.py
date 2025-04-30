@@ -6,6 +6,7 @@ app_name = "wallet"
 urlpatterns = [
     path("dashboard/", views.dashboard, name="dashboard"),
     path("wallets/", views.wallet, name="wallet"),
+    path("wallet/create", views.create_wallet, name="create-wallet"),
     path("staff-dashboard/", views.staff_dashboard, name="staff-dashboard"),
     path("kyc-reg/", views.kyc_registration, name="kyc-reg"),
     path("expenses/", views.expenses, name="expenses"),

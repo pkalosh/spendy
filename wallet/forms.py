@@ -1,7 +1,26 @@
 from django import forms 
-from wallet.models import CompanyKYC, StaffProfile,Role
+from wallet.models import CompanyKYC, StaffProfile,Role,Wallet
 from django.forms import ImageField, FileInput, DateInput
 from userauths.models import User
+from decimal import Decimal
+
+class WalletForm(forms.ModelForm):
+    class Meta:
+        model = Wallet
+        fields = ['wallet_name', 'company', 'wallet_type', 'currency', 'balance']
+        widgets = {
+            'wallet_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Wallet Name'}),
+            'company': forms.Select(attrs={'class': 'form-control'}),
+            'wallet_type': forms.Select(attrs={'class': 'form-control'}),
+            'currency': forms.Select(attrs={'class': 'form-control'}),
+            'balance': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0.00', 'min': '0'}),
+        }
+    
+    def clean_balance(self):
+        balance = self.cleaned_data.get('balance')
+        if balance < Decimal('0'):
+            raise forms.ValidationError("Balance cannot be negative")
+        return balance
 class DateInput(forms.DateInput):
     input_type = 'date'
 

@@ -9,6 +9,7 @@ import uuid
 from shortuuid.django_fields import ShortUUIDField
 from userauths.models import User
 from django.core.validators import FileExtensionValidator
+from expense.models import Expense
 class TransactionError(Exception):
     pass
 
@@ -140,30 +141,61 @@ NOTIFICATION_TYPE = (
 
 class Transaction(models.Model):
     transaction_id = ShortUUIDField(unique=True, length=15, max_length=20, prefix="TRN")
-    company = models.ForeignKey(CompanyKYC, on_delete=models.SET_NULL, blank=True, null=True)
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="user")
+    
+    # Core fields
+    company = models.ForeignKey('CompanyKYC', on_delete=models.SET_NULL, blank=True, null=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="user_transactions")
     amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     description = models.CharField(max_length=1000, null=True, blank=True)
-   
-    reciever = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="reciever")
-    sender = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="sender")
-   
-    reciever_wallet = models.ForeignKey(Wallet, on_delete=models.SET_NULL, null=True, related_name="reciever_wallet")
-    sender_wallet = models.ForeignKey(Wallet, on_delete=models.SET_NULL, null=True, related_name="sender_wallet")
-
+    
+    # Transaction participants
+    receiver = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="received_transactions")
+    sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="sent_transactions")
+    receiver_wallet = models.ForeignKey('Wallet', on_delete=models.SET_NULL, null=True, blank=True, related_name="received_transactions")
+    sender_wallet = models.ForeignKey('Wallet', on_delete=models.SET_NULL, null=True, blank=True, related_name="sent_transactions")
+    
+    # Transaction state
     status = models.CharField(choices=TRANSACTION_STATUS, max_length=100, default="pending")
     transaction_type = models.CharField(choices=TRANSACTION_TYPE, max_length=100, default="none")
-
+    
+    # Related models for different transaction types
+    expense = models.ForeignKey(Expense, on_delete=models.SET_NULL, null=True, blank=True, related_name='transactions')
+    
+    # For admin wallet funding
+    funded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="funding_transactions")
+    
+    # Timestamps
     date = models.DateTimeField(auto_now_add=True)
-    updated = models.DateTimeField(auto_now_add=False, null=True, blank=True)
-
+    updated = models.DateTimeField(auto_now=True, null=True, blank=True)
+    
     def __str__(self):
-        try:
-            return f"{self.user}"
-        except:
-            return f"Transaction"
-
-
+        if self.transaction_type == "expense":
+            return f"Expense Transaction: {self.transaction_id} - {self.amount}"
+        elif self.transaction_type == "wallet_funding":
+            return f"Wallet Funding: {self.transaction_id} - {self.amount}"
+        elif self.transaction_type == "transfer":
+            return f"Transfer: {self.transaction_id} - {self.amount}"
+        else:
+            return f"Transaction: {self.transaction_id} - {self.amount}"
+    
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        
+        # Validation for expense transactions
+        if self.transaction_type == "expense" and not self.expense:
+            raise ValidationError("Expense record is required for expense transactions")
+        
+        # Validation for transfers
+        if self.transaction_type == "transfer" and (not self.sender_wallet or not self.receiver_wallet):
+            raise ValidationError("Both sender and receiver wallets are required for transfers")
+        
+        # Validation for wallet funding
+        if self.transaction_type == "wallet_funding" and not self.receiver_wallet:
+            raise ValidationError("Receiver wallet is required for wallet funding")
+    
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
 
 class Notification(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)

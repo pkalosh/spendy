@@ -120,14 +120,16 @@
                                 <!-- Card Preview Loop -->
                                 <div class="col-4">
                                     <div class="bg-light p-2 rounded-3 text-center">
-                                        <img src="{% static 'assets1/images/icon/card.png' %}" alt="Card" class="w-100 rounded">
+                                        <p class="text-muted mb-0"> {{c.currency}}</p>
+
+                                        <!-- <img src="{% static 'assets1/images/icon/card.png' %}" alt="Card" class="w-100 rounded"> -->
                                         {{c.balance}}
                                     </div>
                                    
                                 </div>
                             {% endfor %}
                             <div class="col-4">
-                                <button type="button" class="btn btn-outline-secondary w-100 h-100 p-3" data-bs-toggle="modal" data-bs-target="#addcardMod">
+                                <button type="button" class="btn btn-outline-secondary w-100 h-100 p-3" data-bs-toggle="modal" data-bs-target="#createWalletModal">
                                     <img src="{% static 'assets1/images/add-new.png' %}" alt="Add" class="w-100">
                                 </button>
                             </div>
@@ -180,40 +182,29 @@
     </div>
 </section>
 <!-- Add Wallet Modal -->
-<div class="modal fade" id="addcardMod" tabindex="-1" aria-labelledby="addcardModLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-4 shadow">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addcardModLabel">Add New Wallet</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form method="POST" action="">
-                {% csrf_token %}
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="walletName" class="form-label">Wallet Name</label>
-                        <input type="text" name="wallet_name" id="walletName" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="initialBalance" class="form-label">Initial Balance</label>
-                        <input type="number" name="initial_balance" id="initialBalance" class="form-control" required step="0.01" min="0">
-                    </div>
-                    <div class="mb-3">
-                        <label for="currency" class="form-label">Currency</label>
-                        <select name="currency" id="currency" class="form-select" required>
- 
-                            <option value="KES">KES</option>
-                            <!-- Add more currencies as needed -->
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary w-100 rounded-pill">Add Wallet</button>
-                </div>
-            </form>
-        </div>
+  
+  <!-- Modal -->
+  <div class="modal fade" id="createWalletModal" tabindex="-1" aria-labelledby="createWalletModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form method="post" action="{% url 'wallet:create-wallet' %}">
+          {% csrf_token %}
+          <div class="modal-header">
+            <h5 class="modal-title" id="createWalletModalLabel">Create Wallet</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            {{ wallet_form.as_p }}
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary">Create</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          </div>
+        </form>
+      </div>
     </div>
-</div>
+  </div>
+  
 
 <!-- Modals -->
 {% include 'partials/pay_modal.html' %}

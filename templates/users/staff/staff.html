@@ -312,7 +312,7 @@
                                                 <td>{{ txn.transaction_id }}</td>
                                                 <td>{{ txn.company.company_name|default:"-" }}</td>
                                                 <td>{{ txn.user.get_full_name|default:"-" }}</td>
-                                                <td>{{ txn.sender.get_full_name|default:"-" }}</td>
+                                                <td>{{ txn.event.name|default:"-" }}</td>
                                                 <td>{{ txn.reciever.get_full_name|default:"-" }}</td>
                                                 <td>{{ txn.sender_wallet.currency|default:"" }} {{ txn.amount|floatformat:2|intcomma }}</td>
                                                 <td>{{ txn.transaction_type|title }}</td>

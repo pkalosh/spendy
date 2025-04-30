@@ -1,20 +1,17 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
-from wallet.forms import KYCForm, StaffProfileForm, UserForm,RoleForm
+from wallet.forms import KYCForm, StaffProfileForm, UserForm,RoleForm,WalletForm
+from expense.forms import ExpenseRequestForm ,ExpenseApprovalForm
 from django.contrib import messages
 from wallet.models import Wallet, Notification, Transaction,CompanyKYC, StaffProfile,Role
-from expense.models import ExpenseCategory, OperationCategory, EventCategory
+from expense.models import ExpenseCategory, OperationCategory, EventCategory,Expense
 from userauths.models import User
 from django.core.paginator import Paginator
-from userauths.forms import UserRegisterForm
 from django.contrib.auth.hashers import make_password
-from django.contrib.auth.models import UserManager
-from django.contrib.auth.base_user import BaseUserManager
-from django.http import HttpResponseRedirect
 from django.urls import reverse
-from expense.models import Expense
 from django.core.exceptions import ObjectDoesNotExist
-
+from django.views.decorators.http import require_http_methods
+from django.db.models import Q
 def is_admin(user):
     return user.is_authenticated and user.is_admin
 
@@ -236,7 +233,32 @@ def delete_staff_profile(request, pk):
     return render(request, 'users/staff/delete.html', {'staff': staff})
 
 
-# @login_required
+
+
+
+@login_required
+@user_passes_test(is_admin)
+def create_wallet(request):
+    if request.method == 'POST':
+        wallet_form = WalletForm(request.POST)
+        print(wallet_form)
+        if wallet_form.is_valid():
+            wallet = wallet_form.save(commit=False)
+            wallet.user = request.user
+            wallet.company = request.user.companykyc
+            wallet.save()
+
+            messages.success(request, f"Wallet '{wallet.wallet_name}' created successfully!")
+            return redirect('wallet:dashboard')
+        else:
+            messages.error(request, "Please correct the errors in the form.")
+    else:
+        wallet_form = WalletForm()
+
+    return render(request, 'account/dashboard.html', {'wallet_form': wallet_form})
+
+
+@login_required
 def wallet(request):
     if request.user.is_authenticated:
         try:
@@ -351,15 +373,63 @@ def transactions(request):
 
 
 @login_required
+@require_http_methods(["GET", "POST"])
 def expenses(request):
     user = request.user
+    company = get_object_or_404(CompanyKYC, user=user)
 
-    txn = Expense.objects.filter(company = get_object_or_404(CompanyKYC, user= request.user))
+    # Handle POST (create or actions)
+    if request.method == "POST":
+        action = request.POST.get("action")
 
-    print(txn)
+        # CREATE EXPENSE
+        if action == "create":
+            form = ExpenseRequestForm(request.POST)
+            if form.is_valid():
+                expense = form.save(commit=False)
+                expense.company = company
+                expense.wallet = user.wallet  # or however your wallet is linked
+                expense.save()
+                messages.success(request, "Expense created successfully.")
+                return redirect("expenses")
+
+        # APPROVE EXPENSE
+        elif action == "approve":
+            expense_id = request.POST.get("expense_id")
+            expense = get_object_or_404(Expense, id=expense_id, company=company)
+            expense.approved = True
+            expense.approved_by = request.user
+            expense.save()
+            messages.success(request, "Expense approved.")
+            return redirect("expenses")
+
+        # REJECT EXPENSE
+        elif action == "reject":
+            expense_id = request.POST.get("expense_id")
+            reason = request.POST.get("reason")
+            expense = get_object_or_404(Expense, id=expense_id, company=company)
+            expense.approved = False
+            expense.rejection_reason = reason
+            expense.approved_by = request.user
+            expense.save()
+            messages.error(request, "Expense rejected.")
+            return redirect("expenses")
+
+        # MARK AS PAID
+        elif action == "pay":
+            expense_id = request.POST.get("expense_id")
+            expense = get_object_or_404(Expense, id=expense_id, company=company)
+            expense.status = "completed"
+            expense.save()
+            messages.success(request, "Expense marked as paid.")
+            return redirect("expenses")
+
+    # GET - show all expenses related to the company
+    txn = Expense.objects.filter(company=company).order_by("-created_at")
 
     context = {
         "transactions": txn,
+        "form": ExpenseRequestForm()
     }
     return render(request, "expenses/expense.html", context)
 
@@ -400,6 +470,7 @@ def dashboard(request):
             return redirect("wallet:staff-dashboard")  # Redirect non-admin users to wallet
             
         form = KYCForm()
+        wallet_form = WalletForm()
         try:
             kyc = CompanyKYC.objects.get(user=request.user)
             # Check if all required fields are filled
@@ -434,6 +505,7 @@ def dashboard(request):
         "kyc": kyc,
         "wallets": wallets,
         "form": form,
+        "wallet_form": wallet_form,
         "sender_transaction": sender_transaction
     }
     
@@ -441,8 +513,8 @@ def dashboard(request):
     
 
 from django.http import HttpResponse, JsonResponse
-from expense.models import Expense, Wallet, Event, Operation, ExpenseGroup
-from expense.forms import ExpenseRequestForm, ExpenseApprovalForm, PaymentForm
+from expense.models import Expense
+from expense.forms import ExpenseRequestForm, PaymentForm
 @login_required
 def staff_dashboard(request):
     """
