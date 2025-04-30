@@ -18,8 +18,8 @@ class ExpenseRequestForm(forms.ModelForm):
         self.fields['operation'].queryset = Operation.objects.none()
 
         if self.company:
-            self.fields['event'].queryset = Event.objects.filter(company=self.company)
-            self.fields['operation'].queryset = Operation.objects.filter(company=self.company)
+            self.fields['event'].queryset = Event.objects.filter(company=self.company, approved=False)
+            self.fields['operation'].queryset = Operation.objects.filter(company=self.company, approved=False)
 
     
     def clean(self):

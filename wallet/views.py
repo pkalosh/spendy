@@ -287,9 +287,15 @@ def wallet(request):
 @login_required
 def kyc_registration(request):
     user = request.user
+    
+    # Only admin users should access the KYC registration
+    if not user.is_admin:
+        messages.error(request, "Only admin users can submit KYC information.")
+        return redirect("wallet:staff-dashboard")  # Redirect non-admin users back to wallet
+    
     wallet = Wallet.objects.get(user=user)
-
     all_fields = False  # Default to False
+    
     try:
         kyc = CompanyKYC.objects.get(user=user)
         required_fields = [
@@ -303,13 +309,12 @@ def kyc_registration(request):
             kyc.address,
             kyc.mobile
         ]
-        
         if all(required_fields) and kyc.kyc_submitted:
             all_fields = True
     except CompanyKYC.DoesNotExist:
         kyc = None
         all_fields = False
-
+        
     if request.method == "POST":
         form = KYCForm(request.POST, request.FILES, instance=kyc)
         if form.is_valid():
@@ -322,13 +327,14 @@ def kyc_registration(request):
             return redirect("wallet:wallet")
     else:
         form = KYCForm(instance=kyc)
-    
+        
     context = {
         "account": wallet,
         "form": form,
         "kyc": kyc,
         "all_fields": all_fields
     }
+    
     return render(request, "account/kyc-form.html", context)
 
 
@@ -386,11 +392,16 @@ def create_roles(request):
 
 @login_required
 def dashboard(request):
+    # First check if user is authenticated
     if request.user.is_authenticated:
+        # Check if user is admin - only admins can access dashboard
+        if not request.user.is_admin:
+            messages.warning(request, "Only admin users can access the dashboard.")
+            return redirect("wallet:staff-dashboard")  # Redirect non-admin users to wallet
+            
         form = KYCForm()
         try:
             kyc = CompanyKYC.objects.get(user=request.user)
-            
             # Check if all required fields are filled
             required_fields = [
                 kyc.company_name,
@@ -403,7 +414,6 @@ def dashboard(request):
                 kyc.address,
                 kyc.mobile
             ]
-            
             if not all(required_fields) or not kyc.kyc_submitted:
                 messages.warning(request, "Your KYC is incomplete. Please fill all required fields.")
                 return redirect("wallet:kyc-reg")
@@ -413,22 +423,20 @@ def dashboard(request):
         except CompanyKYC.DoesNotExist:
             messages.warning(request, "You need to submit your KYC")
             return redirect("wallet:kyc-reg")
-    
-
+            
         sender_transaction = Transaction.objects.filter(sender=request.user).order_by("-id")
-        
         wallets = Wallet.objects.filter(user=request.user)
-
     else:
         messages.warning(request, "You need to login to access the dashboard")
         return redirect("userauths:sign-in")
-
+        
     context = {
-        "kyc":kyc,
-        "wallets":wallets,
-        "form":form,
-        "sender_transaction":sender_transaction
+        "kyc": kyc,
+        "wallets": wallets,
+        "form": form,
+        "sender_transaction": sender_transaction
     }
+    
     return render(request, "account/dashboard.html", context)
     
 
@@ -457,7 +465,7 @@ def staff_dashboard(request):
         expenses = Expense.objects.filter(company=company.company).order_by('-created_at')
 
         pending_expenses = expenses.filter(approved=False, declined=False)
-        approved_expenses = expenses.filter(approved=True)
+        approved_expenses = expenses.filter(approved=True,paid=False)
         declined_expenses = expenses.filter(declined=True)
         
         # Initialize forms

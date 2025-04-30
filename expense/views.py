@@ -94,30 +94,31 @@ def submit_expense(request):
 
 @login_required
 def expense_detail(request, expense_id):
-    """Show expense details"""
     user = request.user
     expense = get_object_or_404(Expense, id=expense_id)
-    
-    # Check if user has access to this expense
+
+    # Permission check
     if not is_admin(user) and expense.created_by != user:
         return HttpResponseForbidden("You don't have permission to view this expense")
     
+    company = getattr(user, 'company', None) or getattr(user.staffprofile, 'company', None)
+
     approval_form = None
     if is_admin(user) and not expense.approved and not expense.declined:
         approval_form = ExpenseApprovalForm(instance=expense)
-    
+
     payment_form = None
     if expense.approved and not expense.declined:
-        payment_form = PaymentForm(user=user, initial={'expense': expense})
-    
+        payment_form = PaymentForm(user=user, company=company, initial={'expense': expense})
+
     context = {
         'expense': expense,
         'approval_form': approval_form,
         'payment_form': payment_form,
         'is_admin': is_admin(user),
     }
-    
-    return render(request, 'expense_detail.html', context)
+    return render(request, 'expenses/expense_detail.html', context)
+
 
 @login_required
 def approve_expense(request, expense_id):
@@ -147,11 +148,11 @@ def approve_expense(request, expense_id):
                 approval.approved_by = user
                 approval.save()
                 
-                return redirect('expense_detail', expense_id=expense.id)
+                return redirect('expense:expense_detail', expense_id=expense.id)
         else:
             messages.error(request, 'Please correct the errors below.')
     
-    return redirect('expense_detail', expense_id=expense.id)
+    return redirect('expense:expense_detail', expense_id=expense.id)
 
 @login_required
 def make_payment(request):

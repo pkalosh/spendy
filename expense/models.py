@@ -47,7 +47,8 @@ class Event(models.Model):
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='events')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
+    approved = models.BooleanField(default=False)
+    paid = models.BooleanField(default=False)
     def __str__(self):
         return f"{self.name} ({self.category.name})"
 
@@ -59,7 +60,8 @@ class Operation(models.Model):
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='operations')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
+    approved = models.BooleanField(default=False)
+    paid = models.BooleanField(default=False)
     def __str__(self):
         return f"{self.name} ({self.category.name})"
 
