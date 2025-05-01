@@ -372,27 +372,44 @@ def transactions(request):
     return render(request, "transaction/approvals.html", context)
 
 
+
 @login_required
 @require_http_methods(["GET", "POST"])
 def expenses(request):
+    context = {}
     user = request.user
     company = get_object_or_404(CompanyKYC, user=user)
-
+    
     # Handle POST (create or actions)
     if request.method == "POST":
         action = request.POST.get("action")
-
+        
         # CREATE EXPENSE
         if action == "create":
-            form = ExpenseRequestForm(request.POST)
+            # Important: Pass user and company to the form
+            form = ExpenseRequestForm(request.POST, user=user, company=company)
+            
             if form.is_valid():
-                expense = form.save(commit=False)
-                expense.company = company
-                expense.wallet = user.wallet  # or however your wallet is linked
-                expense.save()
+                expense = form.save()
                 messages.success(request, "Expense created successfully.")
-                return redirect("expenses")
-
+                return redirect("wallet:expenses")
+            else:
+                # Store form with errors to display in template
+                context["expense_form"] = form
+                
+                # Load all necessary data for the template
+                expenses = Expense.objects.filter(company=company).order_by("-created_at")
+                transactions = Transaction.objects.filter(company=company).order_by("-id")
+                context["transactions"] = transactions
+                context["pending_expenses"] = expenses.filter(approved=False, declined=False)
+                context["approved_expenses"] = expenses.filter(approved=True, paid=False)
+                context["declined_expenses"] = expenses.filter(declined=True)
+                context["payment_form"] = PaymentForm(user=user, company=company)
+                context["is_admin"] = True
+                
+                # Return render directly here to preserve form errors
+                return render(request, "expenses/expense.html", context)
+                
         # APPROVE EXPENSE
         elif action == "approve":
             expense_id = request.POST.get("expense_id")
@@ -401,36 +418,52 @@ def expenses(request):
             expense.approved_by = request.user
             expense.save()
             messages.success(request, "Expense approved.")
-            return redirect("expenses")
-
+            return redirect("wallet:expenses")
+            
         # REJECT EXPENSE
         elif action == "reject":
             expense_id = request.POST.get("expense_id")
             reason = request.POST.get("reason")
             expense = get_object_or_404(Expense, id=expense_id, company=company)
             expense.approved = False
+            expense.declined = True  # Added this to mark as declined
             expense.rejection_reason = reason
             expense.approved_by = request.user
             expense.save()
             messages.error(request, "Expense rejected.")
-            return redirect("expenses")
-
+            return redirect("wallet:expenses")
+            
         # MARK AS PAID
         elif action == "pay":
             expense_id = request.POST.get("expense_id")
             expense = get_object_or_404(Expense, id=expense_id, company=company)
+            expense.paid = True  # Mark as paid
             expense.status = "completed"
             expense.save()
             messages.success(request, "Expense marked as paid.")
-            return redirect("expenses")
-
+            return redirect("wallet:expenses")
+    
     # GET - show all expenses related to the company
-    txn = Expense.objects.filter(company=company).order_by("-created_at")
-
-    context = {
-        "transactions": txn,
-        "form": ExpenseRequestForm()
-    }
+    expenses = Expense.objects.filter(company=company).order_by("-created_at")
+    
+    # Get transactions and wallets
+    transactions = Transaction.objects.filter(company=company).order_by("-id")
+    
+    # Add to context
+    context["transactions"] = transactions
+    pending_expenses = expenses.filter(approved=False, declined=False)
+    approved_expenses = expenses.filter(approved=True, paid=False)
+    declined_expenses = expenses.filter(declined=True)
+    
+    # Initialize forms if not already in context (due to validation error)
+    if "expense_form" not in context:
+        context["expense_form"] = ExpenseRequestForm(user=user, company=company)
+        
+    context["payment_form"] = PaymentForm(user=user, company=company)
+    context["pending_expenses"] = pending_expenses
+    context["approved_expenses"] = approved_expenses
+    context["declined_expenses"] = declined_expenses
+    
     return render(request, "expenses/expense.html", context)
 
 def create_expenses(request):
@@ -495,7 +528,8 @@ def dashboard(request):
             messages.warning(request, "You need to submit your KYC")
             return redirect("wallet:kyc-reg")
             
-        sender_transaction = Transaction.objects.filter(sender=request.user).order_by("-id")
+        transactions = Transaction.objects.filter(company=kyc).order_by("-id")
+        print(transactions)
         wallets = Wallet.objects.filter(user=request.user)
     else:
         messages.warning(request, "You need to login to access the dashboard")
@@ -506,7 +540,7 @@ def dashboard(request):
         "wallets": wallets,
         "form": form,
         "wallet_form": wallet_form,
-        "sender_transaction": sender_transaction
+        "transactions": transactions
     }
     
     return render(request, "account/dashboard.html", context)
@@ -534,7 +568,7 @@ def staff_dashboard(request):
         # Add to context
         context["transactions"] = transactions
         context["wallets"] = wallets
-        expenses = Expense.objects.filter(company=company.company).order_by('-created_at')
+        expenses = Expense.objects.filter(company=company.company, created_by=request.user).order_by('-created_at')
 
         pending_expenses = expenses.filter(approved=False, declined=False)
         approved_expenses = expenses.filter(approved=True,paid=False)

@@ -49,7 +49,7 @@
                     <!-- Payments Table -->
                     <div class="card p-4 mt-4 shadow-sm rounded-4">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="mb-0">Payments</h5>
+                            <h5 class="mb-0">Recent Payments</h5>
                             <a href="{% url 'wallet:transactions' %}" class="text-decoration-none">View All <img src="{% static 'assets1/images/icon/right-arrow.png' %}" alt="View All Icon"></a>
                         </div>
                         <div class="table-responsive">
@@ -64,7 +64,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for s in sender_transaction %}
+                                    {% for s in transactions %}
                                     <tr>
                                         <td>
                                             <strong>{{ s.reciever.kyc.full_name|title }}</strong><br>
@@ -76,7 +76,7 @@
                                         </td>
                                         <td>
                                             <span class="{% if s.status == 'completed' %}text-success
-                                                        {% elif s.status in 'pending processing' %}text-warning
+                                                        {% elif s.status in 'pending' %}text-warning
                                                         {% else %}text-danger{% endif %}">
                                                 {{ s.status|title }}
                                             </span>
@@ -89,8 +89,8 @@
                                                 </button>
                                                 <ul class="dropdown-menu custom-dropdown-menu" aria-labelledby="dropdownMenuButton{{ s.id }}">
                                                     <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#viewTransactionModal{{ s.id }}">View</a></li>
-                                                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#approveTransactionModal{{ s.id }}">Approve</a></li>
-                                                    <li><a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#rejectTransactionModal{{ s.id }}">Reject</a></li>
+                                                    <!-- <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#approveTransactionModal{{ s.id }}">Approve</a></li>
+                                                    <li><a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#rejectTransactionModal{{ s.id }}">Reject</a></li> -->
                                                 </ul>
                                             </div>
                                         </td>

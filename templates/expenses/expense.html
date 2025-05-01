@@ -1,3 +1,4 @@
+
 {% extends "partials/dashboard-base.html" %}
 {% load static %}
 {% load humanize %}
@@ -10,129 +11,474 @@
                 <div class="col-xl-12 col-lg-12">
                     <div class="section-content">
 
-                        <div class="transactions-area">
-                            <div class="section-text d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h5>Expense</h5>
-                                    <p>View transactions pending approvals, as well as historical expenses.</p>
+                    <!-- Expense Management Section -->
+                    <div class="transactions-area mb-5">
+                        <div class="row mb-4">
+                            <!-- Navigation tabs - full width on mobile -->
+                            <div class="col-lg-8 col-md-7 col-12 mb-3 mb-md-0">
+                                <div class="nav nav-tabs flex-nowrap overflow-auto" role="tablist">
+                                    <button class="nav-link active flex-shrink-0" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button" role="tab" aria-controls="pending" aria-selected="true">
+                                        Pending Requests
+                                    </button>
+                                    <button class="nav-link flex-shrink-0" id="approved-tab" data-bs-toggle="tab" data-bs-target="#approved" type="button" role="tab" aria-controls="approved" aria-selected="false">
+                                        Approved Expenses
+                                    </button>
+                                    <button class="nav-link flex-shrink-0" id="declined-tab" data-bs-toggle="tab" data-bs-target="#declined" type="button" role="tab" aria-controls="declined" aria-selected="false">
+                                        Declined Expenses
+                                    </button>
+                                    <button class="nav-link flex-shrink-0" id="payments-tab" data-bs-toggle="tab" data-bs-target="#payment" type="button" role="tab" aria-controls="payment" aria-selected="false">
+                                        Paid Expenses
+                                    </button>
                                 </div>
-                                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createExpenseModal">Create Expense</button>
                             </div>
+                            <!-- Action buttons - stack on mobile -->
+                            <div class="col-lg-4 col-md-5 col-12 d-flex justify-content-md-end justify-content-center">
+                                <div class="d-flex flex-column flex-sm-row gap-2">
+                                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#submitExpenseModal">
+                                        Submit Expense Request
+                                    </button>
+                                    {% if not is_admin %}
+                                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#makePaymentModal">
+                                        Make Payment
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
 
-                            <div class="top-area d-flex align-items-center justify-content-between mt-3">
-                                <ul class="nav nav-tabs" role="tablist">
-                                    <li class="nav-item">
-                                        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#pending" type="button" role="tab">Pending</button>
-                                    </li>
-                                    <li class="nav-item">
-                                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab">History</button>
-                                    </li>
-                                </ul>
-                                <div class="search-area">
-                                    <div class="input-group">
-                                        <span class="input-group-text"><i class="fas fa-search"></i></span>
-                                        <input type="text" class="form-control" placeholder="Search">
+                        <div class="tab-content">
+                            <!-- Pending Expenses Tab -->
+                            <div class="tab-pane fade show active" id="pending" role="tabpanel" aria-labelledby="pending-tab">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-hover">
+                                        <thead class="bg-light">
+                                            <tr>
+                                                <th>Expense Group</th>
+                                                <th class="d-none d-md-table-cell">Related Item</th>
+                                                <th>Amount</th>
+                                                <th class="d-none d-md-table-cell">Date Requested</th>
+                                                <th class="d-none d-lg-table-cell">Requested By</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for expense in pending_expenses %}
+                                            <tr>
+                                                <td>{{ expense.get_expense_group_display }}</td>
+                                                <td class="d-none d-md-table-cell">
+                                                    {% if expense.expense_group == 'event' %}
+                                                        {{ expense.event.name }}
+                                                    {% else %}
+                                                        {{ expense.operation.name }}
+                                                    {% endif %}
+                                                </td>
+                                                <td>{{ expense.amount|intcomma }}</td>
+                                                <td class="d-none d-md-table-cell">{{ expense.created_at|date:"M d, Y" }}</td>
+                                                <td class="d-none d-lg-table-cell">{{ expense.created_by.get_full_name }}</td>
+                                                <td>
+                                                    <!-- Approve -->
+                                                    <button type="button" class="btn btn-success action-btn" 
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#actionModal"
+                                                            data-expense-id="{{ expense.id }}" 
+                                                            data-action="approve">
+                                                    Approve
+                                                    </button>
+
+                                                    <!-- Reject -->
+                                                    <button type="button" class="btn btn-danger action-btn" 
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#actionModal"
+                                                            data-expense-id="{{ expense.id }}" 
+                                                            data-action="reject">
+                                                    Decline
+                                                    </button>
+
+                                                    <!-- Mark as Paid -->
+                                                    <!-- <button type="button" class="btn btn-primary action-btn" 
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#actionModal"
+                                                            data-expense-id="{{ expense.id }}" 
+                                                            data-action="pay">
+                                                    Mark as Paid
+                                                    </button> -->
+                                                                                                    <!-- <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#viewExpenseModal" 
+                                                        onclick="loadExpenseDetails('{{ expense.id }}', '{{ expense.get_expense_group_display }}', 
+                                                        '{% if expense.expense_group == 'event' %}{{ expense.event.name }}{% else %}{{ expense.operation.name }}{% endif %}', 
+                                                        '{{ expense.amount|intcomma }}', '{{ expense.created_at|date:"M d, Y" }}', 
+                                                        '{{ expense.created_by.get_full_name }}', '{{ expense.description }}', 
+                                                        '{{ expense.status }}')">
+                                                        View
+                                                    </button> -->
+                                                </td>
+                                            </tr>
+                                            {% empty %}
+                                            <tr>
+                                                <td colspan="6" class="text-center text-gray-500">No pending expense requests found.</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <!-- Mobile-only expense cards for better readability -->
+                                <div class="d-md-none">
+                                    {% for expense in pending_expenses %}
+                                    <div class="card mb-3">
+                                        <div class="card-body">
+                                            <h6 class="card-subtitle mb-2 text-muted">{{ expense.get_expense_group_display }}</h6>
+                                            <p class="card-text">
+                                                <strong>Amount:</strong> {{ expense.amount|intcomma }}<br>
+                                                <strong>Related Item:</strong>
+                                                {% if expense.expense_group == 'event' %}
+                                                    {{ expense.event.name }}
+                                                {% else %}
+                                                    {{ expense.operation.name }}
+                                                {% endif %}<br>
+                                                <strong>Date:</strong> {{ expense.created_at|date:"M d, Y" }}<br>
+                                                <strong>Requested By:</strong> {{ expense.created_by.get_full_name }}
+                                            </p>
+                                            <div class="d-flex gap-2">
+                                                <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#viewExpenseModal" 
+                                                    onclick="loadExpenseDetails('{{ expense.id }}', '{{ expense.get_expense_group_display }}', 
+                                                    '{% if expense.expense_group == 'event' %}{{ expense.event.name }}{% else %}{{ expense.operation.name }}{% endif %}', 
+                                                    '{{ expense.amount|intcomma }}', '{{ expense.created_at|date:"M d, Y" }}', 
+                                                    '{{ expense.created_by.get_full_name }}', '{{ expense.description }}', 
+                                                    '{{ expense.status }}')">
+                                                    View
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
+                                    {% empty %}
+                                    <div class="alert alert-info">No pending expense requests found.</div>
+                                    {% endfor %}
                                 </div>
                             </div>
 
-                            <div class="tab-content mt-40">
-                                <div class="tab-pane fade show active" id="pending" role="tabpanel">
-                                    <div class="table-responsive">
-                                        <table class="table">
-                                            <thead>
-                                                <tr>
-                                                    <th>Expense Name</th>
-                                                    <th>Group</th>
-                                                    <th>Category</th>
-                                                    <th>Budget</th>
-                                                    <th>Date</th>
-                                                    <th>Status</th>
-                                                    <th>Requested By</th>
-                                                    <th>Approved By</th>
-                                                    <th>Action</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {% for s in transactions %}
-                                                    <tr>
-                                                        <td>{{ s.event.name }}</td>
-                                                        <td>{{ s.expense_group }}</td>
-                                                        <td>{{ s.event.category.name }}</td>
-                                                        <td>{{ s.wallet.currency }} {{ s.amount|intcomma }}</td>
-                                                        <td>{{ s.created_at|date:"M d, Y" }}</td>
-                                                        <td><span class="badge bg-warning">{{ s.approved|title }}</span></td>
-                                                        <td>{{ s.wallet.user.get_full_name }}</td>
-                                                        <td>-</td>
-                                                        <td>
-                                                            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#viewTransactionModal{{ s.id }}">View</button>
-                                                        </td>
-                                                    </tr>
-
-                                                    <!-- View Modal -->
-                                                    <div class="modal fade" id="viewTransactionModal{{ s.id }}" tabindex="-1" aria-hidden="true">
-                                                        <div class="modal-dialog modal-lg" style="margin-top: 80px;">
-                                                            <div class="modal-content">
-                                                                <div class="modal-header">
-                                                                    <h5 class="modal-title">Transaction Details</h5>
-                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                                </div>
-                                                                <div class="modal-body">
-                                                                    <p><strong>Expense Name:</strong> {{ s.event.name }}</p>
-                                                                    <p><strong>Amount:</strong> {{ s.wallet.currency }} {{ s.amount|intcomma }}</p>
-                                                                    <p><strong>Requested By:</strong> {{ s.wallet.user.get_full_name }}</p>
-                                                                    <p><strong>Date:</strong> {{ s.created_at|date:"M d, Y" }}</p>
-                                                                    <div class="d-flex gap-2">
-                                                                        <form action="{% url 'wallet:expenses' %}" method="post" class="w-50">
-                                                                            {% csrf_token %}
-                                                                            <input type="hidden" name="action" value="approve">
-                                                                            <input type="hidden" name="expense_id" value="{{ s.id }}">
-                                                                            <button type="submit" class="btn btn-success w-100">Approve</button>
-                                                                        </form>
-                                                                        <button class="btn btn-danger w-50" data-bs-toggle="modal" data-bs-target="#declineModal{{ s.id }}">Decline</button>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
+                            <!-- Approved Expenses Tab -->
+                            <div class="tab-pane fade" id="approved" role="tabpanel" aria-labelledby="approved-tab">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-hover">
+                                        <thead class="bg-light">
+                                            <tr>
+                                                <th>Expense Group</th>
+                                                <th class="d-none d-md-table-cell">Related Item</th>
+                                                <th>Amount</th>
+                                                <th class="d-none d-md-table-cell">Date Approved</th>
+                                                <th class="d-none d-lg-table-cell">Approved By</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for expense in approved_expenses %}
+                                            <tr>
+                                                <td>{{ expense.get_expense_group_display }}</td>
+                                                <td class="d-none d-md-table-cell">
+                                                    {% if expense.expense_group == 'event' %}
+                                                        {{ expense.event.name }}
+                                                    {% else %}
+                                                        {{ expense.operation.name }}
+                                                    {% endif %}
+                                                </td>
+                                                <td>{{ expense.amount|intcomma }}</td>
+                                                <td class="d-none d-md-table-cell">{{ expense.updated_at|date:"M d, Y" }}</td>
+                                                <td class="d-none d-lg-table-cell">{{ expense.approved_by.get_full_name }}</td>
+                                                <td>
+                                                    <div class="d-flex flex-column flex-sm-row gap-1">
+                                                        <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#viewExpenseModal" 
+                                                            onclick="loadExpenseDetails('{{ expense.id }}', '{{ expense.get_expense_group_display }}', 
+                                                            '{% if expense.expense_group == 'event' %}{{ expense.event.name }}{% else %}{{ expense.operation.name }}{% endif %}', 
+                                                            '{{ expense.amount|intcomma }}', '{{ expense.updated_at|date:"M d, Y" }}', 
+                                                            '{{ expense.approved_by.get_full_name }}', '{{ expense.description }}', 
+                                                            '{{ expense.status }}')">
+                                                            View
+                                                        </button>
+                                                        {% if not is_admin %}
+                                                        <button class="btn btn-sm btn-success" onclick="preparePayment('{{ expense.id }}')">Pay</button>
+                                                        {% endif %}
                                                     </div>
-
-                                                    <!-- Decline Modal -->
-                                                    <div class="modal fade" id="declineModal{{ s.id }}" tabindex="-1" aria-hidden="true">
-                                                        <div class="modal-dialog modal-lg" style="margin-top: 80px;">
-                                                            <div class="modal-content">
-                                                                <div class="modal-header">
-                                                                    <h5 class="modal-title">Decline Transaction</h5>
-                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                                </div>
-                                                                <div class="modal-body">
-                                                                    <form action="{% url 'wallet:expenses' %}" method="post" onsubmit="return validateDeclineReason('{{ s.id }}');">
-                                                                        {% csrf_token %}
-                                                                        <input type="hidden" name="action" value="reject">
-                                                                        <input type="hidden" name="expense_id" value="{{ s.id }}">
-                                                                        <div class="mb-3">
-                                                                            <label for="declineReason{{ s.id }}" class="form-label">Reason</label>
-                                                                            <textarea class="form-control" id="declineReason{{ s.id }}" name="reason" rows="3" required></textarea>
-                                                                        </div>
-                                                                        <button type="submit" class="btn btn-danger w-100">Submit Decline</button>
-                                                                    </form>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                {% endfor %}
-                                                {% if not transactions %}
-                                                    <tr><td colspan="9" class="text-center">No data available</td></tr>
+                                                </td>
+                                            </tr>
+                                            {% empty %}
+                                            <tr>
+                                                <td colspan="6" class="text-center text-gray-500">No approved expenses found.</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <!-- Mobile-only expense cards for better readability -->
+                                <div class="d-md-none">
+                                    {% for expense in approved_expenses %}
+                                    <div class="card mb-3">
+                                        <div class="card-body">
+                                            <h6 class="card-subtitle mb-2 text-muted">{{ expense.get_expense_group_display }}</h6>
+                                            <p class="card-text">
+                                                <strong>Amount:</strong> {{ expense.amount|intcomma }}<br>
+                                                <strong>Related Item:</strong>
+                                                {% if expense.expense_group == 'event' %}
+                                                    {{ expense.event.name }}
+                                                {% else %}
+                                                    {{ expense.operation.name }}
+                                                {% endif %}<br>
+                                                <strong>Date:</strong> {{ expense.updated_at|date:"M d, Y" }}<br>
+                                                <strong>Approved By:</strong> {{ expense.approved_by.get_full_name }}
+                                            </p>
+                                            <div class="d-flex gap-2">
+                                                <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#viewExpenseModal" 
+                                                    onclick="loadExpenseDetails('{{ expense.id }}', '{{ expense.get_expense_group_display }}', 
+                                                    '{% if expense.expense_group == 'event' %}{{ expense.event.name }}{% else %}{{ expense.operation.name }}{% endif %}', 
+                                                    '{{ expense.amount|intcomma }}', '{{ expense.updated_at|date:"M d, Y" }}', 
+                                                    '{{ expense.approved_by.get_full_name }}', '{{ expense.description }}', 
+                                                    '{{ expense.status }}')">
+                                                    View
+                                                </button>
+                                                {% if not is_admin %}
+                                                <button class="btn btn-sm btn-success" onclick="preparePayment('{{ expense.id }}')">Pay</button>
                                                 {% endif %}
-                                            </tbody>
-                                        </table>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="tab-pane fade" id="history" role="tabpanel">
-                                    <!-- Optional: History view content -->
+                                    {% empty %}
+                                    <div class="alert alert-info">No approved expenses found.</div>
+                                    {% endfor %}
                                 </div>
                             </div>
 
-                        </div> <!-- transactions-area -->
+                            <!-- Declined Expenses Tab -->
+                            <div class="tab-pane fade" id="declined" role="tabpanel" aria-labelledby="declined-tab">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-hover">
+                                        <thead class="bg-light">
+                                            <tr>
+                                                <th>Expense Group</th>
+                                                <th class="d-none d-md-table-cell">Related Item</th>
+                                                <th>Amount</th>
+                                                <th class="d-none d-md-table-cell">Date Declined</th>
+                                                <th class="d-none d-lg-table-cell">Declined By</th>
+                                                <th class="d-none d-md-table-cell">Reason</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for expense in declined_expenses %}
+                                            <tr>
+                                                <td>{{ expense.get_expense_group_display }}</td>
+                                                <td class="d-none d-md-table-cell">
+                                                    {% if expense.expense_group == 'event' %}
+                                                        {{ expense.event.name }}
+                                                    {% else %}
+                                                        {{ expense.operation.name }}
+                                                    {% endif %}
+                                                </td>
+                                                <td>{{ expense.amount|intcomma }}</td>
+                                                <td class="d-none d-md-table-cell">{{ expense.updated_at|date:"M d, Y" }}</td>
+                                                <td class="d-none d-lg-table-cell">{{ expense.approved_by.get_full_name }}</td>
+                                                <td class="d-none d-md-table-cell">{{ expense.decline_reason }}</td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#viewExpenseModal" 
+                                                      >
+                                                        View
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            {% empty %}
+                                            <tr>
+                                                <td colspan="7" class="text-center text-gray-500">No declined expenses found.</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <!-- Mobile-only expense cards for better readability -->
+                                <div class="d-md-none">
+                                    {% for expense in declined_expenses %}
+                                    <div class="card mb-3">
+                                        <div class="card-body">
+                                            <h6 class="card-subtitle mb-2 text-muted">{{ expense.get_expense_group_display }}</h6>
+                                            <p class="card-text">
+                                                <strong>Amount:</strong> {{ expense.amount|intcomma }}<br>
+                                                <strong>Related Item:</strong>
+                                                {% if expense.expense_group == 'event' %}
+                                                    {{ expense.event.name }}
+                                                {% else %}
+                                                    {{ expense.operation.name }}
+                                                {% endif %}<br>
+                                                <strong>Date:</strong> {{ expense.updated_at|date:"M d, Y" }}<br>
+                                                <strong>Declined By:</strong> {{ expense.approved_by.get_full_name }}<br>
+                                                <strong>Reason:</strong> {{ expense.decline_reason }}
+                                            </p>
+                                            <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#viewExpenseModal" 
+                                                onclick="loadExpenseDetails('{{ expense.id }}', '{{ expense.get_expense_group_display }}', 
+                                                '{% if expense.expense_group == 'event' %}{{ expense.event.name }}{% else %}{{ expense.operation.name }}{% endif %}', 
+                                                '{{ expense.amount|intcomma }}', '{{ expense.updated_at|date:"M d, Y" }}', 
+                                                '{{ expense.approved_by.get_full_name }}', '{{ expense.description }}', 
+                                                '{{ expense.status }}', '{{ expense.decline_reason }}')">
+                                                View
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {% empty %}
+                                    <div class="alert alert-info">No declined expenses found.</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <!-- Payment Transactions Tab -->
+                            <div class="tab-pane fade" id="payment" role="tabpanel" aria-labelledby="payment-tab">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Transaction ID</th>
+                                            <th>Company</th>
+                                            <th>Initiated By</th>
+                                            <!-- <th>Event/Operation/Item</th> -->
+                                            <th>Funding wallet</th>
+                                            <th>Amount</th>
+                                            <th>Transaction Type</th>
+                                            <th>Status</th>
+                                            <th>Date</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for txn in transactions %}
+                                            <tr>
+                                                <td>{{ txn.transaction_id }}</td>
+                                                <td>{{ txn.company.company_name|default:"-" }}</td>
+                                                <td>{{ txn.user.get_full_name|default:"-" }}</td>
+                                                <!-- <td>{{ txn.event.name|default:"-" }}</td> -->
+                                                <td>{{ txn.expense.wallet.wallet_name}}</td>
+                                                <td>{{ txn.sender_wallet.currency|default:"" }} {{ txn.amount|floatformat:2|intcomma }}</td>
+                                                <td>{{ txn.transaction_type|title }}</td>
+                                                <td>
+                                                    {% if txn.status == 'completed' %}
+                                                        <span class="badge bg-success">{{ txn.status|title }}</span>
+                                                    {% elif txn.status == 'failed' or txn.status == 'cancelled' %}
+                                                        <span class="badge bg-danger">{{ txn.status|title }}</span>
+                                                    {% else %}
+                                                        <span class="badge bg-warning">{{ txn.status|title }}</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>{{ txn.date|date:"M d, Y H:i" }}</td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#viewTransactionModal{{ txn.transaction_id }}">View</button>
+                                                </td>
+                                            </tr>
+
+                                            <!-- View Transaction Modal -->
+                                            <div class="modal fade" id="viewTransactionModal{{ txn.transaction_id }}" tabindex="-1" aria-labelledby="viewTransactionModalLabel{{ txn.transaction_id }}" aria-hidden="true">
+  
+                                                <div class="modal-dialog modal-lg" style="margin-top: 80px;">
+                                                  <div class="modal-content">
+                                              
+                                                    <div class="modal-header">
+                                                      <h5 class="modal-title" id="viewTransactionModalLabel{{ txn.transaction_id }}">Transaction Details</h5>
+                                                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                              
+                                                    <div class="modal-body">
+                                                      <div class="modal-body">
+                                                        <div class="row mb-3">
+                                                            <div class="col-md-6">
+                                                                <strong>Transaction ID:</strong> {{ txn.transaction_id }}
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <strong>Amount:</strong> {{ txn.amount }}
+                                                            </div>
+                                                        </div>
+                                            
+                                                        <div class="row mb-3">
+                                                            <div class="col-md-6">
+                                                                <strong>Sender:</strong> {{ txn.sender.get_full_name }}
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <strong>Receiver:</strong> {{ txn.reciever.get_full_name }}
+                                                            </div>
+                                                        </div>
+                                            
+                                                        <div class="row mb-3">
+                                                            <div class="col-md-6">
+                                                                <strong>Sender Wallet:</strong> {{ txn.sender_wallet.wallet_id }}
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <strong>Receiver Wallet:</strong> {{ txn.reciever_wallet.wallet_id }}
+                                                            </div>
+                                                        </div>
+                                            
+                                                        <div class="row mb-3">
+                                                            <div class="col-md-6">
+                                                                <strong>Status:</strong> {{ txn.status }}
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <strong>Transaction Type:</strong> {{ txn.transaction_type }}
+                                                            </div>
+                                                        </div>
+                                            
+                                                        <div class="row mb-3">
+                                                            <div class="col-md-12">
+                                                                <strong>Description:</strong><br>
+                                                                {{ txn.description }}
+                                                            </div>
+                                                        </div>
+                                            
+                                                        <div class="row">
+                                                            <div class="col-md-6">
+                                                                <strong>Date Created:</strong> {{ txn.date|date:"Y-m-d H:i" }}
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <strong>Last Updated:</strong> {{ txn.updated|date:"Y-m-d H:i" }}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    </div>
+                                                   
+                                              
+                                                  </div>
+                                                </div>
+                                              </div>
+
+                                        {% endfor %}
+
+                                        {% if not transactions %}
+                                            <tr>
+                                                <td colspan="11" class="text-center">No transactions available.</td>
+                                            </tr>
+                                        {% endif %}
+                                    </tbody>
+                                    </table>
+                                </div>
+                                
+                                <!-- Mobile-friendly transaction display -->
+                                <div class="d-md-none">
+                                    {% for txn in transactions %}
+                                    <div class="card mb-3">
+                                        <div class="card-body">
+                                            <h6 class="card-subtitle mb-2 text-muted">Transaction: {{ txn.transaction_id }}</h6>
+                                            <p class="card-text">
+                                                <strong>Amount:</strong> {{ txn.sender_wallet.currency|default:"" }} {{ txn.amount|floatformat:2|intcomma }}<br>
+                                                <strong>Type:</strong> {{ txn.transaction_type|title }}<br>
+                                                <strong>Status:</strong> 
+                                                {% if txn.status == 'completed' %}
+                                                    <span class="badge bg-success">{{ txn.status|title }}</span>
+                                                {% elif txn.status == 'failed' or txn.status == 'cancelled' %}
+                                                    <span class="badge bg-danger">{{ txn.status|title }}</span>
+                                                {% else %}
+                                                    <span class="badge bg-warning">{{ txn.status|title }}</span>
+                                                {% endif %}<br>
+                                                <strong>Date:</strong> {{ txn.date|date:"M d, Y" }}
+                                            </p>
+                                            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#viewTransactionModal{{ txn.transaction_id }}">View Details</button>
+                                        </div>
+                                    </div>
+                                    {% empty %}
+                                    <div class="alert alert-info">No transactions found.</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div> <!-- transactions-area -->
 
                     </div>
                 </div>
@@ -141,38 +487,514 @@
     </div>
 </section>
 
-<!-- Create Expense Modal -->
-<div class="modal fade" id="createExpenseModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg" style="margin-top: 80px;">
-        <div class="modal-content p-4">
+
+
+<!-- View Expense Modal with Approve/Decline functionality -->
+<div class="modal fade" id="viewExpenseModal" tabindex="-1" aria-labelledby="viewExpenseModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Create Expense</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title" id="viewExpenseModalLabel">Expense Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form action="{% url 'wallet:expenses' %}" method="post">
-                    {% csrf_token %}
-                    {{ form.as_p }}
-                    <input type="hidden" name="action" value="create">
-                    <button type="submit" class="btn btn-primary w-100">Create Expense</button>
-                </form>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Expense ID:</strong> <span id="expense_id_display"></span>
+                        <input type="hidden" id="current_expense_id" value="">
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Status:</strong> <span id="expense_status_display" class="badge"></span>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Expense Group:</strong> <span id="expense_group_display"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Related Item:</strong> <span id="related_item_display"></span>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Amount:</strong> <span id="amount_display"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Date:</strong> <span id="date_display"></span>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <strong>Requested By:</strong> <span id="requestor_display"></span>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <strong>Description:</strong>
+                        <p id="description_display" class="mt-2"></p>
+                    </div>
+                </div>
+                
+                <!-- Decline reason section (only visible for declined expenses) -->
+                <div id="decline_reason_section" class="row mb-3" style="display: none;">
+                    <div class="col-md-12">
+                        <strong>Decline Reason:</strong>
+                        <p id="decline_reason_display" class="mt-2"></p>
+                    </div>
+                </div>
+                
+                <!-- Approve/Decline actions (only visible for admin users and pending expenses) -->
+                <div id="" class="mt-4" style="display: none;">
+                    <div class="d-flex gap-2 justify-content-end">
+                        <button id="approveBtn" class="btn btn-success" onclick="showApproveConfirmation()">Approve</button>
+                        <button id="declineBtn" class="btn btn-danger" onclick="showDeclineForm()">Decline</button>
+                    </div>
+                    
+                    <!-- Approve Confirmation -->
+                    <div id="" class="mt-3 border rounded p-3 bg-light" style="display: none;">
+                        <h6>Confirm Approval</h6>
+                        <p>Are you sure you want to approve this expense request?</p>
+                        <div class="d-flex gap-2 justify-content-end">
+                            <button class="btn btn-secondary btn-sm" onclick="hideApproveConfirmation()">Cancel</button>
+                            <button class="btn btn-success btn-sm" onclick="approveExpense()">Confirm Approval</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Decline Form -->
+                    <div id="" class="mt-3 border rounded p-3 bg-light" style="display: none;">
+                        <h6>Decline Expense</h6>
+                        <div class="mb-3">
+                            <label for="decline_reason" class="form-label">Reason for declining:</label>
+                            <textarea id="decline_reason" class="form-control" rows="3" required></textarea>
+                        </div>
+                        <div class="d-flex gap-2 justify-content-end">
+                            <button class="btn btn-secondary btn-sm" onclick="hideDeclineForm()">Cancel</button>
+                            <button class="btn btn-danger btn-sm" onclick="declineExpense()">Confirm Decline</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <!-- Pay button only appears for approved expenses and non-admin users -->
+                <button type="button" id="payBtn" class="btn btn-success" style="display: none;" onclick="preparePayment()">Make Payment</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Bootstrap Bundle JS (ensure only one instance loaded) -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Submit Expense Modal -->
+<div class="modal fade" id="submitExpenseModal" tabindex="-1" aria-labelledby="submitExpenseModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="submitExpenseModalLabel">Submit Expense Request</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="expenseForm" method="post" action="{% url 'wallet:expenses' %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="create">
+                <input type="hidden" name="expense_id" id="expense_id">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Wallet</label>
+                        {{ expense_form.wallet }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="expense_group" class="form-label">Expense Group</label>
+                        <select class="form-select" id="expense_group" name="expense_group" required onchange="toggleRelatedItems()">
+                            <option value="" selected disabled>Select expense group</option>
+                            <option value="event">Event</option>
+                            <option value="operation">Operation</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3" id="event_selection" style="display: none;">
+                        <label for="event" class="form-label">Event</label>
+                        <select class="form-select" id="event" name="event">
+                            <option value="" selected disabled>Select event</option>
+                            {% for event in events %}
+                            <option value="{{ event.id }}">{{ event.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3" id="operation_selection" style="display: none;">
+                        <label for="operation" class="form-label">Operation</label>
+                        <select class="form-select" id="operation" name="operation">
+                            <option value="" selected disabled>Select operation</option>
+                            {% for operation in operations %}
+                            <option value="{{ operation.id }}">{{ operation.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
-<script>
-function validateDeclineReason(expenseId) {
-    const reason = document.getElementById('declineReason' + expenseId).value;
-    if (reason.trim() === '') {
-        alert('Reason is required!');
-        return false;
+<!-- Make Payment Modal -->
+<div class="modal fade" id="makePaymentModal" tabindex="-1" aria-labelledby="makePaymentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="makePaymentModalLabel">Make Payment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="paymentForm" method="post" action="{% url 'wallet:expenses' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <input type="hidden" id="payment_expense_id" name="expense_id">
+                    <input type="hidden" name="action" value="paid">
+
+                    <div class="mb-3">
+                        <label for="wallet" class="form-label">Select Wallet</label>
+                        <select class="form-select" id="wallet" name="wallet_id" required>
+                            <option value="" selected disabled>Select your wallet</option>
+                            {% for wallet in wallets %}
+                            <option value="{{ wallet.id }}">{{ wallet.name }} ({{ wallet.currency }} {{ wallet.balance|floatformat:2|intcomma }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="payment_description" class="form-label">Payment Note (Optional)</label>
+                        <textarea class="form-control" id="payment_description" name="payment_description" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Process Payment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="actionModal" tabindex="-1" aria-labelledby="actionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form method="post" action="">
+          {% csrf_token %}
+          <div class="modal-header">
+            <h5 class="modal-title" id="actionModalLabel">Confirm Action</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" name="expense_id" id="modalExpenseId">
+            <input type="hidden" name="action" id="modalAction">
+            
+            <!-- Show this only when action is "reject" -->
+            <div id="rejectionReasonDiv" style="display: none;">
+              <label for="modalReason" class="form-label">Rejection Reason</label>
+              <textarea name="reason" id="modalReason" class="form-control" rows="3" placeholder="Enter reason"></textarea>
+            </div>
+  
+            <p id="modalMessage" class="mt-2">Are you sure you want to perform this action?</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Confirm</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  
+  <!-- Bootstrap 5 and custom JavaScript (placed before closing </body>) -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var actionModal = document.getElementById('actionModal');
+      
+      actionModal.addEventListener('show.bs.modal', function (event) {
+        var button = event.relatedTarget;
+        var action = button.getAttribute('data-action');
+        var expenseId = button.getAttribute('data-expense-id');
+        
+        var modalTitle = actionModal.querySelector('.modal-title');
+        var modalMessage = actionModal.querySelector('#modalMessage');
+        var reasonDiv = actionModal.querySelector('#rejectionReasonDiv');
+    
+        // Fill form fields
+        actionModal.querySelector('#modalExpenseId').value = expenseId;
+        actionModal.querySelector('#modalAction').value = action;
+    
+        // Reset reason textarea
+        document.getElementById('modalReason').value = "";
+    
+        // Configure modal text and visibility
+        let actionText = {
+          approve: "Approve",
+          reject: "Reject",
+          pay: "Mark as Paid"
+        };
+    
+        modalTitle.textContent = `${actionText[action]} Expense`;
+        modalMessage.textContent = `Are you sure you want to ${actionText[action].toLowerCase()} this expense?`;
+    
+        if (action === 'reject') {
+          reasonDiv.style.display = 'block';
+        } else {
+          reasonDiv.style.display = 'none';
+        }
+      });
+    });
+    </script>
+    
+<!-- JavaScript for Expense Management -->
+<!-- <script>
+    // Function to toggle related items based on expense group selection
+    function toggleRelatedItems() {
+        const expenseGroup = document.getElementById('expense_group').value;
+        const eventSelection = document.getElementById('event_selection');
+        const operationSelection = document.getElementById('operation_selection');
+        
+        if (expenseGroup === 'event') {
+            eventSelection.style.display = 'block';
+            operationSelection.style.display = 'none';
+            document.getElementById('operation').removeAttribute('required');
+            document.getElementById('event').setAttribute('required', 'required');
+        } else if (expenseGroup === 'operation') {
+            eventSelection.style.display = 'none';
+            operationSelection.style.display = 'block';
+            document.getElementById('event').removeAttribute('required');
+            document.getElementById('operation').setAttribute('required', 'required');
+        } else {
+            eventSelection.style.display = 'none';
+            operationSelection.style.display = 'none';
+            document.getElementById('event').removeAttribute('required');
+            document.getElementById('operation').removeAttribute('required');
+        }
     }
-    return true;
-}
-</script>
-
-{% endblock content %}
+    
+    // Validate expense form before submission
+    document.getElementById('expenseForm').addEventListener('submit', function(event) {
+        const expenseGroup = document.getElementById('expense_group').value;
+        // const amount = document.getElementById('amount').value;
+        const description = document.getElementById('description').value;
+        
+        let isValid = true;
+        
+        // Validate expense group selection
+        if (!expenseGroup) {
+            isValid = false;
+            alert('Please select an expense group');
+        }
+        
+        // Validate related item based on expense group
+        if (expenseGroup === 'event' && !document.getElementById('event').value) {
+            isValid = false;
+            alert('Please select an event');
+        } else if (expenseGroup === 'operation' && !document.getElementById('operation').value) {
+            isValid = false;
+            alert('Please select an operation');
+        }
+        
+      
+        // Validate description
+        if (!description.trim()) {
+            isValid = false;
+            alert('Please provide a description for the expense');
+        }
+        
+        if (!isValid) {
+            event.preventDefault();
+        }
+    });
+    
+    // Load expense details into view modal
+    function loadExpenseDetails(id, group, relatedItem, amount, date, requestor, description, status, declineReason = null) {
+        // Set display values
+        document.getElementById('expense_id_display').textContent = id;
+        document.getElementById('current_expense_id').value = id;
+        document.getElementById('expense_group_display').textContent = group;
+        document.getElementById('related_item_display').textContent = relatedItem;
+        document.getElementById('amount_display').textContent = amount;
+        document.getElementById('date_display').textContent = date;
+        document.getElementById('requestor_display').textContent = requestor;
+        document.getElementById('description_display').textContent = description;
+        
+        // Set status with appropriate badge styling
+        const statusDisplay = document.getElementById('expense_status_display');
+        statusDisplay.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+        
+        if (status === 'pending') {
+            statusDisplay.className = 'badge bg-warning';
+        } else if (status === 'approved') {
+            statusDisplay.className = 'badge bg-success';
+        } else if (status === 'declined') {
+            statusDisplay.className = 'badge bg-danger';
+        } else if (status === 'paid') {
+            statusDisplay.className = 'badge bg-info';
+        }
+        
+        // Show/hide decline reason section
+        const declineReasonSection = document.getElementById('decline_reason_section');
+        if (status === 'declined' && declineReason) {
+            declineReasonSection.style.display = 'block';
+            document.getElementById('decline_reason_display').textContent = declineReason;
+        } else {
+            declineReasonSection.style.display = 'none';
+        }
+        
+        // Show/hide admin actions section
+        const isAdmin = true;
+        const adminActions = document.getElementById('admin_actions');
+        if (status === 'pending') {
+            adminActions.style.display = 'block';
+        } else {
+            adminActions.style.display = 'none';
+        }
+        
+        // Show/hide pay button for approved expenses
+        const payBtn = document.getElementById('payBtn');
+        if (status === 'approved') {
+            payBtn.style.display = 'inline-block';
+        } else {
+            payBtn.style.display = 'none';
+        }
+        
+        // Hide any open confirmation/form sections
+        hideApproveConfirmation();
+        hideDeclineForm();
+    }
+    
+    // Show/hide approve confirmation
+    function showApproveConfirmation() {
+        document.getElementById('approve_confirmation').style.display = 'block';
+        document.getElementById('decline_form').style.display = 'none';
+    }
+    
+    function hideApproveConfirmation() {
+        document.getElementById('approve_confirmation').style.display = 'none';
+    }
+    
+    // Show/hide decline form
+    function showDeclineForm() {
+        document.getElementById('decline_form').style.display = 'block';
+        document.getElementById('approve_confirmation').style.display = 'none';
+    }
+    
+    function hideDeclineForm() {
+        document.getElementById('decline_form').style.display = 'none';
+        document.getElementById('decline_reason').value = '';
+    }
+    
+    // Approve expense
+    function approveExpense() {
+        const expenseId = document.getElementById('current_expense_id').value;
+        
+        // Send AJAX request to approve expense
+        fetch('{% url "wallet:expenses" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                expense_id: expenseId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Close modal and reload page to show updated data
+                $('#viewExpenseModal').modal('hide');
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+        });
+    }
+    
+    // Decline expense
+    function declineExpense() {
+        const expenseId = document.getElementById('current_expense_id').value;
+        const declineReason = document.getElementById('decline_reason').value.trim();
+        
+        if (!declineReason) {
+            alert('Please provide a reason for declining the expense.');
+            return;
+        }
+        
+        // Send AJAX request to decline expense
+        fetch('{% url "wallet:expenses" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                expense_id: expenseId,
+                decline_reason: declineReason
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Close modal and reload page to show updated data
+                $('#viewExpenseModal').modal('hide');
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+        });
+    }
+    
+    // Prepare payment for an expense
+    function preparePayment(expenseId = null) {
+        // If called from view modal, use the current expense ID
+        if (!expenseId) {
+            expenseId = document.getElementById('current_expense_id').value;
+        }
+        
+        // Set expense ID in payment form
+        document.getElementById('payment_expense_id').value = expenseId;
+        
+        // Close expense view modal if open
+        $('#viewExpenseModal').modal('hide');
+        
+        // Open payment modal
+        $('#makePaymentModal').modal('show');
+    }
+    
+    // Validate payment form before submission
+    document.getElementById('paymentForm').addEventListener('submit', function(event) {
+        const walletId = document.getElementById('wallet').value;
+        
+        if (!walletId) {
+            alert('Please select a wallet to process the payment.');
+            event.preventDefault();
+        }
+    });
+    
+    // Initialize any components when the DOM is fully loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize any Bootstrap components if needed
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script> -->
+{% endblock %}

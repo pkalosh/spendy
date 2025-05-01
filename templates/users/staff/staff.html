@@ -599,23 +599,47 @@
 
 <!-- Custom JS -->
 <script>
-    function toggleExpenseFields() {
-        const expense_group = document.getElementById('id_expense_group').value;
+    // function toggleExpenseFields() {
+    //     const expense_group = document.getElementById('id_expense_group').value;
+    //     const eventFields = document.getElementById('eventFields');
+    //     const operationFields = document.getElementById('operationFields');
+        
+    //     if (expense_group === 'event') {
+    //         eventFields.style.display = 'block';
+    //         operationFields.style.display = 'none';
+    //     } else if (expense_group === 'operation') {
+    //         eventFields.style.display = 'none';
+    //         operationFields.style.display = 'block';
+    //     } else {
+    //         eventFields.style.display = 'none';
+    //         operationFields.style.display = 'none';
+    //     }
+    // }
+    document.addEventListener('DOMContentLoaded', function () {
+        const expenseGroupField = document.getElementById('id_expense_group');
         const eventFields = document.getElementById('eventFields');
         const operationFields = document.getElementById('operationFields');
-        
-        if (expense_group === 'event') {
-            eventFields.style.display = 'block';
-            operationFields.style.display = 'none';
-        } else if (expense_group === 'operation') {
-            eventFields.style.display = 'none';
-            operationFields.style.display = 'block';
-        } else {
-            eventFields.style.display = 'none';
-            operationFields.style.display = 'none';
+
+        function toggleFields() {
+            const selected = expenseGroupField.value;
+            if (selected === 'EVENT') {
+                eventFields.style.display = 'block';
+                operationFields.style.display = 'none';
+            } else if (selected === 'OPERATION') {
+                eventFields.style.display = 'none';
+                operationFields.style.display = 'block';
+            } else {
+                eventFields.style.display = 'none';
+                operationFields.style.display = 'none';
+            }
         }
-    }
-    
+
+        // Initial toggle
+        toggleFields();
+
+        // Toggle on change
+        expenseGroupField.addEventListener('change', toggleFields);
+    });
     function togglePaymentFields() {
         const payment_method = document.getElementById('id_payment_method').value;
         const mpesaNumberSection = document.getElementById('mpesaNumberSection');

@@ -93,7 +93,7 @@ class Wallet(models.Model):
 
     def __str__(self):
         company_name = self.company.company_name if self.company else "NoCompany"
-        return f"{self.wallet_name}-{company_name}-{self.wallet_type} Wallet: {self.balance} {self.currency}"
+        return f"{company_name}-{self.wallet_type} Wallet: {self.balance} {self.currency}"
 
 
     def validate_sufficient_funds(self, amount):
