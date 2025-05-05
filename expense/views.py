@@ -122,7 +122,7 @@ def _handle_event_expense(request, wallet):
             created_by=request.user
         )
 
-        expense_group = request.POST.get('expense_group', 'Event')
+        expense_group = ExpenseGroup.EVENT
 
         expense = Expense.objects.create(
             wallet=wallet,
@@ -178,7 +178,7 @@ def _handle_operation_expense(request, wallet):
             created_by=request.user
         )
 
-        expense_group = request.POST.get('expense_group', 'Operation')
+        expense_group =ExpenseGroup.OPERATION
 
         expense = Expense.objects.create(
             wallet=wallet,
@@ -423,23 +423,76 @@ def approve_expense(request, expense_id):
 
 @login_required
 def make_payment(request):
-    """Handle payments for approved expenses"""
+    """Handle payments for approved expenses via selected method"""
     user = request.user
-    company = getattr(user, 'company', None) or getattr(user.staffprofile, 'company', None)
+    company = getattr(user, 'company', None)
+    if not company and hasattr(user, 'staffprofile'):
+        company = getattr(user.staffprofile, 'company', None)
+
+    if not company:
+        messages.error(request, "User is not associated with any company.")
+        return redirect('wallet:staff-dashboard')
 
     if request.method == 'POST':
-        form = PaymentForm(request.POST, user=user, company=company)        
-        if form.is_valid():
-            expense = form.cleaned_data['expense']
+        expense_id = request.POST.get('expense')
+        payment_method = request.POST.get('payment_method')
+        amount = request.POST.get('amount')
 
-            if not expense.approved or expense.declined:
-                messages.error(request, 'Payment can only be made for approved expenses.')
+        # Validate essential fields
+        if not all([expense_id, payment_method, amount]):
+            messages.error(request, "All required fields must be filled.")
+            return redirect('wallet:staff-dashboard')
+
+        try:
+            amount = float(amount)
+            if amount <= 0:
+                raise ValueError
+        except ValueError:
+            messages.error(request, "Invalid amount provided.")
+            return redirect('wallet:staff-dashboard')
+
+        expense = get_object_or_404(Expense, id=expense_id)
+
+        if not expense.approved or expense.declined:
+            messages.error(request, 'Payment can only be made for approved expenses.')
+            return redirect('wallet:staff-dashboard')
+
+        wallet = expense.wallet
+
+        # Capture extra fields depending on method
+        extra_info = {}
+        if payment_method == 'mpesa_number':
+            mpesa_number = request.POST.get('mpesa_number')
+            if not mpesa_number or not mpesa_number.isdigit() or len(mpesa_number) != 9:
+                messages.error(request, 'Invalid M-Pesa number.')
                 return redirect('wallet:staff-dashboard')
+            extra_info['mpesa_number'] = f'+254{mpesa_number}'
 
-            wallet = expense.wallet
-            amount = expense.amount
+        elif payment_method == 'paybill_number':
+            paybill_number = request.POST.get('paybill_number')
+            account_number = request.POST.get('account_number')
+            if not (paybill_number and account_number):
+                messages.error(request, 'Paybill and account number are required.')
+                return redirect('wallet:staff-dashboard')
+            extra_info['paybill_number'] = paybill_number
+            extra_info['account_number'] = account_number
 
+        elif payment_method == 'till_number':
+            till_number = request.POST.get('till_number')
+            if not till_number or not till_number.isdigit():
+                messages.error(request, 'Invalid Till number.')
+                return redirect('wallet:staff-dashboard')
+            extra_info['till_number'] = till_number
+
+        else:
+            messages.error(request, 'Invalid payment method selected.')
+            return redirect('wallet:staff-dashboard')
+
+        # Process the payment
+        try:
             with transaction.atomic():
+                wallet = Wallet.objects.select_for_update().get(pk=wallet.pk)
+
                 if wallet.balance >= amount:
                     wallet.balance -= amount
                     wallet.save()
@@ -450,23 +503,25 @@ def make_payment(request):
                         sender=user,
                         sender_wallet=wallet,
                         amount=amount,
-                        description=f"Payment for expense #{expense.id}: {expense.title if hasattr(expense, 'title') else ''}",
+                        description=(
+                            f"Payment for expense #{expense.id}: "
+                            f"{getattr(expense, 'title', '')} via {payment_method} ({extra_info})"
+                        ),
                         status="completed",
-                        transaction_type="withdraw",  # or "request_settled" if this was part of a payment request
+                        transaction_type="withdraw",
                     )
 
                     expense.paid = True
                     expense.save()
 
-                    messages.success(request, f'Payment of {amount} made successfully.')
+                    messages.success(request, f'Payment of KES {amount} made successfully via {payment_method}.')
                 else:
-                    messages.error(request, f'Insufficient funds in wallet. Available balance: {wallet.balance}')
-        else:
-            messages.error(request, 'Please correct the errors below.')
+                    messages.error(request, f'Insufficient funds in wallet. Available balance: KES {wallet.balance}')
+
+        except Exception as e:
+            messages.error(request, f'An error occurred during payment: {str(e)}')
 
     return redirect('wallet:staff-dashboard')
-
-
 
 @login_required
 def get_expense_options(request):

@@ -73,7 +73,7 @@
                                         <thead class="bg-light">
                                             <tr>
                                                 <th>Expense Group</th>
-                                                <th class="d-none d-md-table-cell">Related Item</th>
+                                                <th class="d-none d-md-table-cell">Description</th>
                                                 <th>Amount</th>
                                                 <th class="d-none d-md-table-cell">Date Requested</th>
                                                 <th class="d-none d-lg-table-cell">Requested By</th>
@@ -149,7 +149,7 @@
                                         <thead class="bg-light">
                                             <tr>
                                                 <th>Expense Group</th>
-                                                <th class="d-none d-md-table-cell">Related Item</th>
+                                                <th class="d-none d-md-table-cell">Description</th>
                                                 <th>Amount</th>
                                                 <th class="d-none d-md-table-cell">Date Approved</th>
                                                 <th class="d-none d-lg-table-cell">Approved By</th>
@@ -173,9 +173,7 @@
                                                 <td>
                                                     <div class="d-flex flex-column flex-sm-row gap-1">
                                                         <a href="{% url 'expense:expense_detail' expense.id %}" class="btn btn-sm btn-info mb-1 mb-sm-0">View</a>
-                                                        {% if not is_admin %}
-                                                        <button class="btn btn-sm btn-success" onclick="preparePayment('{{ expense.id }}')">Pay</button>
-                                                        {% endif %}
+                                                        
                                                     </div>
                                                 </td>
                                             </tr>
@@ -225,7 +223,7 @@
                                         <thead class="bg-light">
                                             <tr>
                                                 <th>Expense Group</th>
-                                                <th class="d-none d-md-table-cell">Related Item</th>
+                                                <th class="d-none d-md-table-cell">Description</th>
                                                 <th>Amount</th>
                                                 <th class="d-none d-md-table-cell">Date Declined</th>
                                                 <th class="d-none d-lg-table-cell">Declined By</th>
@@ -562,54 +560,202 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form class="p-3" method="post" action="{% url 'expense:make_payment' %}" id="paymentForm">
+                <form class="accent-graybg-white p-4 shadow rounded" method="post" action="{% url 'expense:make_payment' %}" id="paymentForm">
                     {% csrf_token %}
+                    <input type="hidden" name="csrf_token" value="token_value_here">
                     
-                    <!-- Select Expense -->
+                    <!-- Expense Selection -->
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Select Expense to Pay</label>
-                        {{ payment_form.expense }}
+                        <label class="form-label fw-bold required">Select Expense to Pay</label>
+                        <select id="expenseSelect" class="form-select" name="expense" required>
+                            <option value="">Choose a request</option>
+                            {% for expense in approved_expenses %}
+                            <option value="{{ expense.id }}">{{ expense }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="invalid-feedback">Please select an expense.</div>
                     </div>
                     
                     <!-- Payment Method -->
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Payment Method</label>
-                        {{ payment_form.payment_method }}
+                        <label class="form-label fw-bold required">Payment Method</label>
+                        <select id="paymentType" name="payment_method" class="form-select" onchange="togglePaymentFields()" required>
+                            <option value="">Select method</option>
+                            <option value="mpesa_number">M-Pesa Number</option>
+                            <option value="paybill_number">Paybill</option>
+                            <option value="till_number">Till Number</option>
+                        </select>
+                        <div class="invalid-feedback">Please select a payment method.</div>
+                        <input type="hidden" id="form_type" name="form_type">
                     </div>
-                    
+
                     <!-- M-Pesa Number -->
-                    <div id="mpesaNumberSection" class="mb-3">
-                        <label class="form-label fw-bold">M-Pesa Number</label>
-                        {{ payment_form.mpesa_number }}
-                        <small class="text-muted">Enter a valid 10-12 digit phone number</small>
+                    <div id="mpesaNumberSection" class="mb-3 payment-section hidden">
+                        <label class="form-label fw-bold required">M-Pesa Number</label>
+                        <div class="input-group">
+                            <span class="input-group-text">+254</span>
+                            <input type="text" class="form-control mpesa-field" name="mpesa_number" id="mpesa_number" placeholder="7XXXXXXXX" pattern="\d{9}" maxlength="9">
+                            <div class="invalid-feedback">Please enter a valid 9-digit number.</div>
+                        </div>
+                        <small class="text-muted">Enter a valid 9-digit number after +254</small>
                     </div>
-                    
+
                     <!-- Paybill Section -->
-                    <div id="paybillSection" class="mb-3" style="display: none;">
-                        <label class="form-label fw-bold">Paybill Number</label>
-                        {{ payment_form.paybill_number }}
+                    <div id="paybillSection" class="mb-3 payment-section hidden">
+                        <label class="form-label fw-bold required">Paybill Number</label>
+                        <input type="text" class="form-control paybill-field" name="paybill_number" id="paybill_number" placeholder="Enter Paybill number" pattern="\d{5,6}" maxlength="6">
+                        <div class="invalid-feedback">Please enter a valid 5-6 digit paybill number.</div>
                         <small class="text-muted">Enter a valid 5-6 digit paybill number</small>
-                        
-                        <label class="form-label mt-3 fw-bold">Account Number</label>
-                        {{ payment_form.account_number }}
+
+                        <label class="form-label mt-3 fw-bold required">Account Number</label>
+                        <input type="text" class="form-control paybill-field" name="account_number" id="account_number" placeholder="Enter account number">
+                        <div class="invalid-feedback">Please enter an account number.</div>
                     </div>
-                    
+
                     <!-- Till Number Section -->
-                    <div id="tillNumberSection" class="mb-3" style="display: none;">
-                        <label class="form-label fw-bold">Till Number</label>
-                        {{ payment_form.till_number }}
+                    <div id="tillNumberSection" class="mb-3 payment-section hidden">
+                        <label class="form-label fw-bold required">Till Number</label>
+                        <input type="text" class="form-control till-field" name="till_number" id="till_number" placeholder="Enter Till number" pattern="\d{5,6}" maxlength="6">
+                        <div class="invalid-feedback">Please enter a valid 5-6 digit till number.</div>
                         <small class="text-muted">Enter a valid 5-6 digit till number</small>
                     </div>
-                    
-                    <button class="btn btn-success w-100 mt-4" type="submit">Process Payment</button>
+
+                    <!-- Amount -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold required">Amount</label>
+                        <div class="input-group">
+                            <span class="input-group-text">KES</span>
+                            <input type="number" class="form-control" name="amount" id="amount" placeholder="Enter amount" required min="1">
+                            <div class="invalid-feedback">Please enter a valid amount greater than 0.</div>
+                        </div>
+                    </div>
+
+                    <!-- Submit -->
+                    <button class="btn btn-success w-100 mt-3" type="submit" id="paymentSubmitBtn">Process Payment</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Bootstrap 5 + JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- jQuery (must be loaded BEFORE Bootstrap and Select2) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <!-- Select2 JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/js/select2.min.js"></script>
+
+    <script>
+  function togglePaymentFields() {
+    const requestType = document.getElementById('paymentType').value;
+    document.getElementById('form_type').value = requestType;
+    
+    // Toggle visibility
+    document.getElementById('mpesaNumberSection').classList.toggle('hidden', requestType !== 'mpesa_number');
+    document.getElementById('paybillSection').classList.toggle('hidden', requestType !== 'paybill_number');
+    document.getElementById('tillNumberSection').classList.toggle('hidden', requestType !== 'till_number');
+    
+    // Remove required from all
+    document.querySelectorAll('.mpesa-field, .paybill-field, .till-field').forEach(field => {
+        field.removeAttribute('required');
+    });
+    
+    // Add required to relevant fields
+    if (requestType === 'mpesa_number') {
+        document.querySelectorAll('.mpesa-field').forEach(field => field.setAttribute('required', ''));
+    } else if (requestType === 'paybill_number') {
+        document.querySelectorAll('.paybill-field').forEach(field => field.setAttribute('required', ''));
+    } else if (requestType === 'till_number') {
+        document.querySelectorAll('.till-field').forEach(field => field.setAttribute('required', ''));
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const paymentForm = document.getElementById('paymentForm');
+    
+    // Set initial state
+    togglePaymentFields(); 
+    
+    // Add proper form validation with visual feedback
+    paymentForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        
+        // Clear previous validation states
+        document.querySelectorAll('.is-invalid').forEach(field => {
+            field.classList.remove('is-invalid');
+        });
+        
+        let isValid = true;
+        const requestType = document.getElementById('paymentType').value;
+        
+        // Validate expense selection
+        const expenseSelect = document.getElementById('expenseSelect');
+        if (!expenseSelect.value) {
+            expenseSelect.classList.add('is-invalid');
+            isValid = false;
+        }
+        
+        // Validate payment method selection
+        const paymentTypeSelect = document.getElementById('paymentType');
+        if (!requestType) {
+            paymentTypeSelect.classList.add('is-invalid');
+            isValid = false;
+        }
+        
+        // Validate M-Pesa number
+        if (requestType === 'mpesa_number') {
+            const mpesaNumber = document.getElementById('mpesa_number');
+            // Check if it's a valid 9-digit number
+            if (!mpesaNumber.value || !/^\d{9}$/.test(mpesaNumber.value)) {
+                mpesaNumber.classList.add('is-invalid');
+                isValid = false;
+            }
+        }
+        
+        // Validate Paybill information
+        if (requestType === 'paybill_number') {
+            const paybill = document.getElementById('paybill_number').value.trim();
+            const account = document.getElementById('account_number').value.trim();
+
+            if (!paybill) {
+                alert('Please enter Paybill number');
+                isValid = false;
+            }
+
+            if (!account) {
+                alert('Please enter Account number');
+                isValid = false;
+            }
+        }
+        
+        // Validate Till number
+        if (requestType === 'till_number') {
+            const tillNumber = document.getElementById('till_number');
+            // Check if it's a valid 5-6 digit number
+            if (!tillNumber.value || !/^\d{5,6}$/.test(tillNumber.value)) {
+                tillNumber.classList.add('is-invalid');
+                isValid = false;
+            }
+        }
+        
+        // Validate amount
+        const amount = document.getElementById('amount');
+        if (!amount.value || parseFloat(amount.value) <= 0) {
+            amount.classList.add('is-invalid');
+            isValid = false;
+        }
+        
+        // Submit form if valid
+        if (isValid) {
+            paymentForm.submit();
+        }
+    });
+});
+        </script>
+        
 
 
 <script>

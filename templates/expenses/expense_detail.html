@@ -2,51 +2,64 @@
 {% load static %}
 {% load humanize %}
 {% block content %}
-<div class="container mt-4">
-    <h2>Expense Details</h2>
-    <hr>
 
-    <div class="card mb-3">
-        <div class="card-body">
-            <h5 class="card-title">{{ expense.title }}</h5>
-            <p><strong>Amount:</strong> {{ expense.amount }}</p>
-            <p><strong>Status:</strong>
-                {% if expense.approved %}
-                    <span class="badge bg-success">Approved</span>
-                {% elif expense.declined %}
-                    <span class="badge bg-danger">Declined</span>
-                {% else %}
-                    <span class="badge bg-warning text-dark">Pending</span>
-                {% endif %}
-            </p>
-            <p><strong>Created By:</strong> {{ expense.created_by.get_full_name }}</p>
-            <p><strong>Date:</strong> {{ expense.created_at|date:"M d, Y H:i" }}</p>
+<section class="dashboard-section body-collapse">
+    <div class="overlay pt-120">
+        <div class="container-fruid">
+            <div class="row">
+                <div class="col-xl-12 col-lg-12">
+                    <div class="section-content">
+
+                        <div class="container mt-4">
+                            <h4>Expense Details</h4>
+
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ expense.title }}</h5>
+                                    <p><strong>Amount:</strong> {{ expense.amount }}</p>
+                                    <p><strong>Status:</strong>
+                                        {% if expense.approved %}
+                                            <span class="badge bg-success">Approved</span>
+                                        {% elif expense.declined %}
+                                            <span class="badge bg-danger">Declined</span>
+                                        {% else %}
+                                            <span class="badge bg-warning text-dark">Pending</span>
+                                        {% endif %}
+                                    </p>
+                                    <p><strong>Created By:</strong> {{ expense.created_by.get_full_name }}</p>
+                                    <p><strong>Date:</strong> {{ expense.created_at|date:"M d, Y H:i" }}</p>
+                                </div>
+                            </div>
+
+                            <!-- {% if is_admin and approval_form %}
+                            <div class="mb-4">
+                                <h4>Approve/Decline Expense</h4>
+                                <form method="post" action="{% url 'expense:approve_expense' expense.id %}">
+                                    {% csrf_token %}
+                                    {{ approval_form.as_p }}
+                                    <button type="submit" class="btn btn-success">Approve</button>
+                                    <button type="submit" name="decline" value="true" class="btn btn-danger">Decline</button>
+                                </form>
+                            </div>
+                            {% endif %} -->
+                        <!-- 
+                            {% if payment_form %}
+                            <div class="mb-4">
+                                <h4>Make Payment</h4>
+                                <form method="post" action="{% url 'expense:make_payment' %}">
+                                    {% csrf_token %}
+                                    {{ payment_form.as_p }}
+                                    <button type="submit" class="btn btn-primary">Pay Now</button>
+                                </form>
+                            </div>
+                            {% endif %} -->
+
+                            <a href="{% url 'wallet:staff-dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-
-    {% if is_admin and approval_form %}
-    <div class="mb-4">
-        <h4>Approve/Decline Expense</h4>
-        <form method="post" action="{% url 'expense:approve_expense' expense.id %}">
-            {% csrf_token %}
-            {{ approval_form.as_p }}
-            <button type="submit" class="btn btn-success">Approve</button>
-            <button type="submit" name="decline" value="true" class="btn btn-danger">Decline</button>
-        </form>
-    </div>
-    {% endif %}
-
-    {% if payment_form %}
-    <div class="mb-4">
-        <h4>Make Payment</h4>
-        <form method="post" action="{% url 'expense:make_payment' %}">
-            {% csrf_token %}
-            {{ payment_form.as_p }}
-            <button type="submit" class="btn btn-primary">Pay Now</button>
-        </form>
-    </div>
-    {% endif %}
-
-    <a href="{% url 'wallet:staff-dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
-</div>
+</section>
 {% endblock %}
