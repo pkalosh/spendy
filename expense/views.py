@@ -444,10 +444,10 @@ def make_payment(request):
             return redirect('wallet:staff-dashboard')
 
         try:
-            amount = float(amount)
+            amount = Decimal(amount)
             if amount <= 0:
                 raise ValueError
-        except ValueError:
+        except (InvalidOperation, ValueError):
             messages.error(request, "Invalid amount provided.")
             return redirect('wallet:staff-dashboard')
 
