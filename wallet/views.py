@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from wallet.forms import KYCForm, StaffProfileForm, UserForm,RoleForm,WalletForm
-from expense.forms import ExpenseRequestForm ,ExpenseApprovalForm
+from expense.forms import ExpenseRequestForm ,ExpenseApprovalForm,EventExpenseForm,OperationExpenseForm
 from django.contrib import messages
 from wallet.models import Wallet, Notification, Transaction,CompanyKYC, StaffProfile,Role
 from expense.models import ExpenseCategory, OperationCategory, EventCategory,Expense
@@ -547,8 +547,11 @@ def dashboard(request):
     
 
 from django.http import HttpResponse, JsonResponse
-from expense.models import Expense
+from expense.models import Expense, ExpenseGroup,Event,Operation
 from expense.forms import ExpenseRequestForm, PaymentForm
+from django.views.decorators.http import require_POST
+from decimal import Decimal, InvalidOperation
+from django.db.models import Q
 @login_required
 def staff_dashboard(request):
     """
@@ -557,40 +560,117 @@ def staff_dashboard(request):
     """
     context = {}
     user = request.user
+    
     try:
         # Get staff profile
         company = StaffProfile.objects.get(user=request.user)
         
         # Get transactions and wallets
         transactions = Transaction.objects.filter(sender=request.user).order_by("-id")
-        wallets = Wallet.objects.filter(company=company.company).order_by("-id")  # Added proper ordering
+        wallets = Wallet.objects.filter(company=company.company).order_by("-id").exclude(wallet_type="PRIMARY")
         
         # Add to context
         context["transactions"] = transactions
         context["wallets"] = wallets
+        
         expenses = Expense.objects.filter(company=company.company, created_by=request.user).order_by('-created_at')
-
         pending_expenses = expenses.filter(approved=False, declined=False)
-        approved_expenses = expenses.filter(approved=True,paid=False)
+        approved_expenses = expenses.filter(approved=True, paid=False)
         declined_expenses = expenses.filter(declined=True)
         
         # Initialize forms
-        expense_form = ExpenseRequestForm(user=user, company=company.company)
-        payment_form = PaymentForm(user=user,company=company.company)
+        # expense_form = ExpenseRequestForm(user=user, company=company.company)
+        payment_form = PaymentForm(user=user, company=company.company)
+        # event_form = EventExpenseForm(user=user, company=company.company)
+        # operation_form = OperationExpenseForm(user=user, company=company.company)
+        
+        # Debug information - print to console
+        print("============= FORM DEBUG INFO =============")
+        # print(f"expense_form fields: {expense_form.fields.keys()}")
+        # print(f"event_form fields: {event_form.fields.keys()}")
+        # print(f"operation_form fields: {operation_form.fields.keys()}")
+        
+        events_queryset = Event.objects.filter(
+            created_by=user,
+            company=company.company, 
+            approved=False,
+            paid=False
+        )
+        print(f"Available events count: {events_queryset.count()}")
+        print(f"Available events: {list(events_queryset.values_list('id', 'name'))}")
+        
+        operations_queryset = Operation.objects.filter(
+            created_by=user,
+            company=company.company, 
+            approved=False,
+            paid=False
+        )
+        
+        # user1 = get_object_or_404(User, id=user.id)
+        wallet = get_pending_approved_expense_sum(user)
+        print(f"Available wallets count: {wallet}")
+        print(f"Available operations count: {operations_queryset.count()}")
+        print(f"Available operations: {list(operations_queryset.values_list('id', 'name'))}")
+        
         context["pending_expenses"] = pending_expenses
         context["approved_expenses"] = approved_expenses
         context["declined_expenses"] = declined_expenses
-        context["expense_form"] = expense_form
-        context["payment_form"] = payment_form
+        # context["expense_form"] = expense_form
+        # context["payment_form"] = payment_form
+        # context["event_form"] = event_form
+        # context["operation_form"] = operation_form
+        context["expense_groups"] = [{"name": "Event", "value": "EVENT"}, {"name": "Operation", "value": "OPERATION"}]
+        context["wallet"] = wallet
+        context["operations"] = Operation.objects.filter(company=company.company, created_by=request.user)
+        context["events"] = Event.objects.filter(company=company.company, created_by=request.user)
 
+        # # Add debug info to context
+        # context["debug_expense_fields"] = list(expense_form.fields.keys())
+        # context["debug_event_fields"] = list(event_form.fields.keys())
+        # context["debug_operation_fields"] = list(operation_form.fields.keys())
+        context["debug_events_count"] = events_queryset.count()
+        context["debug_operations_count"] = operations_queryset.count()
+        context['event_categories']  = EventCategory.objects.filter(
+            Q(company=company.company)
+        )
+        context['operation_categories']  = OperationCategory.objects.filter(
+            Q(company=company.company)
+        )
+        context['project_leads'] = StaffProfile.objects.filter(
+            company=company.company,
+            user__is_active=True
+        ).select_related('user')
         return render(request, "users/staff/staff.html", context)
         
     except StaffProfile.DoesNotExist as e:
         # Log the error
         print(f"Staff profile error: {e}")
-        
         # Add error message to be displayed on the page
         messages.error(request, "Staff profile not found. Please contact administrator.")
-        
         # Return to a simple error template or the login page
         return render(request, "error_template.html", {"error": "Staff profile not found"}, status=404)
+
+
+from decimal import Decimal
+from django.db.models import Sum
+from .models import Expense
+
+def get_pending_approved_expense_sum(user):
+    """
+    Returns the sum of all approved but unpaid expenses created by the user
+    and belonging to the user's company.
+    """
+    try:
+        company = user.staffprofile.company
+    except AttributeError:
+        # If the user has no staff profile or company
+        return Decimal('0.00')
+
+    result = Expense.objects.filter(
+        approved=True,
+        paid=False,
+        created_by=user,
+        company=company
+    ).aggregate(total=Sum('amount'))
+
+    return result['total'] or Decimal('0.00')

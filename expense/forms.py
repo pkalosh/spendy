@@ -1,12 +1,75 @@
 from django import forms
 from .models import Expense, Event, Operation, ExpenseGroup
 from wallet.models import Wallet
+class EventExpenseForm(forms.ModelForm):
+    class Meta:
+        model = Event
+        fields = ['name', 'category', 'company', 'start_date', 'end_date', 'budget', 'project_lead', 'location', 'created_by','description']
+        widgets = {
+            'start_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'end_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'category': forms.Select(attrs={'class': 'form-control'}),
+            'budget': forms.NumberInput(attrs={'class': 'form-control'}),
+            'project_lead': forms.Select(attrs={'class': 'form-control'}),
+            'location': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        # Extract user and company from kwargs before passing to parent class
+        self.user = kwargs.pop('user', None)
+        self.company = kwargs.pop('company', None)
+        super(EventExpenseForm, self).__init__(*args, **kwargs)
+        
+        # Set initial values and hide certain fields
+        if self.user:
+            self.fields['created_by'].initial = self.user
+            self.fields['created_by'].widget = forms.HiddenInput()
+        
+        if self.company:
+            self.fields['company'].initial = self.company
+            self.fields['company'].widget = forms.HiddenInput()
+
+
+class OperationExpenseForm(forms.ModelForm):
+    class Meta:
+        model = Operation
+        fields = ['name', 'category', 'company', 'budget', 'project_lead', 'created_by','description']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'category': forms.Select(attrs={'class': 'form-control'}),
+            'budget': forms.NumberInput(attrs={'class': 'form-control'}),
+            'project_lead': forms.Select(attrs={'class': 'form-control'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        # Extract user and company from kwargs before passing to parent class
+        self.user = kwargs.pop('user', None)
+        self.company = kwargs.pop('company', None)
+        super(OperationExpenseForm, self).__init__(*args, **kwargs)
+        
+        # Set initial values and hide certain fields
+        if self.user:
+            self.fields['created_by'].initial = self.user
+            self.fields['created_by'].widget = forms.HiddenInput()
+        
+        if self.company:
+            self.fields['company'].initial = self.company
+            self.fields['company'].widget = forms.HiddenInput()
+
+
 class ExpenseRequestForm(forms.ModelForm):
     """Form for creating expense requests"""
     class Meta:
         model = Expense
         fields = ['wallet', 'expense_group', 'event', 'operation']
-        # Note: amount is not included in fields as it will be set automatically
+        widgets = {
+            'wallet': forms.Select(attrs={'class': 'form-control'}),
+            'expense_group': forms.Select(attrs={'class': 'form-control', 'id': 'id_expense_group'}),
+            'event': forms.Select(attrs={'class': 'form-control'}),
+            'operation': forms.Select(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': '3', 'placeholder': 'Enter detailed reason for this expense'}),
+        }
         
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user', None)
@@ -18,8 +81,7 @@ class ExpenseRequestForm(forms.ModelForm):
         self.fields['event'].queryset = Event.objects.none()
         self.fields['operation'].queryset = Operation.objects.none()
         self.fields['wallet'].queryset = Wallet.objects.none()
-        # self.fields['expense_group'].widget.attrs.update({'id': 'id_expense_group'})
-        # self.fields['wallet'].widget.attrs.update({'id': 'id_wallet'})  
+        
         # Only filter if company is provided
         if self.company:
             self.fields['event'].queryset = Event.objects.filter(
@@ -38,82 +100,6 @@ class ExpenseRequestForm(forms.ModelForm):
                 company=self.company, 
                 is_active=True
             ).exclude(wallet_type="PRIMARY")
-    
-    def clean(self):
-        cleaned_data = super().clean()
-        expense_group = cleaned_data.get('expense_group')
-        event = cleaned_data.get('event')
-        operation = cleaned_data.get('operation')
-        wallet = cleaned_data.get('wallet')
-        
-        # Validate based on expense group selection
-        if expense_group == ExpenseGroup.EVENT and not event:
-            raise forms.ValidationError({
-                'event': "Event is required for event expenses."
-            })
-            
-        if expense_group == ExpenseGroup.OPERATION and not operation:
-            raise forms.ValidationError({
-                'operation': "Operation is required for operation expenses."
-            })
-            
-        # Check if an expense request already exists for this event/operation
-        if expense_group == ExpenseGroup.EVENT and event:
-            existing_request = Expense.objects.filter(
-                event=event,
-                approved=False,
-                paid=False,
-                declined=False
-            ).exists()
-            
-            if existing_request:
-                raise forms.ValidationError({
-                    'event': "A pending expense request already exists for this event."
-                })
-                
-        if expense_group == ExpenseGroup.OPERATION and operation:
-            existing_request = Expense.objects.filter(
-                operation=operation,
-                approved=False,
-                paid=False,
-                declined=False
-            ).exists()
-            
-            if existing_request:
-                raise forms.ValidationError({
-                    'operation': "A pending expense request already exists for this operation."
-                })
-            
-        # Determine budget amount based on expense group
-        budget_amount = None
-        if expense_group == ExpenseGroup.EVENT and event:
-            budget_amount = event.budget
-        elif expense_group == ExpenseGroup.OPERATION and operation:
-            budget_amount = operation.budget
-            
-        # Check if wallet has enough balance
-        if wallet and budget_amount is not None:
-            if wallet.balance < budget_amount:
-                raise forms.ValidationError({
-                    'wallet': f"Insufficient funds in wallet. Available balance: {wallet.balance} {wallet.currency}"
-                })
-                
-        return cleaned_data
-        
-    def save(self, commit=True):
-        instance = super().save(commit=False)
-        instance.created_by = self.user
-        instance.company = self.company
-        
-        # Set amount based on expense group
-        if instance.expense_group == ExpenseGroup.EVENT and instance.event:
-            instance.amount = instance.event.budget
-        elif instance.expense_group == ExpenseGroup.OPERATION and instance.operation:
-            instance.amount = instance.operation.budget
-            
-        if commit:
-            instance.save()
-        return instance
 class ExpenseApprovalForm(forms.ModelForm):
     """Form for approving or declining expense requests"""
     
@@ -201,3 +187,5 @@ class PaymentForm(forms.Form):
             raise forms.ValidationError("Till number is required for this payment method.")
             
         return cleaned_data
+
+

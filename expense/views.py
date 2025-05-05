@@ -3,10 +3,15 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponseForbidden
 from django.db import transaction
+from django.views.decorators.http import require_POST
 from django.urls import reverse
-from .models import Expense, Event, Operation, ExpenseGroup
-from .forms import ExpenseRequestForm, ExpenseApprovalForm, PaymentForm
+from .models import Expense, Event, Operation, ExpenseGroup, CategoryBase, ExpenseCategory, EventCategory, OperationCategory
+from .forms import ExpenseRequestForm, ExpenseApprovalForm, PaymentForm, EventExpenseForm, OperationExpenseForm
 from wallet.models import Transaction, CompanyKYC, Wallet
+
+from decimal import Decimal, InvalidOperation
+from django.db.models import Q
+
 def is_admin(user):
     """Check if user is admin either through Django admin or through StaffProfile"""
     if user.is_staff or user.is_superuser:
@@ -61,37 +66,299 @@ def dashboard(request):
     
     return render(request, 'dashboard.html', context)
 
+
 @login_required
 def submit_expense(request):
-    """Handle expense submission"""
+    if request.method == 'POST':
+        form_type = request.POST.get('request_type')
+        if not form_type or form_type not in ['event', 'operation']:
+            messages.error(request, "Please select a valid request type")
+            return redirect('wallet:staff-dashboard')
+
+        # try:
+        #     wallet = Wallet.objects.get(user=request.user)
+        # except Wallet.DoesNotExist:
+        #     messages.error(request, "You don't have a wallet. Please create one first.")
+        #     return redirect('wallet:staff-dashboard')
+
+        if form_type == 'event':
+            wallet = Wallet.objects.get(company = request.user.staffprofile.company, wallet_type="EVENT")    
+            return _handle_event_expense(request, wallet)
+        else:
+            wallet = Wallet.objects.get(company = request.user.staffprofile.company, wallet_type="OPERATIONS")
+            return _handle_operation_expense(request, wallet)
+
+def _handle_event_expense(request, wallet):
+    event_name = request.POST.get('event_name')
+    event_category_id = request.POST.get('event_category')
+    start_date = request.POST.get('event_start_date')
+    end_date = request.POST.get('event_end_date')
+    budget = request.POST.get('event_budget')
+    description = request.POST.get('event_description')
+    project_lead = request.POST.get('event_project_lead')
+    location = request.POST.get('event_location')
+    
+    # company_id = request.POST.get('company')
+    company = CompanyKYC.objects.filter(id=request.user.staffprofile.company.id).first()
+
+    if not all([event_name, event_category_id, start_date, end_date, budget, project_lead, location]):
+        messages.error(request, "Please fill in all required event fields")
+        return redirect('wallet:staff-dashboard')
+
+    try:
+        budget = Decimal(budget)
+        event_category = EventCategory.objects.get(id=event_category_id)
+
+        event = Event.objects.create(
+            name=event_name,
+            category=event_category,
+            company=company,
+            start_date=start_date,
+            end_date=end_date,
+            budget=budget,
+            description=description,
+            project_lead=project_lead,
+            location=location,
+            created_by=request.user
+        )
+
+        expense_group = request.POST.get('expense_group', 'Event')
+
+        expense = Expense.objects.create(
+            wallet=wallet,
+            amount=budget,
+            expense_group=expense_group,
+            event=event,
+            operation=None,
+            company=company,
+            created_by=request.user
+        )
+        print(expense)
+
+        messages.success(request, f"Event expense '{event_name}' created successfully")
+        return redirect('wallet:staff-dashboard')
+
+    except EventCategory.DoesNotExist:
+        messages.error(request, "Selected event category does not exist")
+    except ValueError:
+        messages.error(request, "Invalid budget value")
+    except Exception as e:
+        messages.error(request, f"Error creating event expense: {str(e)}")
+    
+    return redirect('wallet:staff-dashboard')
+
+
+def _handle_operation_expense(request, wallet):
+    operation_name = request.POST.get('operation_name')
+    operation_category_id = request.POST.get('operation_category')
+    budget = request.POST.get('operation_budget')
+    description = request.POST.get('operation_description')
+    project_lead = request.POST.get('operation_project_lead', '')
+
+    # company_id = request.POST.get('company')
+    company = CompanyKYC.objects.filter(id=request.user.staffprofile.company.id).first()
+
+    # company = CompanyKYC.objects.filter(id=company_id).first() if company_id else None
+
+    if not all([operation_name, operation_category_id, budget]):
+        messages.error(request, "Please fill in all required operation fields")
+        return redirect('wallet:staff-dashboard')
+
+    try:
+        budget = Decimal(budget)
+        operation_category = OperationCategory.objects.get(id=operation_category_id)
+
+        operation = Operation.objects.create(
+            name=operation_name,
+            category=operation_category,
+            company=company,
+            budget=budget,
+            description=description,
+            project_lead=project_lead,
+            created_by=request.user
+        )
+
+        expense_group = request.POST.get('expense_group', 'Operation')
+
+        expense = Expense.objects.create(
+            wallet=wallet,
+            amount=budget,
+            expense_group=expense_group,
+            event=None,
+            operation=operation,
+            company=company,
+            created_by=request.user
+        )
+
+        messages.success(request, f"Operation expense '{operation_name}' created successfully")
+        return redirect('wallet:staff-dashboard')
+
+    except OperationCategory.DoesNotExist:
+        messages.error(request, "Selected operation category does not exist")
+    except ValueError:
+        messages.error(request, "Invalid budget value")
+    except Exception as e:
+        messages.error(request, f"Error creating operation expense: {str(e)}")
+    
+    return redirect('wallet:staff-dashboard')
+
+
+
+@login_required
+@require_POST
+def create_event(request):
+    """
+    Handle event creation from modal form with hard-coded fields
+    """
     user = request.user
     company = user.staffprofile.company if hasattr(user, 'staffprofile') else None
     
-    if request.method == 'POST':
-        form = ExpenseRequestForm(request.POST, user=user, company=company)
+    try:
+        # Extract and sanitize form data
+        name = request.POST.get('name', '').strip()
+        category_id = request.POST.get('category')
+        start_date = request.POST.get('start_date')
+        end_date = request.POST.get('end_date')
+        budget_str = request.POST.get('budget')
+        project_lead_id = request.POST.get('project_lead')
+        location = request.POST.get('location', '').strip()
         
-        if form.is_valid():
-            expense = form.save(commit=False)
-            expense.created_by = user
-            expense.company = company
-            
-            # Check if wallet has sufficient funds
-            wallet = expense.wallet
-            amount = expense.amount
-            
-            if wallet.balance >= amount:
-                expense.save()
-                messages.success(request, 'Expense request submitted successfully.')
-                return redirect('wallet:staff-dashboard')
-            else:
-                messages.error(request, f'Insufficient funds in wallet. Available balance: {wallet.balance}')
-        else:
-            messages.error(request, 'Please correct the errors below.')
-    else:
-        form = ExpenseRequestForm(user=user, company=company)
-    
-    return render(request, 'users/staff/staff.html', {'form': form})
+        # Validate required fields
+        if not all([name, category_id, start_date, end_date, budget_str, project_lead_id]):
+            return JsonResponse({
+                'success': False, 
+                'message': 'All fields are required'
+            })
+        
+        # Convert budget to Decimal
+        try:
+            budget = Decimal(budget_str)
+            if budget <= 0:
+                return JsonResponse({
+                    'success': False, 
+                    'message': 'Budget must be greater than zero'
+                })
+        except (InvalidOperation, TypeError):
+            return JsonResponse({
+                'success': False, 
+                'message': 'Please enter a valid budget amount'
+            })
+        
+        # Get category
+        try:
+            category = ExpenseCategory.objects.get(
+                Q(company=company) | Q(is_global=True),
+                id=category_id,
+                category_type='event'
+                
+            )
+        except ExpenseCategory.DoesNotExist:
+            return JsonResponse({
+                'success': False, 
+                'message': 'Invalid category selected'
+            })
+        
+        # Create and save event
+        event = Event(
+            name=name,
+            category=category,
+            start_date=start_date,
+            end_date=end_date,
+            budget=budget,
+            project_lead_id=project_lead_id,
+            location=location,
+            company=company,
+            created_by=user
+        )
+        event.save()
+        
+        return JsonResponse({
+            'success': True,
+            'id': event.id,
+            'name': event.name,
+            'message': 'Event created successfully'
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'An error occurred: {str(e)}'
+        })
 
+
+@login_required
+@require_POST
+def create_operation(request):
+    """
+    Handle operation creation from modal form with hard-coded fields
+    """
+    user = request.user
+    company = user.staffprofile.company if hasattr(user, 'staffprofile') else None
+    
+    try:
+        # Extract and sanitize form data
+        name = request.POST.get('name', '').strip()
+        category_id = request.POST.get('category')
+        budget_str = request.POST.get('budget')
+        project_lead_id = request.POST.get('project_lead')
+        
+        # Validate required fields
+        if not all([name, category_id, budget_str, project_lead_id]):
+            return JsonResponse({
+                'success': False, 
+                'message': 'All fields are required'
+            })
+        
+        # Convert budget to Decimal
+        try:
+            budget = Decimal(budget_str)
+            if budget <= 0:
+                return JsonResponse({
+                    'success': False, 
+                    'message': 'Budget must be greater than zero'
+                })
+        except (InvalidOperation, TypeError):
+            return JsonResponse({
+                'success': False, 
+                'message': 'Please enter a valid budget amount'
+            })
+        
+        # Get category
+        try:
+            category = ExpenseCategory.objects.get(
+                Q(company=company) | Q(is_global=True),
+                id=category_id,
+                category_type='operation'
+            )
+        except ExpenseCategory.DoesNotExist:
+            return JsonResponse({
+                'success': False, 
+                'message': 'Invalid category selected'
+            })
+        
+        # Create and save operation
+        operation = Operation(
+            name=name,
+            category=category,
+            budget=budget,
+            project_lead_id=project_lead_id,
+            company=company,
+            created_by=user
+        )
+        operation.save()
+        
+        return JsonResponse({
+            'success': True,
+            'id': operation.id,
+            'name': operation.name,
+            'message': 'Operation created successfully'
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'An error occurred: {str(e)}'
+        })
 @login_required
 def expense_detail(request, expense_id):
     user = request.user
@@ -223,3 +490,113 @@ def get_expense_options(request):
         return JsonResponse({'options': list(operations)})
     
     return JsonResponse({'options': []})
+
+
+
+@login_required
+def create_event_ajax(request):
+    """AJAX endpoint for creating events"""
+    if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'success': False, 'errors': 'Invalid request'})
+    
+    user = request.user
+    company = user.staffprofile.company if hasattr(user, 'staffprofile') else None
+    
+    if request.method == 'POST':
+        form = EventExpenseForm(request.POST, user=user, company=company)
+        
+        if form.is_valid():
+            event = form.save()
+            return JsonResponse({
+                'success': True,
+                'event_id': event.id,
+                'event_name': event.name
+            })
+        else:
+            errors = {field: errors[0] for field, errors in form.errors.items()}
+            return JsonResponse({'success': False, 'errors': errors})
+    
+    return JsonResponse({'success': False, 'errors': 'Invalid request method'})
+
+
+@login_required
+def create_operation_ajax(request):
+    """AJAX endpoint for creating operations"""
+    if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'success': False, 'errors': 'Invalid request'})
+    
+    user = request.user
+    company = user.staffprofile.company if hasattr(user, 'staffprofile') else None
+    
+    if request.method == 'POST':
+        form = OperationExpenseForm(request.POST, user=user, company=company)
+        
+        if form.is_valid():
+            operation = form.save()
+            return JsonResponse({
+                'success': True,
+                'operation_id': operation.id,
+                'operation_name': operation.name
+            })
+        else:
+            errors = {field: errors[0] for field, errors in form.errors.items()}
+            return JsonResponse({'success': False, 'errors': errors})
+    
+    return JsonResponse({'success': False, 'errors': 'Invalid request method'})
+
+
+@require_POST
+def create_event(request):
+    """AJAX endpoint to create a new event"""
+    if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'success': False, 'errors': 'Invalid request'})
+        
+    user = request.user
+    company = user.staffprofile.company if hasattr(user, 'staffprofile') else None
+    
+    form = EventExpenseForm(request.POST)
+    if company:
+        form.instance.company = company
+    if user:
+        form.instance.created_by = user
+        
+    if form.is_valid():
+        event = form.save()
+        return JsonResponse({
+            'success': True,
+            'id': event.id,
+            'name': event.name
+        })
+    else:
+        return JsonResponse({
+            'success': False,
+            'errors': form.errors
+        }, status=400)
+
+@require_POST
+def create_operation(request):
+    """AJAX endpoint to create a new operation"""
+    if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'success': False, 'errors': 'Invalid request'})
+        
+    user = request.user
+    company = user.staffprofile.company if hasattr(user, 'staffprofile') else None
+    
+    form = OperationExpenseForm(request.POST)
+    if company:
+        form.instance.company = company
+    if user:
+        form.instance.created_by = user
+        
+    if form.is_valid():
+        operation = form.save()
+        return JsonResponse({
+            'success': True,
+            'id': operation.id,
+            'name': operation.name
+        })
+    else:
+        return JsonResponse({
+            'success': False,
+            'errors': form.errors
+        }, status=400)
