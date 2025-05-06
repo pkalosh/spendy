@@ -530,7 +530,8 @@ def dashboard(request):
             
         transactions = Transaction.objects.filter(company=kyc).order_by("-id")
         print(transactions)
-        wallets = Wallet.objects.filter(user=request.user)
+        wallets = Wallet.objects.filter(company=kyc).order_by("-id").exclude(wallet_type="PRIMARY")
+        primary_wallets = Wallet.objects.filter(company=kyc,wallet_type="PRIMARY").order_by("-id")
     else:
         messages.warning(request, "You need to login to access the dashboard")
         return redirect("userauths:sign-in")
@@ -538,6 +539,7 @@ def dashboard(request):
     context = {
         "kyc": kyc,
         "wallets": wallets,
+        "primary_wallets": primary_wallets,
         "form": form,
         "wallet_form": wallet_form,
         "transactions": transactions

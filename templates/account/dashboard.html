@@ -4,50 +4,95 @@
 {% block content %}
 <style>
     .custom-dropdown-menu {
-    z-index: 1051; /* Make sure this is higher than the modal's z-index */
-}
+        z-index: 1051; /* Make sure this is higher than the modal's z-index */
+    }
 
-.modal-content {
-    overflow-y: auto; /* Ensures modal content is scrollable */
-}
+    .modal-content {
+        overflow-y: auto; /* Ensures modal content is scrollable */
+    }
 
-.modal-body {
-    overflow-y: auto; /* Keeps content scrollable if it exceeds the height */
-}
+    .modal-body {
+        overflow-y: auto; /* Keeps content scrollable if it exceeds the height */
+    }
 
+    .wallet-card {
+        transition: all 0.3s ease;
+    }
+    
+    .wallet-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    .alert-card {
+        border-left: 4px solid #ffc107;
+    }
 </style>
 <section class="dashboard-section body-collapse">
     <div class="overlay pt-120">
         <div class="container-fluid">
+
+            <h5 class="">Hi, {{ kyc.company_name|title }}! Welcome to Spendy</h5>
             {% if form.errors %}
                 <div class="alert alert-danger">
                     <strong>{{ form.errors }}</strong>
                 </div>
             {% endif %}
 
-            <div class="row g-4">
-                <!-- Left Section -->
-                <div class="col-lg-8">
-                    <!-- Wallet Summary Card -->
-                    <div class="card p-4 shadow-sm rounded-4">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h5 class="mb-1">Hi, {{ kyc.company_name|title }}!</h5>
-                                <h2 class="text-primary">${{ account.account_balance|intcomma }}</h2>
-                            </div>
-                            <div>
-                                <img src="{% static 'assets1/images/icon/wallet.png' %}" alt="Wallet Icon" class="img-fluid" style="height: 40px;">
-                            </div>
-                        </div>
-                        <div class="mt-4 d-flex flex-wrap gap-2">
-                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#payModal">Pay</button>
-                            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#sendModal">Send</button>
-                            <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#expenseModal">New Expense</button>
-                        </div>
+            <!-- Wallets Row - Horizontal Display -->
+            <div class="row ">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"></h5>
+                        <a href="#" class="text-decoration-none pb-2">Add Wallet <i class="fas fa-plus-circle"></i></a>
                     </div>
+                    <div class="row">
+                        {% if primary_wallets %}
+                            {% for c in primary_wallets %}
+                                <div class="col-md-3 mb-4">
+                                    <div class="wallet-card bg-white p-4 rounded shadow-md border-l-4 border-blue-500 h-100">
+                                        <div class="d-flex justify-content-between">
+                                            <h5 class="font-semibold">{{ c.wallet_name }}</h5>
+                                            <span class="text-sm">{{c.currency}}{{ c.wallet_balance|intcomma }}10000000</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="col-12">
+                                <div class="alert alert-info">
+                                    You don't have any primary wallets yet. Create one to get started!
+                                </div>
+                            </div>
+                        {% endif %}
+                        
+                        {% if wallets %}
+                            {% for c in wallets %}
+                                <div class="col-md-3 mb-4">
+                                    <div class="wallet-card bg-white p-4 rounded shadow-md border-l-4 border-blue-500 h-100">
+                                        <div class="d-flex justify-content-between">
+                                            <h5 class="font-semibold">{{ c.wallet_name }}</h5>
+                                            <span class="text-sm">{{c.currency}}{{ c.wallet_balance|intcomma }}10000000</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="col-12">
+                                <div class="alert alert-info">
+                                    You don't have any wallets yet. Create one to get started!
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
 
-                    <!-- Payments Table -->
-                    <div class="card p-4 mt-4 shadow-sm rounded-4">
+            <!-- Main Content Row with 8:4 Layout -->
+            <div class="row g-4 mt-2">
+                <!-- Left Section (8) - Transactions -->
+                <div class="col-lg-8">
+                    <div class="card p-4 shadow-sm rounded-4">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h5 class="mb-0">Recent Payments</h5>
                             <a href="{% url 'wallet:transactions' %}" class="text-decoration-none">View All <img src="{% static 'assets1/images/icon/right-arrow.png' %}" alt="View All Icon"></a>
@@ -67,7 +112,7 @@
                                     {% for s in transactions %}
                                     <tr>
                                         <td>
-                                            <strong>{{ s.reciever.kyc.full_name|title }}</strong><br>
+                                            <strong>{{ s.user|title }}</strong><br>
                                             <small class="text-muted">{{ s.transaction_type|title }}</small>
                                         </td>
                                         <td>
@@ -76,8 +121,8 @@
                                         </td>
                                         <td>
                                             <span class="{% if s.status == 'completed' %}text-success
-                                                        {% elif s.status in 'pending' %}text-warning
-                                                        {% else %}text-danger{% endif %}">
+                                                      {% elif s.status in 'pending' %}text-warning
+                                                      {% else %}text-danger{% endif %}">
                                                 {{ s.status|title }}
                                             </span>
                                         </td>
@@ -89,14 +134,10 @@
                                                 </button>
                                                 <ul class="dropdown-menu custom-dropdown-menu" aria-labelledby="dropdownMenuButton{{ s.id }}">
                                                     <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#viewTransactionModal{{ s.id }}">View</a></li>
-                                                    <!-- <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#approveTransactionModal{{ s.id }}">Approve</a></li>
-                                                    <li><a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#rejectTransactionModal{{ s.id }}">Reject</a></li> -->
                                                 </ul>
                                             </div>
                                         </td>
-                                        
                                     </tr>
-
                                     <!-- Modals for each transaction -->
                                     {% include 'partials/transaction_modals.html' with transaction=s %}
                                     {% endfor %}
@@ -105,110 +146,64 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Right Sidebar -->
+                
+                <!-- Right Section (4) - Alerts and Notifications -->
                 <div class="col-lg-4">
-                    <!-- Linked Wallets -->
-                    <div class="card p-4 shadow-sm rounded-4 mb-4">
+                <!-- Quick Actions Card -->
+                <div class="card p-4 shadow-sm rounded-4">
+                    <h5 class="mb-3">Quick Actions</h5>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-primary">Send Money</button>
+                        <button class="btn btn-outline-secondary">Request Payment</button>
+                        <button class="btn btn-outline-secondary">Add Funds</button>
+                    </div>
+                </div>
+                    <div class="card p-4 shadow-sm rounded-4 mt-4">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6 class="mb-0">Active Wallets</h6>
-                            <a href="{% url 'wallet:wallet' %}" class="btn btn-info">View All</a>
-
+                            <h5 class="mb-0">Alerts & Updates</h5>
+                            <a href="#" class="text-decoration-none">Settings <i class="fas fa-cog"></i></a>
                         </div>
-                        <div class="row g-2">
-                            {% for c in wallets %}
-                                <!-- Card Preview Loop -->
-                                <div class="col-4">
-                                    <div class="bg-light p-2 rounded-3 text-center">
-                                        <p class="text-muted mb-0"> {{c.currency}}</p>
-
-                                        <!-- <img src="{% static 'assets1/images/icon/card.png' %}" alt="Card" class="w-100 rounded"> -->
-                                        {{c.balance}}
-                                    </div>
-                                   
+                        
+                        <div class="alert-container">
+                            <!-- Sample alerts - replace with your dynamic alerts -->
+                            <div class="alert-card bg-white p-3 mb-3 rounded shadow-sm">
+                                <div class="d-flex justify-content-between">
+                                    <h6 class="font-semibold mb-1">Payment Due</h6>
+                                    <small class="text-muted">Today</small>
                                 </div>
-                            {% endfor %}
-                            <div class="col-4">
-                                <button type="button" class="btn btn-outline-secondary w-100 h-100 p-3" data-bs-toggle="modal" data-bs-target="#createWalletModal">
-                                    <img src="{% static 'assets1/images/add-new.png' %}" alt="Add" class="w-100">
-                                </button>
+                                <p class="text-sm mb-1">Invoice #1234 is due in 3 days</p>
+                                <a href="#" class="text-primary text-sm">View Details</a>
+                            </div>
+                            
+                            <div class="alert-card bg-white p-3 mb-3 rounded shadow-sm">
+                                <div class="d-flex justify-content-between">
+                                    <h6 class="font-semibold mb-1">Balance Low</h6>
+                                    <small class="text-muted">Yesterday</small>
+                                </div>
+                                <p class="text-sm mb-1">Your Operations wallet is running low</p>
+                                <a href="#" class="text-primary text-sm">Add Funds</a>
+                            </div>
+                            
+                            <div class="alert-card bg-white p-3 mb-3 rounded shadow-sm">
+                                <div class="d-flex justify-content-between">
+                                    <h6 class="font-semibold mb-1">New Feature</h6>
+                                    <small class="text-muted">2 days ago</small>
+                                </div>
+                                <p class="text-sm mb-1">Try our new budgeting tools</p>
+                                <a href="#" class="text-primary text-sm">Explore Now</a>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- Payment Analytics -->
-                    <div class="card p-4 shadow-sm rounded-4 mb-4">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h6 class="mb-0">Payment Analytics</h6>
-                            <select class="form-select w-auto">
-                                <option selected>Monthly</option>
-                                <option value="1">Jan</option>
-                                <option value="2">Feb</option>
-                                <option value="3">Mar</option>
-                            </select>
+                        
+                        <div class="text-center mt-3">
+                            <a href="#" class="btn btn-outline-primary btn-sm">View All Alerts</a>
                         </div>
-                        <div id="chart" class="mt-3"></div>
                     </div>
+                    
 
-                    <!-- Notifications -->
-                    <div class="card p-4 shadow-sm rounded-4">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6 class="mb-0">Notifications ({{ notifications.count }})</h6>
-                            <a href="javascript:void(0)" class="text-decoration-none">View All</a>
-                        </div>
-                        <ul class="list-unstyled">
-                            {% for n in notifications %}
-                                <li class="mb-3 d-flex justify-content-between align-items-start">
-                                    <div>
-                                        {% if n.notification_type == "Credit Alert" %}
-                                            <p>You received <b>${{ n.amount }}</b></p>
-                                        {% elif n.notification_type == "Debit Alert" %}
-                                            <p>You sent <b>${{ n.amount }}</b></p>
-                                        {% elif n.notification_type == "Sent Payment Request" %}
-                                            <p>Sent payment request of <b>${{ n.amount }}</b></p>
-                                        {% elif n.notification_type == "Recieved Payment Request" %}
-                                            <p>Received payment request of <b>${{ n.amount }}</b></p>
-                                        {% endif %}
-                                        <small class="text-muted">{{ n.date }}</small>
-                                    </div>
-                                    <i class="fa-solid fa-caret-right mt-1"></i>
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    </div>
                 </div>
             </div>
         </div>
     </div>
 </section>
-<!-- Add Wallet Modal -->
-  
-  <!-- Modal -->
-  <div class="modal fade" id="createWalletModal" tabindex="-1" aria-labelledby="createWalletModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <form method="post" action="{% url 'wallet:create-wallet' %}">
-          {% csrf_token %}
-          <div class="modal-header">
-            <h5 class="modal-title" id="createWalletModalLabel">Create Wallet</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            {{ wallet_form.as_p }}
-          </div>
-          <div class="modal-footer">
-            <button type="submit" class="btn btn-primary">Create</button>
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-  
-
-<!-- Modals -->
-{% include 'partials/pay_modal.html' %}
-{% include 'partials/send_modal.html' %}
-{% include 'partials/expense_modal.html' %}
 
 {% endblock content %}
