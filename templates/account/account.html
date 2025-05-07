@@ -22,7 +22,7 @@
                                 </div>
                             </div>
                             <div>
-                                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editAccountModal">Edit Company Info</button>
+                                <a href="{% url 'wallet:kyc-reg' %}"  class="btn btn-primary">Edit Account</a>
                             </div>
                         </div>
                     </div>
@@ -38,10 +38,6 @@
                                 <div>
                                     <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createWalletModal">Create Wallet</button>
                                 </div>
-                            </div>
-
-                            <div class="progress mb-4" style="height: 10px;">
-                                <div class="progress-bar bg-success" role="progressbar" style="width: {{ income_percentage }}%;" aria-valuenow="{{ income_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
                             </div>
 
                             <div class="row">
@@ -85,7 +81,7 @@
                         <h5 class="mb-4">Wallet Actions</h5>
 
                         <div class="d-grid gap-2">
-                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#sendMoneyModal">Send Money</button>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#sendMoneyModal">Wallet Transfer</button>
                             <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#fundWalletModal">Fund Wallet</button>
                         </div>
                     </div>
@@ -260,7 +256,7 @@
       <div class="modal-content">
   
         <div class="modal-header">
-          <h5 class="modal-title" id="sendMoneyModalLabel">Send Money</h5>
+          <h5 class="modal-title" id="sendMoneyModalLabel">Transfer Money</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
   
@@ -276,11 +272,8 @@
             <div class="mb-3">
               <label for="sendType" class="form-label">Send To</label>
               <select class="form-select" id="sendType" onchange="handleSendTypeChange()">
-                <option value="" disabled selected>Select destination type</option>
-                <option value="mobile">Mobile Number</option>
-                <option value="till">Till Number</option>
-                <option value="paybill">Paybill Number</option>
-                <option value="bank">Bank Account</option>
+                <option value="" disabled selected>Select destination Wallet</option>
+
                 <option value="wallet">Another Wallet</option>
               </select>
             </div>
@@ -443,5 +436,4 @@
     }
     </script>
       
-
 {% endblock content %}

@@ -32,7 +32,7 @@
     <div class="overlay pt-120">
         <div class="container-fluid">
 
-            <h5 class="">Hi, {{ kyc.company_name|title }}! Welcome to Spendy</h5>
+            <h5 class="mb-2">Hi, {{ kyc.company_name|title }}! Welcome to Spendy</h5>
             {% if form.errors %}
                 <div class="alert alert-danger">
                     <strong>{{ form.errors }}</strong>
@@ -42,10 +42,7 @@
             <!-- Wallets Row - Horizontal Display -->
             <div class="row ">
                 <div class="col-12">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0"></h5>
-                        <a href="#" class="text-decoration-none pb-2">Add Wallet <i class="fas fa-plus-circle"></i></a>
-                    </div>
+
                     <div class="row">
                         {% if primary_wallets %}
                             {% for c in primary_wallets %}
@@ -53,7 +50,7 @@
                                     <div class="wallet-card bg-white p-4 rounded shadow-md border-l-4 border-blue-500 h-100">
                                         <div class="d-flex justify-content-between">
                                             <h5 class="font-semibold">{{ c.wallet_name }}</h5>
-                                            <span class="text-sm">{{c.currency}}{{ c.wallet_balance|intcomma }}10000000</span>
+                                            <span class="text-sm">{{c.currency}} {{ c.balance|intcomma }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -72,7 +69,7 @@
                                     <div class="wallet-card bg-white p-4 rounded shadow-md border-l-4 border-blue-500 h-100">
                                         <div class="d-flex justify-content-between">
                                             <h5 class="font-semibold">{{ c.wallet_name }}</h5>
-                                            <span class="text-sm">{{c.currency}}{{ c.wallet_balance|intcomma }}10000000</span>
+                                            <span class="text-sm">{{c.currency}} {{ c.balance|intcomma }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -153,9 +150,9 @@
                 <div class="card p-4 shadow-sm rounded-4">
                     <h5 class="mb-3">Quick Actions</h5>
                     <div class="d-grid gap-2">
-                        <button class="btn btn-primary">Send Money</button>
-                        <button class="btn btn-outline-secondary">Request Payment</button>
-                        <button class="btn btn-outline-secondary">Add Funds</button>
+                        <button class="btn btn-primary">New Wallet</button>
+                        <button class="btn btn-primary">Wallet Transfer</button>
+                        <button class="btn btn-outline-secondary">Fund Wallet</button>
                     </div>
                 </div>
                     <div class="card p-4 shadow-sm rounded-4 mt-4">

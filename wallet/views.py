@@ -315,7 +315,6 @@ def kyc_registration(request):
         messages.error(request, "Only admin users can submit KYC information.")
         return redirect("wallet:staff-dashboard")  # Redirect non-admin users back to wallet
     
-    wallet = Wallet.objects.get(user=user)
     all_fields = False  # Default to False
     
     try:
@@ -336,7 +335,8 @@ def kyc_registration(request):
     except CompanyKYC.DoesNotExist:
         kyc = None
         all_fields = False
-        
+    wallet = Wallet.objects.filter(company=kyc,wallet_type="PRIMARY",is_active=True).first()
+
     if request.method == "POST":
         form = KYCForm(request.POST, request.FILES, instance=kyc)
         if form.is_valid():
