@@ -8,85 +8,44 @@
         <div class="container-fluid">
             <div class="main-content">
                 <div class="row">
-
-                    <!-- Company Info Header -->
-                    <div class="col-12 mb-4">
-                        <div class="d-flex justify-content-between align-items-center bg-white rounded-3 p-3 shadow-sm">
-                            <div class="d-flex align-items-center">
-                                <div class="company-logo me-3">
-                                    <img src="{{ kyc.logo.url }}" alt="Company Logo" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover;">
-                                </div>
-                                <div>
-                                    <h5 class="mb-0">{{ kyc.company_name|title }}</h5>
-                                    <p class="mb-0 text-cyan">{{ primary_wallet.wallet_number }}</p>
-                                </div>
-                            </div>
-                            <div>
-                                <a href="{% url 'wallet:kyc-reg' %}"  class="btn btn-primary">Edit Account</a>
-                            </div>
-                        </div>
+                  <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
+                    <div>
+                        <h5 class="mb-0">{{ kyc.company_name|title }} Wallets</h5>
+                        <p class="mb-0">View and manage your wallets, balances, and transactions.</p>
                     </div>
-
-                    <!-- Account Balance Card -->
-                    <div class="col-lg-8 mb-4">
-                        <div class="bg-white rounded-3 p-4 shadow-sm">
-                            <div class="d-flex justify-content-between align-items-center mb-4">
-                                <div>
-                                    <p class="text-muted mb-1">Primary Wallet Balance</p>
-                                    <h6 class="mb-0">KES {{ primary_wallet.balance|floatformat:2 }}</h6>
-                                </div>
-                                <div>
-                                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createWalletModal">Create Wallet</button>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                {% for wallet in wallets %}
-                                <div class="col-md-3 mb-3 position-relative">
-                                    <div class="card border-0" style="box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-                                        <div class="card-body">
-                                            <!-- Options button (three dots) -->
-                                            <div class="dropdown float-end">
-                                                <button class="btn btn-light btn-sm" type="button" id="walletOptions{{ wallet.id }}" data-bs-toggle="dropdown" aria-expanded="false">
-                                                    <i class="fas fa-ellipsis-v"></i>
-                                                </button>
-                                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="walletOptions{{ wallet.id }}">
-                                                    <li><a class="dropdown-item" href="">View</a></li>
-                                                    <li><a class="dropdown-item" href="">Edit</a></li>
-                                                    <li><a class="dropdown-item" href="">Fund</a></li>
-                                                    <li><a class="dropdown-item text-danger" href="">Close</a></li>
-                                                </ul>
-                                            </div>
-                                
-                                            <!-- Wallet Info -->
-                                            <div class="text-center mt-4">
-                                                <h6 class="text-muted">{{ wallet.name }}</h6>
-                                                <h5 class="mb-0">KES {{ wallet.balance|floatformat:2 }}</h5>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                {% empty %}
-                                <div class="col-12 text-center">
-                                    <p>No wallets available.</p>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
-                <!-- Actions Card -->
-                <div class="col-lg-4 mb-4">
-                    <div class="bg-white rounded-3 p-4 shadow-sm h-100 position-relative">
-                        <h5 class="mb-4">Wallet Actions</h5>
-
-                        <div class="d-grid gap-2">
-                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#sendMoneyModal">Wallet Transfer</button>
-                            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#fundWalletModal">Fund Wallet</button>
-                        </div>
+                    <div class="d-flex gap-2 mt-2 mt-md-0">
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createWalletModal">New Wallet</button>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#sendMoneyModal">Wallet Transfer</button>
+                        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#fundWalletModal">Fund Wallet</button>
                     </div>
                 </div>
-
+                
+                        {% for wallet in wallets %}
+                        <div class="col-md-3 mb-4">
+                          <div class="card h-100 shadow-sm rounded-3 border-0">
+                              <div class="card-body d-flex flex-column justify-content-between text-center">
+                                  <!-- Wallet Icon (Optional) -->
+                                  <div class="mb-3">
+                                      <i class="fas fa-wallet fa-2x text-primary"></i>
+                                  </div>
+                      
+                                  <!-- Wallet Name -->
+                                  <h6 class="fw-bold text-uppercase text-muted mb-1">{{ wallet.wallet_name }}</h6>
+                      
+                                  <!-- Wallet Balance -->
+                                  <p class="fs-5 fw-semibold text-dark mb-0">{{ wallet.currency }} {{ wallet.balance|floatformat:2 }}</p>
+                              </div>
+                          </div>
+                      </div>
+                      
+                      
+                                                           
+                        {% empty %}
+                        <div class="col-12 text-center">
+                            <p>No wallets available.</p>
+                        </div>
+                        {% endfor %}
+                  
 
                     <!-- Recent Payments -->
                     <div class="col-12 mb-4">
@@ -142,67 +101,6 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- Company KYC Details -->
-                    <div class="accordion" id="companyKycAccordion">
-                        <div class="accordion-item">
-                            <h2 class="accordion-header" id="companyKycHeading">
-                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#companyKycCollapse" aria-expanded="true" aria-controls="companyKycCollapse">
-                                    Company KYC Details
-                                </button>
-                            </h2>
-                            <div id="companyKycCollapse" class="accordion-collapse collapse" aria-labelledby="companyKycHeading" data-bs-parent="#companyKycAccordion">
-                                <div class="accordion-body">
-                                    {% if kyc %}
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Company Name</label>
-                                            <input type="text" class="form-control" readonly value="{{ kyc.company_name|title }}">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Email</label>
-                                            <input type="text" class="form-control" readonly value="{{ kyc.user.email }}">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Date of Registration</label>
-                                            <input type="text" class="form-control" readonly value="{{ kyc.date|date:'d M, Y' }}">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Mobile</label>
-                                            <input type="text" class="form-control" readonly value="{{ kyc.mobile }}">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Country</label>
-                                            <input type="text" class="form-control" readonly value="{{ kyc.country|title }}">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">County</label>
-                                            <input type="text" class="form-control" readonly value="{{ kyc.county|title }}">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">City</label>
-                                            <input type="text" class="form-control" readonly value="{{ kyc.city|title }}">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Address</label>
-                                            <input type="text" class="form-control" readonly value="{{ kyc.address|title }}">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">KRA File</label><br>
-                                            <a href="{{ kyc.kra_pin.url }}" target="_blank" class="btn btn-outline-primary btn-sm">View KRA Document</a>
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Incorporation Certificate</label><br>
-                                            <a href="{{ kyc.registration_certificate.url }}" target="_blank" class="btn btn-outline-primary btn-sm">View Certificate</a>
-                                        </div>
-                                    </div>
-                                    {% else %}
-                                    <p class="text-muted">Company KYC details not available.</p>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                     
 
                 </div> <!-- Row End -->
@@ -240,16 +138,8 @@
     </div>
 </div>
 
-<!-- Edit Account Modal -->
-<div class="modal fade" id="editAccountModal" tabindex="-1" aria-labelledby="editAccountModalLabel" aria-hidden="true">
-    <div class="modal-dialog" style="margin-top: 80px;">
-        <div class="modal-content">
-            <!-- You can put Edit Account form here -->
-        </div>
-    </div>
-</div>
 
-<!-- Send Money Modal -->
+
 <!-- Send Money Modal -->
 <div class="modal fade" id="sendMoneyModal" tabindex="-1" aria-labelledby="sendMoneyModalLabel" aria-hidden="true">
     <div class="modal-dialog" style="margin-top: 80px;">

@@ -19,10 +19,10 @@
         transition: all 0.3s ease;
     }
     
-    .wallet-card:hover {
+    /* .wallet-card:hover {
         transform: translateY(-5px);
         box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-    }
+    } */
     
     .alert-card {
         border-left: 4px solid #ffc107;
@@ -31,8 +31,19 @@
 <section class="dashboard-section body-collapse">
     <div class="overlay pt-120">
         <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
+                <div>
+                    <h5 class="mb-0">{{ kyc.company_name|title }} ! Welcome to Spendy</h5>
+                    <p class="mb-0">Manage your expenses efficiently.</p>
+                </div>
+                <div class="d-flex gap-2 mt-2 mt-md-0">
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createWalletModal">New Wallet</button>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#sendMoneyModal">Wallet Transfer</button>
+                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#fundWalletModal">Fund Wallet</button>
+                </div>
+            </div>
 
-            <h5 class="mb-2">Hi, {{ kyc.company_name|title }}! Welcome to Spendy</h5>
+           
             {% if form.errors %}
                 <div class="alert alert-danger">
                     <strong>{{ form.errors }}</strong>
@@ -45,7 +56,7 @@
                     <div class="row">
                         {% if primary_wallets %}
                             {% for c in primary_wallets %}
-                                <div class="col-md-3 mb-4">
+                                <div class="col-md-4 mb-4">
                                     <div class="wallet-card bg-white p-4 rounded shadow border-l-4 border-blue-500 h-100">
                                         <div class="d-flex justify-content-between mb-2">
                                             <h5 class="font-semibold">{{ c.wallet_name }}</h5>
@@ -76,7 +87,7 @@
             
                         {% if wallets %}
                             {% for c in wallets %}
-                                <div class="col-md-3 mb-4">
+                                <div class="col-md-4 mb-4">
                                     <div class="wallet-card bg-white p-4 rounded shadow border-l-4 border-blue-500 h-100">
                                         <div class="d-flex justify-content-between mb-2">
                                             <h5 class="font-semibold">{{ c.wallet_name }}</h5>
@@ -112,7 +123,7 @@
             <div class="row g-4 mt-2">
                 <!-- Left Section (8) - Transactions -->
                 <div class="col-lg-8">
-                    <div class="card p-4 shadow-sm rounded-4">
+                    <div class="card p-4  rounded">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h5 class="mb-0">Recent Payments</h5>
                             <a href="{% url 'wallet:transactions' %}" class="text-decoration-none">View All <img src="{% static 'assets1/images/icon/right-arrow.png' %}" alt="View All Icon"></a>
@@ -169,16 +180,8 @@
                 
                 <!-- Right Section (4) - Alerts and Notifications -->
                 <div class="col-lg-4">
-                <!-- Quick Actions Card -->
-                <div class="card p-4 shadow-sm rounded-4">
-                    <h5 class="mb-3">Quick Actions</h5>
-                    <div class="d-grid gap-2">
-                        <button class="btn btn-primary">New Wallet</button>
-                        <button class="btn btn-primary">Wallet Transfer</button>
-                        <button class="btn btn-outline-secondary">Fund Wallet</button>
-                    </div>
-                </div>
-                    <div class="card p-4 shadow-sm rounded-4 mt-4">
+ 
+                    <div class="card p-4 shadow-sm rounded-4">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h5 class="mb-0">Alerts & Updates</h5>
                             <a href="#" class="text-decoration-none">Settings <i class="fas fa-cog"></i></a>
