@@ -40,18 +40,29 @@
             {% endif %}
 
             <!-- Wallets Row - Horizontal Display -->
-            <div class="row ">
+            <div class="row">
                 <div class="col-12">
-
                     <div class="row">
                         {% if primary_wallets %}
                             {% for c in primary_wallets %}
                                 <div class="col-md-3 mb-4">
-                                    <div class="wallet-card bg-white p-4 rounded shadow-md border-l-4 border-blue-500 h-100">
-                                        <div class="d-flex justify-content-between">
+                                    <div class="wallet-card bg-white p-4 rounded shadow border-l-4 border-blue-500 h-100">
+                                        <div class="d-flex justify-content-between mb-2">
                                             <h5 class="font-semibold">{{ c.wallet_name }}</h5>
-                                            <span class="text-sm">{{c.currency}} {{ c.balance|intcomma }}</span>
+                                            <span class="text-sm">{{ c.currency }} {{ c.balance|intcomma }}</span>
                                         </div>
+                                        {% if c.utilization is not None %}
+                                            <div class="mb-2">
+                                                <small class="text-muted">
+                                                    Utilized: {{ c.total_utilized|intcomma }} / {{ c.limit|intcomma }} ({{ c.utilization }}%)
+                                                </small>
+                                                <div class="progress mt-1" style="height: 6px;">
+                                                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ c.utilization }}%;" aria-valuenow="{{ c.utilization }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                                </div>
+                                            </div>
+                                        {% else %}
+                                            <small class="text-muted">No utilization data</small>
+                                        {% endif %}
                                     </div>
                                 </div>
                             {% endfor %}
@@ -62,15 +73,27 @@
                                 </div>
                             </div>
                         {% endif %}
-                        
+            
                         {% if wallets %}
                             {% for c in wallets %}
                                 <div class="col-md-3 mb-4">
-                                    <div class="wallet-card bg-white p-4 rounded shadow-md border-l-4 border-blue-500 h-100">
-                                        <div class="d-flex justify-content-between">
+                                    <div class="wallet-card bg-white p-4 rounded shadow border-l-4 border-blue-500 h-100">
+                                        <div class="d-flex justify-content-between mb-2">
                                             <h5 class="font-semibold">{{ c.wallet_name }}</h5>
-                                            <span class="text-sm">{{c.currency}} {{ c.balance|intcomma }}</span>
+                                            <span class="text-sm">{{ c.currency }} {{ c.balance|intcomma }}</span>
                                         </div>
+                                        {% if c.utilization is not None %}
+                                            <div class="mb-2">
+                                                <small class="text-muted">
+                                                    Utilized: {{ c.total_utilized|intcomma }} / {{ c.limit|intcomma }} ({{ c.utilization }}%)
+                                                </small>
+                                                <div class="progress mt-1" style="height: 6px;">
+                                                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ c.utilization }}%;" aria-valuenow="{{ c.utilization }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                                </div>
+                                            </div>
+                                        {% else %}
+                                            <small class="text-muted">No utilization data</small>
+                                        {% endif %}
                                     </div>
                                 </div>
                             {% endfor %}
@@ -84,7 +107,7 @@
                     </div>
                 </div>
             </div>
-
+            
             <!-- Main Content Row with 8:4 Layout -->
             <div class="row g-4 mt-2">
                 <!-- Left Section (8) - Transactions -->

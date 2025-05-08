@@ -495,58 +495,76 @@ def create_roles(request):
 
 @login_required
 def dashboard(request):
-    # First check if user is authenticated
-    if request.user.is_authenticated:
-        # Check if user is admin - only admins can access dashboard
-        if not request.user.is_admin:
-            messages.warning(request, "Only admin users can access the dashboard.")
-            return redirect("wallet:staff-dashboard")  # Redirect non-admin users to wallet
-            
-        form = KYCForm()
-        wallet_form = WalletForm()
-        try:
-            kyc = CompanyKYC.objects.get(user=request.user)
-            # Check if all required fields are filled
-            required_fields = [
-                kyc.company_name,
-                kyc.logo,
-                kyc.kra_pin,
-                kyc.registration_certificate,
-                kyc.country,
-                kyc.county,
-                kyc.city,
-                kyc.address,
-                kyc.mobile
-            ]
-            if not all(required_fields) or not kyc.kyc_submitted:
-                messages.warning(request, "Your KYC is incomplete. Please fill all required fields.")
-                return redirect("wallet:kyc-reg")
-            if not kyc.kyc_confirmed and not kyc.status == "approved":
-                messages.warning(request, "Your KYC is Under Review.")
-                return redirect("wallet:kyc-reg")
-        except CompanyKYC.DoesNotExist:
-            messages.warning(request, "You need to submit your KYC")
-            return redirect("wallet:kyc-reg")
-            
-        transactions = Transaction.objects.filter(company=kyc).order_by("-id")
-        print(transactions)
-        wallets = Wallet.objects.filter(company=kyc).order_by("-id").exclude(wallet_type="PRIMARY")
-        primary_wallets = Wallet.objects.filter(company=kyc,wallet_type="PRIMARY").order_by("-id")
-    else:
-        messages.warning(request, "You need to login to access the dashboard")
-        return redirect("userauths:sign-in")
-        
+    # Redirect if user is not an admin
+    if not request.user.is_admin:
+        messages.warning(request, "Only admin users can access the dashboard.")
+        return redirect("wallet:staff-dashboard")
+
+    form = KYCForm()
+    wallet_form = WalletForm()
+
+    try:
+        kyc = CompanyKYC.objects.get(user=request.user)
+    except CompanyKYC.DoesNotExist:
+        messages.warning(request, "You need to submit your KYC")
+        return redirect("wallet:kyc-reg")
+
+    # Check required KYC fields
+    required_fields = [
+        kyc.company_name,
+        kyc.logo,
+        kyc.kra_pin,
+        kyc.registration_certificate,
+        kyc.country,
+        kyc.county,
+        kyc.city,
+        kyc.address,
+        kyc.mobile
+    ]
+    if not all(required_fields) or not kyc.kyc_submitted:
+        messages.warning(request, "Your KYC is incomplete. Please fill all required fields.")
+        return redirect("wallet:kyc-reg")
+
+    if not kyc.kyc_confirmed and kyc.status != "approved":
+        messages.warning(request, "Your KYC is under review.")
+        return redirect("wallet:kyc-reg")
+
+    # Fetch transactions and wallets
+    transactions = Transaction.objects.filter(company=kyc).order_by("-id")
+    primary_wallets = Wallet.objects.filter(company=kyc, wallet_type="PRIMARY").order_by("-id")
+    wallets = Wallet.objects.filter(company=kyc).exclude(wallet_type="PRIMARY").order_by("-id")
+
+    # Combine wallets for utilization tracking
+    all_wallets = list(primary_wallets) + list(wallets)
+
+    for wallet in all_wallets:
+        approved_paid_tx = Transaction.objects.filter(
+            company=kyc,
+            sender_wallet=wallet,
+            status = "completed"
+        )
+
+        total_utilized = approved_paid_tx.aggregate(total=Sum('amount'))['total'] or 0
+
+        if wallet.balance and wallet.balance > 0:
+            utilization = round((total_utilized / wallet.balance) * 100, 2)
+        else:
+            utilization = None
+
+        # Attach data to each wallet instance
+        wallet.utilization = utilization
+        wallet.total_utilized = total_utilized
+
     context = {
         "kyc": kyc,
         "wallets": wallets,
         "primary_wallets": primary_wallets,
         "form": form,
         "wallet_form": wallet_form,
-        "transactions": transactions
+        "transactions": transactions,
     }
-    
+
     return render(request, "account/dashboard.html", context)
-    
 
 from django.http import HttpResponse, JsonResponse
 from expense.models import Expense, ExpenseGroup,Event,Operation
