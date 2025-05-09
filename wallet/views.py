@@ -1,10 +1,11 @@
+from itertools import chain
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from wallet.forms import KYCForm, StaffProfileForm, UserForm,RoleForm,WalletForm
 from expense.forms import ExpenseRequestForm ,ExpenseApprovalForm,EventExpenseForm,OperationExpenseForm
 from django.contrib import messages
 from wallet.models import Wallet, Notification, Transaction,CompanyKYC, StaffProfile,Role
-from expense.models import ExpenseCategory, OperationCategory, EventCategory,Expense
+from expense.models import ExpenseCategory, OperationCategory, EventCategory,Expense,ExpenseRequestType
 from userauths.models import User
 from django.core.paginator import Paginator
 from django.contrib.auth.hashers import make_password
@@ -374,96 +375,21 @@ def transactions(request):
 
 
 @login_required
-@require_http_methods(["GET", "POST"])
 def expenses(request):
-    context = {}
     user = request.user
     company = get_object_or_404(CompanyKYC, user=user)
-    
-    # Handle POST (create or actions)
-    if request.method == "POST":
-        action = request.POST.get("action")
-        
-        # CREATE EXPENSE
-        if action == "create":
-            # Important: Pass user and company to the form
-            form = ExpenseRequestForm(request.POST, user=user, company=company)
-            
-            if form.is_valid():
-                expense = form.save()
-                messages.success(request, "Expense created successfully.")
-                return redirect("wallet:expenses")
-            else:
-                # Store form with errors to display in template
-                context["expense_form"] = form
-                
-                # Load all necessary data for the template
-                expenses = Expense.objects.filter(company=company).order_by("-created_at")
-                transactions = Transaction.objects.filter(company=company).order_by("-id")
-                context["transactions"] = transactions
-                context["pending_expenses"] = expenses.filter(approved=False, declined=False)
-                context["approved_expenses"] = expenses.filter(approved=True, paid=False)
-                context["declined_expenses"] = expenses.filter(declined=True)
-                context["payment_form"] = PaymentForm(user=user, company=company)
-                context["is_admin"] = True
-                
-                # Return render directly here to preserve form errors
-                return render(request, "expenses/expense.html", context)
-                
-        # APPROVE EXPENSE
-        elif action == "approve":
-            expense_id = request.POST.get("expense_id")
-            expense = get_object_or_404(Expense, id=expense_id, company=company)
-            expense.approved = True
-            expense.approved_by = request.user
-            expense.save()
-            messages.success(request, "Expense approved.")
-            return redirect("wallet:expenses")
-            
-        # REJECT EXPENSE
-        elif action == "reject":
-            expense_id = request.POST.get("expense_id")
-            reason = request.POST.get("reason")
-            expense = get_object_or_404(Expense, id=expense_id, company=company)
-            expense.approved = False
-            expense.declined = True  # Added this to mark as declined
-            expense.rejection_reason = reason
-            expense.approved_by = request.user
-            expense.save()
-            messages.error(request, "Expense rejected.")
-            return redirect("wallet:expenses")
-            
-        # MARK AS PAID
-        elif action == "pay":
-            expense_id = request.POST.get("expense_id")
-            expense = get_object_or_404(Expense, id=expense_id, company=company)
-            expense.paid = True  # Mark as paid
-            expense.status = "completed"
-            expense.save()
-            messages.success(request, "Expense marked as paid.")
-            return redirect("wallet:expenses")
-    
-    # GET - show all expenses related to the company
-    expenses = Expense.objects.filter(company=company).order_by("-created_at")
-    
-    # Get transactions and wallets
-    transactions = Transaction.objects.filter(company=company).order_by("-id")
-    
-    # Add to context
-    context["transactions"] = transactions
-    pending_expenses = expenses.filter(approved=False, declined=False)
-    approved_expenses = expenses.filter(approved=True, paid=False)
-    declined_expenses = expenses.filter(declined=True)
-    
-    # Initialize forms if not already in context (due to validation error)
-    if "expense_form" not in context:
-        context["expense_form"] = ExpenseRequestForm(user=user, company=company)
-        
-    context["payment_form"] = PaymentForm(user=user, company=company)
-    context["pending_expenses"] = pending_expenses
-    context["approved_expenses"] = approved_expenses
-    context["declined_expenses"] = declined_expenses
-    
+    events = Event.objects.filter(company=company, is_active=True)
+    operations = Operation.objects.filter(company=company, is_active=True)
+    event_form = EventExpenseForm()
+    operation_form = OperationExpenseForm()
+    all_items =  list(events) + list(operations)
+    context = {
+        'all_items': all_items ,
+        'event_form': event_form,
+        'operation_form': operation_form,
+        'event_categories': EventCategory.objects.filter(company=company,is_active=True),
+        'operation_categories': OperationCategory.objects.filter(company=company,is_active=True),
+    }
     return render(request, "expenses/expense.html", context)
 
 def create_expenses(request):
@@ -598,68 +524,46 @@ def staff_dashboard(request):
         approved_expenses = expenses.filter(approved=True, paid=False)
         declined_expenses = expenses.filter(declined=True)
         
-        # Initialize forms
-        # expense_form = ExpenseRequestForm(user=user, company=company.company)
         payment_form = PaymentForm(user=user, company=company.company)
-        # event_form = EventExpenseForm(user=user, company=company.company)
-        # operation_form = OperationExpenseForm(user=user, company=company.company)
+        expense_form = ExpenseRequestForm(company=company.company)
+
         
-        # Debug information - print to console
-        print("============= FORM DEBUG INFO =============")
-        # print(f"expense_form fields: {expense_form.fields.keys()}")
-        # print(f"event_form fields: {event_form.fields.keys()}")
-        # print(f"operation_form fields: {operation_form.fields.keys()}")
-        
-        events_queryset = Event.objects.filter(
-            created_by=user,
-            company=company.company, 
-            approved=False,
-            paid=False
-        )
-        print(f"Available events count: {events_queryset.count()}")
-        print(f"Available events: {list(events_queryset.values_list('id', 'name'))}")
-        
-        operations_queryset = Operation.objects.filter(
-            created_by=user,
-            company=company.company, 
-            approved=False,
-            paid=False
-        )
+
         
         # user1 = get_object_or_404(User, id=user.id)
         wallet = get_pending_approved_expense_sum(user)
-        print(f"Available wallets count: {wallet}")
-        print(f"Available operations count: {operations_queryset.count()}")
-        print(f"Available operations: {list(operations_queryset.values_list('id', 'name'))}")
         
         context["pending_expenses"] = pending_expenses
         context["approved_expenses"] = approved_expenses
         context["declined_expenses"] = declined_expenses
-        # context["expense_form"] = expense_form
-        # context["payment_form"] = payment_form
-        # context["event_form"] = event_form
-        # context["operation_form"] = operation_form
-        context["expense_groups"] = [{"name": "Event", "value": "EVENT"}, {"name": "Operation", "value": "OPERATION"}]
-        context["wallet"] = wallet
-        context["operations"] = Operation.objects.filter(company=company.company, created_by=request.user)
-        context["events"] = Event.objects.filter(company=company.company, created_by=request.user)
+        context["expense_form"] = expense_form
 
-        # # Add debug info to context
-        # context["debug_expense_fields"] = list(expense_form.fields.keys())
-        # context["debug_event_fields"] = list(event_form.fields.keys())
-        # context["debug_operation_fields"] = list(operation_form.fields.keys())
-        context["debug_events_count"] = events_queryset.count()
-        context["debug_operations_count"] = operations_queryset.count()
+        context["wallet"] = wallet
+        context['request_type']  = ExpenseRequestType.objects.filter(
+            Q(company=company.company)
+        )
+        context["events"] = Event.objects.filter(
+            company=company.company, 
+            approved=False,
+            paid=False
+        ).order_by("-created_at")
+        context["operations"] = Operation.objects.filter(
+            company=company.company, 
+            approved=False,
+            paid=False
+        )
+        
         context['event_categories']  = EventCategory.objects.filter(
             Q(company=company.company)
         )
         context['operation_categories']  = OperationCategory.objects.filter(
             Q(company=company.company)
         )
-        context['project_leads'] = StaffProfile.objects.filter(
-            company=company.company,
-            user__is_active=True
-        ).select_related('user')
+        context['expense_categories']  = ExpenseCategory.objects.filter(
+            Q(company=company.company)
+        )
+        context['payment_form'] = payment_form
+
         return render(request, "users/staff/staff.html", context)
         
     except StaffProfile.DoesNotExist as e:

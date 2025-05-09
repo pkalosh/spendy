@@ -1,65 +1,464 @@
-{% extends "partials/user-base.html" %}
+{% extends "partials/dashboard-base.html" %}
 {% load static %}
 {% load humanize %}
 {% block content %}
+{% load custom_filters %} 
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 
 <section class="dashboard-section body-collapse">
     <div class="overlay pt-120">
-        <div class="container-fruid">
-            <div class="row">
-                <div class="col-xl-12 col-lg-12">
-                    <div class="section-content">
-
-                        <div class="container mt-4">
-                            <h4>Expense Details</h4>
-
-                            <div class="card mb-3">
-                                <div class="card-body">
-                                    <h5 class="card-title">{{ expense.title }}</h5>
-                                    <p><strong>Amount:</strong> {{ expense.amount }}</p>
-                                    <p><strong>Status:</strong>
-                                        {% if expense.approved %}
-                                            <span class="badge bg-success">Approved</span>
-                                        {% elif expense.declined %}
-                                            <span class="badge bg-danger">Declined</span>
-                                        {% else %}
-                                            <span class="badge bg-warning text-dark">Pending</span>
-                                        {% endif %}
-                                    </p>
-                                    <p><strong>Created By:</strong> {{ expense.created_by.get_full_name }}</p>
-                                    <p><strong>Date:</strong> {{ expense.created_at|date:"M d, Y H:i" }}</p>
+        <div class="container-fluid">
+            <!-- First Row: Expense Details -->
+            <div class="row mb-3">
+                <div class="col-12">
+                    <h4 class="mb-3">Expense Details</h4>
+                </div>
+                <div class="col-md-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-secondary text-white">
+                            Item Details
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                              {% if item_type == 'event' %}
+                                <div class="col-12 border-bottom">
+                                  <h5>{{ item.name }}</h5>
                                 </div>
-                            </div>
+                                <div class="col-12 border-bottom">
+                                  <small class="text-muted d-block">Category</small>
+                                  <div>{{ item.category }}</div>
+                                </div>
+                                <div class="col-12 border-bottom">
+                                  <small class="text-muted d-block">Created By</small>
+                                  <div>{{ item.created_by.first_name }} {{ item.created_by.last_name }}</div>
+                                </div>
+                                <div class="col-12 border-bottom">
+                                  <small class="text-muted d-block">Start Date</small>
+                                  <div>{{ item.start_date }}</div>
+                                </div>
+                                <div class="col-12 border-bottom">
+                                  <small class="text-muted d-block">End Date</small>
+                                  <div>{{ item.end_date }}</div>
+                                </div>
 
-                            <!-- {% if is_admin and approval_form %}
-                            <div class="mb-4">
-                                <h4>Approve/Decline Expense</h4>
-                                <form method="post" action="{% url 'expense:approve_expense' expense.id %}">
-                                    {% csrf_token %}
-                                    {{ approval_form.as_p }}
-                                    <button type="submit" class="btn btn-success">Approve</button>
-                                    <button type="submit" name="decline" value="true" class="btn btn-danger">Decline</button>
-                                </form>
+                                <div class="col-12">
+                                  <small class="text-muted d-block">Created On</small>
+                                  <div>{{ item.created_at }}</div>
+                                </div>
+                          
+                              {% elif item_type == 'operation' %}
+                                <div class="col-12 border-bottom">
+                                  <h5>{{ item.name }}</h5>
+                                </div>
+                                <div class="col-12 border-bottom">
+                                  <small class="text-muted d-block">Category</small>
+                                  <div>{{ item.category }}</div>
+                                </div>
+                                <div class="col-12 border-bottom">
+                                  <small class="text-muted d-block">Created By</small>
+                                  <div>{{ item.created_by.first_name }} {{ item.created_by.last_name }}</div>
+                                </div>
+                         
+                                <div class="col-12 border-bottom">
+                                  <small class="text-muted d-block">Description</small>
+                                  <div>{{ item.description|default:"No description available" }}</div>
+                                </div>
+                                <div class="col-12">
+                                  <small class="text-muted d-block">Created On</small>
+                                  <div>{{ item.created_at }}</div>
+                                </div>
+                          
+                              {% else %}
+                                <div class="col-12 border-bottom">
+                                  <small class="text-muted d-block">Name</small>
+                                  <div>
+                                    {% if expense.event %}{{ expense.event.name }}
+                                    {% elif expense.operation %}{{ expense.operation.name }}
+                                    {% endif %}
+                                  </div>
+                                </div>
+                                <div class="col-12 border-bottom">
+                                  <small class="text-muted d-block">Created By</small>
+                                  <div>{{ expense.created_by.first_name }} {{ expense.created_by.last_name }}</div>
+                                </div>
+                                <div class="col-12 border-bottom">
+                                  <small class="text-muted d-block">Expense Category</small>
+                                  <div>{{ expense.expense_category }}</div>
+                                </div>
+                                <div class="col-12 border-bottom">
+                                  <small class="text-muted d-block">Start Date</small>
+                                  <div>{{ expense.start_date }}</div>
+                                </div>
+                                <div class="col-12 border-bottom">
+                                  <small class="text-muted d-block">End Date</small>
+                                  <div>{{ expense.end_date }}</div>
+                                </div>
+                                <div class="col-12">
+                                  <small class="text-muted d-block">Created On</small>
+                                  <div>{{ expense.created_at }}</div>
+                                </div>
+                              {% endif %}
                             </div>
-                            {% endif %} -->
-                        <!-- 
-                            {% if payment_form %}
-                            <div class="mb-4">
-                                <h4>Make Payment</h4>
-                                <form method="post" action="{% url 'expense:make_payment' %}">
-                                    {% csrf_token %}
-                                    {{ payment_form.as_p }}
-                                    <button type="submit" class="btn btn-primary">Pay Now</button>
-                                </form>
+                          </div>
+                          
+                          
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-secondary text-white">
+                            Summary
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-borderless">
+                                    <thead>
+                                        <tr>
+                                            <th>STATUS</th>
+                                            <th>TOTAL AMOUNT</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% if item_type == 'event' or item_type == 'operation' %}
+                                            {% if expenses %}
+                                                <tr>
+                                                    <td>Pending</td>
+                                                    <td>{{ expenses|filter_by_status:"pending"|calculate_total:"amount"|intcomma }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Approved</td>
+                                                    <td>{{ expenses|filter_by_status:"approved"|calculate_total:"amount"|intcomma }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Declined</td>
+                                                    <td>{{ expenses|filter_by_status:"declined"|calculate_total:"amount"|intcomma }}</td>
+                                                </tr>
+                                            {% else %}
+                                                <tr>
+                                                    <td colspan="2">No results found.</td>
+                                                </tr>
+                                            {% endif %}
+                                        {% else %}
+                                            {% if summaries %}
+                                                {% for summary in summaries %}
+                                                    <tr>
+                                                        <td>{{ summary.status }}</td>
+                                                        <td>{{ summary.amount|intcomma }}</td>
+                                                    </tr>
+                                                {% endfor %}
+                                            {% else %}
+                                                <tr>
+                                                    <td colspan="2">No results found.</td>
+                                                </tr>
+                                            {% endif %}
+                                        {% endif %}
+                                    </tbody>
+                                </table>
                             </div>
-                            {% endif %} -->
-
-                            <a href="{% url 'wallet:staff-dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-secondary text-white">
+                            {% if item_type == 'event' or item_type == 'operation' %}
+                                Total Expenses
+                            {% else %}
+                                Expenses Requests
+                            {% endif %}
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-borderless">
+                                    <thead>
+                                        <tr>
+                                            <th>CATEGORY</th>
+                                            <th>TOTAL AMOUNT</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% if item_type == 'event' or item_type == 'operation' %}
+                                            {% if expenses %}
+                                                {% for category in expenses|group_by:"expense_category" %}
+                                                    <tr>
+                                                        <td>{{ category.name }}</td>
+                                                        <td>{{ category.total|intcomma }}</td>
+                                                    </tr>
+                                                {% endfor %}
+                                            {% else %}
+                                                <tr>
+                                                    <td colspan="2">No results found.</td>
+                                                </tr>
+                                            {% endif %}
+                                        {% else %}
+                                            {% if expense_requests %}
+                                                {% for request in expense_requests %}
+                                                    <tr>
+                                                        <td>{{ request.category }}</td>
+                                                        <td>{{ request.amount|intcomma }}</td>
+                                                    </tr>
+                                                {% endfor %}
+                                            {% else %}
+                                                <tr>
+                                                    <td colspan="2">No results found.</td>
+                                                </tr>
+                                            {% endif %}
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+            
+            <!-- Second Row: Details and Forms -->
+            <div class="row mb-4">
+                {% if item_type == 'event' or item_type == 'operation' %}
+                    <div class="col-12">
+                        <h4 class="mb-3">Expense List</h4>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-secondary text-white">
+                                {% if item_type == 'event' %}Event{% else %}Operation{% endif %} Expenses
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table id="expenses-table" class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>DESCRIPTION</th>
+                                                <th>CATEGORY</th>
+                                                <th>AMOUNT</th>
+                                                <th>CREATED BY</th>
+                                                <th>STATUS</th>
+                                                <th>ACTIONS</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% if expenses %}
+                                                {% for expense in expenses %}
+                                                    <tr>
+                                                        <td>{{ expense.description }}</td>
+                                                        <td>{{ expense.expense_category }}</td>
+                                                        <td>{{ expense.amount|intcomma }}</td>
+                                                        <td>{{ expense.created_by.first_name }} {{ expense.created_by.last_name }}</td>
+                                                        <td>
+                                                            {% if expense.approved %}
+                                                                <span class="badge bg-success">Approved</span>
+                                                            {% elif expense.declined %}
+                                                                <span class="badge bg-danger">Declined</span>
+                                                            {% else %}
+                                                                <span class="badge bg-warning">Pending</span>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>
+                                                            <a href="{% url 'expense:expense_detail' expense.id %}" class="btn btn-sm btn-primary">View</a>
+                                                        </td>
+                                                    </tr>
+                                                {% endfor %}
+                                            {% else %}
+                                                <tr>
+                                                    <td colspan="6" class="text-center">No expenses found.</td>
+                                                </tr>
+                                            {% endif %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                           
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <!-- For individual expense view -->
+                    <div class="col-12">
+                        <h4 class="mb-3">Expense Management</h4>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-secondary text-white">
+                                Approved Requests
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-borderless">
+                                        <thead>
+                                            <tr>
+                                                <th>BY</th>
+                                                <th>EXPENSE</th>
+                                                <th>STATUS</th>
+                                                <th>AMOUNT</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% if approved_requests %}
+                                                {% for request in approved_requests %}
+                                                    <tr>
+                                                        <td>{{ request.created_by }}</td>
+                                                        <td>{{ request.expense_type }}</td>
+                                                        <td>{{ request.status }}</td>
+                                                        <td>{{ request.amount|intcomma }}</td>
+                                                    </tr>
+                                                {% endfor %}
+                                            {% else %}
+                                                <tr>
+                                                    <td colspan="4">No results found.</td>
+                                                </tr>
+                                            {% endif %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        {% if is_admin and not expense.approved and not expense.declined %}
+                            <div class="card shadow-sm">
+                                <div class="card-header bg-secondary text-white">
+                                    Expense Approval
+                                </div>
+                                <div class="card-body">
+                                    <form method="post" action="{% url 'expense:approve_expense' expense.id %}">
+                                        {% csrf_token %}
+                                        {{ approval_form }}
+                                        <div class="mt-3">
+                                            <button type="submit" name="action" value="approve" class="btn btn-success">Approve</button>
+                                            <button type="submit" name="action" value="decline" class="btn btn-danger">Decline</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        {% endif %}
+                        
+                        {% if expense.approved and not expense.declined and payment_form %}
+                            <div class="card shadow-sm mt-4">
+                                <div class="card-header bg-secondary text-white">
+                                    Process Payment
+                                </div>
+                                <div class="card-body">
+                                    <form method="post" action="{% url 'expense:make_payment' %}">
+                                        {% csrf_token %}
+                                        {{ payment_form }}
+                                        <button type="submit" class="btn btn-primary mt-3">Process Payment</button>
+                                    </form>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Related Expenses -->
+                    {% if related_expenses %}
+                        <div class="col-12 mt-4">
+                            <div class="card shadow-sm">
+                                <div class="card-header bg-secondary text-white">
+                                    Related Expenses
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>DESCRIPTION</th>
+                                                    <th>CATEGORY</th>
+                                                    <th>AMOUNT</th>
+                                                    <th>STATUS</th>
+                                                    <th>CREATED BY</th>
+                                                    <th>ACTIONS</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for rel_expense in related_expenses %}
+                                                    <tr>
+                                                        <td>{{ rel_expense.description }}</td>
+                                                        <td>{{ rel_expense.expense_category }}</td>
+                                                        <td>{{ rel_expense.amount|intcomma }}</td>
+                                                        <td>
+                                                            {% if rel_expense.approved %}
+                                                                <span class="badge bg-success">Approved</span>
+                                                            {% elif rel_expense.declined %}
+                                                                <span class="badge bg-danger">Declined</span>
+                                                            {% else %}
+                                                                <span class="badge bg-warning">Pending</span>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>{{ rel_expense.created_by.first_name }} {{ rel_expense.created_by.last_name }}</td>
+                                                        <td>
+                                                            <a href="{% url 'expense:expense_detail' rel_expense.id %}" class="btn btn-sm btn-primary">View</a>
+                                                        </td>
+                                                    </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
         </div>
     </div>
 </section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#expenses-table').DataTable({
+            "order": [[4, "desc"]], // Sort by status column by default
+            "pageLength": 10,
+            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]]
+        });
+    });
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .table-borderless td {
+    border-bottom: 1px solid #e9ecef; /* Bootstrap muted gray */
+  }
+    .card-header {
+        background-color: #5c6b7e !important;
+        color: white !important;
+    }
+    
+    .table th {
+        font-weight: normal;
+        color: #666;
+    }
+    
+    .badge {
+        padding: 5px 10px;
+        border-radius: 4px;
+    }
+    
+    .text-muted {
+        margin-bottom: 15px;
+    }
+    
+    .badge.bg-success {
+        background-color: #28a745 !important;
+    }
+    
+    .badge.bg-danger {
+        background-color: #dc3545 !important;
+    }
+    
+    .badge.bg-warning {
+        background-color: #ffc107 !important;
+        color: #212529;
+    }
+    
+    h4 {
+        color: #384353;
+        font-weight: 600;
+    }
+</style>
 {% endblock %}

@@ -15,8 +15,8 @@
             <div class="row">
                 <div class="col-12">
                     <!-- Wallets Section -->
-                    <div id="wallets" class="content-section mb-5">
-                        <h4 class="text-2xl font-bold mb-4">Wallet </h4>
+                    <div id="wallets" class="content-section mb-3">
+                        <h4 class="text-2xl font-bold">Wallet </h4>
                         <div class="row">
                             <div class="col-md-12 mb-4 col-sm-12">
                                 <div class="bg-white p-4 shadow rounded-md h-100">
@@ -31,7 +31,7 @@
                     </div>
 
                     <!-- Expense Management Section -->
-                    <div class="transactions-area mb-5">
+                    <div class="transactions-area">
                         <div class="row mb-4">
                             <!-- Navigation tabs - full width on mobile -->
                             <div class="col-lg-8 col-md-7 col-12 mb-3 mb-md-0">
@@ -53,11 +53,11 @@
                             <!-- Action buttons - stack on mobile -->
                             <div class="col-lg-4 col-md-5 col-12 d-flex justify-content-md-end justify-content-center">
                                 <div class="d-flex flex-column flex-sm-row gap-2">
-                                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#submitExpenseModal">
+                                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#submitExpenseModal">
                                         Submit Expense Request
                                     </button>
                                     {% if not is_admin %}
-                                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#makePaymentModal">
+                                    <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#makePaymentModal">
                                         Make Payment
                                     </button>
                                     {% endif %}
@@ -72,7 +72,7 @@
                                     <table class="table table-bordered table-hover">
                                         <thead class="bg-light">
                                             <tr>
-                                                <th>Expense Group</th>
+                                                <th>Event/Operation</th>
                                                 <th class="d-none d-md-table-cell">Description</th>
                                                 <th>Amount</th>
                                                 <th class="d-none d-md-table-cell">Date Requested</th>
@@ -83,21 +83,20 @@
                                         <tbody>
                                             {% for expense in pending_expenses %}
                                             <tr>
-                                                <td>{{ expense.get_expense_group_display }}</td>
+                                                <td><p>{% if expense.event %}{{expense.event.name}}{% else %}{{expense.operation.name}}{% endif %}</p>{{ expense.request_type }}</td>
                                                 <td class="d-none d-md-table-cell">
-                                                    {% if expense.expense_group == 'EVENT' %}
-                                                        {{ expense.event.name }}
-                                                    {% else %}
-                                                        {{ expense.operation.name }}
-                                                    {% endif %}
+                                                    
+                                                        {{ expense.description }}
+                                                
                                                 </td>
                                                 <td>{{ expense.amount|intcomma }}</td>
                                                 <td class="d-none d-md-table-cell">{{ expense.created_at|date:"M d, Y" }}</td>
                                                 <td class="d-none d-lg-table-cell">{{ expense.created_by.get_full_name }}</td>
                                                 <td>
+                                                    {% if is_admin %}
                                                     <div class="d-flex flex-column flex-sm-row gap-1">
                                                         <a href="{% url 'expense:expense_detail' expense.id %}" class="btn btn-sm btn-info mb-1 mb-sm-0">View</a>
-                                                        {% if is_admin %}
+                                                        
                                                         <a href="{% url 'expense:expense_detail' expense.id %}" class="btn btn-sm btn-success">Approve/Decline</a>
                                                         {% endif %}
                                                     </div>
@@ -128,12 +127,12 @@
                                                 <strong>Date:</strong> {{ expense.created_at|date:"M d, Y" }}<br>
                                                 <strong>Requested By:</strong> {{ expense.created_by.get_full_name }}
                                             </p>
-                                            <div class="d-flex gap-2">
+                                            <!-- <div class="d-flex gap-2">
                                                 <a href="{% url 'expense:expense_detail' expense.id %}" class="btn btn-sm btn-info">View</a>
                                                 {% if is_admin %}
                                                 <a href="{% url 'expense:expense_detail' expense.id %}" class="btn btn-sm btn-success">Approve/Decline</a>
                                                 {% endif %}
-                                            </div>
+                                            </div> -->
                                         </div>
                                     </div>
                                     {% empty %}
@@ -147,8 +146,9 @@
                                 <div class="table-responsive d-none d-md-block">
                                     <table class="table table-bordered table-hover">
                                         <thead class="bg-light">
+                                            
                                             <tr>
-                                                <th>Expense Group</th>
+                                                <th>Event/Operation</th>
                                                 <th class="d-none d-md-table-cell">Description</th>
                                                 <th>Amount</th>
                                                 <th class="d-none d-md-table-cell">Date Approved</th>
@@ -159,7 +159,7 @@
                                         <tbody>
                                             {% for expense in approved_expenses %}
                                             <tr>
-                                                <td>{{ expense.get_expense_group_display }}</td>
+                                                <td><p>{% if expense.event %}{{expense.event.name}}{% else %}{{expense.operation.name}}{% endif %}</p>{{ expense.request_type }}</td>
                                                 <td class="d-none d-md-table-cell">
                                                     {% if expense.expense_group == 'EVENT' %}
                                                         {{ expense.event.name }}
@@ -171,10 +171,10 @@
                                                 <td class="d-none d-md-table-cell">{{ expense.updated_at|date:"M d, Y" }}</td>
                                                 <td class="d-none d-lg-table-cell">{{ expense.approved_by.get_full_name }}</td>
                                                 <td>
-                                                    <div class="d-flex flex-column flex-sm-row gap-1">
+                                                    <!-- <div class="d-flex flex-column flex-sm-row gap-1">
                                                         <a href="{% url 'expense:expense_detail' expense.id %}" class="btn btn-sm btn-info mb-1 mb-sm-0">View</a>
                                                         
-                                                    </div>
+                                                    </div> -->
                                                 </td>
                                             </tr>
                                             {% empty %}
@@ -202,12 +202,12 @@
                                                 <strong>Date:</strong> {{ expense.updated_at|date:"M d, Y" }}<br>
                                                 <strong>Approved By:</strong> {{ expense.approved_by.get_full_name }}
                                             </p>
-                                            <div class="d-flex gap-2">
+                                            <!-- <div class="d-flex gap-2">
                                                 <a href="{% url 'expense:expense_detail' expense.id %}" class="btn btn-sm btn-info">View</a>
                                                 {% if not is_admin %}
                                                 <button class="btn btn-sm btn-success" onclick="preparePayment('{{ expense.id }}')">Pay</button>
                                                 {% endif %}
-                                            </div>
+                                            </div> -->
                                         </div>
                                     </div>
                                     {% empty %}
@@ -222,7 +222,7 @@
                                     <table class="table table-bordered table-hover">
                                         <thead class="bg-light">
                                             <tr>
-                                                <th>Expense Group</th>
+                                                <th>Event/operation</th>
                                                 <th class="d-none d-md-table-cell">Description</th>
                                                 <th>Amount</th>
                                                 <th class="d-none d-md-table-cell">Date Declined</th>
@@ -234,20 +234,17 @@
                                         <tbody>
                                             {% for expense in declined_expenses %}
                                             <tr>
-                                                <td>{{ expense.get_expense_group_display }}</td>
+                                                <td><p>{% if expense.event %}{{expense.event.name}}{% else %}{{expense.operation.name}}{% endif %}</p>{{ expense.request_type }}</td>
                                                 <td class="d-none d-md-table-cell">
-                                                    {% if expense.expense_group == 'EVENT' %}
-                                                        {{ expense.event.name }}
-                                                    {% else %}
-                                                        {{ expense.operation.name }}
-                                                    {% endif %}
+                                                        {{ expense.description }}
+                                                  
                                                 </td>
                                                 <td>{{ expense.amount|intcomma }}</td>
                                                 <td class="d-none d-md-table-cell">{{ expense.updated_at|date:"M d, Y" }}</td>
                                                 <td class="d-none d-lg-table-cell">{{ expense.approved_by.get_full_name }}</td>
                                                 <td class="d-none d-md-table-cell">{{ expense.decline_reason }}</td>
                                                 <td>
-                                                    <a href="{% url 'expense:expense_detail' expense.id %}" class="btn btn-sm btn-info">View</a>
+                                                    <!-- <a href="{% url 'expense:expense_detail' expense.id %}" class="btn btn-sm btn-info">View</a> -->
                                                 </td>
                                             </tr>
                                             {% empty %}
@@ -276,9 +273,9 @@
                                                 <strong>Declined By:</strong> {{ expense.approved_by.get_full_name }}<br>
                                                 <strong>Reason:</strong> {{ expense.decline_reason }}
                                             </p>
-                                            <div class="d-flex">
+                                            <!-- <div class="d-flex">
                                                 <a href="{% url 'expense:expense_detail' expense.id %}" class="btn btn-sm btn-info">View</a>
-                                            </div>
+                                            </div> -->
                                         </div>
                                     </div>
                                     {% empty %}
@@ -438,119 +435,109 @@
         </div> <!-- End container-fluid -->
     </div> <!-- End overlay -->
 </section>
-<!-- Submit Expense Modal -->
+<!-- Updated Modal with improved form structure -->
 <div class="modal fade" id="submitExpenseModal" tabindex="-1" aria-labelledby="submitExpenseModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header bg-light">
-        <h5 class="modal-title">Submit Expense Request</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <!-- Request Form -->
-        <div id="requests" class="content-section">
-          <h3 class="mb-3">Make a Request</h3>
-          <p class="text-muted mb-4">Request funds for an event or operation.</p>
-          <form id="expenseForm" class="bg-white p-4 shadow rounded" method="post" action="{% url 'expense:submit_expense' %}">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-light">
+          <h5 class="modal-title" id="submitExpenseModalLabel">Submit Expense Request</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="expense-form" method="post" action="{% url 'expense:submit_expense' %}" class="bg-white p-4 shadow rounded">
             {% csrf_token %}
-            <input type="hidden" name="form_type" id="form_type" value="">
-            <input type="hidden" name="budget" id="hidden_budget" value="">
+            <input type="hidden" id="form_type" name="form_type">
             
-            <!-- Request Type -->
+            <!-- Always visible request type dropdown -->
             <div class="mb-3">
-              <label for="requestType" class="form-label fw-bold">Request Type</label>
-              <select id="requestType" name="request_type" class="form-select" onchange="toggleRequestFields()" required>
-                <option value="">Select Type</option>
-                <option value="event">Event</option>
-                <option value="operation">Operation</option>
-              </select>
-            </div>
-            
-            <!-- Event Request Fields -->
-            <div id="eventRequestFields" class="hidden">
-              <div class="mb-3">
-                <label for="event_name" class="form-label">Event Name</label>
-                <input type="text" id="event_name" name="event_name" class="form-control event-field" maxlength="255">
-              </div>
-              
-              <div class="mb-3">
-                <label for="event_category" class="form-label">Event Category</label>
-                <select id="event_category" name="event_category" class="form-select event-field">
-                  <option value="">Select Category</option>
-                  {% for category in event_categories %}
-                    <option value="{{ category.id }}">{{ category.name }}</option>
-                  {% endfor %}
+                <label for="id_request_type" class="form-label fw-bold required">Request Type</label>
+                <select name="request_type" id="id_request_type" class="form-select" onchange="toggleExpenseFields()" required>
+                    <option value="">---------</option>
+                    <option value="1">Event</option>
+                    <option value="2">Operation</option>
                 </select>
-              </div>
-              
-              <div class="row">
-                <div class="col-md-6 mb-3">
-                  <label for="event_start_date" class="form-label">Start Date</label>
-                  <input type="date" id="event_start_date" name="event_start_date" class="form-control event-field">
-                </div>
-                <div class="col-md-6 mb-3">
-                  <label for="event_end_date" class="form-label">End Date</label>
-                  <input type="date" id="event_end_date" name="event_end_date" class="form-control event-field">
-                </div>
-              </div>
-              <div class="mb-3">
-                <label for="event_budget" class="form-label">Budget</label>
-                <input type="number" id="event_budget" name="event_budget" class="form-control budget-field event-field" step="0.01">
-              </div>
-              <div class="mb-3">
-                <label for="event_description" class="form-label">Description</label>
-                <textarea id="event_description" name="event_description" class="form-control event-field" rows="3"></textarea>
-              </div>
-              
-              <div class="mb-3">
-                <label for="event_project_lead" class="form-label">Project Lead</label>
-                <input type="text" id="event_project_lead" name="event_project_lead" class="form-control event-field" maxlength="255">
-              </div>
-              
-              <div class="mb-3">
-                <label for="event_location" class="form-label">Location</label>
-                <input type="text" id="event_location" name="event_location" class="form-control event-field" maxlength="255">
-              </div>
+                <div class="invalid-feedback">Please select a request type.</div>
             </div>
             
-            <!-- Operation Request Fields -->
-            <div id="operationRequestFields" class="hidden">
-              <div class="mb-3">
-                <label for="operation_name" class="form-label">Operation Name</label>
-                <input type="text" id="operation_name" name="operation_name" class="form-control operation-field" maxlength="255">
-              </div>
-              
-              <div class="mb-3">
-                <label for="operation_category" class="form-label">Operation Category</label>
-                <select id="operation_category" name="operation_category" class="form-select operation-field">
-                  <option value="">Select Category</option>
-                  {% for category in operation_categories %}
-                    <option value="{{ category.id }}">{{ category.name }}</option>
-                  {% endfor %}
+            <!-- Event field - hidden initially -->
+            <div class="mb-3 expense-section hidden" id="event-field">
+                <label for="id_event" class="form-label fw-bold required">Event</label>
+                <select name="event" id="id_event" class="form-select event-field">
+                    <option value="">---------</option>
+                    {% for event in events %}
+                    <option value="{{ event.id }}">{{ event }}</option>
+                    {% endfor %}
                 </select>
-              </div>
+                <div class="invalid-feedback">Please select an event.</div>
+            </div>
+            
+            <!-- Operation field - hidden initially -->
+            <div class="mb-3 expense-section hidden" id="operation-field">
+                <label for="id_operation" class="form-label fw-bold required">Operation</label>
+                <select name="operation" id="id_operation" class="form-select operation-field">
+                    <option value="">---------</option>
+                    {% for op in operations %}
+                    <option value="{{ op.id }}">{{ op }}</option>
+                    {% endfor %}
+                </select>
+                <div class="invalid-feedback">Please select an operation.</div>
+            </div>
+            
+          
+            
+            <!-- Expense category field -->
+            <div class="mb-3">
+                <label for="id_expense_category" class="form-label fw-bold required">Expense Category</label>
+                <select name="expense_category" id="id_expense_category" class="form-select" required>
+                    <option value="">---------</option>
+                    {% for category in expense_categories %}
+                    <option value="{{ category.id }}">{{ category }}</option>
+                    {% endfor %}
+                </select>
+                <div class="invalid-feedback">Please select an expense category.</div>
+            </div>
+            
+            <!-- Common fields -->
+            <div id="common-fields">
+              <!-- Amount field -->
               <div class="mb-3">
-                <label for="operation_budget" class="form-label">Budget</label>
-                <input type="number" id="operation_budget" name="operation_budget" class="form-control budget-field operation-field" step="0.01">
-              </div>
-              <div class="mb-3">
-                <label for="operation_description" class="form-label">Description</label>
-                <textarea id="operation_description" name="operation_description" class="form-control operation-field" rows="3"></textarea>
+                <label for="id_amount" class="form-label fw-bold required">Amount</label>
+                <div class="input-group">
+                  <span class="input-group-text">KES</span>
+                  <input type="number" name="amount" id="id_amount" class="form-control" step="0.01" min="0" placeholder="Enter amount" required>
+                  <div class="invalid-feedback">
+                    Please enter a valid amount greater than 0.
+                  </div>
+                </div>
               </div>
               
+              <!-- Description field -->
               <div class="mb-3">
-                <label for="operation_project_lead" class="form-label">Project Lead</label>
-                <input type="text" id="operation_project_lead" name="operation_project_lead" class="form-control operation-field" maxlength="255">
+                <label for="id_description" class="form-label fw-bold required">Description</label>
+                <textarea name="description" id="id_description" class="form-control" rows="3" placeholder="Enter description" required></textarea>
+                <div class="invalid-feedback">
+                  Please provide a description.
+                </div>
               </div>
             </div>
             
-            <button type="submit" class="btn btn-primary mt-3">Submit Request</button>
+            <!-- Submit button -->
+            <button type="submit" class="btn btn-primary w-100 mt-3" id="expenseSubmitBtn">Submit Expense</button>
           </form>
         </div>
       </div>
     </div>
   </div>
-</div>
+
+<style>
+  .hidden {
+    display: none;
+  }
+  .required:after {
+    content: " *";
+    color: red;
+  }
+</style>
 <!-- Make Payment Modal -->
 <div class="modal fade" id="makePaymentModal" tabindex="-1" aria-labelledby="makePaymentModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -639,14 +626,13 @@
 </div>
 
 <!-- jQuery (must be loaded BEFORE Bootstrap and Select2) -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <!-- Bootstrap JS Bundle with Popper -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <!-- jQuery -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <!-- Select2 JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/js/select2.min.js"></script>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/js/select2.min.js"></script> -->
 
     <script>
   function togglePaymentFields() {
@@ -757,126 +743,120 @@ document.addEventListener('DOMContentLoaded', function () {
         </script>
         
 
-
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <!-- Place this just before </body> -->
 <script>
-function toggleRequestFields() {
-  let requestType = document.getElementById('requestType').value;
+function toggleExpenseFields() {
+  const requestType = document.getElementById('id_request_type').value;
   document.getElementById('form_type').value = requestType;
   
-  // Show/hide appropriate fields
-  document.getElementById('eventRequestFields').classList.toggle('hidden', requestType !== 'event');
-  document.getElementById('operationRequestFields').classList.toggle('hidden', requestType !== 'operation');
+  // Hide all conditional sections first
+  document.querySelectorAll('.expense-section').forEach(section => {
+    section.classList.add('hidden');
+  });
   
-  // First, remove required attribute from all fields to avoid validation issues when hidden
-  const allFields = document.querySelectorAll('.event-field, .operation-field');
-  allFields.forEach(field => field.removeAttribute('required'));
+  // Remove required attribute from all conditional fields
+  document.querySelectorAll('.event-field, .operation-field').forEach(field => {
+    field.removeAttribute('required');
+  });
   
-  // Handle field requirements based on request type
-  if (requestType === 'event') {
-    // Make visible event fields required
-    const eventFields = document.querySelectorAll('.event-field');
-    eventFields.forEach(field => {
+  // Show and require relevant fields based on selection
+  if (requestType === '1') { // '1' is for Event
+    document.getElementById('event-field').classList.remove('hidden');
+    document.querySelectorAll('.event-field').forEach(field => {
       field.setAttribute('required', '');
     });
-    
-    // Remove operation budget's required attribute since it's hidden
-    const operationBudget = document.getElementById('operation_budget');
-    if (operationBudget) {
-      operationBudget.removeAttribute('required');
-    }
-  } else if (requestType === 'operation') {
-    // Make visible operation fields required
-    const operationFields = document.querySelectorAll('.operation-field');
-    operationFields.forEach(field => {
+  } else if (requestType === '2') { // '2' is for Operation
+    document.getElementById('operation-field').classList.remove('hidden');
+    document.querySelectorAll('.operation-field').forEach(field => {
       field.setAttribute('required', '');
     });
-    
-    // Remove event budget's required attribute since it's hidden
-    const eventBudget = document.getElementById('event_budget');
-    if (eventBudget) {
-      eventBudget.removeAttribute('required');
-    }
   }
 }
 
-// Form validation and submission
 document.addEventListener('DOMContentLoaded', function() {
-  const expenseForm = document.getElementById('expenseForm');
+  const expenseForm = document.getElementById('expense-form');
   
-  // Make sure the correct fields are required/not required when the page loads
-  toggleRequestFields();
+  // Set initial state
+  toggleExpenseFields();
   
-  // Setup budget field listeners
-  const eventBudget = document.getElementById('event_budget');
-  const operationBudget = document.getElementById('operation_budget');
-  const hiddenBudget = document.getElementById('hidden_budget');
-  
-  eventBudget.addEventListener('input', function() {
-    hiddenBudget.value = this.value;
-  });
-  
-  operationBudget.addEventListener('input', function() {
-    hiddenBudget.value = this.value;
-  });
-  
+  // Form validation
   expenseForm.addEventListener('submit', function(e) {
     e.preventDefault();
     
-    const requestType = document.getElementById('requestType').value;
-    let isValid = true;
+    // Clear previous validation states
+    document.querySelectorAll('.is-invalid').forEach(field => {
+      field.classList.remove('is-invalid');
+    });
     
-    // Basic validation
+    let isValid = true;
+    const requestType = document.getElementById('id_request_type').value;
+    
+    // Validate request type
     if (!requestType) {
-      alert('Please select a request type');
+      document.getElementById('id_request_type').classList.add('is-invalid');
       isValid = false;
     }
     
-    if (requestType === 'event') {
-      // Validate event fields
-      const eventName = document.getElementById('event_name').value;
-      const eventCategory = document.getElementById('event_category').value;
-      const eventStartDate = document.getElementById('event_start_date').value;
-      const eventBudget = document.getElementById('event_budget').value;
-      const eventEndDate = document.getElementById('event_end_date').value;
-      const eventProjectLead = document.getElementById('event_project_lead').value;
-      const eventLocation = document.getElementById('event_location').value;
-      
-      // Update hidden budget field
-      hiddenBudget.value = eventBudget;
-      
-      if (!eventName || !eventCategory || !eventStartDate || !eventEndDate || 
-          !eventProjectLead || !eventLocation || !eventBudget) {
-        alert('Please fill out all required event fields');
-        isValid = false;
+    // Validate wallet
+    // const walletSelect = document.getElementById('id_wallet');
+    // if (!walletSelect.value) {
+    //   walletSelect.classList.add('is-invalid');
+    //   isValid = false;
+    // }
+    
+    // Validate expense category
+    const categorySelect = document.getElementById('id_expense_category');
+    if (!categorySelect.value) {
+      categorySelect.classList.add('is-invalid');
+      isValid = false;
+    }
+    
+    // Only validate conditional fields if a request type is selected
+    if (requestType) {
+      // Validate event if Event is selected
+      if (requestType === '1') {
+        const eventSelect = document.getElementById('id_event');
+        if (!eventSelect.value) {
+          eventSelect.classList.add('is-invalid');
+          isValid = false;
+        }
       }
       
-      // Validate dates
-      if (eventStartDate && eventEndDate && new Date(eventStartDate) > new Date(eventEndDate)) {
-        alert('End date must be after start date');
-        isValid = false;
-      }
-    } else if (requestType === 'operation') {
-      // Validate operation fields
-      const operationName = document.getElementById('operation_name').value;
-      const operationCategory = document.getElementById('operation_category').value;
-      const operationBudget = document.getElementById('operation_budget').value;
-      const operationProjectLead = document.getElementById('operation_project_lead').value;
-      
-      // Update hidden budget field
-      hiddenBudget.value = operationBudget;
-      
-      if (!operationName || !operationCategory || !operationBudget) {
-        alert('Please fill out all required operation fields');
-        isValid = false;
+      // Validate operation if Operation is selected
+      if (requestType === '2') {
+        const operationSelect = document.getElementById('id_operation');
+        if (!operationSelect.value) {
+          operationSelect.classList.add('is-invalid');
+          isValid = false;
+        }
       }
     }
     
+    // Validate amount
+    const amountInput = document.getElementById('id_amount');
+    if (!amountInput.value || parseFloat(amountInput.value) <= 0) {
+      amountInput.classList.add('is-invalid');
+      isValid = false;
+    }
+    
+    // Validate description
+    const descriptionInput = document.getElementById('id_description');
+    if (!descriptionInput.value.trim()) {
+      descriptionInput.classList.add('is-invalid');
+      isValid = false;
+    }
+    
+    // Submit if valid
     if (isValid) {
-      this.submit();
+      expenseForm.submit();
     }
   });
 });
-</script>
+  </script>
+  
+        
+  
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 
 

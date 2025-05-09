@@ -1,78 +1,55 @@
 from django import forms
-from .models import Expense, Event, Operation, ExpenseGroup
+from .models import Expense, Event, Operation, ExpenseRequestType, ExpenseCategory, EventCategory, OperationCategory
 from wallet.models import Wallet
 class EventExpenseForm(forms.ModelForm):
     class Meta:
         model = Event
-        fields = ['name', 'category', 'company', 'start_date', 'end_date', 'budget', 'project_lead', 'location', 'created_by','description']
-        widgets = {
-            'start_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-            'end_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-            'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'category': forms.Select(attrs={'class': 'form-control'}),
-            'budget': forms.NumberInput(attrs={'class': 'form-control'}),
-            'project_lead': forms.Select(attrs={'class': 'form-control'}),
-            'location': forms.TextInput(attrs={'class': 'form-control'}),
-        }
-    
+        fields = ['name', 'category', 'start_date', 'end_date', 'budget', 'project_lead', 'location', 'description']
+        # widgets = {
+        #             'start_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+        #             'end_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+        #             'name': forms.TextInput(attrs={'class': 'form-control'}),
+        #             'category': forms.Select(attrs={'class': 'form-control'}),
+        #             'budget': forms.NumberInput(attrs={'class': 'form-control'}),
+        #             'project_lead': forms.TextInput(attrs={'class': 'form-control'}),
+        #             'location': forms.TextInput(attrs={'class': 'form-control'}),
+        #         }
     def __init__(self, *args, **kwargs):
-        # Extract user and company from kwargs before passing to parent class
-        self.user = kwargs.pop('user', None)
-        self.company = kwargs.pop('company', None)
         super(EventExpenseForm, self).__init__(*args, **kwargs)
-        
-        # Set initial values and hide certain fields
-        if self.user:
-            self.fields['created_by'].initial = self.user
-            self.fields['created_by'].widget = forms.HiddenInput()
-        
-        if self.company:
-            self.fields['company'].initial = self.company
-            self.fields['company'].widget = forms.HiddenInput()
-
+        for field in self.fields.values():
+            field.widget.attrs.update({'class': 'form-control'})
 
 class OperationExpenseForm(forms.ModelForm):
     class Meta:
         model = Operation
-        fields = ['name', 'category', 'company', 'budget', 'project_lead', 'created_by','description']
-        widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'category': forms.Select(attrs={'class': 'form-control'}),
-            'budget': forms.NumberInput(attrs={'class': 'form-control'}),
-            'project_lead': forms.Select(attrs={'class': 'form-control'}),
-        }
-    
+        fields = ['name', 'category', 'budget', 'project_lead', 'description']
+        # widgets = {
+        #             'name': forms.TextInput(attrs={'class': 'form-control'}),
+        #             'category': forms.Select(attrs={'class': 'form-control'}),
+        #             'budget': forms.NumberInput(attrs={'class': 'form-control'}),
+        #             'project_lead': forms.Select(attrs={'class': 'form-control'}),
+        #         }
+
     def __init__(self, *args, **kwargs):
-        # Extract user and company from kwargs before passing to parent class
-        self.user = kwargs.pop('user', None)
-        self.company = kwargs.pop('company', None)
         super(OperationExpenseForm, self).__init__(*args, **kwargs)
-        
-        # Set initial values and hide certain fields
-        if self.user:
-            self.fields['created_by'].initial = self.user
-            self.fields['created_by'].widget = forms.HiddenInput()
-        
-        if self.company:
-            self.fields['company'].initial = self.company
-            self.fields['company'].widget = forms.HiddenInput()
+        for field in self.fields.values():
+            field.widget.attrs.update({'class': 'form-control'})
 
 
 class ExpenseRequestForm(forms.ModelForm):
     """Form for creating expense requests"""
     class Meta:
         model = Expense
-        fields = ['wallet', 'expense_group', 'event', 'operation']
+        fields = ['request_type','wallet', 'expense_category', 'event', 'operation','amount', 'description']
         widgets = {
-            'wallet': forms.Select(attrs={'class': 'form-control'}),
-            'expense_group': forms.Select(attrs={'class': 'form-control', 'id': 'id_expense_group'}),
+            'request_type': forms.Select(attrs={'class': 'form-control', 'id': 'id_request_type', 'data-nice-select': 'false'}),
+            'expense_category': forms.Select(attrs={'class': 'form-control', 'id': 'id_expense_category'}),
             'event': forms.Select(attrs={'class': 'form-control'}),
             'operation': forms.Select(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': '3', 'placeholder': 'Enter detailed reason for this expense'}),
         }
         
     def __init__(self, *args, **kwargs):
-        self.user = kwargs.pop('user', None)
         self.company = kwargs.pop('company', None)
         
         super().__init__(*args, **kwargs)
@@ -81,20 +58,28 @@ class ExpenseRequestForm(forms.ModelForm):
         self.fields['event'].queryset = Event.objects.none()
         self.fields['operation'].queryset = Operation.objects.none()
         self.fields['wallet'].queryset = Wallet.objects.none()
+        self.fields['request_type'].queryset = ExpenseRequestType.objects.none()
+        self.fields['expense_category'].queryset = ExpenseCategory.objects.none()
         
         # Only filter if company is provided
         if self.company:
             self.fields['event'].queryset = Event.objects.filter(
-                created_by=self.user,
                 company=self.company, 
                 approved=False,
                 paid=False
             )
             self.fields['operation'].queryset = Operation.objects.filter(
-                created_by=self.user,
                 company=self.company, 
                 approved=False,
                 paid=False
+            )
+            self.fields['request_type'].queryset = ExpenseRequestType.objects.filter(
+                company=self.company, 
+                is_active=True
+            )
+            self.fields['expense_category'].queryset = ExpenseCategory.objects.filter(
+                company=self.company, 
+                is_active=True
             )
             self.fields['wallet'].queryset = Wallet.objects.filter(
                 company=self.company, 
