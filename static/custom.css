@@ -134,7 +134,9 @@ h4 {
   font-weight: 500;
   border-radius: 6px;
   transition: all 0.2s ease;
+  font-size: 0.85rem; /* smaller font */
 }
+
 
 .btn-primary {
   background-color: var(--primary-plum);
@@ -348,20 +350,19 @@ h4 {
 
 /* Enhanced Wallet Section */
 #wallets .bg-white {
-  background: linear-gradient(15deg, var(--primary-plum), var(--dark-plum));
-  color: white;
+  background: none; /* Removes the gradient */
+  color: inherit;   /* Resets text color to default */
 }
 
 #wallets .bg-white p {
-  color: rgba(255, 255, 255, 0.9);
+  color: inherit;   /* Also reset paragraph color */
 }
 
 #wallets .text-xl {
-  color: white;
   font-size: 2rem;
   display: block;
-  margin-top: 1rem;
 }
+
 
 /* Transitions */
 .tab-pane {

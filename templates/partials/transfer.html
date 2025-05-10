@@ -1,0 +1,47 @@
+<!-- Transfer Between Wallets Modal -->
+<div class="modal fade" id="sendModal" tabindex="-1" aria-labelledby="sendModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-light">
+          <h5 class="modal-title" id="sendModalLabel">Transfer Between Wallets</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <form id="transferForm" action="{% url 'wallet:wallet-transfer' %}" method="post">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">From Wallet</label>
+                        <select name="from_wallet_id" class="form-control" required>
+                            <option value="">Select source</option>
+                            {% for wallet in wallets %}
+                                <option value="{{ wallet.id }}">{{ wallet.wallet_name|title }} (KES {{ wallet.balance }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">To Wallet</label>
+                        <select name="to_wallet_id" class="form-control" required>
+                            <option value="">Select destination</option>
+                            {% for wallet in wallets %}
+                                <option value="{{ wallet.id }}">{{ wallet.wallet_name|title }} (KES {{ wallet.balance }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Amount</label>
+                    <input type="number" name="amount" class="form-control" placeholder="Enter amount" required min="1">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-exchange-alt me-2"></i> Transfer Funds
+                    </button>
+                </div>
+                <div id="transferFeedback" class="mt-4 d-none"></div>
+            </form>
+        </div>
+      </div>
+    </div>
+</div>

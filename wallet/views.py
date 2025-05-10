@@ -13,6 +13,7 @@ from django.urls import reverse
 from django.core.exceptions import ObjectDoesNotExist
 from django.views.decorators.http import require_http_methods
 from django.db.models import Q
+from django.utils.html import escape
 def is_admin(user):
     return user.is_authenticated and user.is_admin
 
@@ -241,22 +242,119 @@ def delete_staff_profile(request, pk):
 @user_passes_test(is_admin)
 def create_wallet(request):
     if request.method == 'POST':
-        wallet_form = WalletForm(request.POST)
-        print(wallet_form)
-        if wallet_form.is_valid():
-            wallet = wallet_form.save(commit=False)
-            wallet.user = request.user
-            wallet.company = request.user.companykyc
+        wallet_name = request.POST.get('wallet_name', '').strip()
+        balance = request.POST.get('balance', '0').strip()
+        wallet_type = request.POST.get('wallet_type')
+
+        # Sanitize input
+        wallet_name = escape(wallet_name)
+        try:
+            balance = float(balance)
+            if balance < 0:
+                balance = 0
+        except ValueError:
+            balance = 0
+
+        if wallet_name:
+            wallet = Wallet(
+                wallet_name=wallet_name,
+                balance=balance,
+                user=request.user,
+                wallet_type=wallet_type,
+                company=request.user.companykyc
+            )
             wallet.save()
 
             messages.success(request, f"Wallet '{wallet.wallet_name}' created successfully!")
             return redirect('wallet:dashboard')
         else:
-            messages.error(request, "Please correct the errors in the form.")
-    else:
-        wallet_form = WalletForm()
+            messages.error(request, "Wallet name is required.")
+            return redirect('wallet:dashboard')
 
-    return render(request, 'account/dashboard.html', {'wallet_form': wallet_form})
+    return redirect('wallet:dashboard')
+
+@login_required
+@user_passes_test(is_admin)
+def wallet_transfer(request):
+    if request.method == 'POST':
+        from_wallet_id = request.POST.get('from_wallet_id')
+        to_wallet_id = request.POST.get('to_wallet_id')
+        amount_str = request.POST.get('amount')
+
+        if not all([from_wallet_id, to_wallet_id, amount_str]):
+            messages.error(request, "All fields are required.")
+            return redirect('wallet:dashboard')
+
+        if from_wallet_id == to_wallet_id:
+            messages.error(request, "Source and destination wallets must be different.")
+            return redirect('wallet:dashboard')
+
+        try:
+            amount = Decimal(amount_str)
+            if amount <= 0:
+                raise ValueError
+        except:
+            messages.error(request, "Amount must be a positive number.")
+            return redirect('wallet:dashboard')
+
+        # Fetch wallets by ID
+        from_wallet = get_object_or_404(Wallet, id=from_wallet_id, company=request.user.companykyc)
+        to_wallet = get_object_or_404(Wallet, id=to_wallet_id, company=request.user.companykyc)
+
+        if from_wallet.balance < amount:
+            messages.error(request, "Insufficient balance in the source wallet.")
+            return redirect('wallet:dashboard')
+
+        # Perform transfer
+        from_wallet.balance -= amount
+        to_wallet.balance += amount
+        from_wallet.save()
+        to_wallet.save()
+
+        messages.success(
+            request,
+            f"Transferred KES {amount} from {from_wallet.wallet_name.title()} to {to_wallet.wallet_name.title()}."
+        )
+        return redirect('wallet:dashboard')
+    
+    messages.error(request, "Invalid request method.")
+    return redirect('wallet:dashboard')
+
+
+
+
+@login_required
+@user_passes_test(is_admin)
+def fund_wallet(request):
+    if request.method == 'POST':
+        business_id = request.POST.get('business_id')  # e.g. mobile number
+        amount_str = request.POST.get('amount')
+        wallet_id = request.POST.get('wallet_id')
+
+        if not all([business_id, amount_str]):
+            messages.error(request, "Mobile number and amount are required.")
+            return redirect('wallet:dashboard')
+
+        try:
+            amount = Decimal(amount_str)
+            if amount <= 0:
+                raise ValueError
+        except:
+            messages.error(request, "Amount must be a positive number.")
+            return redirect('wallet:dashboard')
+
+        # Fund the primary wallet
+        wallet = get_object_or_404(Wallet, id = wallet_id, company=request.user.companykyc)
+        # Simulate MPESA funding success
+        wallet.balance += amount
+        wallet.save()
+
+        messages.success(request, f"Wallet funded with KES {amount} via mobile {business_id}.")
+        return redirect('wallet:dashboard')
+    else:
+        messages.error(request, "Invalid request method.")
+        return redirect('wallet:dashboard')
+
 
 
 @login_required

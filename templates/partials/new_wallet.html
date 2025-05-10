@@ -1,0 +1,42 @@
+<!-- New Wallet Modal -->
+<div class="modal fade" id="newWalletModal" tabindex="-1" aria-labelledby="newWalletModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <form method="POST" action="{% url 'wallet:create-wallet' %}">
+      {% csrf_token %}
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="newWalletModalLabel">Create New Wallet</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="walletName" class="form-label">Wallet Name</label>
+            <input type="text" id="walletName" name="wallet_name" class="form-control" placeholder="e.g., Savings, Business" required>
+          </div>
+
+          <div class="mb-3">
+            <label for="startingBalance" class="form-label">Starting Balance</label>
+            <input type="number" id="startingBalance" name="balance" class="form-control" min="0" value="0" required>
+          </div>
+
+          <div class="mb-3">
+            <label for="walletType" class="form-label">Wallet Type</label>
+            <select id="walletType" name="wallet_type" class="form-select" required>
+              <option value="">Select wallet type</option>
+              <option value="PRIMARY">Primary</option>
+              <option value="EVENT">Event</option>
+              <option value="OPERATION">Operation</option>
+              <option value="EMERGENCY">Emergency</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="modal-footer mt-4">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create Wallet</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>

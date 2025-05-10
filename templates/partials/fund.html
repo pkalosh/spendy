@@ -1,0 +1,37 @@
+<!-- Fund Wallet Modal -->
+<div class="modal fade" id="fundWalletModal" tabindex="-1" aria-labelledby="fundWalletModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="POST" action="{% url 'wallet:fund-wallet' %}">
+            {% csrf_token %}
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="fundWalletModalLabel">Fund Wallet Via Mpesa</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Select Wallet</label>
+                        <select name="wallet_id" class="form-control" required>
+                            <option value="">Select Wallet to fund</option>
+                            {% for wallet in wallets %}
+                                <option value="{{ wallet.id }}">{{ wallet.wallet_name|title }} (KES {{ wallet.balance }})</option>
+                            {% endfor %}
+                        </select>
+                    </div><br>
+                    <div class="mb-3">
+                        <label class="form-label">Mobile Number</label>
+                        <input type="text" name="business_id" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Amount</label>
+                        <input type="number" name="amount" class="form-control" required min="1">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Fund</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

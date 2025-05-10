@@ -14,10 +14,11 @@
                         <p class="mb-0">View and manage your wallets, balances, and transactions.</p>
                     </div>
                     <div class="d-flex gap-2 mt-2 mt-md-0">
-                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createWalletModal">New Wallet</button>
-                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#sendMoneyModal">Wallet Transfer</button>
-                        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#fundWalletModal">Fund Wallet</button>
-                    </div>
+                      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newWalletModal">+ New Wallet</button>
+                      
+                      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#sendModal">Wallet Transfer</button>
+                      <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#fundWalletModal">Fund Wallet</button>
+                  </div>
                 </div>
                 
                         {% for wallet in wallets %}
@@ -110,131 +111,7 @@
 </section>
 <!-- Dashboard Section end -->
 
-<!-- Create Wallet Modal -->
-<div class="modal fade" id="createWalletModal" tabindex="-1" aria-labelledby="createWalletModalLabel" aria-hidden="true">
-    <div class="modal-dialog" style="margin-top: 80px;">
-        <div class="modal-content">
-            <form method="post" action="">
-                {% csrf_token %}
-                <div class="modal-header">
-                    <h5 class="modal-title" id="createWalletModalLabel">Create Wallet</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="walletName" class="form-label">Wallet Name</label>
-                        <input type="text" class="form-control" id="walletName" name="wallet_name" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="walletAmount" class="form-label">Initial Amount</label>
-                        <input type="number" class="form-control" id="walletAmount" name="initial_amount" required>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Create</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 
-
-
-<!-- Send Money Modal -->
-<div class="modal fade" id="sendMoneyModal" tabindex="-1" aria-labelledby="sendMoneyModalLabel" aria-hidden="true">
-    <div class="modal-dialog" style="margin-top: 80px;">
-      <div class="modal-content">
-  
-        <div class="modal-header">
-          <h5 class="modal-title" id="sendMoneyModalLabel">Transfer Money</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-  
-        <div class="modal-body">
-          <form id="sendMoneyForm">
-            <!-- From Wallet -->
-            <div class="mb-3">
-              <label for="fromWallet" class="form-label">From Wallet</label>
-              <input type="text" class="form-control" id="fromWallet" placeholder="Enter source wallet ID or number">
-            </div>
-  
-            <!-- Select Send Type -->
-            <div class="mb-3">
-              <label for="sendType" class="form-label">Send To</label>
-              <select class="form-select" id="sendType" onchange="handleSendTypeChange()">
-                <option value="" disabled selected>Select destination Wallet</option>
-
-                <option value="wallet">Another Wallet</option>
-              </select>
-            </div>
-  
-            <!-- Dynamic To Fields -->
-            <div id="sendFields"></div>
-  
-            <!-- Amount -->
-            <div class="mb-3">
-              <label for="sendAmount" class="form-label">Amount</label>
-              <input type="number" class="form-control" id="sendAmount" placeholder="Enter amount to send">
-            </div>
-          </form>
-        </div>
-  
-        <div class="modal-footer">
-          <button type="button" class="btn btn-primary">Proceed</button>
-        </div>
-  
-      </div>
-    </div>
-  </div>
-  
-<!-- Fund Wallet Modal -->
-<!-- Fund Wallet Modal -->
-<div class="modal fade" id="fundWalletModal" tabindex="-1" aria-labelledby="fundWalletModalLabel" aria-hidden="true">
-    <div class="modal-dialog" style="margin-top: 80px;">
-      <div class="modal-content">
-  
-        <div class="modal-header">
-          <h5 class="modal-title" id="fundWalletModalLabel">Fund Wallet</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-  
-        <div class="modal-body">
-          <form id="fundWalletForm">
-            <!-- To Wallet -->
-            <div class="mb-3">
-              <label for="toWallet" class="form-label">To Wallet</label>
-              <input type="text" class="form-control" id="toWallet" placeholder="Enter your wallet ID to fund">
-            </div>
-  
-            <!-- Fund Source Type -->
-            <div class="mb-3">
-              <label for="fundType" class="form-label">Fund From</label>
-              <select class="form-select" id="fundType" onchange="handleFundTypeChange()">
-                <option value="" disabled selected>Select funding method</option>
-                <option value="mobile">Mobile Money</option>
-                <option value="bank">Bank Transfer</option>
-                <option value="card">Credit/Debit Card</option>
-              </select>
-            </div>
-  
-            <!-- Dynamic Fund Source Fields -->
-            <div id="fundFields"></div>
-  
-            <!-- Amount -->
-            <div class="mb-3">
-              <label for="fundAmount" class="form-label">Amount</label>
-              <input type="number" class="form-control" id="fundAmount" placeholder="Enter amount to fund">
-            </div>
-          </form>
-        </div>
-  
-        <div class="modal-footer">
-          <button type="button" class="btn btn-success">Fund</button>
-        </div>
-  
-      </div>
-    </div>
-  </div>
   
   <script>
     function handleSendTypeChange() {
@@ -325,5 +202,7 @@
         fundFields.innerHTML = html;
     }
     </script>
-      
+{% include 'partials/transfer.html' %}
+{% include 'partials/new_wallet.html' %}
+{% include 'partials/fund.html' %}
 {% endblock content %}
