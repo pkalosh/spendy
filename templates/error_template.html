@@ -1,78 +1,80 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Error - Your Application</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            background-color: #f8f9fa;
-            padding-top: 50px;
-        }
-        .error-container {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            padding: 30px;
-        }
-        .error-icon {
-            color: #dc3545;
-            font-size: 64px;
-            margin-bottom: 20px;
-        }
-        .error-heading {
-            margin-bottom: 20px;
-            color: #333;
-        }
-        .back-button {
-            margin-top: 20px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="error-container text-center">
-            <div class="error-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="currentColor" class="bi bi-exclamation-triangle" viewBox="0 0 16 16">
-                    <path d="M7.938 2.016A.13.13 0 0 1 8.002 2a.13.13 0 0 1 .063.016.146.146 0 0 1 .054.057l6.857 11.667c.036.06.035.124.002.183a.163.163 0 0 1-.054.06.116.116 0 0 1-.066.017H1.146a.115.115 0 0 1-.066-.017.163.163 0 0 1-.054-.06.176.176 0 0 1 .002-.183L7.884 2.073a.147.147 0 0 1 .054-.057zm1.044-.45a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566z"/>
-                    <path d="M7.002 12a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 5.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995z"/>
-                </svg>
-            </div>
-            <h1 class="error-heading">Oops! An Error Occurred</h1>
-            
-            {% if error %}
-                <div class="alert alert-danger">
-                    {{ error }}
-                </div>
-            {% endif %}
-            
-            {% if messages %}
-                <div class="messages">
-                    {% for message in messages %}
-                        <div class="alert alert-{{ message.tags }}">
-                            {{ message }}
+{% extends 'partials/base.html' %}
+{% load static %}
+{% block content %}
+<style>
+    body {
+        background-color: #f8f9fa;
+        padding-top: 50px;
+    }
+    .error-container {
+        max-width: 600px;
+        margin: 0 auto;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+    }
+    .error-icon {
+        color: #dc3545;
+        font-size: 64px;
+        margin-bottom: 20px;
+    }
+    .error-heading {
+        margin-bottom: 20px;
+        color: #333;
+    }
+    .back-button {
+        margin-top: 20px;
+    }
+</style>
+      <!-- Login Reg start -->
+      <section class="login-reg">
+        <div class="overlay pt-120">
+            <div class="container">
+                <div class="row">
+                    <div class="error-container text-center">
+                        <div class="error-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="currentColor" class="bi bi-exclamation-triangle" viewBox="0 0 16 16">
+                                <path d="M7.938 2.016A.13.13 0 0 1 8.002 2a.13.13 0 0 1 .063.016.146.146 0 0 1 .054.057l6.857 11.667c.036.06.035.124.002.183a.163.163 0 0 1-.054.06.116.116 0 0 1-.066.017H1.146a.115.115 0 0 1-.066-.017.163.163 0 0 1-.054-.06.176.176 0 0 1 .002-.183L7.884 2.073a.147.147 0 0 1 .054-.057zm1.044-.45a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566z"/>
+                                <path d="M7.002 12a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 5.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995z"/>
+                            </svg>
                         </div>
-                    {% endfor %}
+                        <h1 class="error-heading">Oops! An Error Occurred</h1>
+                        
+                        {% if error %}
+                            <div class="alert alert-danger">
+                                {{ error }}
+                            </div>
+                        {% endif %}
+                        
+                        {% if messages %}
+                            <div class="messages">
+                                {% for message in messages %}
+                                    <div class="alert alert-{{ message.tags }}">
+                                        {{ message }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        
+                        <p class="lead">Something went wrong while processing your request.</p>
+                        <p>Please try again or contact support if the problem persists.</p>
+                        
+                        <div class="back-button">
+                            <a href="/" class="btn btn-primary">Back to Home</a>
+                            <a href="javascript:history.back()" class="btn btn-outline-secondary ms-2">Go Back</a>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <small class="text-muted">© {% now "Y" %} Your Company. All rights reserved.</small>
+                    </div>
                 </div>
-            {% endif %}
-            
-            <p class="lead">Something went wrong while processing your request.</p>
-            <p>Please try again or contact support if the problem persists.</p>
-            
-            <div class="back-button">
-                <a href="/" class="btn btn-primary">Back to Home</a>
-                <a href="javascript:history.back()" class="btn btn-outline-secondary ms-2">Go Back</a>
             </div>
         </div>
-        
-        <div class="text-center mt-4">
-            <small class="text-muted">© {% now "Y" %} Your Company. All rights reserved.</small>
-        </div>
-    </div>
+    </section>
+      <!-- Login Reg end -->
+ 
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+{% endblock %}
