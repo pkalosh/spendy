@@ -45,11 +45,16 @@ class UserForm(forms.ModelForm):
 
 
 class StaffProfileForm(forms.ModelForm):
+    role = forms.ModelChoiceField(
+        queryset=Role.objects.all(),
+        required=True,
+        label='Role or Designation',
+        empty_label="Select a role"
+    )    
     class Meta:
         model = StaffProfile
-        fields = ['company', 'profile_image', 'role', 'assigned_modules', 'is_active']
+        fields = ['profile_image', 'role', 'assigned_modules', 'is_active']
         labels = {
-            'company': 'Company Name',
             'profile_image': 'Profile Image',
             'role': 'Role or Designation',
             'assigned_modules': 'Modules Assigned',

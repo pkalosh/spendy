@@ -11,58 +11,108 @@
   }
 </style>
 <section class="dashboard-section body-collapse">
-    <div class="overlay pt-120">
-        <div class="container-fluid">
-              <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#submitExpenseModal">
-                New Event/Operation
-            </button>
+  <div class="overlay pt-120">
+    <div class="container-fluid">
 
-            <div class="row">
-              <div class="col-xl-12">
-                <table id="expensesTable" class="display table table-striped" style="width:100%">
-                  <thead>
+      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#submitExpenseModal">
+        New Event/Operation
+      </button>
+
+      <!-- Nav tabs -->
+      <ul class="nav nav-tabs mt-4" id="expenseTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="event-tab" data-bs-toggle="tab" data-bs-target="#event" type="button" role="tab" aria-controls="event" aria-selected="true">Events</button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="operation-tab" data-bs-toggle="tab" data-bs-target="#operation" type="button" role="tab" aria-controls="operation" aria-selected="false">Operations</button>
+        </li>
+      </ul>
+
+      <!-- Tab panes -->
+      <div class="tab-content mt-3">
+        <!-- Events Tab -->
+        <div class="tab-pane fade show active" id="event" role="tabpanel" aria-labelledby="event-tab">
+          <div class="table-responsive">
+            <table class="display table table-striped" style="width:100%">
+              <thead>
+                <tr>
+                  <th>Event</th>
+                  <th>Expense</th>
+                  <th>Budget</th>
+                  <th>Description</th>
+                  <th>Created By</th>
+
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in all_items %}
+                  {% if item|get_class_name == 'Event' %}
                     <tr>
-                      <th>Created By</th>
-                      <th>Event/Operation</th>
-                      <th>Expense</th>
-                      <th>Status</th>
-                      <th>Budget</th>
-                      <th>Description</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for item in all_items %}
-                    <tr>
-                      <td><a href="#">{{ item.created_by.get_full_name }}</a></td>
-                      <td>{{item.name}}</td>
+                      <td>{{ item.name }}</td>
                       <td>{{ item.category }}</td>
-                      <td>{% if item.approved == 'True' %}Approved {% else %} Pending {% endif %}</td>
                       <td>{{ item.budget|intcomma }}</td>
                       <td>{{ item.description }}</td>
+                      <td><a href="#">{{ item.created_by.get_full_name }}</a></td>
+
                       <td>
-                        {% if item|get_class_name == 'Event' %}
-                          <a href="{% url 'expense:event_expense_detail' item.id %}" class="btn btn-sm btn-primary">View Expenses</a>
-                        {% elif item|get_class_name == 'Operation' %}
-                          <a href="{% url 'expense:operation_expense_detail' item.id %}" class="btn btn-sm btn-primary">View Expenses</a>
-                        {% endif %}
+                        <a href="{% url 'expense:event_expense_detail' item.id %}" class="btn btn-sm btn-primary">View Expenses</a>
+                        <a href="{% url 'expense:event_expense_detail' item.id %}" class="btn btn-sm btn-primary">Edit Event</a>
                       </td>
                     </tr>
-                    {% empty %}
-                    <tr>
-                      <td colspan="7" class="text-center">No expense records found.</td>
-                    </tr>
-                    {% endfor %}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            
-           
+                  {% endif %}
+                {% empty %}
+                  <tr><td colspan="7" class="text-center">No event records found.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
           </div>
         </div>
+
+        <!-- Operations Tab -->
+        <div class="tab-pane fade" id="operation" role="tabpanel" aria-labelledby="operation-tab">
+          <div class="table-responsive">
+            <table class="display table table-striped" style="width:100%">
+              <thead>
+                <tr>
+                  <th>Operation</th>
+                  <th>Expense</th>
+                  <th>Budget</th>
+                  <th>Description</th>
+                  <th>Created By</th>
+
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in all_items %}
+                  {% if item|get_class_name == 'Operation' %}
+                    <tr>
+                      <td>{{ item.name }}</td>
+                      <td>{{ item.category }}</td>
+                      <td>{{ item.budget|intcomma }}</td>
+                      <td>{{ item.description }}</td>
+                      <td><a href="#">{{ item.created_by.get_full_name }}</a></td>
+
+                      <td>
+                        <a href="{% url 'expense:operation_expense_detail' item.id %}" class="btn btn-sm btn-primary">View Expenses</a>
+                        <a href="{% url 'expense:operation_expense_detail' item.id %}" class="btn btn-sm btn-primary">Edit Operation</a>
+                      </td>
+                    </tr>
+                  {% endif %}
+                {% empty %}
+                  <tr><td colspan="7" class="text-center">No operation records found.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
     </div>
+  </div>
 </section>
+
 <!-- Submit Expense Modal -->
 <div class="modal fade" id="submitExpenseModal" tabindex="-1" aria-labelledby="submitExpenseModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">

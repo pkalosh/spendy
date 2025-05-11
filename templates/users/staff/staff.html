@@ -93,13 +93,7 @@
                                                 <td class="d-none d-md-table-cell">{{ expense.created_at|date:"M d, Y" }}</td>
                                                 <td class="d-none d-lg-table-cell">{{ expense.created_by.get_full_name }}</td>
                                                 <td>
-                                                    {% if is_admin %}
-                                                    <div class="d-flex flex-column flex-sm-row gap-1">
-                                                        <a href="{% url 'expense:expense_detail' expense.id %}" class="btn btn-sm btn-info mb-1 mb-sm-0">View</a>
-                                                        
-                                                        <a href="{% url 'expense:expense_detail' expense.id %}" class="btn btn-sm btn-success">Approve/Decline</a>
-                                                        {% endif %}
-                                                    </div>
+                                                   #
                                                 </td>
                                             </tr>
                                             {% empty %}
@@ -127,12 +121,7 @@
                                                 <strong>Date:</strong> {{ expense.created_at|date:"M d, Y" }}<br>
                                                 <strong>Requested By:</strong> {{ expense.created_by.get_full_name }}
                                             </p>
-                                            <!-- <div class="d-flex gap-2">
-                                                <a href="{% url 'expense:expense_detail' expense.id %}" class="btn btn-sm btn-info">View</a>
-                                                {% if is_admin %}
-                                                <a href="{% url 'expense:expense_detail' expense.id %}" class="btn btn-sm btn-success">Approve/Decline</a>
-                                                {% endif %}
-                                            </div> -->
+                                           
                                         </div>
                                     </div>
                                     {% empty %}
@@ -171,10 +160,7 @@
                                                 <td class="d-none d-md-table-cell">{{ expense.updated_at|date:"M d, Y" }}</td>
                                                 <td class="d-none d-lg-table-cell">{{ expense.approved_by.get_full_name }}</td>
                                                 <td>
-                                                    <!-- <div class="d-flex flex-column flex-sm-row gap-1">
-                                                        <a href="{% url 'expense:expense_detail' expense.id %}" class="btn btn-sm btn-info mb-1 mb-sm-0">View</a>
-                                                        
-                                                    </div> -->
+                                                   #
                                                 </td>
                                             </tr>
                                             {% empty %}
@@ -202,12 +188,7 @@
                                                 <strong>Date:</strong> {{ expense.updated_at|date:"M d, Y" }}<br>
                                                 <strong>Approved By:</strong> {{ expense.approved_by.get_full_name }}
                                             </p>
-                                            <!-- <div class="d-flex gap-2">
-                                                <a href="{% url 'expense:expense_detail' expense.id %}" class="btn btn-sm btn-info">View</a>
-                                                {% if not is_admin %}
-                                                <button class="btn btn-sm btn-success" onclick="preparePayment('{{ expense.id }}')">Pay</button>
-                                                {% endif %}
-                                            </div> -->
+                                            
                                         </div>
                                     </div>
                                     {% empty %}
@@ -244,7 +225,7 @@
                                                 <td class="d-none d-lg-table-cell">{{ expense.approved_by.get_full_name }}</td>
                                                 <td class="d-none d-md-table-cell">{{ expense.decline_reason }}</td>
                                                 <td>
-                                                    <!-- <a href="{% url 'expense:expense_detail' expense.id %}" class="btn btn-sm btn-info">View</a> -->
+                                                    #
                                                 </td>
                                             </tr>
                                             {% empty %}
@@ -273,9 +254,7 @@
                                                 <strong>Declined By:</strong> {{ expense.approved_by.get_full_name }}<br>
                                                 <strong>Reason:</strong> {{ expense.decline_reason }}
                                             </p>
-                                            <!-- <div class="d-flex">
-                                                <a href="{% url 'expense:expense_detail' expense.id %}" class="btn btn-sm btn-info">View</a>
-                                            </div> -->
+                                            
                                         </div>
                                     </div>
                                     {% empty %}

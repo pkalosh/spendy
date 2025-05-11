@@ -178,6 +178,7 @@ random_password = get_random_string(length=12)
 @login_required
 @user_passes_test(is_admin)
 def create_staff_profile(request):
+    company  = request.user.companykyc
     if request.method == 'POST':
         user_form = UserForm(request.POST)
         profile_form = StaffProfileForm(request.POST, request.FILES)
@@ -189,12 +190,13 @@ def create_staff_profile(request):
             user.set_password(random_password)
             # Assign appropriate user flags for staff
             user.is_staff = True
-            user.company_name = profile_form.cleaned_data['company']
+            user.company_name = company.company_name
             user.is_org_staff = True
             user.save()
 
             staff = profile_form.save(commit=False)
             staff.user = user
+            staff.company  = company
             staff.save()
             profile_form.save_m2m()
 

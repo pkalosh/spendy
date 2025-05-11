@@ -512,6 +512,7 @@ def approve_expense(request, expense_id):
     
     if request.method == 'POST':
         form = ExpenseApprovalForm(request.POST, instance=expense)
+        print(form)
         
         if form.is_valid():
             with transaction.atomic():

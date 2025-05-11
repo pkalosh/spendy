@@ -9,9 +9,10 @@
             <div class="row">
                 <div class="col-xl-10 offset-xl-1">
                     <div class="section-content">
-                        {% if form.errors %}
+
+                        {% if user_form.errors or profile_form.errors %}
                             <div class="alert alert-danger">
-                                <strong>{{ form.errors }}</strong>
+                                <strong>Please fix the errors below.</strong>
                             </div>
                         {% endif %}
 
@@ -28,36 +29,69 @@
                                     <div class="row g-3">
                                         <!-- User Fields -->
                                         <div class="col-md-6">
-                                            {{ user_form.first_name.label_tag }} {{ user_form.first_name }}
+                                            {{ user_form.first_name.label_tag }} 
+                                            {{ user_form.first_name }}
+                                            {% for error in user_form.first_name.errors %}
+                                                <div class="text-danger small">{{ error }}</div>
+                                            {% endfor %}
                                         </div>
                                         <div class="col-md-6">
-                                            {{ user_form.last_name.label_tag }} {{ user_form.last_name }}
+                                            {{ user_form.last_name.label_tag }} 
+                                            {{ user_form.last_name }}
+                                            {% for error in user_form.last_name.errors %}
+                                                <div class="text-danger small">{{ error }}</div>
+                                            {% endfor %}
                                         </div>
                                         <div class="col-md-6">
-                                            {{ user_form.email.label_tag }} {{ user_form.email }}
+                                            {{ user_form.email.label_tag }} 
+                                            {{ user_form.email }}
+                                            {% for error in user_form.email.errors %}
+                                                <div class="text-danger small">{{ error }}</div>
+                                            {% endfor %}
                                         </div>
                                         <div class="col-md-6">
-                                            {{ user_form.phone_number.label_tag }} {{ user_form.phone_number }}
+                                            {{ user_form.phone_number.label_tag }} 
+                                            {{ user_form.phone_number }}
+                                            {% for error in user_form.phone_number.errors %}
+                                                <div class="text-danger small">{{ error }}</div>
+                                            {% endfor %}
                                         </div>
                                         <div class="col-md-6">
-                                            {{ user_form.country.label_tag }} {{ user_form.country }}
+                                            {{ user_form.country.label_tag }} 
+                                            {{ user_form.country }}
+                                            {% for error in user_form.country.errors %}
+                                                <div class="text-danger small">{{ error }}</div>
+                                            {% endfor %}
                                         </div>
 
                                         <!-- Profile Fields -->
                                         <div class="col-md-6">
-                                            {{ profile_form.company.label_tag }} {{ profile_form.company }}
+                                            {{ profile_form.profile_image.label_tag }} 
+                                            {{ profile_form.profile_image }}
+                                            {% for error in profile_form.profile_image.errors %}
+                                                <div class="text-danger small">{{ error }}</div>
+                                            {% endfor %}
                                         </div>
                                         <div class="col-md-6">
-                                            {{ profile_form.profile_image.label_tag }} {{ profile_form.profile_image }}
+                                            {{ profile_form.role.label_tag }} 
+                                            {{ profile_form.role }}
+                                            {% for error in profile_form.role.errors %}
+                                                <div class="text-danger small">{{ error }}</div>
+                                            {% endfor %}
                                         </div>
                                         <div class="col-md-6">
-                                            {{ profile_form.role.label_tag }} {{ profile_form.role }}
-                                        </div>
-                                        <div class="col-md-6">
-                                            {{ profile_form.is_active.label_tag }} {{ profile_form.is_active }}
+                                            {{ profile_form.is_active.label_tag }} 
+                                            {{ profile_form.is_active }}
+                                            {% for error in profile_form.is_active.errors %}
+                                                <div class="text-danger small">{{ error }}</div>
+                                            {% endfor %}
                                         </div>
                                         <div class="col-md-12">
-                                            {{ profile_form.assigned_modules.label_tag }} {{ profile_form.assigned_modules }}
+                                            {{ profile_form.assigned_modules.label_tag }} 
+                                            {{ profile_form.assigned_modules }}
+                                            {% for error in profile_form.assigned_modules.errors %}
+                                                <div class="text-danger small">{{ error }}</div>
+                                            {% endfor %}
                                         </div>
                                     </div>
                                 </div>
