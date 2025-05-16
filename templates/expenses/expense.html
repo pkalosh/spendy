@@ -57,7 +57,7 @@
 
                       <td>
                         <a href="{% url 'expense:event_expense_detail' item.id %}" class="btn btn-sm btn-primary">View Expenses</a>
-                        <a href="{% url 'expense:event_expense_detail' item.id %}" class="btn btn-sm btn-primary">Edit Event</a>
+                        <!-- <a href="{% url 'expense:event_expense_detail' item.id %}" class="btn btn-sm btn-primary">Edit Event</a> -->
                       </td>
                     </tr>
                   {% endif %}
@@ -96,7 +96,7 @@
 
                       <td>
                         <a href="{% url 'expense:operation_expense_detail' item.id %}" class="btn btn-sm btn-primary">View Expenses</a>
-                        <a href="{% url 'expense:operation_expense_detail' item.id %}" class="btn btn-sm btn-primary">Edit Operation</a>
+                        <!-- <a href="{% url 'expense:operation_expense_detail' item.id %}" class="btn btn-sm btn-primary">Edit Operation</a> -->
                       </td>
                     </tr>
                   {% endif %}
@@ -118,14 +118,14 @@
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header bg-light">
-        <h5 class="modal-title">Submit Expense Request</h5>
+        <h5 class="modal-title">Create Event or Operation</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <!-- Request Form -->
         <div id="requests" class="content-section">
-          <h3 class="mb-3">Make a Request</h3>
-          <p class="text-muted mb-4">Request funds for an event or operation.</p>
+          <h3 class="mb-3">Event/Operation Item</h3>
+          <p class="text-muted mb-4">Create an event or operation.</p>
           <form id="expenseForm" class="bg-white p-4 shadow rounded" method="post" action="{% url 'expense:event-operation' %}">
             {% csrf_token %}
             <input type="hidden" name="form_type" id="form_type" value="">
