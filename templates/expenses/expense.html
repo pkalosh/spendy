@@ -13,6 +13,10 @@
 <section class="dashboard-section body-collapse">
   <div class="overlay pt-120">
     <div class="container-fluid">
+      <div class="col-12">
+        <h4 class="mb-1">Expenses</h4>
+        <p class="mb-3">Create and track events with categorized expenses.</p>
+    </div>
 
       <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#submitExpenseModal">
         New Event/Operation
@@ -124,8 +128,6 @@
       <div class="modal-body">
         <!-- Request Form -->
         <div id="requests" class="content-section">
-          <h3 class="mb-3">Event/Operation Item</h3>
-          <p class="text-muted mb-4">Create an event or operation.</p>
           <form id="expenseForm" class="bg-white p-4 shadow rounded" method="post" action="{% url 'expense:event-operation' %}">
             {% csrf_token %}
             <input type="hidden" name="form_type" id="form_type" value="">
@@ -133,7 +135,7 @@
             
             <!-- Request Type -->
             <div class="mb-3">
-              <label for="requestType" class="form-label fw-bold">Request Type</label>
+              <label for="requestType" class="form-label fw-bold">Expense Group</label>
               <select id="requestType" name="request_type" class="form-select" onchange="toggleRequestFields()" required>
                 <option value="">Select Type</option>
                 <option value="event">Event</option>
@@ -219,7 +221,7 @@
               </div>
             </div>
             
-            <button type="submit" class="btn btn-primary mt-3">Submit Request</button>
+            <button type="submit" class="btn btn-primary mt-3">Save</button>
           </form>
         </div>
       </div>
