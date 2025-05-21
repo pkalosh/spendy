@@ -623,7 +623,8 @@ def staff_dashboard(request):
         pending_expenses = expenses.filter(approved=False, declined=False)
         approved_expenses = expenses.filter(approved=True, paid=False)
         declined_expenses = expenses.filter(declined=True)
-        
+        print(f"approved_expenses: {approved_expenses}")  # Print the value of approved_expenses)
+
         payment_form = PaymentForm(user=user, company=company.company)
         expense_form = ExpenseRequestForm(company=company.company)
 
@@ -694,6 +695,7 @@ def expense_requests(request):
         expenses = Expense.objects.filter(company=company.company, created_by=request.user).order_by('-created_at')
         pending_expenses = expenses.filter(approved=False, declined=False)
         declined_expenses = expenses.filter(declined=True)
+        approved_expenses = expenses.filter(approved=True, paid=False)
         
         # Set up expense request form
         expense_form = ExpenseRequestForm(company=company.company)
@@ -702,6 +704,7 @@ def expense_requests(request):
         context["pending_expenses"] = pending_expenses
         context["declined_expenses"] = declined_expenses
         context["expense_form"] = expense_form
+        context["approved_expenses"] = approved_expenses
         
         # Get request types and categories
         context['request_type'] = ExpenseRequestType.objects.filter(Q(company=company.company))
