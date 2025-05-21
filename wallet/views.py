@@ -470,7 +470,7 @@ def transactions(request):
     context = {
         "transactions": txn,
     }
-    return render(request, "transaction/approvals.html", context)
+    return render(request, "transaction/transactions.html", context)
 
 
 

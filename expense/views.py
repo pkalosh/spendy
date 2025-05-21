@@ -5,14 +5,22 @@ from django.http import JsonResponse, HttpResponseForbidden,HttpResponse
 from django.db import transaction
 from django.views.decorators.http import require_POST
 from django.urls import reverse
-from .models import Expense, Event, Operation, ExpenseGroup, CategoryBase, ExpenseCategory, EventCategory, OperationCategory
+from django.views.decorators.http import require_GET
+from .models import Expense, Event, Operation, ExpenseGroup, CategoryBase, ExpenseCategory, EventCategory, OperationCategory,ExpenseRequestType
 from .forms import ExpenseRequestForm, ExpenseApprovalForm, PaymentForm, EventExpenseForm, OperationExpenseForm
 from wallet.models import Transaction, CompanyKYC, Wallet
 from django.core.exceptions import ValidationError
 from decimal import Decimal, InvalidOperation
-from django.db.models import Q
-from django.db.models import Sum
 from django.utils import timezone
+from django.db.models import Sum, Count, Avg, Q
+from django.db.models.functions import TruncMonth, TruncYear
+from datetime import datetime, timedelta
+import csv
+import io
+from collections import defaultdict
+from datetime import datetime, timedelta
+import calendar
+
 def is_admin(user):
     """Check if user is admin either through Django admin or through StaffProfile"""
     if user.is_staff or user.is_superuser:
@@ -783,3 +791,107 @@ def create_operation(request):
             'success': False,
             'errors': form.errors
         }, status=400)
+    
+@login_required
+def reports(request):
+    """Render the analytics dashboard template with all analytics data"""
+
+    user = request.user
+    company = getattr(user, 'staffprofile', None) and user.staffprofile.company or getattr(user, 'companykyc', None)
+
+    if not company:
+        return render(request, 'reports/analytics.html', {'error': 'No associated company found.'})
+
+    # Filtered expenses
+    expenses = Expense.objects.filter(company=company)
+
+    # Prepare trend data (monthly)
+    monthly_data = defaultdict(lambda: {'event': 0, 'operation': 0})
+    for exp in expenses:
+        month = exp.created_at.strftime('%Y-%m')
+        type_key = 'event' if exp.event else 'operation'
+        monthly_data[month][type_key] += float(exp.amount)
+
+    trend_chart = {
+        'labels': list(monthly_data.keys()),
+        'event': [monthly_data[m]['event'] for m in monthly_data],
+        'operation': [monthly_data[m]['operation'] for m in monthly_data]
+    }
+    print(trend_chart)
+
+    # Prepare category distribution data
+    category_data = expenses.values('expense_category__name') \
+        .annotate(total=Sum('amount')) \
+        .order_by('-total')
+    pie_chart = {
+        'labels': [c['expense_category__name'] or 'Uncategorized' for c in category_data],
+        'amounts': [float(c['total']) for c in category_data],
+    }
+
+    context = {
+        'categories': ExpenseCategory.objects.filter(is_active=True),
+        'request_types': ExpenseRequestType.objects.filter(is_active=True),
+        'events': Event.objects.filter(is_active=True, company=company),
+        'operations': Operation.objects.filter(is_active=True, company=company),
+        'trend_chart': trend_chart,
+        'pie_chart': pie_chart,
+    }
+
+    return render(request, 'reports/analytics.html', context)
+
+
+
+def get_past_12_months():
+    now = datetime.now()
+    months = []
+    for i in range(11, -1, -1):  # from 11 months ago to now
+        year = (now.year if now.month - i > 0 else now.year - 1)
+        month = (now.month - i - 1) % 12 + 1
+        months.append(f"{year}-{month:02}")
+    return months
+
+@require_GET
+@login_required
+def analytics_data(request):
+    user = request.user
+    company = getattr(user, 'staffprofile', None) and user.staffprofile.company or getattr(user, 'companykyc', None)
+
+    if not company:
+        return JsonResponse({'error': 'No associated company'}, status=400)
+
+    # Optional: filter by date range
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+
+    expenses = Expense.objects.filter(company=company)
+    if start_date and end_date:
+        expenses = expenses.filter(created_at__range=[start_date, end_date])
+
+    # Trend chart data (12-monthly)
+    monthly_data = defaultdict(lambda: {'event': 0, 'operation': 0})
+    for exp in expenses:
+        month = exp.created_at.strftime('%Y-%m')
+        key = 'event' if exp.event else 'operation'
+        monthly_data[month][key] += float(exp.amount)
+
+    # Ensure we have 12 months, even with zero values
+    last_12_months = get_past_12_months()
+    trend_chart = {
+        'labels': last_12_months,
+        'event': [monthly_data[m]['event'] for m in last_12_months],
+        'operation': [monthly_data[m]['operation'] for m in last_12_months],
+    }
+
+    # Pie chart data
+    category_data = expenses.values('expense_category__name') \
+        .annotate(total=Sum('amount')) \
+        .order_by('-total')
+    pie_chart = {
+        'labels': [c['expense_category__name'] or 'Uncategorized' for c in category_data],
+        'amounts': [float(c['total']) for c in category_data]
+    }
+
+    return JsonResponse({
+        'trend_chart': trend_chart,
+        'pie_chart': pie_chart,
+    })

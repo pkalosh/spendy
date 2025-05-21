@@ -27,4 +27,7 @@ urlpatterns = [
 
     path('create-event/', views.create_event, name='create_event'),
     path('create-operation/', views.create_operation, name='create_operation'),
+
+    path('reports/', views.reports, name='reports'),
+    path('analytics/data/', views.analytics_data, name='analytics_data'),
 ]

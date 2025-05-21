@@ -1,0 +1,169 @@
+{% extends "partials/dashboard-base.html" %}
+{% load static %}
+{% load humanize %}
+{% block content %}
+
+    <!-- Dashboard Section start -->
+<!-- Include Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<section class="dashboard-section body-collapse">
+    <div class="overlay pt-120">
+        <div class="container-fruid">
+            {% if form.errors %}
+                <div class="alert alert-danger">
+                    <strong>{{ form.errors }}</strong>
+                </div>
+            {% endif %}
+
+            <div class="container-fluid py-4">
+                <!-- Header -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h4 class=" text-info mb-0">
+                                Expense Analytics
+                        </h4>
+                        <p class="text-muted">Visualize your spending patterns and trends</p>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="filter-section">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label class="form-label">Start Date</label>
+                            <input type="date" class="form-control" id="startDate">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">End Date</label>
+                            <input type="date" class="form-control" id="endDate">
+                        </div>
+                        <div class="col-md-3 mt-4 pt-3">
+                            <label class="form-label">Category</label>
+                            <select class="form-select" id="categoryFilter">
+                                <option value="all">All Categories</option>
+                                <option value="events">Events</option>
+                                <option value="operations">Operations</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mt-4 pt-2">
+                            <button class="btn btn-primary mt-3" onclick="updateAnalytics()">
+                                <i class="fas fa-sync-alt me-2"></i>Update Analytics
+                            </button>
+                            <button class="btn btn-outline-secondary mt-3 ms-2" onclick="exportData()">
+                                <i class="fas fa-download me-2"></i>Export Data
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="row mt-5 mb-4">
+                    <div class="col-lg-8 mb-4">
+                        <div class="card dashboard-card">
+                            <div class="card-header bg-transparent">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-chart-line me-2"></i>Monthly Spending Trend
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="trendChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4 mb-4">
+                        <div class="card dashboard-card">
+                            <div class="card-header bg-transparent">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-chart-pie me-2"></i>Category Distribution
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="pieChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+             
+            </div>
+        </div>
+    </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    let trendChart, pieChart;
+
+    function initCharts(data) {
+        const t = document.getElementById('trendChart');
+        const p = document.getElementById('pieChart');
+
+        if (trendChart) trendChart.destroy();
+        if (pieChart) pieChart.destroy();
+
+        trendChart = new Chart(t, {
+            type: 'line',
+            data: {
+                labels: data.trend_chart.labels,
+                datasets: [
+                    {
+                        label: 'Event Expenses',
+                        data: data.trend_chart.event,
+                        borderColor: '#007bff',
+                        fill: false
+                    },
+                    {
+                        label: 'Operation Expenses',
+                        data: data.trend_chart.operation,
+                        borderColor: '#ffc107',
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+
+        pieChart = new Chart(p, {
+            type: 'pie',
+            data: {
+                labels: data.pie_chart.labels,
+                datasets: [{
+                    label: 'Expense Categories',
+                    data: data.pie_chart.amounts,
+                    backgroundColor: [
+                        '#007bff', '#28a745', '#ffc107', '#dc3545',
+                        '#17a2b8', '#6f42c1', '#fd7e14'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+    }
+
+    function fetchChartData(start = '', end = '') {
+        let url = '{% url "expense:analytics_data" %}';
+        if (start && end) {
+            url += `?start_date=${start}&end_date=${end}`;
+        }
+
+        fetch(url)
+            .then(res => res.json())
+            .then(data => initCharts(data))
+            .catch(err => console.error('Error loading chart data:', err));
+    }
+
+    // Load charts on page load
+    document.addEventListener('DOMContentLoaded', function () {
+        fetchChartData();
+    });
+</script>
+    <!-- Transactions Popup start -->
+    {% endblock content %}
