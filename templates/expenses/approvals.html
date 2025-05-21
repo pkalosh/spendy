@@ -2,15 +2,16 @@
 {% load static %}
 {% load humanize %}
 {% load custom_filters %}
+
 {% block content %}
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<!-- Bootstrap 5 CSS (ensure it's loaded only once in base) -->
 
 <section class="dashboard-section body-collapse">
-  <div class="overlay pt-120">
+  <div class="overlay pt-4 pt-md-5">
     <div class="container-fluid">
-      <div class="row mb-3">
+      <div class="row mt-4">
         <div class="col-12">
-          <h4 class="mb-3">Approvals</h4>
+          <h4 class="mb-3 mt-2">Approvals</h4>
           <p class="mb-3">Review and approve Event/Operational requests.</p>
         </div>
 
@@ -26,7 +27,6 @@
 
         <!-- Tabs Content -->
         <div class="tab-content mt-3" id="approvalTabsContent">
-
           <!-- Event Requests Tab -->
           <div class="tab-pane fade show active" id="event" role="tabpanel">
             <div class="table-responsive">
@@ -52,16 +52,14 @@
                     <td>{{ expense.description }}</td>
                     <td>{{ expense.event.location }}</td>
                     <td>
-                      <div class="d-flex flex-column flex-md-row gap-1">
-                        <form method="post" action="{% url 'expense:approve_expense' expense.id %}">
-                          {% csrf_token %}
-                          <button class="btn btn-success btn-sm w-100" type="submit">Approve</button>
-                        </form>
-                        <form method="post" action="{% url 'expense:decline_expense' expense.id %}">
-                          {% csrf_token %}
-                          <button class="btn btn-danger btn-sm w-100" type="submit">Reject</button>
-                        </form>
-                      </div>
+                      <form method="post" action="{% url 'expense:approve_expense' expense.id %}" class="d-inline-block approve-form">
+                        {% csrf_token %}
+                        <button class="btn btn-success btn-sm" type="submit">Approve</button>
+                      </form>
+                      <form method="post" action="{% url 'expense:decline_expense' expense.id %}" class="d-inline-block decline-form">
+                        {% csrf_token %}
+                        <button class="btn btn-danger btn-sm" type="submit">Reject</button>
+                      </form>
                     </td>
                   </tr>
                   {% empty %}
@@ -95,16 +93,14 @@
                     <td>${{ expense.amount }}</td>
                     <td>{{ expense.description }}</td>
                     <td>
-                      <div class="d-flex flex-column flex-md-row gap-1">
-                        <form method="post" action="{% url 'expense:approve_expense' expense.id %}">
-                          {% csrf_token %}
-                          <button class="btn btn-success btn-sm w-100" type="submit">Approve</button>
-                        </form>
-                        <form method="post" action="{% url 'expense:decline_expense' expense.id %}">
-                          {% csrf_token %}
-                          <button class="btn btn-danger btn-sm w-100" type="submit">Reject</button>
-                        </form>
-                      </div>
+                      <form method="post" action="{% url 'expense:approve_expense' expense.id %}" class="d-inline-block approve-form">
+                        {% csrf_token %}
+                        <button class="btn btn-success btn-sm" type="submit">Approve</button>
+                      </form>
+                      <form method="post" action="{% url 'expense:decline_expense' expense.id %}" class="d-inline-block decline-form">
+                        {% csrf_token %}
+                        <button class="btn btn-danger btn-sm" type="submit">Reject</button>
+                      </form>
                     </td>
                   </tr>
                   {% empty %}
@@ -116,10 +112,99 @@
               </table>
             </div>
           </div>
-
         </div>
       </div>
     </div>
   </div>
 </section>
+
+<!-- Approve Confirmation Modal -->
+<div class="modal fade" id="confirmApproveModal" tabindex="-1" aria-labelledby="confirmApproveLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Confirm Approval</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to approve this request?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-success" id="confirmApproveBtn">Yes, Approve</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Decline Reason Modal -->
+<div class="modal fade" id="declineReasonModal" tabindex="-1" aria-labelledby="declineReasonLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" id="declineReasonForm">
+      {% csrf_token %}
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Reject Request</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <label for="declineReason" class="form-label">Reason for rejection:</label>
+          <textarea class="form-control" id="declineReason" name="reason" required></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-danger">Submit Rejection</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Bootstrap JS -->
+
+<script>
+  let approveForm = null;
+  let declineFormAction = '';
+
+  document.querySelectorAll(".approve-form").forEach(form => {
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      approveForm = form;
+      new bootstrap.Modal(document.getElementById("confirmApproveModal")).show();
+    });
+  });
+
+  document.getElementById("confirmApproveBtn").addEventListener("click", function () {
+    if (approveForm) approveForm.submit();
+  });
+
+  document.querySelectorAll(".decline-form").forEach(form => {
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      declineFormAction = form.action;
+      new bootstrap.Modal(document.getElementById("declineReasonModal")).show();
+    });
+  });
+
+  document.getElementById("declineReasonForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    const reason = document.getElementById("declineReason").value.trim();
+    if (!reason) {
+      alert("Please enter a reason.");
+      return;
+    }
+
+    const realForm = document.createElement("form");
+    realForm.method = "POST";
+    realForm.action = declineFormAction;
+
+    const csrfToken = document.querySelector("#declineReasonForm [name='csrfmiddlewaretoken']").value;
+    realForm.innerHTML = `
+      <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
+      <input type="hidden" name="reason" value="${reason}">
+    `;
+    document.body.appendChild(realForm);
+    realForm.submit();
+  });
+</script>
 {% endblock content %}

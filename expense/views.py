@@ -12,7 +12,7 @@ from django.core.exceptions import ValidationError
 from decimal import Decimal, InvalidOperation
 from django.db.models import Q
 from django.db.models import Sum
-
+from django.utils import timezone
 def is_admin(user):
     """Check if user is admin either through Django admin or through StaffProfile"""
     if user.is_staff or user.is_superuser:
@@ -551,21 +551,53 @@ def expense_approvals(request):
 
 
 
+
 @login_required
-def approve_expense(request, expense_id):
+def approve_expenses(request, expense_id):
     if request.method == 'POST':
         expense = get_object_or_404(Expense, id=expense_id)
+
+        # Optional: prevent re-approving already processed items
+        if expense.approved or expense.declined:
+            messages.warning(request, "This expense has already been processed.")
+            return redirect('expense:expense_approvals')
+
         expense.approved = True
         expense.approved_by = request.user
+        expense.approved_at = timezone.now()  # Add this field in model if needed
         expense.save()
-    return redirect('expense:expense_approvals')
 
+        messages.success(request, "Expense approved successfully.")
+    else:
+        messages.error(request, "Invalid request method.")
+
+    return redirect('expense:expense_approvals')
 @login_required
 def decline_expense(request, expense_id):
     if request.method == 'POST':
+        reason = request.POST.get("reason", "").strip()
+
+        if not reason:
+            messages.error(request, "Decline reason is required.")
+            return redirect('expense:expense_approvals')
+
         expense = get_object_or_404(Expense, id=expense_id)
+
+        # Optional: Prevent declining already processed expenses
+        if expense.approved or expense.declined:
+            messages.warning(request, "This expense has already been processed.")
+            return redirect('expense:expense_approvals')
+
         expense.declined = True
+        expense.declined_at = timezone.now()
+        expense.decline_reason = reason
+        expense.approved_by = request.user
         expense.save()
+
+        messages.success(request, "Expense has been declined successfully.")
+    else:
+        messages.error(request, "Invalid request method.")
+
     return redirect('expense:expense_approvals')
 @login_required
 def make_payment(request):

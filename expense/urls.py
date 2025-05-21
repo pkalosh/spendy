@@ -18,7 +18,7 @@ urlpatterns = [
     # For operations
     path('expense/<str:id>/operation/', views.expense_detail, {'item_type': 'operation'}, name='operation_expense_detail'),
     path('approvals/', views.expense_approvals, name='expense_approvals'),
-    path('expense/<uuid:expense_id>/approve/', views.approve_expense, name='approve_expense'),
+    path('expense/<uuid:expense_id>/approve/', views.approve_expenses, name='approve_expense'),
     path('expense/<uuid:expense_id>/decline/', views.decline_expense, name='decline_expense'),
     
     path('expense/<str:expense_id>/approve/', views.approve_expense, name='approve_expense'),

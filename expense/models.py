@@ -102,6 +102,8 @@ class Expense(models.Model):
     declined = models.BooleanField(default=False)
     approved_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='approved_by', blank=True, null=True)
     decline_reason = models.TextField( null=True, blank=True)
+    declined_at = models.DateTimeField(null=True, blank=True)
+    approved_at = models.DateTimeField(null=True, blank=True)  # optional
     def __str__(self):
         related_item = self.event if self.request_type == "Event" else self.operation
         return f"Expense: {self.amount} for {related_item if related_item else 'N/A'}"
