@@ -95,13 +95,13 @@ def submit_expense(request):
 
             if not wallet:
                 messages.error(request, f"No wallet found for type '{request_type}'.")
-                return redirect('wallet:staff-dashboard')
+                return redirect('wallet:expense-requests')
 
             expense.wallet = wallet
             expense.save()
 
             messages.success(request, "Expense request submitted successfully.")
-            return redirect('wallet:staff-dashboard')
+            return redirect('wallet:expense-requests')
         else:
             messages.error(request, "Please correct the errors below.")
     else:
@@ -277,7 +277,6 @@ def event_operation(request):
 @login_required
 def expense_detail(request, id, item_type=None):
     user = request.user
-    # Updated to use companykyc instead of staffprofile
     company = getattr(user, 'company', None) or getattr(user, 'companykyc', None)
     
     # Determine if we're looking at an event, operation, or specific expense
@@ -534,6 +533,40 @@ def approve_expense(request, expense_id):
     
     return redirect('expense:expense_detail', id=expense.id)
 
+
+
+def expense_approvals(request):
+    # Event requests are those linked to an Event and not yet approved/declined
+    event_requests = Expense.objects.filter(event__isnull=False, approved=False, declined=False)
+
+    # Operation requests are those linked to an Operation and not yet approved/declined
+    operation_requests = Expense.objects.filter(operation__isnull=False, approved=False, declined=False)
+
+    context = {
+        'event_requests': event_requests,
+        'operation_requests': operation_requests,
+    }
+
+    return render(request, 'expenses/approvals.html', context)
+
+
+
+@login_required
+def approve_expense(request, expense_id):
+    if request.method == 'POST':
+        expense = get_object_or_404(Expense, id=expense_id)
+        expense.approved = True
+        expense.approved_by = request.user
+        expense.save()
+    return redirect('expense:expense_approvals')
+
+@login_required
+def decline_expense(request, expense_id):
+    if request.method == 'POST':
+        expense = get_object_or_404(Expense, id=expense_id)
+        expense.declined = True
+        expense.save()
+    return redirect('expense:expense_approvals')
 @login_required
 def make_payment(request):
     """Handle payments for approved expenses via selected method"""

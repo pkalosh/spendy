@@ -1,0 +1,766 @@
+{% extends "partials/user-base.html" %}
+{% load static %}
+{% load humanize %}
+{% block content %}
+<section class="dashboard-section body-collapse">
+    <div class="overlay pt-120">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <!-- Request Management Section -->
+                     
+                    <div class="requests-area">
+                        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap mt-3">
+                            <h4 class="text-2xl font-bold">Expense Requests</h4>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#submitExpenseModal">
+                                New Request
+                            </button>
+                        </div>
+
+
+                        <!-- Type Selection Tabs -->
+                        <ul class="nav nav-tabs mb-4" id="expenseTypeTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all-expenses" type="button" role="tab" aria-controls="all-expenses" aria-selected="true">All Requests</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="events-tab" data-bs-toggle="tab" data-bs-target="#events-expenses" type="button" role="tab" aria-controls="events-expenses" aria-selected="false">Events</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="operations-tab" data-bs-toggle="tab" data-bs-target="#operations-expenses" type="button" role="tab" aria-controls="operations-expenses" aria-selected="false">Operations</button>
+                            </li>
+                        </ul>
+
+                        <!-- Filter Controls -->
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <div class="btn-group" role="group" aria-label="Request filter">
+                                            <button type="button" class="btn btn-outline-primary active" data-filter="all">All Requests</button>
+                                            <button type="button" class="btn btn-outline-warning" data-filter="pending">Pending</button>
+                                            <button type="button" class="btn btn-outline-success" data-filter="approved">Approved</button>
+                                            <button type="button" class="btn btn-outline-danger" data-filter="declined">Declined</button>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <input type="text" class="form-control" id="requestSearch" placeholder="Search requests...">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tab Content -->
+                        <div class="tab-content" id="expenseTabContent">
+                            <!-- All Expenses Tab -->
+                            <div class="tab-pane fade show active" id="all-expenses" role="tabpanel" aria-labelledby="all-tab">
+                                <!-- All Requests Table -->
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-hover" id="allRequestsTable">
+                                        <thead class="bg-light">
+                                            <tr>
+                                                <th>Status</th>
+                                                <th>Expense Type</th>
+                                                <th>Expense category</th>
+                                                <th>Description</th>
+                                                <th>Amount</th>
+                                                <th>Date</th>
+                                                <th>Requested By</th>
+                                                <th>Reviewed By</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <!-- Pending Expenses -->
+                                            {% for expense in pending_expenses %}
+                                            <tr class="request-row pending-request">
+                                                <td><span class="badge bg-warning">Pending</span></td>
+                                                <td>{{ expense.request_type }}</td>
+                                                <td>{{expense.expense_category}}</td>
+                                                <td>{{ expense.description }}</td>
+                                                <td>{{ expense.amount|intcomma }}</td>
+                                                <td>{{ expense.created_at|date:"M d, Y" }}</td>
+                                                <td>{{ expense.created_by.get_full_name }}</td>
+                                                <td>-</td>
+                                                <td>
+                                                    <div class="btn-group" role="group">
+                                                        <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#viewRequestModal{{ expense.id }}">View</button>
+                                                        {% if is_admin %}
+                                                        <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#approveModal{{ expense.id }}">Approve</button>
+                                                        <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#declineModal{{ expense.id }}">Decline</button>
+                                                        {% endif %}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+
+                                            <!-- Approved Expenses -->
+                                            {% for expense in approved_expenses %}
+                                            <tr class="request-row approved-request">
+                                                <td><span class="badge bg-success">Approved</span></td>
+                                                <td>{{ expense.request_type }}</td>
+                                                <td>{{expense.expense_category}}</td>
+                                                <td>{{ expense.description }}</td>
+                                                <td>{{ expense.amount|intcomma }}</td>
+                                                <td>{{ expense.updated_at|date:"M d, Y" }}</td>
+                                                <td>{{ expense.created_by.get_full_name }}</td>
+                                                <td>{{ expense.approved_by.get_full_name }}</td>
+                                                <td>
+                                                    <div class="btn-group" role="group">
+                                                        <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#viewRequestModal{{ expense.id }}">View</button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+
+                                            <!-- Declined Expenses -->
+                                            {% for expense in declined_expenses %}
+                                            <tr class="request-row declined-request">
+                                                <td><span class="badge bg-danger">Declined</span></td>
+                                                <td>{{ expense.request_type }}</td>
+                                                <td>{{expense.expense_category}}</td>
+                                                <td>{{ expense.description }}</td>
+                                                <td>{{ expense.amount|intcomma }}</td>
+                                                <td>{{ expense.updated_at|date:"M d, Y" }}</td>
+                                                <td>{{ expense.created_by.get_full_name }}</td>
+                                                <td>{{ expense.approved_by.get_full_name }}</td>
+                                                <td>
+                                                    <div class="btn-group" role="group">
+                                                        <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#viewRequestModal{{ expense.id }}">View</button>
+                                                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#resubmitModal{{ expense.id }}">Resubmit</button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+
+                                            {% if not pending_expenses and not approved_expenses and not declined_expenses %}
+                                            <tr>
+                                                <td colspan="9" class="text-center">No requests found.</td>
+                                            </tr>
+                                            {% endif %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Events Tab -->
+                            <div class="tab-pane fade" id="events-expenses" role="tabpanel" aria-labelledby="events-tab">
+                                <!-- Events Requests Table -->
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-hover" id="eventsRequestsTable">
+                                        <thead class="bg-light">
+                                            <tr>
+                                                <th>Status</th>
+                                                <th>Event Name</th>
+                                                <th>Expense Category</th>
+                                                <th>Description</th>
+                                                <th>Amount</th>
+                                                <th>Date</th>
+                                                <th>Requested By</th>
+                                                <th>Reviewed By</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <!-- Pending Event Expenses -->
+                                            {% for expense in pending_expenses %}
+                                            {% if expense.event %}
+                                            <tr class="request-row pending-request">
+                                                <td><span class="badge bg-warning">Pending</span></td>
+                                                <td>{{ expense.event.name }}</td>
+                                                <td>{{ expense.expense_category }}</td>
+                                                <td>{{ expense.description }}</td>
+                                                <td>{{ expense.amount|intcomma }}</td>
+                                                <td>{{ expense.created_at|date:"M d, Y" }}</td>
+                                                <td>{{ expense.created_by.get_full_name }}</td>
+                                                <td>-</td>
+                                                <td>
+                                                    <div class="btn-group" role="group">
+                                                        <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#viewRequestModal{{ expense.id }}">View</button>
+                                                        {% if is_admin %}
+                                                        <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#approveModal{{ expense.id }}">Approve</button>
+                                                        <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#declineModal{{ expense.id }}">Decline</button>
+                                                        {% endif %}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {% endif %}
+                                            {% endfor %}
+
+                                            <!-- Approved Event Expenses -->
+                                            {% for expense in approved_expenses %}
+                                            {% if expense.event %}
+                                            <tr class="request-row approved-request">
+                                                <td><span class="badge bg-success">Approved</span></td>
+                                                <td>{{ expense.event.name }}</td>
+                                                <td>{{ expense.expense_category }}</td>
+
+                                                <td>{{ expense.description }}</td>
+                                                <td>{{ expense.amount|intcomma }}</td>
+                                                <td>{{ expense.updated_at|date:"M d, Y" }}</td>
+                                                <td>{{ expense.created_by.get_full_name }}</td>
+                                                <td>{{ expense.approved_by.get_full_name }}</td>
+                                                <td>
+                                                    <div class="btn-group" role="group">
+                                                        <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#viewRequestModal{{ expense.id }}">View</button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {% endif %}
+                                            {% endfor %}
+
+                                            <!-- Declined Event Expenses -->
+                                            {% for expense in declined_expenses %}
+                                            {% if expense.event %}
+                                            <tr class="request-row declined-request">
+                                                <td><span class="badge bg-danger">Declined</span></td>
+                                                <td>{{ expense.event.name }}</td>
+                                                <td>{{ expense.expense_category }}</td>
+
+                                                <td>{{ expense.description }}</td>
+                                                <td>{{ expense.amount|intcomma }}</td>
+                                                <td>{{ expense.updated_at|date:"M d, Y" }}</td>
+                                                <td>{{ expense.created_by.get_full_name }}</td>
+                                                <td>{{ expense.approved_by.get_full_name }}</td>
+                                                <td>
+                                                    <div class="btn-group" role="group">
+                                                        <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#viewRequestModal{{ expense.id }}">View</button>
+                                                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#resubmitModal{{ expense.id }}">Resubmit</button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {% endif %}
+                                            {% endfor %}
+
+                                            {% if not has_event_expenses %}
+                                            <tr>
+                                                <td colspan="8" class="text-center">No event requests found.</td>
+                                            </tr>
+                                            {% endif %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Operations Tab -->
+                            <div class="tab-pane fade" id="operations-expenses" role="tabpanel" aria-labelledby="operations-tab">
+                                <!-- Operations Requests Table -->
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-hover" id="operationsRequestsTable">
+                                        <thead class="bg-light">
+                                            <tr>
+                                                <th>Status</th>
+                                                <th>Operation</th>
+                                                <th>Expense Category</th>
+                                                <th>Description</th>
+                                                <th>Amount</th>
+                                                <th>Date</th>
+                                                <th>Requested By</th>
+                                                <th>Reviewed By</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <!-- Pending Operation Expenses -->
+                                            {% for expense in pending_expenses %}
+                                            {% if expense.operation %}
+                                            <tr class="request-row pending-request">
+                                                <td><span class="badge bg-warning">Pending</span></td>
+                                                <td>{{ expense.operation.name }}</td>
+                                                <td>{{ expense.expense_category }}</td>
+                                                <td>{{ expense.description }}</td>
+                                                <td>{{ expense.amount|intcomma }}</td>
+                                                <td>{{ expense.created_at|date:"M d, Y" }}</td>
+                                                <td>{{ expense.created_by.get_full_name }}</td>
+                                                <td>-</td>
+                                                <td>
+                                                    <div class="btn-group" role="group">
+                                                        <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#viewRequestModal{{ expense.id }}">View</button>
+                                                        {% if is_admin %}
+                                                        <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#approveModal{{ expense.id }}">Approve</button>
+                                                        <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#declineModal{{ expense.id }}">Decline</button>
+                                                        {% endif %}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {% endif %}
+                                            {% endfor %}
+
+                                            <!-- Approved Operation Expenses -->
+                                            {% for expense in approved_expenses %}
+                                            {% if expense.operation %}
+                                            <tr class="request-row approved-request">
+                                                <td><span class="badge bg-success">Approved</span></td>
+                                                <td>{{ expense.operation.name }}</td>
+                                                <td>{{ expense.expense_category }}</td>
+
+                                                <td>{{ expense.description }}</td>
+                                                <td>{{ expense.amount|intcomma }}</td>
+                                                <td>{{ expense.updated_at|date:"M d, Y" }}</td>
+                                                <td>{{ expense.created_by.get_full_name }}</td>
+                                                <td>{{ expense.approved_by.get_full_name }}</td>
+                                                <td>
+                                                    <div class="btn-group" role="group">
+                                                        <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#viewRequestModal{{ expense.id }}">View</button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {% endif %}
+                                            {% endfor %}
+
+                                            <!-- Declined Operation Expenses -->
+                                            {% for expense in declined_expenses %}
+                                            {% if expense.operation %}
+                                            <tr class="request-row declined-request">
+                                                <td><span class="badge bg-danger">Declined</span></td>
+                                                <td>{{ expense.operation.name }}</td>
+                                                <td>{{ expense.expense_category }}</td>
+
+                                                <td>{{ expense.description }}</td>
+                                                <td>{{ expense.amount|intcomma }}</td>
+                                                <td>{{ expense.updated_at|date:"M d, Y" }}</td>
+                                                <td>{{ expense.created_by.get_full_name }}</td>
+                                                <td>{{ expense.approved_by.get_full_name }}</td>
+                                                <td>
+                                                    <div class="btn-group" role="group">
+                                                        <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#viewRequestModal{{ expense.id }}">View</button>
+                                                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#resubmitModal{{ expense.id }}">Resubmit</button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {% endif %}
+                                            {% endfor %}
+
+                                            {% if not has_operation_expenses %}
+                                            <tr>
+                                                <td colspan="8" class="text-center">No operation requests found.</td>
+                                            </tr>
+                                            {% endif %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mobile view cards with tabs -->
+                        <div class="d-md-none">
+                            <div class="tab-content" id="expenseMobileTabContent">
+                                <!-- All Expenses Mobile Tab -->
+                                <div class="tab-pane fade show active" id="all-expenses-mobile" role="tabpanel" aria-labelledby="all-tab">
+                                    <div class="request-cards">
+                                        <!-- Pending Expenses -->
+                                        {% for expense in pending_expenses %}
+                                        <div class="card mb-3 request-card pending-request">
+                                            <div class="card-header d-flex justify-content-between align-items-center">
+                                                <span class="badge bg-warning">Pending</span>
+                                                <small>{{ expense.created_at|date:"M d, Y" }}</small>
+                                            </div>
+                                            <div class="card-body">
+                                                <h6 class="card-subtitle mb-2">{{ expense.request_type }}</h6>
+                                                <p class="card-text">
+                                                    <strong>For:</strong> {% if expense.event %}{{expense.event.name}}{% else %}{{expense.operation.name}}{% endif %}<br>
+                                                    <strong>Amount:</strong> {{ expense.amount|intcomma }}<br>
+                                                    <strong>Description:</strong> {{ expense.description|truncatechars:80 }}<br>
+                                                    <strong>By:</strong> {{ expense.created_by.get_full_name }}
+                                                </p>
+                                                <div class="d-flex gap-2">
+                                                    <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#viewRequestModal{{ expense.id }}">View</button>
+                                                    {% if is_admin %}
+                                                    <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#approveModal{{ expense.id }}">Approve</button>
+                                                    <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#declineModal{{ expense.id }}">Decline</button>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+
+                                        <!-- Other expense cards for all requests -->
+                                        <!-- ... (similar pattern for approved and declined) ... -->
+                                    </div>
+                                </div>
+
+                                <!-- Events Mobile Tab -->
+                                <div class="tab-pane fade" id="events-expenses-mobile" role="tabpanel" aria-labelledby="events-tab">
+                                    <div class="request-cards">
+                                        <!-- Event expenses only -->
+                                        {% for expense in pending_expenses %}
+                                        {% if expense.event %}
+                                        <div class="card mb-3 request-card pending-request">
+                                            <div class="card-header d-flex justify-content-between align-items-center">
+                                                <span class="badge bg-warning">Pending</span>
+                                                <small>{{ expense.created_at|date:"M d, Y" }}</small>
+                                            </div>
+                                            <div class="card-body">
+                                                <h6 class="card-subtitle mb-2">Event: {{ expense.event.name }}</h6>
+                                                <p class="card-text">
+                                                    <strong>Amount:</strong> {{ expense.amount|intcomma }}<br>
+                                                    <strong>Description:</strong> {{ expense.description|truncatechars:80 }}<br>
+                                                    <strong>By:</strong> {{ expense.created_by.get_full_name }}
+                                                </p>
+                                                <div class="d-flex gap-2">
+                                                    <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#viewRequestModal{{ expense.id }}">View</button>
+                                                    {% if is_admin %}
+                                                    <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#approveModal{{ expense.id }}">Approve</button>
+                                                    <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#declineModal{{ expense.id }}">Decline</button>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                        {% endfor %}
+
+                                        <!-- Similar pattern for approved and declined event expenses -->
+                                    </div>
+                                </div>
+
+                                <!-- Operations Mobile Tab -->
+                                <div class="tab-pane fade" id="operations-expenses-mobile" role="tabpanel" aria-labelledby="operations-tab">
+                                    <div class="request-cards">
+                                        <!-- Operation expenses only -->
+                                        {% for expense in pending_expenses %}
+                                        {% if expense.operation %}
+                                        <div class="card mb-3 request-card pending-request">
+                                            <div class="card-header d-flex justify-content-between align-items-center">
+                                                <span class="badge bg-warning">Pending</span>
+                                                <small>{{ expense.created_at|date:"M d, Y" }}</small>
+                                            </div>
+                                            <div class="card-body">
+                                                <h6 class="card-subtitle mb-2">Operation: {{ expense.operation.name }}</h6>
+                                                <p class="card-text">
+                                                    <strong>Amount:</strong> {{ expense.amount|intcomma }}<br>
+                                                    <strong>Description:</strong> {{ expense.description|truncatechars:80 }}<br>
+                                                    <strong>By:</strong> {{ expense.created_by.get_full_name }}
+                                                </p>
+                                                <div class="d-flex gap-2">
+                                                    <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#viewRequestModal{{ expense.id }}">View</button>
+                                                    {% if is_admin %}
+                                                    <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#approveModal{{ expense.id }}">Approve</button>
+                                                    <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#declineModal{{ expense.id }}">Decline</button>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                        {% endfor %}
+
+                                        <!-- Similar pattern for approved and declined operation expenses -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div> <!-- End col-12 -->
+            </div> <!-- End row -->
+        </div> <!-- End container-fluid -->
+    </div> <!-- End overlay -->
+</section>
+<!-- Submit Expense Modal (New Request) -->
+<div class="modal fade" id="submitExpenseModal" tabindex="-1" aria-labelledby="submitExpenseModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-light">
+          <h5 class="modal-title" id="submitExpenseModalLabel">New Expense Request</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="expense-form" method="post" action="{% url 'expense:submit_expense' %}" class="bg-white p-4 shadow rounded">
+            {% csrf_token %}
+            <input type="hidden" id="form_type" name="form_type">
+
+            <!-- Always visible request type dropdown -->
+            <div class="mb-3">
+                <label for="id_request_type" class="form-label fw-bold required">Request Type</label>
+                <select name="request_type" id="id_request_type" class="form-select" onchange="toggleExpenseFields()" required>
+                    <option value="">---------</option>
+                    <option value="1">Event</option>
+                    <option value="2">Operation</option>
+                </select>
+                <div class="invalid-feedback">Please select a request type.</div>
+            </div>
+            
+            <!-- Event field - hidden initially -->
+            <div class="mb-3 expense-section hidden" id="event-field">
+                <label for="id_event" class="form-label fw-bold required">Event</label>
+                <select name="event" id="id_event" class="form-select event-field">
+                    <option value="">---------</option>
+                    {% for event in events %}
+                    <option value="{{ event.id }}">{{ event }}</option>
+                    {% endfor %}
+                </select>
+                <div class="invalid-feedback">Please select an event.</div>
+            </div>
+            
+            <!-- Operation field - hidden initially -->
+            <div class="mb-3 expense-section hidden" id="operation-field">
+                <label for="id_operation" class="form-label fw-bold required">Operation</label>
+                <select name="operation" id="id_operation" class="form-select operation-field">
+                    <option value="">---------</option>
+                    {% for op in operations %}
+                    <option value="{{ op.id }}">{{ op }}</option>
+                    {% endfor %}
+                </select>
+                <div class="invalid-feedback">Please select an operation.</div>
+            </div>
+            
+          
+            
+            <!-- Expense category field -->
+            <div class="mb-3">
+                <label for="id_expense_category" class="form-label fw-bold required">Expense Category</label>
+                <select name="expense_category" id="id_expense_category" class="form-select" required>
+                    <option value="">---------</option>
+                    {% for category in expense_categories %}
+                    <option value="{{ category.id }}">{{ category }}</option>
+                    {% endfor %}
+                </select>
+                <div class="invalid-feedback">Please select an expense category.</div>
+            </div>
+            
+            <!-- Common fields -->
+            <div id="common-fields">
+              <!-- Amount field -->
+              <div class="mb-3">
+                <label for="id_amount" class="form-label fw-bold required">Amount</label>
+                <div class="input-group">
+                  <span class="input-group-text">KES</span>
+                  <input type="number" name="amount" id="id_amount" class="form-control" step="0.01" min="0" placeholder="Enter amount" required>
+                  <div class="invalid-feedback">
+                    Please enter a valid amount greater than 0.
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Description field -->
+              <div class="mb-3">
+                <label for="id_description" class="form-label fw-bold required">Description</label>
+                <textarea name="description" id="id_description" class="form-control" rows="3" placeholder="Enter description" required></textarea>
+                <div class="invalid-feedback">
+                  Please provide a description.
+                </div>
+              </div>
+            </div>
+            
+            <!-- Submit button -->
+            <button type="submit" class="btn btn-primary w-100 mt-3" id="expenseSubmitBtn">Submit Request</button>
+          </form>
+        </div>
+      </div>
+    </div>
+</div>
+
+<!-- View Request Modal Template -->
+<!-- Note: In a real implementation, this would be dynamically generated for each expense -->
+<div class="modal fade" id="viewRequestModal" tabindex="-1" aria-labelledby="viewRequestModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="viewRequestModalLabel">Request Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-3 text-muted">Request ID: <span id="requestId">123456</span></h6>
+                        <p><strong>Status:</strong> <span id="requestStatus" class="badge bg-warning">Pending</span></p>
+                        <p><strong>Request Type:</strong> <span id="requestType">Event</span></p>
+                        <p><strong>For:</strong> <span id="requestFor">Annual Conference 2025</span></p>
+                        <p><strong>Category:</strong> <span id="requestCategory">Travel</span></p>
+                        <p><strong>Amount:</strong> <span id="requestAmount">KES 25,000</span></p>
+                        <p><strong>Description:</strong> <span id="requestDescription">Travel expenses for speakers</span></p>
+                        <p><strong>Submitted By:</strong> <span id="requestSubmitter">John Doe</span></p>
+                        <p><strong>Submitted On:</strong> <span id="requestDate">May 15, 2025</span></p>
+                        <div id="reviewSection">
+                            <hr>
+                            <p><strong>Reviewed By:</strong> <span id="reviewedBy">Jane Smith</span></p>
+                            <p><strong>Reviewed On:</strong> <span id="reviewDate">May 16, 2025</span></p>
+                            <p><strong>Comments:</strong> <span id="reviewComments">Approved as per budget allocation</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- JavaScript for all functionality -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add a variable to track if we have expenses of each type
+        let hasEventExpenses = false;
+        let hasOperationExpenses = false;
+        
+        // Check for event expenses
+        document.querySelectorAll('#eventsRequestsTable tbody tr').forEach(function(row) {
+            if (!row.querySelector('td[colspan]')) {
+                hasEventExpenses = true;
+            }
+        });
+        
+        // Check for operation expenses
+        document.querySelectorAll('#operationsRequestsTable tbody tr').forEach(function(row) {
+            if (!row.querySelector('td[colspan]')) {
+                hasOperationExpenses = true;
+            }
+        });
+        
+        // Set variables for template to use
+        if (!hasEventExpenses) {
+            document.querySelector('#eventsRequestsTable tbody').innerHTML = '<tr><td colspan="8" class="text-center">No event requests found.</td></tr>';
+        }
+        
+        if (!hasOperationExpenses) {
+            document.querySelector('#operationsRequestsTable tbody').innerHTML = '<tr><td colspan="8" class="text-center">No operation requests found.</td></tr>';
+        }
+        
+        // Sync desktop and mobile tabs
+        document.querySelectorAll('#expenseTypeTabs .nav-link').forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                const target = this.getAttribute('data-bs-target');
+                const mobileTarget = target + '-mobile';
+                
+                // Show the corresponding mobile tab
+                const mobileTab = document.querySelector(mobileTarget);
+                if (mobileTab) {
+                    const mobileTabPanes = document.querySelectorAll('#expenseMobileTabContent .tab-pane');
+                    mobileTabPanes.forEach(function(pane) {
+                        pane.classList.remove('show', 'active');
+                    });
+                    mobileTab.classList.add('show', 'active');
+                }
+            });
+        });
+        
+        // Filter functionality
+        const filterButtons = document.querySelectorAll('[data-filter]');
+        const searchInput = document.getElementById('requestSearch');
+        const requestRows = document.querySelectorAll('.request-row');
+        const requestCards = document.querySelectorAll('.request-card');
+        
+        // Filter click handler
+        filterButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Update active button
+                filterButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                const filter = this.getAttribute('data-filter');
+                
+                // Filter table rows
+                requestRows.forEach(row => {
+                    if (filter === 'all' || row.classList.contains(filter + '-request')) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+                
+                // Filter mobile cards
+                requestCards.forEach(card => {
+                    if (filter === 'all' || card.classList.contains(filter + '-request')) {
+                        card.style.display = '';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+        });
+        
+        // Search functionality
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            
+            // Search in table rows
+            requestRows.forEach(row => {
+                const rowText = row.textContent.toLowerCase();
+                if (rowText.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            // Search in mobile cards
+            requestCards.forEach(card => {
+                const cardText = card.textContent.toLowerCase();
+                if (cardText.includes(searchTerm)) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+        
+        // Form validation
+        const expenseForm = document.getElementById('expense-form');
+        if (expenseForm) {
+            expenseForm.addEventListener('submit', function(event) {
+                if (!this.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                this.classList.add('was-validated');
+            });
+        }
+    });
+    
+    // Toggle expense form fields based on selection
+    window.toggleExpenseFields = function() {
+        const requestType = document.getElementById('id_request_type').value;
+        const eventField = document.getElementById('event-field');
+        const operationField = document.getElementById('operation-field');
+        
+        // Hide all sections first
+        eventField.classList.add('hidden');
+        operationField.classList.add('hidden');
+        
+        // Clear required attributes
+        document.querySelectorAll('.event-field, .operation-field').forEach(field => {
+            field.removeAttribute('required');
+        });
+        
+        // Show relevant section based on selection
+        if (requestType === '1') { // Event
+            eventField.classList.remove('hidden');
+            document.getElementById('id_event').setAttribute('required', 'required');
+        } else if (requestType === '2') { // Operation
+            operationField.classList.remove('hidden');
+            document.getElementById('id_operation').setAttribute('required', 'required');
+        }
+    };
+</script>
+
+
+<style>
+.hidden {
+    display: none;
+}
+.required:after {
+    content: " *";
+    color: red;
+}
+.btn-group .btn {
+    margin-right: 5px;
+}
+.request-row td {
+    vertical-align: middle;
+}
+.nav-tabs {
+    border-bottom: 2px solid #dee2e6;
+}
+.nav-tabs .nav-link {
+    border: none;
+    border-bottom: 3px solid transparent;
+    border-radius: 0;
+    padding: 10px 20px;
+    color: #495057;
+    font-weight: 500;
+}
+.nav-tabs .nav-link.active {
+    color: #0d6efd;
+    background-color: transparent;
+    border-bottom: 3px solid #0d6efd;
+}
+</style>
+
+{% endblock %}

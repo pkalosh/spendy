@@ -120,10 +120,12 @@
                            
                                     <ul>
                                         <li class="border-area">
-                                            <a href="{% url 'wallet:staff-dashboard' %}"><i class="fas fa-home"></i>Dashboard</a>
+                                            <a href="{% url 'wallet:staff-dashboard' %}"><i class="fas fa-home"></i>Wallet</a>
                                         </li>
                                   
-                                      
+                                        <li class="border-area">
+                                            <a href="{% url 'userauths:change-password' %}"><i class="fas fa-home"></i>Change Password</a>
+                                        </li>
                                     
                                         <li>
                                             <a href="{% url 'userauths:sign-out' %}"><i class="fas fa-sign-out"></i>Logout</a>
@@ -143,13 +145,18 @@
                         <ul>
                             <li>
                                 <a href="{% url 'wallet:staff-dashboard' %}">
-                                    <img src="{% static 'assets1/images/icon/dashboard.png' %}" alt="Dashboard"> <span>Dashboard</span>
+                                    <img src="{% static 'assets1/images/icon/pay.png' %}" alt="Pay"> <span>Pay</span>
                                 </a>
                             </li>
                      
                     
                             
-
+                            <li>
+                                <a href="{% url 'wallet:expense-requests' %}">
+                                    <img src="{% static 'assets1/images/icon/option.png' %}" alt="Requests"> <span>Requests</span>
+                                </a>
+                            </li>
+                     
                                 
                         </ul>
                         <ul class="bottom-item">

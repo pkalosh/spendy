@@ -1,0 +1,125 @@
+{% extends "partials/dashboard-base.html" %}
+{% load static %}
+{% load humanize %}
+{% load custom_filters %}
+{% block content %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+
+<section class="dashboard-section body-collapse">
+  <div class="overlay pt-120">
+    <div class="container-fluid">
+      <div class="row mb-3">
+        <div class="col-12">
+          <h4 class="mb-3">Approvals</h4>
+          <p class="mb-3">Review and approve Event/Operational requests.</p>
+        </div>
+
+        <!-- Tabs Navigation -->
+        <ul class="nav nav-tabs" id="approvalTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="event-tab" data-bs-toggle="tab" data-bs-target="#event" type="button" role="tab">Event Requests</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="operation-tab" data-bs-toggle="tab" data-bs-target="#operation" type="button" role="tab">Operation Requests</button>
+          </li>
+        </ul>
+
+        <!-- Tabs Content -->
+        <div class="tab-content mt-3" id="approvalTabsContent">
+
+          <!-- Event Requests Tab -->
+          <div class="tab-pane fade show active" id="event" role="tabpanel">
+            <div class="table-responsive">
+              <table class="table table-bordered table-striped">
+                <thead class="table-dark">
+                  <tr>
+                    <th>Requested By</th>
+                    <th>Event Name</th>
+                    <th>Expense Category</th>
+                    <th>Amount</th>
+                    <th>Description</th>
+                    <th>Location</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for expense in event_requests %}
+                  <tr>
+                    <td>{{ expense.created_by.get_full_name }}</td>
+                    <td>{{ expense.event.name }}</td>
+                    <td>{{ expense.expense_category.name }}</td>
+                    <td>${{ expense.amount }}</td>
+                    <td>{{ expense.description }}</td>
+                    <td>{{ expense.event.location }}</td>
+                    <td>
+                      <div class="d-flex flex-column flex-md-row gap-1">
+                        <form method="post" action="{% url 'expense:approve_expense' expense.id %}">
+                          {% csrf_token %}
+                          <button class="btn btn-success btn-sm w-100" type="submit">Approve</button>
+                        </form>
+                        <form method="post" action="{% url 'expense:decline_expense' expense.id %}">
+                          {% csrf_token %}
+                          <button class="btn btn-danger btn-sm w-100" type="submit">Reject</button>
+                        </form>
+                      </div>
+                    </td>
+                  </tr>
+                  {% empty %}
+                  <tr>
+                    <td colspan="7" class="text-center">No pending event requests.</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Operation Requests Tab -->
+          <div class="tab-pane fade" id="operation" role="tabpanel">
+            <div class="table-responsive">
+              <table class="table table-bordered table-striped">
+                <thead class="table-dark">
+                  <tr>
+                    <th>Requested By</th>
+                    <th>Operation Category</th>
+                    <th>Amount</th>
+                    <th>Description</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for expense in operation_requests %}
+                  <tr>
+                    <td>{{ expense.created_by.get_full_name }}</td>
+                    <td>{{ expense.expense_category.name }}</td>
+                    <td>${{ expense.amount }}</td>
+                    <td>{{ expense.description }}</td>
+                    <td>
+                      <div class="d-flex flex-column flex-md-row gap-1">
+                        <form method="post" action="{% url 'expense:approve_expense' expense.id %}">
+                          {% csrf_token %}
+                          <button class="btn btn-success btn-sm w-100" type="submit">Approve</button>
+                        </form>
+                        <form method="post" action="{% url 'expense:decline_expense' expense.id %}">
+                          {% csrf_token %}
+                          <button class="btn btn-danger btn-sm w-100" type="submit">Reject</button>
+                        </form>
+                      </div>
+                    </td>
+                  </tr>
+                  {% empty %}
+                  <tr>
+                    <td colspan="5" class="text-center">No pending operation requests.</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock content %}

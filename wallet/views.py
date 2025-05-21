@@ -675,6 +675,62 @@ def staff_dashboard(request):
         return render(request, "error_template.html", {"error": "Staff profile not found"}, status=404)
 
 
+@login_required
+def expense_requests(request):
+    """
+    Staff requests view showing pending and declined expenses, events, and operations.
+    Focuses on request-related features.
+    Requires authentication and proper staff profile.
+    """
+    context = {}
+    user = request.user
+    try:
+        # Get staff profile
+        company = StaffProfile.objects.get(user=request.user)
+        
+        # Get expense information
+        expenses = Expense.objects.filter(company=company.company, created_by=request.user).order_by('-created_at')
+        pending_expenses = expenses.filter(approved=False, declined=False)
+        declined_expenses = expenses.filter(declined=True)
+        
+        # Set up expense request form
+        expense_form = ExpenseRequestForm(company=company.company)
+        
+        # Add to context
+        context["pending_expenses"] = pending_expenses
+        context["declined_expenses"] = declined_expenses
+        context["expense_form"] = expense_form
+        
+        # Get request types and categories
+        context['request_type'] = ExpenseRequestType.objects.filter(Q(company=company.company))
+        context['expense_categories'] = ExpenseCategory.objects.filter(Q(company=company.company))
+        
+        # Get events information
+        context["events"] = Event.objects.filter(
+            company=company.company,
+            approved=False,
+            paid=False
+        ).order_by("-created_at")
+        context['event_categories'] = EventCategory.objects.filter(Q(company=company.company))
+        
+        # Get operations information
+        context["operations"] = Operation.objects.filter(
+            company=company.company,
+            approved=False,
+            paid=False
+        )
+        context['operation_categories'] = OperationCategory.objects.filter(Q(company=company.company))
+        
+        return render(request, "users/staff/request.html", context)
+    
+    except StaffProfile.DoesNotExist as e:
+        # Log the error
+        print(f"Staff profile error: {e}")
+        # Add error message to be displayed on the page
+        messages.error(request, "Staff profile not found. Please contact administrator.")
+        # Return to a simple error template or the login page
+        return render(request, "error_template.html", {"error": "Staff profile not found"}, status=404)
+
 from decimal import Decimal
 from django.db.models import Sum
 from .models import Expense
@@ -698,3 +754,4 @@ def get_pending_approved_expense_sum(user):
     ).aggregate(total=Sum('amount'))
 
     return result['total'] or Decimal('0.00')
+

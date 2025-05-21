@@ -16,6 +16,7 @@ urlpatterns = [
     path("expenses/", views.expenses, name="expenses"),
     path("expenses/create/", views.create_expenses, name="create-expenses"),
     path("transactions/", views.transactions, name="transactions"),
+    path('expense-requests/', views.expense_requests ,name='expense-requests'),
 
     path('roles/', views.list_roles ,name='staff-roles'),
     path('staff/', views.list_staff_profiles, name='staff-list'),

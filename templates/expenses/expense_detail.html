@@ -335,20 +335,7 @@
                             </div>
                         {% endif %}
                         
-                        {% if expense.approved and not expense.declined and payment_form %}
-                            <div class="card shadow-sm mt-4">
-                                <div class="card-header bg-secondary text-white">
-                                    Process Payment
-                                </div>
-                                <div class="card-body">
-                                    <form method="post" action="{% url 'expense:make_payment' %}">
-                                        {% csrf_token %}
-                                        {{ payment_form }}
-                                        <button type="submit" class="btn btn-primary mt-3">Process Payment</button>
-                                    </form>
-                                </div>
-                            </div>
-                        {% endif %}
+
                     </div>
                     
                     <!-- Related Expenses -->
