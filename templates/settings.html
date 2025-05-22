@@ -19,118 +19,192 @@
                             </div>
                             
                             <div class="settings-container mt-4">
-                                <div class="row">
-                                    <div class="col-md-4">
-                                        <button class="btn btn-primary w-100 mb-3" data-bs-toggle="modal" data-bs-target="#expenseCategoryModal">
-                                            Add Expense Category
-                                        </button>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <button class="btn btn-primary w-100 mb-3" data-bs-toggle="modal" data-bs-target="#operationCategoryModal">
-                                            Add Operation Category
-                                        </button>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <button class="btn btn-primary w-100 mb-3" data-bs-toggle="modal" data-bs-target="#eventCategoryModal">
-                                            Add Event Category
-                                        </button>
-                                    </div>
-                                </div>
-                                
-                                <!-- Category Lists -->
-                                <div class="row mt-4">
-                                    <div class="col-md-4">
-                                        <div class="card">
-                                            <div class="card-header">
-                                                <h6>Expense Categories</h6>
-                                            </div>
-                                            <div class="card-body">
-                                                <ul class="list-group">
-                                                    {% for category in expense_categories %}
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                        {{ category.name }}
-                                                        <div>
-                                                            <button class="btn btn-sm btn-outline-primary edit-category" 
-                                                                    data-type="expense" 
-                                                                    data-id="{{ category.id }}"
-                                                                    data-name="{{ category.name }}">
-                                                                Edit
-                                                            </button>
-                                                            <button class="btn btn-sm btn-outline-danger delete-category"
-                                                                    data-type="expense"
-                                                                    data-id="{{ category.id }}">
-                                                                Delete
-                                                            </button>
-                                                        </div>
-                                                    </li>
-                                                    {% empty %}
-                                                    <li class="list-group-item text-center">No expense categories found</li>
-                                                    {% endfor %}
-                                                </ul>
-                                            </div>
+                                <!-- Table with Tabs -->
+                                <div class="card">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <!-- Tabs Navigation -->
+                                        <ul class="nav nav-tabs card-header-tabs" id="categoryTabs" role="tablist">
+                                            <li class="nav-item" role="presentation">
+                                                <button class="nav-link active" id="expense-tab" data-bs-toggle="tab" data-bs-target="#expense-pane" type="button" role="tab" aria-controls="expense-pane" aria-selected="true">
+                                                    Expense Categories
+                                                </button>
+                                            </li>
+                                            <li class="nav-item" role="presentation">
+                                                <button class="nav-link" id="operation-tab" data-bs-toggle="tab" data-bs-target="#operation-pane" type="button" role="tab" aria-controls="operation-pane" aria-selected="false">
+                                                    Operation Categories
+                                                </button>
+                                            </li>
+                                            <li class="nav-item" role="presentation">
+                                                <button class="nav-link" id="event-tab" data-bs-toggle="tab" data-bs-target="#event-pane" type="button" role="tab" aria-controls="event-pane" aria-selected="false">
+                                                    Event Categories
+                                                </button>
+                                            </li>
+                                        </ul>
+                                        
+                                        <!-- Action Buttons -->
+                                        <div class="d-flex gap-2">
+                                            <button class="btn btn-primary btn-sm" id="addExpenseBtn" data-bs-toggle="modal" data-bs-target="#expenseCategoryModal">
+                                                <i class="fas fa-plus"></i> Add Expense
+                                            </button>
+                                            <button class="btn btn-primary btn-sm" id="addOperationBtn" data-bs-toggle="modal" data-bs-target="#operationCategoryModal" >
+                                                <i class="fas fa-plus"></i> Add Operation
+                                            </button>
+                                            <button class="btn btn-primary btn-sm" id="addEventBtn" data-bs-toggle="modal" data-bs-target="#eventCategoryModal">
+                                                <i class="fas fa-plus"></i> Add Event
+                                            </button>
                                         </div>
                                     </div>
                                     
-                                    <div class="col-md-4">
-                                        <div class="card">
-                                            <div class="card-header">
-                                                <h6>Operation Categories</h6>
+                                    <div class="card-body">
+                                      
+                                        
+                                        <!-- Tab Content -->
+                                        <div class="tab-content" id="categoryTabContent">
+                                            <!-- Expense Categories Tab -->
+                                            <div class="tab-pane fade show active" id="expense-pane" role="tabpanel" aria-labelledby="expense-tab">
+                                                <div class="table-responsive">
+                                                    <table class="table table-hover" id="expenseTable">
+                                                        <thead class="table-light">
+                                                            <tr>
+                                                                <th scope="col">#</th>
+                                                                <th scope="col">Category Name</th>
+                                                                <th scope="col">Created Date</th>
+                                                                <th scope="col" class="text-center">Actions</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {% for category in expense_categories %}
+                                                            <tr>
+                                                                <td>{{ forloop.counter }}</td>
+                                                                <td class="category-name">{{ category.name }}</td>
+                                                                <td>{{ category.created_at|date:"M d, Y" }}</td>
+                                                                <td class="text-center">
+                                                                    <div class="btn-group btn-group-sm" role="group">
+                                                                        <button class="btn btn-outline-primary edit-category" 
+                                                                                data-type="expense" 
+                                                                                data-id="{{ category.id }}"
+                                                                                data-name="{{ category.name }}"
+                                                                                title="Edit">
+                                                                            <i class="fas fa-edit"></i>
+                                                                        </button>
+                                                                        <button class="btn btn-outline-danger delete-category"
+                                                                                data-type="expense"
+                                                                                data-id="{{ category.id }}"
+                                                                                title="Delete">
+                                                                            <i class="fas fa-trash"></i>
+                                                                        </button>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                            {% empty %}
+                                                            <tr>
+                                                                <td colspan="4" class="text-center text-muted py-4">
+                                                                    <i class="fas fa-inbox fa-2x mb-2"></i><br>
+                                                                    No expense categories found
+                                                                </td>
+                                                            </tr>
+                                                            {% endfor %}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
                                             </div>
-                                            <div class="card-body">
-                                                <ul class="list-group">
-                                                    {% for category in operation_categories %}
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                        {{ category.name }}
-                                                        <div>
-                                                            <button class="btn btn-sm btn-outline-primary edit-category" 
-                                                                    data-type="operation" 
-                                                                    data-id="{{ category.id }}"
-                                                                    data-name="{{ category.name }}">
-                                                                Edit
-                                                            </button>
-                                                            <button class="btn btn-sm btn-outline-danger delete-category"
-                                                                    data-type="operation"
-                                                                    data-id="{{ category.id }}">
-                                                                Delete
-                                                            </button>
-                                                        </div>
-                                                    </li>
-                                                    {% empty %}
-                                                    <li class="list-group-item text-center">No operation categories found</li>
-                                                    {% endfor %}
-                                                </ul>
+                                            
+                                            <!-- Operation Categories Tab -->
+                                            <div class="tab-pane fade" id="operation-pane" role="tabpanel" aria-labelledby="operation-tab">
+                                                <div class="table-responsive">
+                                                    <table class="table table-hover" id="operationTable">
+                                                        <thead class="table-light">
+                                                            <tr>
+                                                                <th scope="col">#</th>
+                                                                <th scope="col">Category Name</th>
+                                                                <th scope="col">Created Date</th>
+                                                                <th scope="col" class="text-center">Actions</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {% for category in operation_categories %}
+                                                            <tr>
+                                                                <td>{{ forloop.counter }}</td>
+                                                                <td class="category-name">{{ category.name }}</td>
+                                                                <td>{{ category.created_at|date:"M d, Y" }}</td>
+                                                                <td class="text-center">
+                                                                    <div class="btn-group btn-group-sm" role="group">
+                                                                        <button class="btn btn-outline-primary edit-category" 
+                                                                                data-type="operation" 
+                                                                                data-id="{{ category.id }}"
+                                                                                data-name="{{ category.name }}"
+                                                                                title="Edit">
+                                                                            <i class="fas fa-edit"></i>
+                                                                        </button>
+                                                                        <button class="btn btn-outline-danger delete-category"
+                                                                                data-type="operation"
+                                                                                data-id="{{ category.id }}"
+                                                                                title="Delete">
+                                                                            <i class="fas fa-trash"></i>
+                                                                        </button>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                            {% empty %}
+                                                            <tr>
+                                                                <td colspan="4" class="text-center text-muted py-4">
+                                                                    <i class="fas fa-inbox fa-2x mb-2"></i><br>
+                                                                    No operation categories found
+                                                                </td>
+                                                            </tr>
+                                                            {% endfor %}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="col-md-4">
-                                        <div class="card">
-                                            <div class="card-header">
-                                                <h6>Event Categories</h6>
-                                            </div>
-                                            <div class="card-body">
-                                                <ul class="list-group">
-                                                    {% for category in event_categories %}
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                        {{ category.name }}
-                                                        <div>
-                                                            <button class="btn btn-sm btn-outline-primary edit-category" 
-                                                                    data-type="event" 
-                                                                    data-id="{{ category.id }}"
-                                                                    data-name="{{ category.name }}">
-                                                                Edit
-                                                            </button>
-                                                            <button class="btn btn-sm btn-outline-danger delete-category"
-                                                                    data-type="event"
-                                                                    data-id="{{ category.id }}">
-                                                                Delete
-                                                            </button>
-                                                        </div>
-                                                    </li>
-                                                    {% empty %}
-                                                    <li class="list-group-item text-center">No event categories found</li>
-                                                    {% endfor %}
-                                                </ul>
+                                            
+                                            <!-- Event Categories Tab -->
+                                            <div class="tab-pane fade" id="event-pane" role="tabpanel" aria-labelledby="event-tab">
+                                                <div class="table-responsive">
+                                                    <table class="table table-hover" id="eventTable">
+                                                        <thead class="table-light">
+                                                            <tr>
+                                                                <th scope="col">#</th>
+                                                                <th scope="col">Category Name</th>
+                                                                <th scope="col">Created Date</th>
+                                                                <th scope="col" class="text-center">Actions</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {% for category in event_categories %}
+                                                            <tr>
+                                                                <td>{{ forloop.counter }}</td>
+                                                                <td class="category-name">{{ category.name }}</td>
+                                                                <td>{{ category.created_at|date:"M d, Y" }}</td>
+                                                                <td class="text-center">
+                                                                    <div class="btn-group btn-group-sm" role="group">
+                                                                        <button class="btn btn-outline-primary edit-category" 
+                                                                                data-type="event" 
+                                                                                data-id="{{ category.id }}"
+                                                                                data-name="{{ category.name }}"
+                                                                                title="Edit">
+                                                                            <i class="fas fa-edit"></i>
+                                                                        </button>
+                                                                        <button class="btn btn-outline-danger delete-category"
+                                                                                data-type="event"
+                                                                                data-id="{{ category.id }}"
+                                                                                title="Delete">
+                                                                            <i class="fas fa-trash"></i>
+                                                                        </button>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                            {% empty %}
+                                                            <tr>
+                                                                <td colspan="4" class="text-center text-muted py-4">
+                                                                    <i class="fas fa-inbox fa-2x mb-2"></i><br>
+                                                                    No event categories found
+                                                                </td>
+                                                            </tr>
+                                                            {% endfor %}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -270,40 +344,141 @@
     </div>
 </div>
 
+<style>
+    .nav-tabs .nav-link {
+        border-bottom: 2px solid transparent;
+        color: #6c757d;
+    }
+    
+    .nav-tabs .nav-link.active {
+        border-bottom: 2px solid #0d6efd;
+        color: #0d6efd;
+        background-color: transparent;
+    }
+    
+    .table th {
+        font-weight: 600;
+        border-top: none;
+    }
+    
+    .btn-group-sm > .btn {
+        margin: 0 1px;
+    }
+    
+    .input-group-text {
+        background-color: #f8f9fa;
+        border-right: none;
+    }
+    
+    .form-control:focus {
+        border-left: 1px solid #86b7fe;
+    }
+    
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: rgba(0, 0, 0, 0.02);
+    }
+</style>
+
 <script>
-    $(document).ready(function() {
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize - show expense button by default since expense tab is active
+        document.getElementById('addExpenseBtn').classList.remove('d-none');
+        
+        // Tab switching functionality for action buttons
+        document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(function(tabButton) {
+            tabButton.addEventListener('shown.bs.tab', function(e) {
+                const target = e.target.getAttribute('data-bs-target');
+                
+                // Hide all add buttons
+                document.getElementById('addExpenseBtn').classList.add('d-none');
+                document.getElementById('addOperationBtn').classList.add('d-none');
+                document.getElementById('addEventBtn').classList.add('d-none');
+                
+                // Show appropriate button based on active tab
+                if (target === '#expense-pane') {
+                    document.getElementById('addExpenseBtn').classList.remove('d-none');
+                } else if (target === '#operation-pane') {
+                    document.getElementById('addOperationBtn').classList.remove('d-none');
+                } else if (target === '#event-pane') {
+                    document.getElementById('addEventBtn').classList.remove('d-none');
+                }
+            });
+        });
+        
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('keyup', function() {
+            const value = this.value.toLowerCase();
+            const activeTable = document.querySelector('.tab-pane.active table tbody');
+            
+            if (activeTable) {
+                const rows = activeTable.querySelectorAll('tr');
+                rows.forEach(function(row) {
+                    const categoryName = row.querySelector('.category-name');
+                    if (categoryName) {
+                        const text = categoryName.textContent.toLowerCase();
+                        if (text.indexOf(value) > -1) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    }
+                });
+            }
+        });
+        
+        // Clear search when switching tabs
+        document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(function(tabButton) {
+            tabButton.addEventListener('shown.bs.tab', function(e) {
+                document.getElementById('searchInput').value = '';
+                // Show all rows when switching tabs
+                document.querySelectorAll('.tab-pane table tbody tr').forEach(function(row) {
+                    row.style.display = '';
+                });
+            });
+        });
+        
         // Edit category button click handler
-        $('.edit-category').click(function() {
-            const categoryId = $(this).data('id');
-            const categoryName = $(this).data('name');
-            const categoryType = $(this).data('type');
-            
-            $('#editCategoryId').val(categoryId);
-            $('#editCategoryName').val(categoryName);
-            $('#editCategoryType').val(categoryType);
-            
-            // Set the form action based on the category type
-            const formAction = `{% url 'wallet:edit_category' %}?type=${categoryType}`;
-            $('#editCategoryForm').attr('action', formAction);
-            
-            $('#editCategoryModal').modal('show');
+        document.querySelectorAll('.edit-category').forEach(function(button) {
+            button.addEventListener('click', function() {
+                const categoryId = this.getAttribute('data-id');
+                const categoryName = this.getAttribute('data-name');
+                const categoryType = this.getAttribute('data-type');
+                
+                document.getElementById('editCategoryId').value = categoryId;
+                document.getElementById('editCategoryName').value = categoryName;
+                document.getElementById('editCategoryType').value = categoryType;
+                
+                // Set the form action based on the category type
+                const formAction = `{% url 'wallet:edit_category' %}?type=${categoryType}`;
+                document.getElementById('editCategoryForm').setAttribute('action', formAction);
+                
+                const editModal = new bootstrap.Modal(document.getElementById('editCategoryModal'));
+                editModal.show();
+            });
         });
         
         // Delete category button click handler
-        $('.delete-category').click(function() {
-            const categoryId = $(this).data('id');
-            const categoryType = $(this).data('type');
-            
-            $('#deleteCategoryId').val(categoryId);
-            $('#deleteCategoryType').val(categoryType);
-            
-            // Set the form action based on the category type
-            const formAction = `{% url 'wallet:delete_category' %}?type=${categoryType}`;
-            $('#deleteCategoryForm').attr('action', formAction);
-            
-            $('#confirmDeleteModal').modal('show');
+        document.querySelectorAll('.delete-category').forEach(function(button) {
+            button.addEventListener('click', function() {
+                const categoryId = this.getAttribute('data-id');
+                const categoryType = this.getAttribute('data-type');
+                
+                document.getElementById('deleteCategoryId').value = categoryId;
+                document.getElementById('deleteCategoryType').value = categoryType;
+                
+                // Set the form action based on the category type
+                const formAction = `{% url 'wallet:delete_category' %}?type=${categoryType}`;
+                document.getElementById('deleteCategoryForm').setAttribute('action', formAction);
+                
+                const deleteModal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
+                deleteModal.show();
+            });
         });
     });
 </script>
 {% endblock %}
-

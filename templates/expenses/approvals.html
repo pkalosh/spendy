@@ -48,7 +48,7 @@
                     <td>{{ expense.created_by.get_full_name }}</td>
                     <td>{{ expense.event.name }}</td>
                     <td>{{ expense.expense_category.name }}</td>
-                    <td>${{ expense.amount }}</td>
+                    <td>KSH: {{ expense.amount }}</td>
                     <td>{{ expense.description }}</td>
                     <td>{{ expense.event.location }}</td>
                     <td>
@@ -90,7 +90,7 @@
                   <tr>
                     <td>{{ expense.created_by.get_full_name }}</td>
                     <td>{{ expense.expense_category.name }}</td>
-                    <td>${{ expense.amount }}</td>
+                    <td>KSH: {{ expense.amount }}</td>
                     <td>{{ expense.description }}</td>
                     <td>
                       <form method="post" action="{% url 'expense:approve_expense' expense.id %}" class="d-inline-block approve-form">

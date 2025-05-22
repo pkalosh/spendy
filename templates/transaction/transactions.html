@@ -1,154 +1,179 @@
 {% extends "partials/dashboard-base.html" %}
 {% load static %}
 {% load humanize %}
-
 {% block content %}
-
+<!-- Pay Page - Wallet and Payment Transactions -->
 <section class="dashboard-section body-collapse">
     <div class="overlay pt-120">
         <div class="container-fluid">
             <div class="row">
-                <div class="col-xl-12 col-lg-12">
-                    <div class="section-content">
+                <div class="col-12">
+                    <!-- Wallets Section -->
+                    <div id="wallets" class="content-section mb-4">
+                        <div>
+                        <h5>Transactions</h5>
+                        <p>View all available transactions.</p>
+                    </div>                      
+                    </div>
 
-                        <div class="transactions-area">
-                            <div class="section-text d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h5>Transactions</h5>
-                                    <p>View all available transactions.</p>
-                                </div>
-                            </div>
-
-                            <div class="table-responsive mt-4">
-                                <table class="table">
-                                    <thead>
+                    <!-- Payment Transactions Section -->
+                    <div class="content-section mb-4">
+                        
+                        
+                        <div class="table-responsive d-none d-md-block">
+                            <table class="table table-bordered table-hover">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th>Transaction Code</th>
+                                        <th>Initiated By</th>
+                                        <th>Recipient</th>
+                                        <th>Amount</th>
+                                        <th>Type</th>
+                                        <th>Status</th>
+                                        <th>Date</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for txn in transactions %}
                                         <tr>
-                                            <th>Transaction ID</th>
-                                            <th>Company</th>
-                                            <th>Initiated By</th>
-                                            <th>Sender wallet</th>
-                                            <th>Receiver wallet</th>
-                                            <th>Amount</th>
-                                            <th>Transaction Type</th>
-                                            <th>Status</th>
-                                            <th>Date</th>
-                                            <th>Action</th>
+                                            <td>{{ txn.transaction_id }}</td>
+                                            <td>{{ txn.user.get_full_name|default:"-" }}</td>
+                                            <td>{{ txn.reciever.get_full_name|default:"-" }}</td>
+                                            <td>{{ txn.sender_wallet.currency|default:"" }} {{ txn.amount|floatformat:2|intcomma }}</td>
+                                            <td>{{ txn.transaction_type|title }}</td>
+                                            <td>
+                                                {% if txn.status == 'completed' %}
+                                                    <span class="badge bg-success">{{ txn.status|title }}</span>
+                                                {% elif txn.status == 'failed' or txn.status == 'cancelled' %}
+                                                    <span class="badge bg-danger">{{ txn.status|title }}</span>
+                                                {% else %}
+                                                    <span class="badge bg-warning">{{ txn.status|title }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ txn.date|date:"M d, Y H:i" }}</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#viewTransactionModal{{ txn.transaction_id }}">View</button>
+                                            </td>
                                         </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for txn in transactions %}
-                                            <tr>
-                                                <td>{{ txn.transaction_id }}</td>
-                                                <td>{{ txn.company.company_name|default:"-" }}</td>
-                                                <td>{{ txn.user.get_full_name|default:"-" }}</td>
-                                                <td>{{ txn.sender.get_full_name|default:"-" }}</td>
-                                                <td>{{ txn.reciever.get_full_name|default:"-" }}</td>
-                                                <td>{{ txn.sender_wallet.currency|default:"" }} {{ txn.amount|floatformat:2|intcomma }}</td>
-                                                <td>{{ txn.transaction_type|title }}</td>
-                                                <td>
-                                                    {% if txn.status == 'completed' %}
-                                                        <span class="badge bg-success">{{ txn.status|title }}</span>
-                                                    {% elif txn.status == 'failed' or txn.status == 'cancelled' %}
-                                                        <span class="badge bg-danger">{{ txn.status|title }}</span>
-                                                    {% else %}
-                                                        <span class="badge bg-warning">{{ txn.status|title }}</span>
-                                                    {% endif %}
-                                                </td>
-                                                <td>{{ txn.date|date:"M d, Y H:i" }}</td>
-                                                <td>
-                                                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#viewTransactionModal{{ txn.transaction_id }}">View</button>
-                                                </td>
-                                            </tr>
 
-                                            <!-- View Transaction Modal -->
-                                            <div class="modal fade" id="viewTransactionModal{{ txn.transaction_id }}" tabindex="-1" aria-labelledby="viewTransactionModalLabel{{ txn.transaction_id }}" aria-hidden="true">
-  
-                                                <div class="modal-dialog modal-lg" style="margin-top: 80px;">
-                                                  <div class="modal-content">
-                                              
-                                                    <div class="modal-header">
-                                                      <h5 class="modal-title" id="viewTransactionModalLabel{{ txn.transaction_id }}">Transaction Details</h5>
-                                                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        <!-- View Transaction Modal -->
+                                        <div class="modal fade" id="viewTransactionModal{{ txn.transaction_id }}" tabindex="-1" aria-labelledby="viewTransactionModalLabel{{ txn.transaction_id }}" aria-hidden="true">
+                                            <div class="modal-dialog modal-lg" style="margin-top: 80px;">
+                                              <div class="modal-content">
+                                                <div class="modal-header">
+                                                  <h5 class="modal-title" id="viewTransactionModalLabel{{ txn.transaction_id }}">Transaction Details</h5>
+                                                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                  <div class="row mb-3">
+                                                    <div class="col-md-6">
+                                                        <strong>Transaction ID:</strong> {{ txn.transaction_id }}
                                                     </div>
-                                              
-                                                    <div class="modal-body">
-                                                      <div class="modal-body">
-                                                        <div class="row mb-3">
-                                                            <div class="col-md-6">
-                                                                <strong>Transaction ID:</strong> {{ txn.transaction_id }}
-                                                            </div>
-                                                            <div class="col-md-6">
-                                                                <strong>Amount:</strong> {{ txn.amount }}
-                                                            </div>
-                                                        </div>
-                                            
-                                                        <div class="row mb-3">
-                                                            <div class="col-md-6">
-                                                                <strong>Sender:</strong> {{ txn.sender.get_full_name }}
-                                                            </div>
-                                                            <div class="col-md-6">
-                                                                <strong>Receiver:</strong> {{ txn.reciever.get_full_name }}
-                                                            </div>
-                                                        </div>
-                                            
-                                                        <div class="row mb-3">
-                                                            <div class="col-md-6">
-                                                                <strong>Sender Wallet:</strong> {{ txn.sender_wallet.wallet_id }}
-                                                            </div>
-                                                            <div class="col-md-6">
-                                                                <strong>Receiver Wallet:</strong> {{ txn.reciever_wallet.wallet_id }}
-                                                            </div>
-                                                        </div>
-                                            
-                                                        <div class="row mb-3">
-                                                            <div class="col-md-6">
-                                                                <strong>Status:</strong> {{ txn.status }}
-                                                            </div>
-                                                            <div class="col-md-6">
-                                                                <strong>Transaction Type:</strong> {{ txn.transaction_type }}
-                                                            </div>
-                                                        </div>
-                                            
-                                                        <div class="row mb-3">
-                                                            <div class="col-md-12">
-                                                                <strong>Description:</strong><br>
-                                                                {{ txn.description }}
-                                                            </div>
-                                                        </div>
-                                            
-                                                        <div class="row">
-                                                            <div class="col-md-6">
-                                                                <strong>Date Created:</strong> {{ txn.date|date:"Y-m-d H:i" }}
-                                                            </div>
-                                                            <div class="col-md-6">
-                                                                <strong>Last Updated:</strong> {{ txn.updated|date:"Y-m-d H:i" }}
-                                                            </div>
-                                                        </div>
+                                                    <div class="col-md-6">
+                                                        <strong>Amount:</strong> {{ txn.sender_wallet.currency|default:"" }} {{ txn.amount|floatformat:2|intcomma }}
                                                     </div>
+                                                  </div>
+                                                  <div class="row mb-3">
+                                                    <div class="col-md-6">
+                                                        <strong>Sender:</strong> {{ txn.sender.get_full_name }}
                                                     </div>
-                                                   
-                                              
+                                                    <div class="col-md-6">
+                                                        <strong>Receiver:</strong> {{ txn.reciever.get_full_name }}
+                                                    </div>
+                                                  </div>
+                                                  <div class="row mb-3">
+                                                    <div class="col-md-6">
+                                                        <strong>Sender Wallet:</strong> {{ txn.sender_wallet.wallet_id }}
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <strong>Receiver Wallet:</strong> {{ txn.reciever_wallet.wallet_id }}
+                                                    </div>
+                                                  </div>
+                                                  <div class="row mb-3">
+                                                    <div class="col-md-6">
+                                                        <strong>Status:</strong> {{ txn.status|title }}
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <strong>Transaction Type:</strong> {{ txn.transaction_type|title }}
+                                                    </div>
+                                                  </div>
+                                                  <div class="row mb-3">
+                                                    <div class="col-md-12">
+                                                        <strong>Description:</strong><br>
+                                                        {{ txn.description }}
+                                                    </div>
+                                                  </div>
+                                                  <div class="row">
+                                                    <div class="col-md-6">
+                                                        <strong>Date Created:</strong> {{ txn.date|date:"Y-m-d H:i" }}
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <strong>Last Updated:</strong> {{ txn.updated|date:"Y-m-d H:i" }}
+                                                    </div>
                                                   </div>
                                                 </div>
                                               </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
 
-                                        {% endfor %}
-
-                                        {% if not transactions %}
-                                            <tr>
-                                                <td colspan="11" class="text-center">No transactions available.</td>
-                                            </tr>
-                                        {% endif %}
-                                    </tbody>
-                                </table>
+                                    {% if not transactions %}
+                                        <tr>
+                                            <td colspan="10" class="text-center">No transactions available.</td>
+                                        </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Mobile-only transaction cards -->
+                        <div class="d-md-none">
+                            {% for txn in transactions %}
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h6 class="card-subtitle mb-2 text-muted">{{ txn.transaction_id }}</h6>
+                                    <p class="card-text">
+                                        <strong>Amount:</strong> {{ txn.sender_wallet.currency|default:"" }} {{ txn.amount|floatformat:2|intcomma }}<br>
+                                        <strong>From:</strong> {{ txn.sender.get_full_name }}<br>
+                                        <strong>To:</strong> {{ txn.reciever.get_full_name }}<br>
+                                        <strong>Type:</strong> {{ txn.transaction_type|title }}<br>
+                                        <strong>Status:</strong> 
+                                        {% if txn.status == 'completed' %}
+                                            <span class="badge bg-success">{{ txn.status|title }}</span>
+                                        {% elif txn.status == 'failed' or txn.status == 'cancelled' %}
+                                            <span class="badge bg-danger">{{ txn.status|title }}</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">{{ txn.status|title }}</span>
+                                        {% endif %}<br>
+                                        <strong>Date:</strong> {{ txn.date|date:"M d, Y" }}
+                                    </p>
+                                    <div class="d-flex">
+                                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#viewTransactionModal{{ txn.transaction_id }}">View Details</button>
+                                    </div>
+                                </div>
                             </div>
-
-                        </div> <!-- end transactions-area -->
-
+                            {% empty %}
+                            <div class="alert alert-info">No transactions available.</div>
+                            {% endfor %}
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </section>
-{% endblock content %}
+
+
+<style>
+  .hidden {
+    display: none;
+  }
+  .required:after {
+    content: " *";
+    color: red;
+  }
+</style>
+
+
+{% endblock %}
