@@ -67,7 +67,6 @@
                                                 <th>Date</th>
                                                 <th>Requested By</th>
                                                 <th>Reviewed By</th>
-                                                <th>Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -82,15 +81,7 @@
                                                 <td>{{ expense.created_at|date:"M d, Y" }}</td>
                                                 <td>{{ expense.created_by.get_full_name }}</td>
                                                 <td>-</td>
-                                                <td>
-                                                    <div class="btn-group" role="group">
-                                                        <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#viewRequestModal{{ expense.id }}">View</button>
-                                                        {% if is_admin %}
-                                                        <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#approveModal{{ expense.id }}">Approve</button>
-                                                        <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#declineModal{{ expense.id }}">Decline</button>
-                                                        {% endif %}
-                                                    </div>
-                                                </td>
+                                               
                                             </tr>
                                             {% endfor %}
 
@@ -105,11 +96,7 @@
                                                 <td>{{ expense.updated_at|date:"M d, Y" }}</td>
                                                 <td>{{ expense.created_by.get_full_name }}</td>
                                                 <td>{{ expense.approved_by.get_full_name }}</td>
-                                                <td>
-                                                    <div class="btn-group" role="group">
-                                                        <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#viewRequestModal{{ expense.id }}">View</button>
-                                                    </div>
-                                                </td>
+                                               
                                             </tr>
                                             {% endfor %}
 
@@ -124,12 +111,7 @@
                                                 <td>{{ expense.updated_at|date:"M d, Y" }}</td>
                                                 <td>{{ expense.created_by.get_full_name }}</td>
                                                 <td>{{ expense.approved_by.get_full_name }}</td>
-                                                <td>
-                                                    <div class="btn-group" role="group">
-                                                        <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#viewRequestModal{{ expense.id }}">View</button>
-                                                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#resubmitModal{{ expense.id }}">Resubmit</button>
-                                                    </div>
-                                                </td>
+                                                
                                             </tr>
                                             {% endfor %}
 
@@ -158,7 +140,6 @@
                                                 <th>Date</th>
                                                 <th>Requested By</th>
                                                 <th>Reviewed By</th>
-                                                <th>Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -174,15 +155,7 @@
                                                 <td>{{ expense.created_at|date:"M d, Y" }}</td>
                                                 <td>{{ expense.created_by.get_full_name }}</td>
                                                 <td>-</td>
-                                                <td>
-                                                    <div class="btn-group" role="group">
-                                                        <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#viewRequestModal{{ expense.id }}">View</button>
-                                                        {% if is_admin %}
-                                                        <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#approveModal{{ expense.id }}">Approve</button>
-                                                        <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#declineModal{{ expense.id }}">Decline</button>
-                                                        {% endif %}
-                                                    </div>
-                                                </td>
+                                               
                                             </tr>
                                             {% endif %}
                                             {% endfor %}
@@ -200,11 +173,7 @@
                                                 <td>{{ expense.updated_at|date:"M d, Y" }}</td>
                                                 <td>{{ expense.created_by.get_full_name }}</td>
                                                 <td>{{ expense.approved_by.get_full_name }}</td>
-                                                <td>
-                                                    <div class="btn-group" role="group">
-                                                        <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#viewRequestModal{{ expense.id }}">View</button>
-                                                    </div>
-                                                </td>
+                                                
                                             </tr>
                                             {% endif %}
                                             {% endfor %}
@@ -222,12 +191,7 @@
                                                 <td>{{ expense.updated_at|date:"M d, Y" }}</td>
                                                 <td>{{ expense.created_by.get_full_name }}</td>
                                                 <td>{{ expense.approved_by.get_full_name }}</td>
-                                                <td>
-                                                    <div class="btn-group" role="group">
-                                                        <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#viewRequestModal{{ expense.id }}">View</button>
-                                                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#resubmitModal{{ expense.id }}">Resubmit</button>
-                                                    </div>
-                                                </td>
+                                                
                                             </tr>
                                             {% endif %}
                                             {% endfor %}
@@ -257,7 +221,6 @@
                                                 <th>Date</th>
                                                 <th>Requested By</th>
                                                 <th>Reviewed By</th>
-                                                <th>Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -273,15 +236,7 @@
                                                 <td>{{ expense.created_at|date:"M d, Y" }}</td>
                                                 <td>{{ expense.created_by.get_full_name }}</td>
                                                 <td>-</td>
-                                                <td>
-                                                    <div class="btn-group" role="group">
-                                                        <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#viewRequestModal{{ expense.id }}">View</button>
-                                                        {% if is_admin %}
-                                                        <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#approveModal{{ expense.id }}">Approve</button>
-                                                        <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#declineModal{{ expense.id }}">Decline</button>
-                                                        {% endif %}
-                                                    </div>
-                                                </td>
+                                               
                                             </tr>
                                             {% endif %}
                                             {% endfor %}
@@ -299,11 +254,7 @@
                                                 <td>{{ expense.updated_at|date:"M d, Y" }}</td>
                                                 <td>{{ expense.created_by.get_full_name }}</td>
                                                 <td>{{ expense.approved_by.get_full_name }}</td>
-                                                <td>
-                                                    <div class="btn-group" role="group">
-                                                        <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#viewRequestModal{{ expense.id }}">View</button>
-                                                    </div>
-                                                </td>
+                                               
                                             </tr>
                                             {% endif %}
                                             {% endfor %}
@@ -321,12 +272,7 @@
                                                 <td>{{ expense.updated_at|date:"M d, Y" }}</td>
                                                 <td>{{ expense.created_by.get_full_name }}</td>
                                                 <td>{{ expense.approved_by.get_full_name }}</td>
-                                                <td>
-                                                    <div class="btn-group" role="group">
-                                                        <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#viewRequestModal{{ expense.id }}">View</button>
-                                                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#resubmitModal{{ expense.id }}">Resubmit</button>
-                                                    </div>
-                                                </td>
+                                               
                                             </tr>
                                             {% endif %}
                                             {% endfor %}
