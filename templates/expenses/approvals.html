@@ -23,6 +23,9 @@
           <li class="nav-item" role="presentation">
             <button class="nav-link" id="operation-tab" data-bs-toggle="tab" data-bs-target="#operation" type="button" role="tab">Operation Requests</button>
           </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab">Request History</button>
+          </li>
         </ul>
 
         <!-- Tabs Content -->
@@ -112,6 +115,43 @@
               </table>
             </div>
           </div>
+          <!-- Requests History Tab -->
+          <div class="tab-pane fade" id="history" role="tabpanel">
+            <div class="table-responsive">
+              <table class="table table-bordered table-striped">
+                <thead class="table-dark">
+                  <tr>
+                    <th>Requested By</th>
+                    <th>Reviewed By</th>
+                    <th>Expense Category</th>
+                    <th>Amount</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Decline Reason</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for expense in past_requests %}
+                  <tr>
+                    <td>{{ expense.created_by.get_full_name }}</td>
+                    <td>{{ expense.approved_by.get_full_name }}</td>
+                    <td>{{ expense.expense_category.name }}</td>
+                    <td>KSH: {{ expense.amount }}</td>
+                    <td>{{ expense.description }}</td>
+                    <td>{% if expense.approved %}Approved{% else %}Declined{% endif %}</td>
+                    <td>{% if expense.declined %}{{ expense.decline_reason }}{% else %}-{% endif %}</td>
+                   
+                  </tr>
+                  {% empty %}
+                  <tr>
+                    <td colspan="5" class="text-center">No History requests.</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>

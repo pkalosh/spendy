@@ -321,8 +321,8 @@ def expense_detail(request, id, item_type=None):
         }
         
         # Group expenses by category
-        expense_categories = expenses.values('expense_category').annotate(total=Sum('amount')).order_by('-total')
-        
+        expense_categories = expenses.filter(approved=True).values('expense_category').annotate(total=Sum('amount')).order_by('-total')
+      
         context = {
             'item': event,
             'item_type': 'event',
@@ -367,7 +367,8 @@ def expense_detail(request, id, item_type=None):
         }
         
         # Group expenses by category
-        expense_categories = expenses.values('expense_category').annotate(total=Sum('amount')).order_by('-total')
+        expense_categories = expenses.filter(approved=True).values('expense_category').annotate(total=Sum('amount')).order_by('-total')
+
         
         context = {
             'item': operation,
@@ -542,18 +543,22 @@ def approve_expense(request, expense_id):
     return redirect('expense:expense_detail', id=expense.id)
 
 
-
+@login_required
 def expense_approvals(request):
     # Event requests are those linked to an Event and not yet approved/declined
-    event_requests = Expense.objects.filter(event__isnull=False, approved=False, declined=False)
+    event_requests = Expense.objects.filter(event__isnull=False, approved=False, declined=False,company=request.user.companykyc)
 
     # Operation requests are those linked to an Operation and not yet approved/declined
-    operation_requests = Expense.objects.filter(operation__isnull=False, approved=False, declined=False)
+    operation_requests = Expense.objects.filter(operation__isnull=False, approved=False, declined=False,company=request.user.companykyc)
+    past_requests = Expense.objects.filter(company = request.user.companykyc).exclude(approved=False, declined=False).order_by('-created_at')
+    print(past_requests)
 
     context = {
         'event_requests': event_requests,
         'operation_requests': operation_requests,
+        'past_requests': past_requests,
     }
+    # print(context)
 
     return render(request, 'expenses/approvals.html', context)
 
@@ -628,16 +633,30 @@ def make_payment(request):
         if not all([expense_id, payment_method, amount]):
             messages.error(request, "All required fields must be filled.")
             return redirect('wallet:staff-dashboard')
+        
+        expense = get_object_or_404(Expense, id=expense_id)
 
+        if not expense.approved or expense.declined:
+            messages.error(request, 'Payment can only be made for approved expenses.')
+            return redirect('wallet:staff-dashboard')
+
+        # Convert and validate amount matches exactly
         try:
-            amount = Decimal(amount)
-            if amount <= 0:
+            input_amount = Decimal(amount)
+            if input_amount <= 0:
                 raise ValueError
         except (InvalidOperation, ValueError):
             messages.error(request, "Invalid amount provided.")
             return redirect('wallet:staff-dashboard')
 
-        expense = get_object_or_404(Expense, id=expense_id)
+        # Check exact match
+        if input_amount != expense.amount:
+            messages.error(request, f"Amount must match the approved expense amount of KES {expense.amount}.")
+            return redirect('wallet:staff-dashboard')
+
+        # Use only the validated expense.amount
+        amount = expense.amount
+
 
         if not expense.approved or expense.declined:
             messages.error(request, 'Payment can only be made for approved expenses.')
@@ -862,9 +881,15 @@ def analytics_data(request):
     # Optional: filter by date range
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
+    print(start_date, end_date)
+
 
     expenses = Expense.objects.filter(company=company)
+    # if start_date and end_date:
+    #     expenses = expenses.filter(created_at__range=[start_date, end_date])
     if start_date and end_date:
+        start_date = timezone.make_aware(datetime.strptime(start_date, "%Y-%m-%d"))
+        end_date = timezone.make_aware(datetime.strptime(end_date, "%Y-%m-%d")) + timezone.timedelta(days=1)
         expenses = expenses.filter(created_at__range=[start_date, end_date])
 
     # Trend chart data (12-monthly)

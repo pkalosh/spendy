@@ -3,8 +3,7 @@
 {% load humanize %}
 {% block content %}
 
-    <!-- Dashboard Section start -->
-<!-- Include Chart.js -->
+<!-- Dashboard Section start -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <section class="dashboard-section body-collapse">
@@ -20,9 +19,7 @@
                 <!-- Header -->
                 <div class="row mb-4">
                     <div class="col-12">
-                        <h4 class=" text-info mb-0">
-                                Expense Analytics
-                        </h4>
+                        <h4 class="text-info mb-0">Expense Analytics</h4>
                         <p class="text-muted">Visualize your spending patterns and trends</p>
                     </div>
                 </div>
@@ -38,16 +35,8 @@
                             <label class="form-label">End Date</label>
                             <input type="date" class="form-control" id="endDate">
                         </div>
-                        <div class="col-md-3 mt-4 pt-3">
-                            <label class="form-label">Category</label>
-                            <select class="form-select" id="categoryFilter">
-                                <option value="all">All Categories</option>
-                                <option value="events">Events</option>
-                                <option value="operations">Operations</option>
-                            </select>
-                        </div>
                         <div class="col-md-3 mt-4 pt-2">
-                            <button class="btn btn-primary mt-3" onclick="updateAnalytics()">
+                            <button class="btn btn-primary mt-3" id="filterChartsBtn">
                                 <i class="fas fa-sync-alt me-2"></i>Update Analytics
                             </button>
                             <button class="btn btn-outline-secondary mt-3 ms-2" onclick="exportData()">
@@ -86,13 +75,11 @@
                     </div>
                 </div>
 
-             
             </div>
         </div>
     </div>
 </section>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     let trendChart, pieChart;
 
@@ -160,10 +147,17 @@
             .catch(err => console.error('Error loading chart data:', err));
     }
 
-    // Load charts on page load
+    function updateAnalytics() {
+        const start = document.getElementById('startDate').value;
+        const end = document.getElementById('endDate').value;
+        fetchChartData(start, end);
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         fetchChartData();
+
+        document.getElementById('filterChartsBtn').addEventListener('click', updateAnalytics);
     });
 </script>
-    <!-- Transactions Popup start -->
-    {% endblock content %}
+
+{% endblock content %}
