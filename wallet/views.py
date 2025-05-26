@@ -265,52 +265,97 @@ def edit_wallet(request, wallet_id):
     return redirect('wallet:wallet')
 
 
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_http_methods
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
+from django.db.models import Q
+from django.db import transaction
+
+from .models import Wallet, Transaction
 
 @login_required
 @require_http_methods(["POST"])
 def delete_wallet(request, wallet_id):
     """
-    Simple delete wallet view (non-AJAX fallback)
+    Delete wallet view with balance transfer to PRIMARY wallet.
+    PRIMARY wallets cannot be deleted.
     """
     wallet = get_object_or_404(Wallet, id=wallet_id)
-    
+
+    # Prevent deletion of PRIMARY wallets
+    if wallet.wallet_type == 'PRIMARY':
+        messages.error(request, "PRIMARY wallets cannot be deleted.")
+        return redirect('wallet:wallet')
+
     # Optional: Add permission check
     if hasattr(wallet, 'user') and wallet.user != request.user:
         messages.error(request, "You don't have permission to delete this wallet.")
         return redirect('wallet:wallet')
-    
+
     try:
-        # Check for dependencies
-        transaction_count = Transaction.objects.filter(wallet=wallet).count()
-        # expense_count = Expense.objects.filter(wallet=wallet).count()
-        expense_count = 0  # Adjust based on your models
-        
-        if transaction_count > 0 or expense_count > 0 or wallet.balance > 0:
-            error_msg = []
-            if transaction_count > 0:
-                error_msg.append(f"{transaction_count} transaction(s)")
-            if expense_count > 0:
-                error_msg.append(f"{expense_count} expense(s)")
-            if wallet.balance > 0:
-                error_msg.append(f"balance of {wallet.currency} {wallet.balance}")
-            
-            messages.error(
-                request, 
-                f"Cannot delete wallet '{wallet.wallet_name}'. It still has {', '.join(error_msg)}."
-            )
-            return redirect('wallet:wallet')
-        
+        transaction_count = Transaction.objects.filter(
+            Q(sender_wallet=wallet) | Q(receiver_wallet=wallet)
+        ).count()
+
+        expense_count = 0  # Update this if using Expense model
+
         wallet_name = wallet.wallet_name
-        
+        balance_transfer_note = ""
+
         with transaction.atomic():
+            if wallet.balance > 0:
+                # Look for another PRIMARY wallet
+                primary_wallets = Wallet.objects.filter(user=request.user, wallet_type='PRIMARY')
+                
+                if not primary_wallets.exists():
+                    messages.error(request, "Cannot delete wallet with balance. No PRIMARY wallet found to transfer funds.")
+                    return redirect('wallet:wallet')
+                
+                # Prefer active wallet if multiple PRIMARY wallets exist
+                primary_wallet = primary_wallets.filter(is_active=True).first() or primary_wallets.first()
+                
+                # Perform balance transfer
+                primary_wallet.balance += wallet.balance
+                balance_transfer_note = f"Transferred {wallet.currency} {wallet.balance} to PRIMARY wallet '{primary_wallet.wallet_name}'."
+                primary_wallet.save()
+
+                # Log a transaction
+                Transaction.objects.create(
+                    user=request.user,
+                    sender_wallet=wallet,
+                    receiver_wallet=primary_wallet,
+                    amount=wallet.balance,
+                    company=wallet.company,
+                    status="completed",
+                    transaction_type="Transfer",
+                    description=f"Auto-transfer during deletion of wallet '{wallet.wallet_name}'."
+                )
+
+                wallet.balance = 0
+                wallet.save()
+
+            if transaction_count > 0 or expense_count > 0:
+                error_msg = []
+                if transaction_count > 0:
+                    error_msg.append(f"{transaction_count} transaction(s)")
+                if expense_count > 0:
+                    error_msg.append(f"{expense_count} expense(s)")
+
+                messages.error(
+                    request,
+                    f"Cannot delete wallet '{wallet.wallet_name}'. It still has {', '.join(error_msg)}."
+                )
+                return redirect('wallet:wallet')
+
             wallet.delete()
-        
-        messages.success(request, f'Wallet "{wallet_name}" has been deleted successfully.')
-        
+            messages.success(request, f'Wallet "{wallet_name}" has been deleted successfully. {balance_transfer_note}')
+
     except Exception as e:
         messages.error(request, f'Error deleting wallet: {str(e)}')
-    
+
     return redirect('wallet:wallet')
+
 
 
 # Helper function to get wallet dependencies (optional)
@@ -453,6 +498,7 @@ def fund_wallet(request):
         business_id = request.POST.get('business_id')  # e.g. mobile number
         amount_str = request.POST.get('amount')
         wallet_id = request.POST.get('wallet_id')
+        print(wallet_id)
 
         if not all([business_id, amount_str]):
             messages.error(request, "Mobile number and amount are required.")
@@ -467,7 +513,7 @@ def fund_wallet(request):
             return redirect('wallet:dashboard')
 
         # Fund the primary wallet
-        wallet = get_object_or_404(Wallet, id = wallet_id, company=request.user.companykyc)
+        wallet = get_object_or_404(Wallet, id = int(wallet_id), company=request.user.companykyc)
         # Simulate MPESA funding success
         wallet.balance += amount
         wallet.save()

@@ -127,6 +127,8 @@
                                   </h5>
                                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                               </div>
+                              <form id="deleteWalletForm" method="post" action="{% url 'wallet:delete_wallet' wallet.id %}">
+                                {% csrf_token %}
                               <div class="modal-body">
                                   <!-- Wallet Details Display -->
                                   <div class="card p-2 mb-4">
@@ -157,48 +159,70 @@
                               </div>
                               <div class="modal-footer border-0">
                                   <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                  <button type="button" class="btn btn-danger" id="confirmDeleteBtn"  onclick="deleteWallet()">
+                                  <button class="btn btn-danger" id="confirmDeleteBtn" type="submit" >
                                       <i class="fas fa-trash me-1"></i>Delete Wallet
                                   </button>
                               </div>
+                              </form>
                           </div>
                       </div>
                     </div>
 
 
-                    <div class="modal fade" id="fundWalletModal{{wallet.id}}" tabindex="-1" aria-labelledby="fundWalletModalLabel{{wallet.id}}" aria-hidden="true">
-                      <div class="modal-dialog">
-                          <form method="POST" action="">
-                              {% csrf_token %}
-                              <div class="modal-content">
-                                  <div class="modal-header">
-                                      <h5 class="modal-title" id="fundWalletModalLabel">Fund Wallet Via Mpesa</h5>
-                                      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                  </div>
-                                  <div class="modal-body">
-                                      <div class="col-md-6 mb-3">
-                                          <label class="form-label">Wallet</label>
-                                          <input type="text" name="wallet_id" class="form-control" required>
-
-                                      </div><br>
-                                      <div class="mb-3">
-                                          <label class="form-label">Mobile Number</label>
-                                          <input type="text" name="business_id" class="form-control" required>
-                                      </div>
-                                      <div class="mb-3">
-                                          <label class="form-label">Amount</label>
-                                          <input type="number" name="amount" class="form-control" required min="1">
-                                      </div>
-                                  </div>
-                                  <div class="modal-footer">
-                                      <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                      <button type="submit" class="btn btn-primary">Fund</button>
-                                  </div>
-                              </div>
-                          </form>
+ <!-- Fund Wallet Modal -->
+<div class="modal fade" id="fundWalletModal{{wallet.id}}" tabindex="-1" aria-labelledby="fundWalletModalLabel{{wallet.id}}" aria-hidden="true">
+  <div class="modal-dialog">
+      <form method="POST" action="{% url 'wallet:fund-wallet' %}" id="fundWalletForm">
+          {% csrf_token %}
+          <div class="modal-content">
+              <div class="modal-header">
+                  <h5 class="modal-title" id="fundWalletModalLabel{{wallet.id}}">Fund Wallet Via M-Pesa</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                  <!-- Wallet Details Display -->
+                  <div class="alert alert-light border">
+                      <h6 class="fw-bold mb-2">Wallet Details</h6>
+                      <div class="row">
+                          <div class="col-6">
+                              <small class="text-muted">Wallet Name:</small>
+                              <div id="displayWalletName" class="fw-semibold">-</div>
+                          </div>
+                          <div class="col-6">
+                              <small class="text-muted">Current Balance:</small>
+                              <div id="displayWalletBalance" class="fw-semibold text-success">-</div>
+                          </div>
                       </div>
-                    </div>
-                                        
+                  </div>
+
+                  <!-- Hidden wallet ID field -->
+                  <input type="hidden" name="wallet_id" id="fundWalletId" value="{{wallet.id}}">
+
+                  <!-- Mobile Number -->
+                  <div class="mb-3">
+                      <label class="form-label">Mobile Number</label>
+                      <input type="text" name="business_id" class="form-control" placeholder="Enter M-Pesa mobile number" required>
+                      <small class="text-muted">Enter your M-Pesa registered mobile number</small>
+                  </div>
+
+                  <!-- Amount -->
+                  <div class="mb-3">
+                      <label class="form-label">Amount</label>
+                      <input type="number" name="amount" class="form-control" placeholder="Enter amount" required min="1" step="0.01">
+                      <small class="text-muted">Minimum amount: KES 1</small>
+                  </div>
+
+              </div>
+              <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                  <button type="submit" class="btn btn-primary">Fund</button>
+              </div>
+          </div>
+      </form>
+  </div>
+</div>
+
+                          
                                                          
                       {% empty %}
                       <div class="col-12 text-center">
@@ -270,7 +294,27 @@
 </section>
 
 
+<script>
+  // Function to open fund modal with wallet details
+  function openFundModal(walletId, walletName, walletCurrency, walletBalance) {
+    // Set wallet details in the modal
+    document.getElementById('fundWalletId').value = walletId;
+    document.getElementById('displayWalletName').textContent = walletName;
+    document.getElementById('displayWalletBalance').textContent = walletCurrency + ' ' + parseFloat(walletBalance).toFixed(2);
+    
+    // Show the modal
+    const modal = new bootstrap.Modal(document.getElementById('fundWalletModal'));
+    modal.show();
+  }
   
+  // Reset form when modal is closed
+  document.getElementById('fundWalletModal').addEventListener('hidden.bs.modal', function() {
+    document.getElementById('fundWalletForm').reset();
+    document.getElementById('displayWalletName').textContent = '-';
+    document.getElementById('displayWalletBalance').textContent = '-';
+  });
+  </script>
+                
   <script>
     function handleSendTypeChange() {
         const sendType = document.getElementById('sendType').value;
