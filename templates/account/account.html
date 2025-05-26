@@ -2,114 +2,272 @@
 {% load static %}
 
 {% block content %}
-<!-- Dashboard Section start -->
 <section class="dashboard-section body-collapse">
-    <div class="overlay pt-120">
-        <div class="container-fluid">
-            <div class="main-content">
-                <div class="row">
-                  <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
-                    <div>
-                        <h5 class="mb-0">{{ kyc.company_name|title }} Wallets</h5>
-                        <p class="mb-0">View and manage your wallets, balances, and transactions.</p>
-                    </div>
-                    <div class="d-flex gap-2 mt-2 mt-md-0">
-                      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newWalletModal">+ New Wallet</button>
-                      
-                      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#sendModal">Wallet Transfer</button>
-                      <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#fundWalletModal">Fund Wallet</button>
+  <div class="overlay pt-120">
+      <div class="container-fluid">
+          <div class="main-content">
+              <div class="row">
+                <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
+                  <div>
+                      <h5 class="mb-0">{{ kyc.company_name|title }} Wallets</h5>
+                      <p class="mb-0">View and manage your wallets, balances, and transactions.</p>
                   </div>
+                  <div class="d-flex gap-2 mt-2 mt-md-0">
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newWalletModal">+ New Wallet</button>
+                    
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#sendModal">Wallet Transfer</button>
+                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#fundWalletModal">Fund Wallet</button>
                 </div>
-                
-                        {% for wallet in wallets %}
-                        <div class="col-md-3 mb-4">
-                          <div class="card h-100 shadow-sm rounded-3 border-0">
-                              <div class="card-body d-flex flex-column justify-content-between text-center">
-                                  <!-- Wallet Icon (Optional) -->
-                                  <div class="mb-3">
-                                      <i class="fas fa-wallet fa-2x text-primary"></i>
-                                  </div>
-                      
-                                  <!-- Wallet Name -->
-                                  <h6 class="fw-bold text-uppercase text-muted mb-1">{{ wallet.wallet_name }}</h6>
-                      
-                                  <!-- Wallet Balance -->
-                                  <p class="fs-5 fw-semibold text-dark mb-0">{{ wallet.currency }} {{ wallet.balance|floatformat:2 }}</p>
-                              </div>
-                          </div>
-                      </div>
-                      
-                      
-                                                           
-                        {% empty %}
-                        <div class="col-12 text-center">
-                            <p>No wallets available.</p>
-                        </div>
-                        {% endfor %}
-                  
+              </div>
+              
+                      {% for wallet in wallets %}
+                      <div class="col-md-3 mb-4">
+                        <div class="card h-100 shadow-sm rounded-3 border-0">
+                            <div class="card-body d-flex flex-column justify-content-between text-center position-relative">
+                                <!-- Dropdown Menu -->
+                                <div class="dropdown position-absolute" style="top: 10px; right: 10px;">
+                                    <button class="btn btn-link p-0 text-muted" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li>
+                                            <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editWalletModal{{wallet.id}}"> 
+                                             
+                                                <i class="fas fa-edit me-2"></i>Edit
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#fundWalletModal{{wallet.id}}" data-wallet-id="{{ wallet.id  }}">
+                                                <i class="fas fa-plus-circle me-2"></i>Fund
+                                            </a>
+                                        </li>
+                                        <li>
+                                          <a class="dropdown-item text-danger delete-wallet-btn" href="#" 
+                                             data-bs-toggle="modal" 
+                                             data-bs-target="#deleteWalletModal{{wallet.id}}">
+                                              <i class="fas fa-minus-circle me-2"></i>Delete
+                                          </a>
+                                      </li>
+                                    </ul>
+                                </div>
 
-                    <!-- Recent Payments -->
-                    <div class="col-12 mb-4">
-                        <div class="bg-white rounded-3 p-4 shadow-sm">
-                            <div class="d-flex justify-content-between align-items-center mb-4">
-                                <h5 class="mb-0">Payments</h5>
-                                <a href="" class="btn btn-sm btn-primary">View More</a>
-                            </div>
-                            <div class="table-responsive">
-                                <table class="table align-middle">
-                                    <thead>
-                                        <tr>
-                                            <th>Recipient</th>
-                                            <th>Date</th>
-                                            <th>Account Number</th>
-                                            <th>Reference</th>
-                                            <th>Amount</th>
-                                            <th>Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for transaction in transactions %}
-                                        <tr>
-                                            <td>
-                                                <div class="d-flex align-items-center">
-                                                    <i class="fa fa-arrow-right text-danger me-2"></i>
-                                                    <div>
-                                                        <p class="mb-0">{{ transaction.company }}</p>
-                                                        <small class="text-muted">{{ transaction.transaction_type }}</small>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                {{ transaction.date|date:"d M Y" }}<br>
-                                                <small class="text-muted">{{ transaction.time }}</small>
-                                            </td>
-                                            <td>{{ transaction.account_number }}</td>
-                                            <td>{{ transaction.transaction_id }}</td>
-                                            <td>KES {{ transaction.amount|floatformat:2 }}</td>
-                                            <td>
-                                                <span class="badge {% if transaction.status == 'completed' %}bg-success{% else %}bg-warning{% endif %}">
-                                                    {{ transaction.status }}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                        {% empty %}
-                                        <tr>
-                                            <td colspan="6" class="text-center">No recent transactions</td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
+                                <!-- Wallet Icon (Optional) -->
+                                <div class="mb-3">
+                                    <i class="fas fa-wallet fa-2x text-primary"></i>
+                                </div>
+                    
+                                <!-- Wallet Name -->
+                                <h6 class="fw-bold text-uppercase text-muted mb-1">{{ wallet.wallet_name }}</h6>
+                    
+                                <!-- Wallet Balance -->
+                                <p class="fs-5 fw-semibold text-dark mb-0">{{ wallet.currency }} {{ wallet.balance|floatformat:2 }}</p>
                             </div>
                         </div>
                     </div>
                     
 
-                </div> <!-- Row End -->
-            </div> <!-- Main Content End -->
-        </div> <!-- Container End -->
-    </div> <!-- Overlay End -->
+
+                    <!-- Edit Wallet Modal -->
+                    <div class="modal fade" id="editWalletModal{{wallet.id}}" tabindex="-1" aria-labelledby="editWalletModalLabel{{wallet.id}}" aria-hidden="true">
+                      <div class="modal-dialog">
+                          <div class="modal-content">
+                              <div class="modal-header">
+                                  <h5 class="modal-title" id="editWalletModalLabel{{wallet.id}}">Edit Wallet</h5>
+                                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                              </div>
+                              <form id="editWalletForm" method="post">
+                                  <div class="modal-body">
+                                      {% csrf_token %}
+                                      <input type="hidden" id="editWalletId" name="wallet_id">
+                                      
+                                      <div class="mb-3">
+                                          <label for="editWalletName" class="form-label">Wallet Name</label>
+                                          <input type="text" class="form-control" id="editWalletName" name="wallet_name" value="{{ wallet.wallet_name }}" required>
+                                      </div>
+                                      
+                                      <div class="mb-3">
+                                          <label for="editCompany" class="form-label">Company</label>
+                                          <input type="text" class="form-control" id="editCompany" name="company" value="{{ wallet.company.company_name }}" disabled required>
+                                              <!-- Options will be populated by JavaScript -->
+                                          </select>
+                                      </div>
+                                      
+                                      <div class="mb-3">
+                                          <label for="editWalletType" class="form-label">Wallet Type</label>
+                                          <select class="form-control" class="form-control" id="editWalletType" name="wallet_type" value="{{ wallet.wallet_type }}" required>
+                                              <!-- Options will be populated by JavaScript -->
+                                      </div>
+                                      
+                                      <div class="mb-3">
+                                          <label for="editCurrency" class="form-label">Currency</label>
+                                          <input type="text" class="form-control" id="editCurrency" name="currency" value="{{ wallet.currency }}" required>
+                                              <!-- Options will be populated by JavaScript -->
+                                      </div>
+                                      
+                                      <div class="mb-3">
+                                          <label for="editBalance" class="form-label">Balance</label>
+                                          <input type="number" class="form-control" id="editBalance" name="balance" step="0.01" min="0" value="{{ wallet.balance }}" required>
+                                      </div>
+                                  </div>
+                                  <div class="modal-footer">
+                                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                      <button type="submit" class="btn btn-primary">Update Wallet</button>
+                                  </div>
+                              </form>
+                          </div>
+                      </div>
+                    </div>
+                    <!-- Delete Wallet Modal -->
+                    <div class="modal fade" id="deleteWalletModal{{wallet.id}}" tabindex="-1" aria-labelledby="deleteWalletModalLabel{{wallet.id}}" aria-hidden="true">
+                      <div class="modal-dialog modal-dialog-centered">
+                          <div class="modal-content">
+                              <div class="modal-header border-0">
+                                  <h5 class="modal-title text-danger" id="deleteWalletModalLabel{{wallet.id}}">
+                                      <i class="fas fa-exclamation-triangle me-2"></i>Delete Wallet
+                                  </h5>
+                                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                              </div>
+                              <div class="modal-body">
+                                  <!-- Wallet Details Display -->
+                                  <div class="card p-2 mb-4">
+                                      <h6 class="mb-3"><strong>Wallet Details:</strong></h6>
+                                      <div class="row">
+                                          <div class="col-6">
+                                              <small class="text-muted">Wallet Name:</small>
+                                              <p class="mb-2" id="delete-wallet-name">{{wallet.wallet_name}}</p>
+                                          </div>
+                                          <div class="col-6">
+                                              <small class="text-muted">Company:</small>
+                                              <p class="mb-2" id="delete-company-name">{{wallet.company.company_name}}</p>
+                                          </div>
+                                          <div class="col-6">
+                                              <small class="text-muted">Type:</small>
+                                              <p class="mb-2" id="delete-wallet-type">{{wallet.wallet_type}}</p>
+                                          </div>
+                                          <div class="col-6">
+                                              <small class="text-muted">Balance:</small>
+                                              <p class="mb-0" id="delete-wallet-balance">{{wallet.balance}}</p>
+                                          </div>
+                                      </div>
+                                  </div>
+
+                      
+
+                                
+                              </div>
+                              <div class="modal-footer border-0">
+                                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                  <button type="button" class="btn btn-danger" id="confirmDeleteBtn"  onclick="deleteWallet()">
+                                      <i class="fas fa-trash me-1"></i>Delete Wallet
+                                  </button>
+                              </div>
+                          </div>
+                      </div>
+                    </div>
+
+
+                    <div class="modal fade" id="fundWalletModal{{wallet.id}}" tabindex="-1" aria-labelledby="fundWalletModalLabel{{wallet.id}}" aria-hidden="true">
+                      <div class="modal-dialog">
+                          <form method="POST" action="">
+                              {% csrf_token %}
+                              <div class="modal-content">
+                                  <div class="modal-header">
+                                      <h5 class="modal-title" id="fundWalletModalLabel">Fund Wallet Via Mpesa</h5>
+                                      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                  </div>
+                                  <div class="modal-body">
+                                      <div class="col-md-6 mb-3">
+                                          <label class="form-label">Wallet</label>
+                                          <input type="text" name="wallet_id" class="form-control" required>
+
+                                      </div><br>
+                                      <div class="mb-3">
+                                          <label class="form-label">Mobile Number</label>
+                                          <input type="text" name="business_id" class="form-control" required>
+                                      </div>
+                                      <div class="mb-3">
+                                          <label class="form-label">Amount</label>
+                                          <input type="number" name="amount" class="form-control" required min="1">
+                                      </div>
+                                  </div>
+                                  <div class="modal-footer">
+                                      <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                      <button type="submit" class="btn btn-primary">Fund</button>
+                                  </div>
+                              </div>
+                          </form>
+                      </div>
+                    </div>
+                                        
+                                                         
+                      {% empty %}
+                      <div class="col-12 text-center">
+                          <p>No wallets available.</p>
+                      </div>
+                      {% endfor %}
+                
+
+                  <!-- Recent Payments -->
+                  <div class="col-12 mb-4">
+                      <div class="bg-white rounded-3 p-4 shadow-sm">
+                          <div class="d-flex justify-content-between align-items-center mb-4">
+                              <h5 class="mb-0">Payments</h5>
+                              <a href="" class="btn btn-sm btn-primary">View More</a>
+                          </div>
+                          <div class="table-responsive">
+                              <table class="table align-middle">
+                                  <thead>
+                                      <tr>
+                                          <th>Recipient</th>
+                                          <th>Date</th>
+                                          <th>Account Number</th>
+                                          <th>Reference</th>
+                                          <th>Amount</th>
+                                          <th>Status</th>
+                                      </tr>
+                                  </thead>
+                                  <tbody>
+                                      {% for transaction in transactions %}
+                                      <tr>
+                                          <td>
+                                              <div class="d-flex align-items-center">
+                                                  <i class="fa fa-arrow-right text-danger me-2"></i>
+                                                  <div>
+                                                      <p class="mb-0">{{ transaction.company }}</p>
+                                                      <small class="text-muted">{{ transaction.transaction_type }}</small>
+                                                  </div>
+                                              </div>
+                                          </td>
+                                          <td>
+                                              {{ transaction.date|date:"d M Y" }}<br>
+                                              <small class="text-muted">{{ transaction.time }}</small>
+                                          </td>
+                                          <td>{{ transaction.account_number }}</td>
+                                          <td>{{ transaction.transaction_id }}</td>
+                                          <td>KES {{ transaction.amount|floatformat:2 }}</td>
+                                          <td>
+                                              <span class="badge {% if transaction.status == 'completed' %}bg-success{% else %}bg-warning{% endif %}">
+                                                  {{ transaction.status }}
+                                              </span>
+                                          </td>
+                                      </tr>
+                                      {% empty %}
+                                      <tr>
+                                          <td colspan="6" class="text-center">No recent transactions</td>
+                                      </tr>
+                                      {% endfor %}
+                                  </tbody>
+                              </table>
+                          </div>
+                      </div>
+                  </div>
+                  
+
+              </div> <!-- Row End -->
+          </div> <!-- Main Content End -->
+      </div> <!-- Container End -->
+  </div> <!-- Overlay End -->
 </section>
-<!-- Dashboard Section end -->
 
 
   

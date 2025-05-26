@@ -10,7 +10,8 @@ urlpatterns = [
     path("wallet/create", views.create_wallet, name="create-wallet"),
     path("wallet/transfer", views.wallet_transfer, name="wallet-transfer"),
     path("wallet/fund", views.fund_wallet, name="fund-wallet"),
-
+    path('wallet/edit/<int:wallet_id>/', views.edit_wallet, name='edit_wallet'),
+    path('wallets/<int:wallet_id>/delete/', views.delete_wallet, name='delete_wallet'),
     path("staff-dashboard/", views.staff_dashboard, name="staff-dashboard"),
     path("kyc-reg/", views.kyc_registration, name="kyc-reg"),
     path("expenses/", views.expenses, name="expenses"),

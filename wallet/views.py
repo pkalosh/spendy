@@ -14,6 +14,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.views.decorators.http import require_http_methods
 from django.db.models import Q
 from django.utils.html import escape
+from django.http import JsonResponse
+from django.db import transaction
 def is_admin(user):
     return user.is_authenticated and user.is_admin
 
@@ -238,6 +240,125 @@ def delete_staff_profile(request, pk):
 
 
 
+@login_required  # Remove if you don't need authentication
+def edit_wallet(request, wallet_id):
+    """
+    Edit an existing wallet
+    """
+    wallet = get_object_or_404(Wallet, id=wallet_id)
+    
+    # Optional: Add permission check
+    # if wallet.user != request.user:  # Assuming wallet has a user field
+    #     messages.error(request, "You don't have permission to edit this wallet.")
+    #     return redirect('wallet_list')  # Redirect to appropriate view
+    
+    if request.method == 'POST':
+        form = WalletForm(request.POST, instance=wallet)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Wallet "{wallet.wallet_name}" has been updated successfully!')
+            return redirect('wallet_detail', wallet_id=wallet.id)  # Adjust redirect as needed
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = WalletForm(instance=wallet)
+    return redirect('wallet:wallet')
+
+
+
+@login_required
+@require_http_methods(["POST"])
+def delete_wallet(request, wallet_id):
+    """
+    Simple delete wallet view (non-AJAX fallback)
+    """
+    wallet = get_object_or_404(Wallet, id=wallet_id)
+    
+    # Optional: Add permission check
+    if hasattr(wallet, 'user') and wallet.user != request.user:
+        messages.error(request, "You don't have permission to delete this wallet.")
+        return redirect('wallet:wallet')
+    
+    try:
+        # Check for dependencies
+        transaction_count = Transaction.objects.filter(wallet=wallet).count()
+        # expense_count = Expense.objects.filter(wallet=wallet).count()
+        expense_count = 0  # Adjust based on your models
+        
+        if transaction_count > 0 or expense_count > 0 or wallet.balance > 0:
+            error_msg = []
+            if transaction_count > 0:
+                error_msg.append(f"{transaction_count} transaction(s)")
+            if expense_count > 0:
+                error_msg.append(f"{expense_count} expense(s)")
+            if wallet.balance > 0:
+                error_msg.append(f"balance of {wallet.currency} {wallet.balance}")
+            
+            messages.error(
+                request, 
+                f"Cannot delete wallet '{wallet.wallet_name}'. It still has {', '.join(error_msg)}."
+            )
+            return redirect('wallet:wallet')
+        
+        wallet_name = wallet.wallet_name
+        
+        with transaction.atomic():
+            wallet.delete()
+        
+        messages.success(request, f'Wallet "{wallet_name}" has been deleted successfully.')
+        
+    except Exception as e:
+        messages.error(request, f'Error deleting wallet: {str(e)}')
+    
+    return redirect('wallet:wallet')
+
+
+# Helper function to get wallet dependencies (optional)
+def get_wallet_dependencies(wallet):
+    """
+    Get all dependencies for a wallet
+    Returns a dictionary with counts and details
+    """
+    dependencies = {
+        'transactions': [],
+        'expenses': [],
+        'can_delete': True,
+        'reasons': []
+    }
+    
+    try:
+        # Get related transactions
+        transactions = Transaction.objects.filter(wallet=wallet)
+        dependencies['transactions'] = list(transactions.values(
+            'id', 'amount', 'date', 'description'
+        ))
+        
+        # Get related expenses (adjust based on your model)
+        # expenses = Expense.objects.filter(wallet=wallet)
+        # dependencies['expenses'] = list(expenses.values(
+        #     'id', 'amount', 'date', 'description'
+        # ))
+        
+        # Check balance
+        if wallet.balance > 0:
+            dependencies['reasons'].append(f"Wallet has balance: {wallet.currency} {wallet.balance}")
+            dependencies['can_delete'] = False
+        
+        # Check transactions
+        if len(dependencies['transactions']) > 0:
+            dependencies['reasons'].append(f"Wallet has {len(dependencies['transactions'])} transaction(s)")
+            dependencies['can_delete'] = False
+        
+        # Check expenses
+        if len(dependencies['expenses']) > 0:
+            dependencies['reasons'].append(f"Wallet has {len(dependencies['expenses'])} expense(s)")
+            dependencies['can_delete'] = False
+        
+    except Exception as e:
+        dependencies['can_delete'] = False
+        dependencies['reasons'].append(f"Error checking dependencies: {str(e)}")
+    
+    return dependencies
 
 
 @login_required
