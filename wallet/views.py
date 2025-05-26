@@ -16,6 +16,10 @@ from django.db.models import Q
 from django.utils.html import escape
 from django.http import JsonResponse
 from django.db import transaction
+
+
+
+from .models import Wallet, Transaction
 def is_admin(user):
     return user.is_authenticated and user.is_admin
 
@@ -240,39 +244,51 @@ def delete_staff_profile(request, pk):
 
 
 
-@login_required  # Remove if you don't need authentication
+
+@login_required
 def edit_wallet(request, wallet_id):
     """
-    Edit an existing wallet
+    Handle wallet editing without using Django forms.
+    Only wallet_name and wallet_type are editable.
     """
     wallet = get_object_or_404(Wallet, id=wallet_id)
-    
-    # Optional: Add permission check
-    # if wallet.user != request.user:  # Assuming wallet has a user field
-    #     messages.error(request, "You don't have permission to edit this wallet.")
-    #     return redirect('wallet_list')  # Redirect to appropriate view
-    
+
+    # Prevent editing of PRIMARY wallets
+    if wallet.wallet_type == 'PRIMARY':
+        messages.error(request, "PRIMARY wallets cannot be edited.")
+        return redirect('wallet:wallet')
+
+    # Permission check
+    if wallet.user != request.user:
+        messages.error(request, "You don't have permission to edit this wallet.")
+        return redirect('wallet:wallet')
+
     if request.method == 'POST':
-        form = WalletForm(request.POST, instance=wallet)
-        if form.is_valid():
-            form.save()
-            messages.success(request, f'Wallet "{wallet.wallet_name}" has been updated successfully!')
-            return redirect('wallet_detail', wallet_id=wallet.id)  # Adjust redirect as needed
-        else:
-            messages.error(request, 'Please correct the errors below.')
+        wallet_name = request.POST.get('wallet_name', '').strip()
+        wallet_type = request.POST.get('wallet_type', '').strip().upper()
+
+        # Validate allowed wallet types
+        ALLOWED_TYPES = ['EVENT', 'OPERATIONS', 'EMERGENCY']
+        if wallet_type not in ALLOWED_TYPES:
+            messages.error(request, f"Invalid wallet type selected: {wallet_type}")
+            return redirect('wallet:wallet')
+
+        # Ensure name is not empty
+        if not wallet_name:
+            messages.error(request, "Wallet name cannot be empty.")
+            return redirect('wallet:wallet')
+
+        # Save changes
+        wallet.wallet_name = wallet_name
+        wallet.wallet_type = wallet_type
+        wallet.save()
+
+        messages.success(request, f'Wallet "{wallet_name}" has been updated successfully.')
+
+        return redirect('wallet:wallet')
     else:
-        form = WalletForm(instance=wallet)
-    return redirect('wallet:wallet')
-
-
-from django.contrib.auth.decorators import login_required
-from django.views.decorators.http import require_http_methods
-from django.shortcuts import get_object_or_404, redirect
-from django.contrib import messages
-from django.db.models import Q
-from django.db import transaction
-
-from .models import Wallet, Transaction
+        messages.error(request, "Invalid request method.")
+        return redirect('wallet:wallet')
 
 @login_required
 @require_http_methods(["POST"])
@@ -333,6 +349,7 @@ def delete_wallet(request, wallet_id):
                 )
 
                 wallet.balance = 0
+                wallet.is_active = False
                 wallet.save()
 
             if transaction_count > 0 or expense_count > 0:
@@ -549,8 +566,8 @@ def wallet(request):
                 messages.warning(request, "Your KYC is incomplete. Please fill all required fields.")
                 return redirect("wallet:kyc-reg")
                 
-            wallets = Wallet.objects.filter(user=request.user)
-            primary_wallet  = Wallet.objects.get(user=request.user,wallet_type = "PRIMARY")
+            wallets = Wallet.objects.filter(user=request.user,is_active=True,company=kyc)
+            primary_wallet  = Wallet.objects.get(user=request.user,wallet_type = "PRIMARY",company=kyc)
             print(primary_wallet)
             recent_txns = Transaction.objects.filter(company= kyc)
             print(recent_txns)

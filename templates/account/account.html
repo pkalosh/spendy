@@ -68,55 +68,47 @@
 
 
                     <!-- Edit Wallet Modal -->
-                    <div class="modal fade" id="editWalletModal{{wallet.id}}" tabindex="-1" aria-labelledby="editWalletModalLabel{{wallet.id}}" aria-hidden="true">
+                    <div class="modal fade" id="editWalletModal{{ wallet.id }}" tabindex="-1" aria-labelledby="editWalletModalLabel{{ wallet.id }}" aria-hidden="true">
                       <div class="modal-dialog">
-                          <div class="modal-content">
-                              <div class="modal-header">
-                                  <h5 class="modal-title" id="editWalletModalLabel{{wallet.id}}">Edit Wallet</h5>
-                                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                              </div>
-                              <form id="editWalletForm" method="post">
-                                  <div class="modal-body">
-                                      {% csrf_token %}
-                                      <input type="hidden" id="editWalletId" name="wallet_id">
-                                      
-                                      <div class="mb-3">
-                                          <label for="editWalletName" class="form-label">Wallet Name</label>
-                                          <input type="text" class="form-control" id="editWalletName" name="wallet_name" value="{{ wallet.wallet_name }}" required>
-                                      </div>
-                                      
-                                      <div class="mb-3">
-                                          <label for="editCompany" class="form-label">Company</label>
-                                          <input type="text" class="form-control" id="editCompany" name="company" value="{{ wallet.company.company_name }}" disabled required>
-                                              <!-- Options will be populated by JavaScript -->
-                                          </select>
-                                      </div>
-                                      
-                                      <div class="mb-3">
-                                          <label for="editWalletType" class="form-label">Wallet Type</label>
-                                          <select class="form-control" class="form-control" id="editWalletType" name="wallet_type" value="{{ wallet.wallet_type }}" required>
-                                              <!-- Options will be populated by JavaScript -->
-                                      </div>
-                                      
-                                      <div class="mb-3">
-                                          <label for="editCurrency" class="form-label">Currency</label>
-                                          <input type="text" class="form-control" id="editCurrency" name="currency" value="{{ wallet.currency }}" required>
-                                              <!-- Options will be populated by JavaScript -->
-                                      </div>
-                                      
-                                      <div class="mb-3">
-                                          <label for="editBalance" class="form-label">Balance</label>
-                                          <input type="number" class="form-control" id="editBalance" name="balance" step="0.01" min="0" value="{{ wallet.balance }}" required>
-                                      </div>
-                                  </div>
-                                  <div class="modal-footer">
-                                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                      <button type="submit" class="btn btn-primary">Update Wallet</button>
-                                  </div>
-                              </form>
+                        <div class="modal-content">
+                          <div class="modal-header">
+                            <h5 class="modal-title" id="editWalletModalLabel{{ wallet.id }}">Edit Wallet</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                           </div>
+
+                          <form id="editWalletForm{{ wallet.id }}" method="post" action="{% url 'wallet:edit_wallet' wallet.id %}">
+                            <div class="modal-body">
+                              {% csrf_token %}
+                              <input type="hidden" name="wallet_id" value="{{ wallet.id }}">
+
+                              <div class="mb-3">
+                                <label for="editWalletName{{ wallet.id }}" class="form-label">Wallet Name</label>
+                                <input type="text" class="form-control" id="editWalletName{{ wallet.id }}" name="wallet_name"
+                                      value="{{ wallet.wallet_name }}" required>
+                              </div>
+
+                              <div class="mb-3">
+                                <label for="editWalletType{{ wallet.id }}" class="form-label">Wallet Type</label>
+                                <select class="form-control" id="editWalletType{{ wallet.id }}" name="wallet_type" required>
+                                  <option value="">Select wallet type</option>
+                                  <option value="PRIMARY" {% if wallet.wallet_type == "PRIMARY" %}selected{% endif %}>Primary</option>
+                                  <option value="EVENT" {% if wallet.wallet_type == "EVENT" %}selected{% endif %}>Event</option>
+                                  <option value="OPERATIONS" {% if wallet.wallet_type == "OPERATIONS" %}selected{% endif %}>Operations</option>
+                                  <option value="EMERGENCY" {% if wallet.wallet_type == "EMERGENCY" %}selected{% endif %}>Emergency</option>
+                                </select>
+                              </div>
+                            </div>
+
+                            <div class="modal-footer">
+                              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                              <button type="submit" class="btn btn-primary">Update Wallet</button>
+                            </div>
+                          </form>
+                        </div>
                       </div>
                     </div>
+
+
                     <!-- Delete Wallet Modal -->
                     <div class="modal fade" id="deleteWalletModal{{wallet.id}}" tabindex="-1" aria-labelledby="deleteWalletModalLabel{{wallet.id}}" aria-hidden="true">
                       <div class="modal-dialog modal-dialog-centered">
