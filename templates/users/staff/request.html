@@ -707,6 +707,330 @@
     background-color: transparent;
     border-bottom: 3px solid #0d6efd;
 }
+/* Base styles for the expense management dashboard */
+.dashboard-section {
+    padding: 0 15px;
+}
+
+.requests-area {
+    margin-top: 20px;
+}
+
+/* Header responsive styles */
+.requests-area .d-flex {
+    gap: 15px;
+}
+
+@media (max-width: 768px) {
+    .requests-area .d-flex {
+        flex-direction: column;
+        align-items: stretch !important;
+    }
+    
+    .requests-area h4 {
+        margin-bottom: 15px;
+    }
+}
+
+/* Tab navigation responsive */
+.nav-tabs {
+    border-bottom: 2px solid #dee2e6;
+}
+
+.nav-tabs .nav-link {
+    border: 1px solid transparent;
+    border-radius: 0.375rem 0.375rem 0 0;
+    padding: 10px 15px;
+    font-weight: 500;
+}
+
+@media (max-width: 576px) {
+    .nav-tabs {
+        flex-direction: column;
+        border-bottom: none;
+    }
+    
+    .nav-tabs .nav-item {
+        margin-bottom: 5px;
+    }
+    
+    .nav-tabs .nav-link {
+        border-radius: 0.375rem;
+        text-align: center;
+    }
+}
+
+/* Filter controls responsive */
+.card-body .row {
+    gap: 15px;
+}
+
+@media (max-width: 768px) {
+    .card-body .row {
+        flex-direction: column;
+    }
+    
+    .card-body .col-md-8,
+    .card-body .col-md-4 {
+        width: 100%;
+        max-width: 100%;
+    }
+    
+    .btn-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+    
+    .btn-group .btn {
+        flex: 1;
+        min-width: calc(50% - 2.5px);
+    }
+}
+
+/* Table responsive styles */
+.table-responsive {
+    border-radius: 0.375rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Enhanced table styles */
+.table {
+    margin-bottom: 0;
+    min-width: 800px; /* Minimum width to maintain readability */
+}
+
+.table th {
+    background-color: #f8f9fa !important;
+    font-weight: 600;
+    border-bottom: 2px solid #dee2e6;
+    white-space: nowrap;
+    padding: 12px 8px;
+    font-size: 0.875rem;
+}
+
+.table td {
+    padding: 12px 8px;
+    vertical-align: middle;
+    border-bottom: 1px solid #dee2e6;
+}
+
+/* Badge styles */
+.badge {
+    font-size: 0.75rem;
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.375rem;
+}
+
+/* Mobile table improvements */
+@media (max-width: 992px) {
+    .table {
+        font-size: 0.875rem;
+    }
+    
+    .table th,
+    .table td {
+        padding: 8px 6px;
+    }
+    
+    .table th {
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .table {
+        font-size: 0.8rem;
+        min-width: 700px;
+    }
+    
+    .table th,
+    .table td {
+        padding: 8px 4px;
+    }
+    
+    /* Truncate long text in mobile tables */
+    .table td:nth-child(4) { /* Description column */
+        max-width: 150px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    .table td:nth-child(7), /* Requested By */
+    .table td:nth-child(8) { /* Reviewed By */
+        max-width: 100px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+@media (max-width: 576px) {
+    .table {
+        min-width: 600px;
+        font-size: 0.75rem;
+    }
+    
+    .table th,
+    .table td {
+        padding: 6px 3px;
+    }
+    
+    .badge {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.5rem;
+    }
+}
+
+/* Card styles for mobile fallback (if needed) */
+.request-card {
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    transition: box-shadow 0.15s ease-in-out;
+}
+
+.request-card:hover {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.request-card .card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    padding: 10px 15px;
+}
+
+.request-card .card-body {
+    padding: 15px;
+}
+
+.request-card .btn {
+    margin-right: 5px;
+    margin-bottom: 5px;
+}
+
+/* Hide mobile cards by default, show tables */
+.d-md-none {
+    display: none !important;
+}
+
+/* Show mobile cards only on very small screens if tables become unusable */
+@media (max-width: 480px) {
+    /* Uncomment the following if you want to show cards instead of tables on very small screens */
+    /*
+    .table-responsive {
+        display: none !important;
+    }
+    
+    .d-md-none {
+        display: block !important;
+    }
+    */
+}
+
+
+@media (max-width: 768px) {
+    .modal-dialog {
+        margin: 0.5rem;
+    }
+    
+    .modal-lg {
+        max-width: calc(100vw - 1rem);
+    }
+}
+
+/* Form responsive styles */
+#expense-form .form-label {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+#expense-form .form-control,
+#expense-form .form-select {
+    border-radius: 0.375rem;
+    border: 1px solid #ced4da;
+    padding: 0.625rem 0.75rem;
+}
+
+#expense-form .form-control:focus,
+#expense-form .form-select:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+@media (max-width: 576px) {
+    #expense-form {
+        padding: 1rem !important;
+    }
+}
+
+/* Utility classes for responsive behavior */
+.hidden {
+    display: none !important;
+}
+
+/* Status-based row styling */
+.pending-request {
+    background-color: rgba(255, 193, 7, 0.1);
+}
+
+.approved-request {
+    background-color: rgba(25, 135, 84, 0.1);
+}
+
+.declined-request {
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+/* Search input responsive */
+#requestSearch {
+    border-radius: 0.375rem;
+}
+
+@media (max-width: 768px) {
+    #requestSearch {
+        margin-top: 10px;
+    }
+}
+
+/* Scrollbar styling for table container */
+.table-responsive::-webkit-scrollbar {
+    height: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Print styles */
+@media print {
+    .btn,
+    .modal,
+    .nav-tabs,
+    .card-body .row {
+        display: none !important;
+    }
+    
+    .table {
+        font-size: 0.75rem;
+    }
+    
+    .table th,
+    .table td {
+        padding: 4px;
+    }
+}
 </style>
 
 {% endblock %}

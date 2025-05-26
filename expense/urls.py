@@ -11,7 +11,7 @@ urlpatterns = [
     # path('expense/<str:id>/', views.expense_detail, name='expense_detail'),
     # path('expense/<str:id>/<str:item_type>/', views.expense_detail, name='expense_detail'),
     path('expense/<str:id>/', views.expense_detail, name='expense_detail'),
-    
+    path('edit-item/<str:id>/<str:item_type>/', views.edit_item, name='edit_item'),
     # For events
     path('expense/<str:id>/event/', views.expense_detail, {'item_type': 'event'}, name='event_expense_detail'),
     

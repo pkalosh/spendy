@@ -15,8 +15,22 @@
                 </div>
                 <div class="col-md-4">
                     <div class="card shadow-sm">
-                        <div class="card-header bg-secondary text-white">
-                            Item Details
+                        <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                            <span>Item Details</span>
+                            {% if item_type == 'event' or item_type == 'operation' %}
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-light" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li>
+                                            <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editItemModal">
+                                                <i class="fas fa-edit me-2"></i>Edit {% if item_type == 'event' %}Event{% else %}Operation{% endif %}
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            {% endif %}
                         </div>
                         <div class="card-body">
                             <div class="row g-3">
@@ -40,7 +54,6 @@
                                   <small class="text-muted d-block">End Date</small>
                                   <div>{{ item.end_date }}</div>
                                 </div>
-
                                 <div class="col-12">
                                   <small class="text-muted d-block">Created On</small>
                                   <div>{{ item.created_at }}</div>
@@ -58,7 +71,6 @@
                                   <small class="text-muted d-block">Created By</small>
                                   <div>{{ item.created_by.first_name }} {{ item.created_by.last_name }}</div>
                                 </div>
-                         
                                 <div class="col-12 border-bottom">
                                   <small class="text-muted d-block">Description</small>
                                   <div>{{ item.description|default:"No description available" }}</div>
@@ -99,9 +111,7 @@
                                 </div>
                               {% endif %}
                             </div>
-                          </div>
-                          
-                          
+                        </div>
                     </div>
                 </div>
                 
@@ -121,24 +131,18 @@
                                     </thead>
                                     <tbody>
                                         {% if item_type == 'event' or item_type == 'operation' %}
-                                            {% if expenses %}
-                                                <tr>
-                                                    <td>Pending</td>
-                                                    <td>{{ expenses|filter_by_status:"pending"|calculate_total:"amount"|intcomma }}</td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Approved</td>
-                                                    <td>{{ expenses|filter_by_status:"approved"|calculate_total:"amount"|intcomma }}</td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Declined</td>
-                                                    <td>{{ expenses|filter_by_status:"declined"|calculate_total:"amount"|intcomma }}</td>
-                                                </tr>
-                                            {% else %}
-                                                <tr>
-                                                    <td colspan="2">No results found.</td>
-                                                </tr>
-                                            {% endif %}
+                                            <tr>
+                                                <td>Pending</td>
+                                                <td>{{ expense_summary.pending|intcomma }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Approved</td>
+                                                <td>{{ expense_summary.approved|intcomma }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Declined</td>
+                                                <td>{{ expense_summary.declined|intcomma }}</td>
+                                            </tr>
                                         {% else %}
                                             {% if summaries %}
                                                 {% for summary in summaries %}
@@ -164,9 +168,9 @@
                     <div class="card shadow-sm">
                         <div class="card-header bg-secondary text-white">
                             {% if item_type == 'event' or item_type == 'operation' %}
-                                Total Expenses
+                                Total Approved Expenses
                             {% else %}
-                                Expenses Requests
+                                Expense Requests
                             {% endif %}
                         </div>
                         <div class="card-body">
@@ -180,16 +184,16 @@
                                     </thead>
                                     <tbody>
                                         {% if item_type == 'event' or item_type == 'operation' %}
-                                            {% if expenses %}
-                                                {% for category in expenses|group_by:"expense_category" %}
+                                            {% if expense_categories %}
+                                                {% for category in expense_categories %}
                                                     <tr>
-                                                        <td>{{ category.name }}</td>
+                                                        <td>{{ category.expense_category__name }}</td>
                                                         <td>{{ category.total|intcomma }}</td>
                                                     </tr>
                                                 {% endfor %}
                                             {% else %}
                                                 <tr>
-                                                    <td colspan="2">No results found.</td>
+                                                    <td colspan="2">No approved expenses found.</td>
                                                 </tr>
                                             {% endif %}
                                         {% else %}
@@ -268,8 +272,6 @@
                                         </tbody>
                                     </table>
                                 </div>
-                                
-                           
                             </div>
                         </div>
                     </div>
@@ -306,7 +308,7 @@
                                                 {% endfor %}
                                             {% else %}
                                                 <tr>
-                                                    <td colspan="4">No results found.</td>
+                                                    <td colspan="4">No approved requests found.</td>
                                                 </tr>
                                             {% endif %}
                                         </tbody>
@@ -334,8 +336,6 @@
                                 </div>
                             </div>
                         {% endif %}
-                        
-
                     </div>
                     
                     <!-- Related Expenses -->
@@ -391,6 +391,78 @@
         </div>
     </div>
 </section>
+
+<!-- Edit Item Modal -->
+{% if item_type == 'event' or item_type == 'operation' %}
+<div class="modal fade" id="editItemModal" tabindex="-1" aria-labelledby="editItemModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editItemModalLabel">
+                    Edit {% if item_type == 'event' %}Event{% else %}Operation{% endif %} Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'expense:edit_item' item.id item_type %}">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="row">
+                        {% if item_type == 'event' %}
+                            <div class="col-md-6 mb-3">
+                                <label for="start_date" class="form-label">Start Date</label>
+                                <input type="date" class="form-control" id="start_date" name="start_date" 
+                                       value="{{ item.start_date|date:'Y-m-d' }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="end_date" class="form-label">End Date</label>
+                                <input type="date" class="form-control" id="end_date" name="end_date" 
+                                       value="{{ item.end_date|date:'Y-m-d' }}" required>
+                            </div>
+                        {% else %}
+                            <div class="col-md-6 mb-3">
+                                <label for="start_date" class="form-label">Start Date</label>
+                                <input type="date" class="form-control" id="start_date" name="start_date" 
+                                       value="{% if item.start_date %}{{ item.start_date|date:'Y-m-d' }}{% endif %}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="end_date" class="form-label">End Date</label>
+                                <input type="date" class="form-control" id="end_date" name="end_date" 
+                                       value="{% if item.end_date %}{{ item.end_date|date:'Y-m-d' }}{% endif %}">
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Display non-editable information -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <small>
+                                    <strong>Note:</strong> Only dates can be modified. Other details like name, category, and description cannot be changed.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">Name</label>
+                            <input type="text" class="form-control" value="{{ item.name }}" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Category</label>
+                            <input type="text" class="form-control" value="{{ item.category }}" readonly>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
 {% endblock %}
 
 {% block extra_js %}
