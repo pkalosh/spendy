@@ -1,0 +1,43 @@
+{% extends "partials/dashboard-base.html" %}
+{% load static %}
+{% load humanize %}
+{% block content %}
+<section class="dashboard-section body-collapse">
+    <div class="overlay pt-120">
+        <div class="container-fluid">
+
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <h4 class="mb-4">Notifications</h4>
+
+                    <!-- Success Alert -->
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <strong>Success!</strong> Your payment was processed successfully.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+
+                    <!-- Info Alert -->
+                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                        <strong>Heads up!</strong> You have a pending transaction.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+
+                    <!-- Warning Alert -->
+                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                        <strong>Warning!</strong> Your subscription will expire soon.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+
+                    <!-- Danger Alert -->
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <strong>Error!</strong> There was an issue processing your request.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+{% endblock %}

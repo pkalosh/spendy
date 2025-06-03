@@ -136,6 +136,10 @@ NOTIFICATION_TYPE = (
     ("Approved Expense request", "Approved Expense request"),
     ("Sent Payment Request", "Sent Payment Request"),
     ("Received Payment Request", "Received Payment Request"),
+    ('info', 'Info'),
+    ('success', 'Success'),
+    ('warning', 'Warning'),
+    ('danger', 'Danger'),
 
 )
 
@@ -197,10 +201,13 @@ class Transaction(models.Model):
         self.clean()
         super().save(*args, **kwargs)
 
+
+
 class Notification(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     notification_type = models.CharField(max_length=100, choices=NOTIFICATION_TYPE, default="none")
-    amount = models.IntegerField(default=0)
+    title = models.CharField(max_length=255,blank=True, null=True)
+    message = models.TextField(blank=True, null=True)
     is_read = models.BooleanField(default=False)
     date = models.DateTimeField(auto_now_add=True)
     nid = ShortUUIDField(length=10, max_length=25, alphabet="abcdefghijklmnopqrstuvxyz")
