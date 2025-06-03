@@ -18,7 +18,7 @@ from django.utils.html import escape
 from django.http import JsonResponse,HttpResponseForbidden
 from django.db import transaction
 from django.core.paginator import Paginator
-
+from datetime import datetime
 
 from .models import Wallet, Transaction
 def is_admin(user):
@@ -544,6 +544,7 @@ def fund_wallet(request):
 
 
 
+
 @login_required
 def wallet(request):
     if request.user.is_authenticated:
@@ -566,15 +567,34 @@ def wallet(request):
             if not all(required_fields) or not kyc.kyc_submitted:
                 messages.warning(request, "Your KYC is incomplete. Please fill all required fields.")
                 return redirect("wallet:kyc-reg")
-                
-            wallets = Wallet.objects.filter(user=request.user,is_active=True,company=kyc)
-            primary_wallet  = Wallet.objects.get(user=request.user,wallet_type = "PRIMARY",company=kyc)
-            print(primary_wallet)
-            recent_txns = Transaction.objects.filter(company= kyc)
-            print(recent_txns)
+
             if not kyc.kyc_confirmed:
                 messages.warning(request, "Your KYC is Under Review.")
                 return redirect("wallet:kyc-reg")
+
+            # Get wallets
+            wallets = Wallet.objects.filter(user=request.user, is_active=True, company=kyc)
+            primary_wallet = Wallet.objects.get(user=request.user, wallet_type="PRIMARY", company=kyc)
+            
+            # Get all transactions for the company
+            all_transactions = Transaction.objects.filter(company=kyc).order_by('-date')
+            
+            # Get recent transactions for initial display (limit 20 for performance)
+            recent_txns = all_transactions[:20]
+            
+            # Get all unique users for filter dropdown
+            all_users = Transaction.objects.filter(company=kyc).values_list(
+                'receiver', 'receiver_wallet'
+            ).distinct()
+            
+            # Format users for dropdown
+            unique_users = []
+            for name, wallet in all_users:
+                if name:
+                    unique_users.append({'id': wallet, 'name': name})
+                else:
+                    unique_users.append({'id': wallet, 'name': wallet})
+
         except CompanyKYC.DoesNotExist:
             messages.warning(request, "You need to submit your KYC")
             return redirect("wallet:kyc-reg")
@@ -584,14 +604,127 @@ def wallet(request):
     else:
         messages.warning(request, "You need to login to access the dashboard")
         return redirect("userauths:sign-in")
-    
+
     context = {
         "kyc": kyc,
         "wallets": wallets,
-        "primary_wallet":primary_wallet,
+        "primary_wallet": primary_wallet,
         "transactions": recent_txns,
+        "all_transactions": all_transactions,  # For JavaScript processing
+        "all_users": unique_users,
     }
     return render(request, "account/account.html", context)
+
+
+@login_required
+def get_transaction_details(request, transaction_id):
+    """API endpoint to get detailed transaction information"""
+    try:
+        kyc = CompanyKYC.objects.get(user=request.user)
+        transaction = Transaction.objects.get(id=transaction_id, company=kyc)
+        
+        # Generate reference code
+        reference_code = f"SPNDY{transaction.created_at.strftime('%y%m%d')}{transaction.id:03d}"
+        
+        transaction_data = {
+            'id': transaction.id,
+            'reference': reference_code,
+            'recipient_name': transaction.recipient_name or transaction.recipient_wallet,
+            'recipient_wallet': transaction.recipient_wallet,
+            'from_wallet_name': transaction.from_wallet.wallet_name if transaction.from_wallet else 'Primary Wallet',
+            'from_wallet_id': transaction.from_wallet.wallet_id if transaction.from_wallet else '',
+            'date': transaction.created_at.strftime('%d %b %Y'),
+            'time': transaction.created_at.strftime('%I:%M %p'),
+            'amount': float(transaction.amount),
+            'status': transaction.status,
+            'transaction_type': transaction.transaction_type,
+            'category': transaction.category or '',
+            'description': transaction.description or '',
+        }
+        
+        return JsonResponse(transaction_data)
+    
+    except (Transaction.DoesNotExist, CompanyKYC.DoesNotExist):
+        return JsonResponse({'error': 'Transaction not found'}, status=404)
+
+
+@login_required
+def filter_transactions(request):
+    """API endpoint to filter transactions"""
+    if request.method == 'GET':
+        try:
+            kyc = CompanyKYC.objects.get(user=request.user)
+            
+            # Get filter parameters
+            user_filter = request.GET.get('user', '')
+            date_from = request.GET.get('date_from', '')
+            date_to = request.GET.get('date_to', '')
+            status_filter = request.GET.get('status', '')
+            page = int(request.GET.get('page', 1))
+            
+            # Start with all transactions
+            transactions = Transaction.objects.filter(company=kyc)
+            
+            # Apply filters
+            if user_filter:
+                transactions = transactions.filter(
+                    Q(recipient_name__icontains=user_filter) |
+                    Q(recipient_wallet__icontains=user_filter)
+                )
+            
+            if date_from:
+                date_from_obj = datetime.strptime(date_from, '%Y-%m-%d').date()
+                transactions = transactions.filter(created_at__date__gte=date_from_obj)
+            
+            if date_to:
+                date_to_obj = datetime.strptime(date_to, '%Y-%m-%d').date()
+                transactions = transactions.filter(created_at__date__lte=date_to_obj)
+            
+            if status_filter:
+                transactions = transactions.filter(status=status_filter)
+            
+            # Order by date
+            transactions = transactions.order_by('-created_at')
+            
+            # Paginate
+            paginator = Paginator(transactions, 10)  # 10 transactions per page
+            page_obj = paginator.get_page(page)
+            
+            # Prepare response data
+            transaction_list = []
+            for transaction in page_obj:
+                reference_code = f"SPNDY{transaction.created_at.strftime('%y%m%d')}{transaction.id:03d}"
+                
+                transaction_list.append({
+                    'id': transaction.id,
+                    'recipient_name': transaction.recipient_name or '',
+                    'recipient_wallet': transaction.recipient_wallet,
+                    'from_wallet_name': transaction.from_wallet.wallet_name if transaction.from_wallet else 'Primary Wallet',
+                    'from_wallet_id': transaction.from_wallet.wallet_id if transaction.from_wallet else '',
+                    'date': transaction.created_at.strftime('%d %b %Y'),
+                    'time': transaction.created_at.strftime('%I:%M %p'),
+                    'datetime': transaction.created_at.strftime('%Y-%m-%d %H:%M'),
+                    'reference': reference_code,
+                    'amount': float(transaction.amount),
+                    'status': transaction.status,
+                    'transaction_type': transaction.transaction_type or 'wallet_transfer',
+                    'category': transaction.category or '',
+                    'description': transaction.description or '',
+                })
+            
+            return JsonResponse({
+                'transactions': transaction_list,
+                'has_next': page_obj.has_next(),
+                'has_previous': page_obj.has_previous(),
+                'current_page': page_obj.number,
+                'total_pages': paginator.num_pages,
+                'total_count': paginator.count,
+            })
+            
+        except CompanyKYC.DoesNotExist:
+            return JsonResponse({'error': 'KYC not found'}, status=404)
+    
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
 @login_required
 def kyc_registration(request):
     user = request.user

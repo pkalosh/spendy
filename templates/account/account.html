@@ -222,61 +222,200 @@
                       </div>
                       {% endfor %}
                 
+<!-- Filters Section -->
+<div class="col-12 mb-4">
+    <div class="bg-white rounded-3 p-4 shadow-sm">
+        <h6 class="mb-3"><i class="fa fa-filter me-2"></i>Filter Transfers</h6>
+        <form id="filterForm">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label for="userFilter" class="form-label">User/Recipient</label>
+                    <select class="form-select" id="userFilter">
+                        <option value="">All Users</option>
+                        {% for user in all_users %}
+                        <option value="{{ user.id }}">{{ user.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="dateFrom" class="form-label">From Date</label>
+                    <input type="date" class="form-control" id="dateFrom">
+                </div>
+                <div class="col-md-3">
+                    <label for="dateTo" class="form-label">To Date</label>
+                    <input type="date" class="form-control" id="dateTo">
+                </div>
+                <div class="col-md-3">
+                    <label for="statusFilter" class="form-label">Status</label>
+                    <select class="form-select" id="statusFilter">
+                        <option value="">All Status</option>
+                        <option value="completed">Completed</option>
+                        <option value="pending">Pending</option>
+                        <option value="failed">Failed</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-12">
+                    <button type="button" class="btn btn-primary me-2" onclick="applyFilters()">
+                        <i class="fa fa-search me-1"></i>Apply Filters
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="clearFilters()">
+                        <i class="fa fa-times me-1"></i>Clear
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
 
-                  <!-- Recent Payments -->
-                  <div class="col-12 mb-4">
-                      <div class="bg-white rounded-3 p-4 shadow-sm">
-                          <div class="d-flex justify-content-between align-items-center mb-4">
-                              <h5 class="mb-0">Payments</h5>
-                              <a href="" class="btn btn-sm btn-primary">View More</a>
-                          </div>
-                          <div class="table-responsive">
-                              <table class="table align-middle">
-                                  <thead>
-                                      <tr>
-                                          <th>Recipient</th>
-                                          <th>Date</th>
-                                          <th>Account Number</th>
-                                          <th>Reference</th>
-                                          <th>Amount</th>
-                                          <th>Status</th>
-                                      </tr>
-                                  </thead>
-                                  <tbody>
-                                      {% for transaction in transactions %}
-                                      <tr>
-                                          <td>
-                                              <div class="d-flex align-items-center">
-                                                  <i class="fa fa-arrow-right text-danger me-2"></i>
-                                                  <div>
-                                                      <p class="mb-0">{{ transaction.company }}</p>
-                                                      <small class="text-muted">{{ transaction.transaction_type }}</small>
-                                                  </div>
-                                              </div>
-                                          </td>
-                                          <td>
-                                              {{ transaction.date|date:"d M Y" }}<br>
-                                              <small class="text-muted">{{ transaction.time }}</small>
-                                          </td>
-                                          <td>{{ transaction.account_number }}</td>
-                                          <td>{{ transaction.transaction_id }}</td>
-                                          <td>KES {{ transaction.amount|floatformat:2 }}</td>
-                                          <td>
-                                              <span class="badge {% if transaction.status == 'completed' %}bg-success{% else %}bg-warning{% endif %}">
-                                                  {{ transaction.status }}
-                                              </span>
-                                          </td>
-                                      </tr>
-                                      {% empty %}
-                                      <tr>
-                                          <td colspan="6" class="text-center">No recent transactions</td>
-                                      </tr>
-                                      {% endfor %}
-                                  </tbody>
-                              </table>
-                          </div>
-                      </div>
-                  </div>
+<!-- Recent Payments -->
+<div class="col-12 mb-4">
+    <div class="bg-white rounded-3 p-4 shadow-sm">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="mb-0">Transfers</h5>
+            <small class="text-muted">
+                Showing <span id="showingFrom">1</span>-<span id="showingTo">10</span> of <span id="totalRecords">{{ transactions.count }}</span> transfers
+            </small>
+        </div>
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Recipient</th>
+                        <th>Date & Time</th>
+                        <th>From Wallet</th>
+                        <th>Reference</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="transfersTableBody">
+                    {% for transaction in transactions %}
+                    <tr class="transaction-row" style="cursor: pointer;" onclick="showTransactionDetails('{{ transaction.id }}')">
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <i class="fa fa-arrow-right text-danger me-2"></i>
+                                <div>
+                                    <p class="mb-0">{{ transaction.recipient_name}}</p>
+                                    <small class="text-muted">To: {{ transaction.recipient_wallet }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {{ transaction.created_at|date:"d M Y" }}<br>
+                            <small class="text-muted">{{ transaction.created_at|time:"g:i A" }}</small>
+                        </td>
+                        <td>
+                            <div>
+                                <p class="mb-0">{{ transaction.from_wallet.wallet_name|default:"Primary Wallet" }}</p>
+                                <small class="text-muted">{{ transaction.from_wallet.wallet_id }}</small>
+                            </div>
+                        </td>
+                        <td>
+                            <span style="font-family: 'Courier New', monospace; font-weight: bold; color: #0d6efd;">
+                                SPNDY{{ transaction.created_at|date:"ymd" }}{{ transaction.id|stringformat:"03d" }}
+                            </span>
+                        </td>
+                        <td>KES {{ transaction.amount|floatformat:2 }}</td>
+                        <td>
+                            <span class="badge {% if transaction.status == 'completed' %}bg-success{% elif transaction.status == 'pending' %}bg-warning{% else %}bg-danger{% endif %}">
+                                {{ transaction.status|title }}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation(); showTransactionDetails('{{ transaction.id }}')">
+                                <i class="fa fa-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4">
+                            <i class="fa fa-inbox fa-2x text-muted mb-2"></i>
+                            <div>No recent transactions</div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        <nav aria-label="Transfers pagination" class="mt-4">
+            <ul class="pagination justify-content-center mb-0" id="paginationControls">
+                <!-- Pagination will be generated by JavaScript -->
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<!-- Transaction Details Modal -->
+<div class="modal fade" id="transactionModal" tabindex="-1" aria-labelledby="transactionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header  text-white">
+                <h5 class="modal-title" id="transactionModalLabel">
+                    <i class="fa fa-receipt me-2"></i>Transfer Details
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3 pb-3 border-bottom">
+                            <strong class="text-muted">Reference Code</strong>
+                            <div class="fw-bold text-primary" id="modalReference" style="font-family: 'Courier New', monospace;">-</div>
+                        </div>
+                        <div class="mb-3 pb-3 border-bottom">
+                            <strong class="text-muted">Recipient</strong>
+                            <div id="modalRecipient" class="fw-medium">-</div>
+                            <small class="text-muted" id="modalRecipientWallet">Wallet: -</small>
+                        </div>
+                        <div class="mb-3 pb-3 border-bottom">
+                            <strong class="text-muted">From Wallet</strong>
+                            <div id="modalFromWallet">-</div>
+                            <small class="text-muted" id="modalFromWalletId">ID: -</small>
+                        </div>
+                        <div class="mb-3">
+                            <strong class="text-muted">Date & Time</strong>
+                            <div id="modalDateTime">-</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3 pb-3 border-bottom">
+                            <strong class="text-muted">Amount</strong>
+                            <div class="fs-4 fw-bold text-success" id="modalAmount">KES 0.00</div>
+                        </div>
+                        <div class="mb-3 pb-3 border-bottom">
+                            <strong class="text-muted">Status</strong>
+                            <div id="modalStatus">
+                                <span class="badge bg-secondary">-</span>
+                            </div>
+                        </div>
+                        <div class="mb-3 pb-3 border-bottom" id="modalCategorySection" style="display: none;">
+                            <strong class="text-muted">Category</strong>
+                            <div id="modalCategory">-</div>
+                        </div>
+                        <div class="mb-3" id="modalDescriptionSection" style="display: none;">
+                            <strong class="text-muted">Description</strong>
+                            <div id="modalDescription">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="downloadReceipt()">
+                    <i class="fa fa-download me-1"></i>Download Receipt
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
                   
 
               </div> <!-- Row End -->
@@ -396,6 +535,326 @@
         fundFields.innerHTML = html;
     }
     </script>
+    <script>
+// Transfer management functionality
+let currentPage = 1;
+const itemsPerPage = 10;
+let allTransactions = [];
+let filteredTransactions = [];
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadTransactions();
+    initializePagination();
+});
+
+// Load transactions from backend
+function loadTransactions() {
+    // Get transactions from your Django template context
+    allTransactions = [
+        {% for transaction in all_transactions %}
+        {
+            id: '{{ transaction.id }}',
+            recipient_name: '{{ transaction.recipient_name|default:"" }}',
+            recipient_wallet: '{{ transaction.recipient_wallet }}',
+            from_wallet_name: '{{ transaction.from_wallet.wallet_name|default:"Primary Wallet" }}',
+            from_wallet_id: '{{ transaction.from_wallet.wallet_id }}',
+            date: '{{ transaction.date|date:"d M Y" }}',
+            time: '{{ transaction.date|time:"g:i A" }}',
+            datetime: '{{ transaction.created_at|date:"Y-m-d H:i" }}',
+            reference: 'SPNDY{{ transaction.created_at|date:"ymd" }}{{ transaction.id|stringformat:"03d" }}',
+            amount: {{ transaction.amount }},
+            status: '{{ transaction.status }}',
+            transaction_type: '{{ transaction.transaction_type|default:"wallet_transfer" }}',
+            category: '{{ transaction.category|default:"" }}',
+            description: '{{ transaction.description|default:"" }}'
+        },
+        {% endfor %}
+    ];
+    
+    filteredTransactions = [...allTransactions];
+    renderTransactions();
+}
+
+// Apply filters
+function applyFilters() {
+    const userFilter = document.getElementById('userFilter').value;
+    const dateFrom = document.getElementById('dateFrom').value;
+    const dateTo = document.getElementById('dateTo').value;
+    const statusFilter = document.getElementById('statusFilter').value;
+
+    filteredTransactions = allTransactions.filter(transaction => {
+        // User filter
+        if (userFilter && !transaction.recipient_name.toLowerCase().includes(userFilter.toLowerCase()) && 
+            !transaction.recipient_wallet.includes(userFilter)) {
+            return false;
+        }
+
+        // Date filters
+        if (dateFrom) {
+            const transactionDate = new Date(transaction.datetime);
+            const filterFromDate = new Date(dateFrom);
+            if (transactionDate < filterFromDate) return false;
+        }
+
+        if (dateTo) {
+            const transactionDate = new Date(transaction.datetime);
+            const filterToDate = new Date(dateTo);
+            filterToDate.setHours(23, 59, 59, 999); // End of day
+            if (transactionDate > filterToDate) return false;
+        }
+
+        // Status filter
+        if (statusFilter && transaction.status !== statusFilter) {
+            return false;
+        }
+
+        return true;
+    });
+
+    currentPage = 1;
+    renderTransactions();
+}
+
+// Clear all filters
+function clearFilters() {
+    document.getElementById('userFilter').value = '';
+    document.getElementById('dateFrom').value = '';
+    document.getElementById('dateTo').value = '';
+    document.getElementById('statusFilter').value = '';
+    
+    filteredTransactions = [...allTransactions];
+    currentPage = 1;
+    renderTransactions();
+}
+
+// Render transactions table
+function renderTransactions() {
+    const tbody = document.getElementById('transfersTableBody');
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const pageTransactions = filteredTransactions.slice(startIndex, endIndex);
+
+    if (pageTransactions.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center py-4">
+                    <i class="fa fa-inbox fa-2x text-muted mb-2"></i>
+                    <div>No transfers found</div>
+                </td>
+            </tr>
+        `;
+    } else {
+        tbody.innerHTML = pageTransactions.map(transaction => {
+            const statusClass = transaction.status === 'completed' ? 'bg-success' : 
+                              transaction.status === 'pending' ? 'bg-warning' : 'bg-danger';
+            
+            return `
+                <tr class="transaction-row" style="cursor: pointer;" onclick="showTransactionDetails('${transaction.id}')">
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <i class="fa fa-arrow-right text-danger me-2"></i>
+                            <div>
+                                <p class="mb-0">${transaction.recipient_name || transaction.recipient_wallet}</p>
+                                <small class="text-muted">To: ${transaction.recipient_wallet}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        ${transaction.date}<br>
+                        <small class="text-muted">${transaction.time}</small>
+                    </td>
+                    <td>
+                        <div>
+                            <p class="mb-0">${transaction.from_wallet_name}</p>
+                            <small class="text-muted">${transaction.from_wallet_id}</small>
+                        </div>
+                    </td>
+                    <td>
+                        <span style="font-family: 'Courier New', monospace; font-weight: bold; color: #0d6efd;">
+                            ${transaction.reference}
+                        </span>
+                    </td>
+                    <td>KES ${parseFloat(transaction.amount).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                    <td>
+                        <span class="badge ${statusClass}">
+                            ${transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation(); showTransactionDetails('${transaction.id}')">
+                            <i class="fa fa-eye"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    updatePaginationInfo();
+    renderPagination();
+}
+
+// Update pagination info
+function updatePaginationInfo() {
+    const startIndex = (currentPage - 1) * itemsPerPage + 1;
+    const endIndex = Math.min(currentPage * itemsPerPage, filteredTransactions.length);
+    
+    document.getElementById('showingFrom').textContent = filteredTransactions.length > 0 ? startIndex : 0;
+    document.getElementById('showingTo').textContent = endIndex;
+    document.getElementById('totalRecords').textContent = filteredTransactions.length;
+}
+
+// Initialize pagination
+function initializePagination() {
+    renderPagination();
+}
+
+// Render pagination controls
+function renderPagination() {
+    const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
+    const paginationControls = document.getElementById('paginationControls');
+    
+    if (totalPages <= 1) {
+        paginationControls.innerHTML = '';
+        return;
+    }
+
+    let paginationHTML = '';
+    
+    // Previous button
+    paginationHTML += `
+        <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="changePage(${currentPage - 1}); return false;">
+                <i class="fa fa-chevron-left"></i>
+            </a>
+        </li>
+    `;
+
+    // Page numbers
+    const startPage = Math.max(1, currentPage - 2);
+    const endPage = Math.min(totalPages, currentPage + 2);
+    
+    if (startPage > 1) {
+        paginationHTML += `
+            <li class="page-item">
+                <a class="page-link" href="#" onclick="changePage(1); return false;">1</a>
+            </li>
+        `;
+        if (startPage > 2) {
+            paginationHTML += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+        }
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+        paginationHTML += `
+            <li class="page-item ${i === currentPage ? 'active' : ''}">
+                <a class="page-link" href="#" onclick="changePage(${i}); return false;">${i}</a>
+            </li>
+        `;
+    }
+
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+            paginationHTML += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+        }
+        paginationHTML += `
+            <li class="page-item">
+                <a class="page-link" href="#" onclick="changePage(${totalPages}); return false;">${totalPages}</a>
+            </li>
+        `;
+    }
+
+    // Next button
+    paginationHTML += `
+        <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="changePage(${currentPage + 1}); return false;">
+                <i class="fa fa-chevron-right"></i>
+            </a>
+        </li>
+    `;
+
+    paginationControls.innerHTML = paginationHTML;
+}
+
+// Change page
+function changePage(page) {
+    const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
+    if (page >= 1 && page <= totalPages) {
+        currentPage = page;
+        renderTransactions();
+    }
+}
+
+// Show transaction details in modal
+function showTransactionDetails(transactionId) {
+    const transaction = allTransactions.find(t => t.id === transactionId);
+    if (!transaction) return;
+
+    // Populate modal fields
+    document.getElementById('modalReference').textContent = transaction.reference;
+    document.getElementById('modalRecipient').textContent = transaction.recipient_name || transaction.recipient_wallet;
+    document.getElementById('modalRecipientWallet').textContent = `Wallet: ${transaction.recipient_wallet}`;
+    document.getElementById('modalFromWallet').textContent = transaction.from_wallet_name;
+    document.getElementById('modalFromWalletId').textContent = `ID: ${transaction.from_wallet_id}`;
+    document.getElementById('modalDateTime').textContent = `${transaction.date}, ${transaction.time}`;
+    document.getElementById('modalAmount').textContent = `KES ${parseFloat(transaction.amount).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+    
+    // Status badge
+    const statusClass = transaction.status === 'completed' ? 'bg-success' : 
+                       transaction.status === 'pending' ? 'bg-warning' : 'bg-danger';
+    document.getElementById('modalStatus').innerHTML = `
+        <span class="badge ${statusClass}">
+            ${transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
+        </span>
+    `;
+
+    // Show/hide category and description for non-wallet transfers
+    const categorySection = document.getElementById('modalCategorySection');
+    const descriptionSection = document.getElementById('modalDescriptionSection');
+    
+    if (transaction.transaction_type !== 'wallet_transfer' && (transaction.category || transaction.description)) {
+        if (transaction.category) {
+            document.getElementById('modalCategory').textContent = transaction.category;
+            categorySection.style.display = 'block';
+        } else {
+            categorySection.style.display = 'none';
+        }
+        
+        if (transaction.description) {
+            document.getElementById('modalDescription').textContent = transaction.description;
+            descriptionSection.style.display = 'block';
+        } else {
+            descriptionSection.style.display = 'none';
+        }
+    } else {
+        categorySection.style.display = 'none';
+        descriptionSection.style.display = 'none';
+    }
+
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('transactionModal'));
+    modal.show();
+}
+
+// Download receipt function
+function downloadReceipt() {
+    // Implement receipt download logic here
+    alert('Receipt download functionality to be implemented');
+}
+
+// Add hover effects for transaction rows
+document.addEventListener('DOMContentLoaded', function() {
+    const style = document.createElement('style');
+    style.textContent = `
+        .transaction-row:hover {
+            background-color: #f8f9fa !important;
+            transition: background-color 0.2s ease;
+        }
+    `;
+    document.head.appendChild(style);
+});
+</script>
 {% include 'partials/transfer.html' %}
 {% include 'partials/new_wallet.html' %}
 {% include 'partials/fund.html' %}
