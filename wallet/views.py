@@ -1,4 +1,5 @@
 from itertools import chain
+from django.views.decorators.http import require_POST
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from wallet.forms import KYCForm, StaffProfileForm, UserForm,RoleForm,WalletForm
@@ -14,7 +15,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.views.decorators.http import require_http_methods
 from django.db.models import Q
 from django.utils.html import escape
-from django.http import JsonResponse
+from django.http import JsonResponse,HttpResponseForbidden
 from django.db import transaction
 from django.core.paginator import Paginator
 
@@ -790,7 +791,29 @@ def dashboard(request):
 @login_required
 def notifications(request):
     alerts = Notification.objects.filter(user=request.user)
-    return render(request, 'notifications.html', {'alerts': alerts})
+    alert_type = request.GET.get('type')
+    if alert_type:
+        alerts = alerts.filter(notification_type=alert_type)
+
+    paginator = Paginator(alerts.order_by('-date'), 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'notifications.html', {'alerts': page_obj, 'counts': alerts.count()})
+
+@login_required
+@require_POST
+def mark_alert_as_read(request):
+    alert_id = request.POST.get("alert_id")
+    try:
+        alert = Notification.objects.get(id=alert_id, user=request.user)
+        alert.is_read = True
+        alert.save()
+        return JsonResponse({"success": True})
+    except Notification.DoesNotExist:
+        return HttpResponseForbidden("Alert not found or permission denied.")
+
+
 
 
 from django.http import HttpResponse, JsonResponse

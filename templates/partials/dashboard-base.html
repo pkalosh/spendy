@@ -46,12 +46,10 @@
                            
                             <div class="single-item notifications-area">
                                 <div class="notifications-btn">
-                                    <img src="{% static 'assets1/images/icon/bell.png' %}" class="bell-icon" alt="icon">
+                                    <img src="{% static 'assets1/images/icon/bell.png' %}" class="bell-icon" alt="icon"><span class="mdr">{{ counts }}</span>
                                 </div>
                                 <div class="main-area notifications-content">
-                                    <div class="head-area d-flex justify-content-between">
-                                        <a href="{% url 'wallet:notifications' %}">View All</a> <span class="mdr">{{ notifications.count }}</span>
-                                    </div>
+                                        <a  class="head-area d-flex justify-content-between" href="{% url 'wallet:notifications' %}">View All</a> 
                                   
                                 </div>
                             </div>
