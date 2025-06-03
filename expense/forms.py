@@ -4,7 +4,7 @@ from wallet.models import Wallet
 class EventExpenseForm(forms.ModelForm):
     class Meta:
         model = Event
-        fields = ['name', 'category', 'start_date', 'end_date', 'budget', 'project_lead', 'location', 'description']
+        fields = ['name', 'category', 'start_date', 'end_date', 'budget', 'project_lead', 'location']
         # widgets = {
         #             'start_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
         #             'end_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
@@ -22,7 +22,7 @@ class EventExpenseForm(forms.ModelForm):
 class OperationExpenseForm(forms.ModelForm):
     class Meta:
         model = Operation
-        fields = ['name', 'category', 'budget', 'project_lead', 'description']
+        fields = ['name', 'category', 'budget', 'project_lead']
         # widgets = {
         #             'name': forms.TextInput(attrs={'class': 'form-control'}),
         #             'category': forms.Select(attrs={'class': 'form-control'}),

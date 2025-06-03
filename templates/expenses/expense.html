@@ -43,7 +43,6 @@
                   <th>Event</th>
                   <th>Category</th>
                   <th>Budget</th>
-                  <th>Description</th>
                   <th>Created By</th>
 
                   <th>Actions</th>
@@ -56,12 +55,10 @@
                       <td>{{ item.name }}</td>
                       <td>{{ item.category }}</td>
                       <td>{{ item.budget|intcomma }}</td>
-                      <td>{{ item.description }}</td>
                       <td><a href="#">{{ item.created_by.get_full_name }}</a></td>
 
                       <td>
                         <a href="{% url 'expense:event_expense_detail' item.id %}" class="btn btn-sm btn-primary">View Expenses</a>
-                        <!-- <a href="{% url 'expense:event_expense_detail' item.id %}" class="btn btn-sm btn-primary">Edit Event</a> -->
                       </td>
                     </tr>
                   {% endif %}
@@ -82,7 +79,6 @@
                   <th>Operation</th>
                   <th>Category</th>
                   <th>Budget</th>
-                  <th>Description</th>
                   <th>Created By</th>
 
                   <th>Actions</th>
@@ -95,7 +91,6 @@
                       <td>{{ item.name }}</td>
                       <td>{{ item.category }}</td>
                       <td>{{ item.budget|intcomma }}</td>
-                      <td>{{ item.description }}</td>
                       <td><a href="#">{{ item.created_by.get_full_name }}</a></td>
 
                       <td>
@@ -174,10 +169,7 @@
                 <label for="event_budget" class="form-label">Budget</label>
                 <input type="number" id="event_budget" name="event_budget" class="form-control budget-field event-field" step="0.01">
               </div>
-              <div class="mb-3">
-                <label for="event_description" class="form-label">Description</label>
-                <textarea id="event_description" name="event_description" class="form-control event-field" rows="3"></textarea>
-              </div>
+              
               
               <div class="mb-3">
                 <label for="event_project_lead" class="form-label">Project Lead</label>
@@ -210,10 +202,7 @@
                 <label for="operation_budget" class="form-label">Budget</label>
                 <input type="number" id="operation_budget" name="operation_budget" class="form-control budget-field operation-field" step="0.01">
               </div>
-              <div class="mb-3">
-                <label for="operation_description" class="form-label">Description</label>
-                <textarea id="operation_description" name="operation_description" class="form-control operation-field" rows="3"></textarea>
-              </div>
+             
               
               <div class="mb-3">
                 <label for="operation_project_lead" class="form-label">Project Lead</label>

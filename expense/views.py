@@ -194,7 +194,6 @@ def event_operation(request):
                         raise ValidationError("Invalid budget value")
                 
                 # Get other fields
-                description = request.POST.get('event_description')
                 project_lead = request.POST.get('event_project_lead')
                 if not project_lead:
                     raise ValidationError("Project lead is required")
@@ -211,7 +210,6 @@ def event_operation(request):
                     start_date=start_date,
                     end_date=end_date,
                     budget=budget,
-                    description=description,
                     project_lead=project_lead,
                     location=location,
                     created_by=request.user
@@ -250,7 +248,6 @@ def event_operation(request):
                         raise ValidationError("Invalid budget value")
                 
                 # Get other fields
-                description = request.POST.get('operation_description')
                 project_lead = request.POST.get('operation_project_lead')
                 
                 # Create and save operation
@@ -259,7 +256,6 @@ def event_operation(request):
                     category=category,
                     company=company,
                     budget=budget,
-                    description=description,
                     project_lead=project_lead,
                     created_by=request.user
                 )
@@ -283,234 +279,6 @@ def event_operation(request):
     # Handle GET request - since this is a popup/modal, we don't need to render a template here
     # The form should already be in the page that opened the modal
     return redirect('wallet:expenses')
-
-# @login_required
-# def expense_detail(request, id, item_type=None):
-#     user = request.user
-#     company = getattr(user, 'company', None) or getattr(user, 'companykyc', None)
-    
-#     # Determine if we're looking at an event, operation, or specific expense
-#     if item_type == 'event':
-#         # Handle event and its expenses
-#         event = None
-        
-#         # First try direct id lookup
-#         event_queryset = Event.objects.filter(id=id)
-#         if event_queryset.exists():
-#             event = event_queryset.first()
-#         else:
-#             # Check if the model has a uuid field
-#             if hasattr(Event, 'uuid'):
-#                 event_queryset = Event.objects.filter(uuid=id)
-#                 if event_queryset.exists():
-#                     event = event_queryset.first()
-        
-#         if not event:
-#             return HttpResponse(f"Event with ID {id} not found.", status=404)
-            
-#         # Check if this event belongs to the user's company
-#         if company and event.company != company:
-#             return HttpResponseForbidden("You don't have permission to view this event")
-            
-#         expenses = Expense.objects.filter(event=event)
-#         event_form = EventExpenseForm()
-        
-#         # Create expense summary by status
-#         expense_summary = {
-#             'pending': expenses.filter(approved=False, declined=False).aggregate(Sum('amount'))['amount__sum'] or 0,
-#             'approved': expenses.filter(approved=True).aggregate(Sum('amount'))['amount__sum'] or 0,
-#             'declined': expenses.filter(declined=True).aggregate(Sum('amount'))['amount__sum'] or 0,
-#         }
-        
-#         # Group expenses by category
-#         expense_categories = expenses.filter(approved=True).values('expense_category').annotate(total=Sum('amount')).order_by('-total')
-#         print(f"expense_categories: {expense_categories}") 
-      
-#         context = {
-#             'item': event,
-#             'item_type': 'event',
-#             'expenses': expenses,
-#             'expense_summary': expense_summary,
-#             'expense_categories': expense_categories,
-#             'is_admin': is_admin(user),
-#             'event_form': event_form,
-#         }
-#         return render(request, 'expenses/expense_detail.html', context)
-        
-#     elif item_type == 'operation':
-#         # Handle operation and its expenses
-#         operation = None
-        
-#         # First try direct id lookup
-#         operation_queryset = Operation.objects.filter(id=id)
-#         if operation_queryset.exists():
-#             operation = operation_queryset.first()
-#         else:
-#             # Check if the model has a uuid field
-#             if hasattr(Operation, 'uuid'):
-#                 operation_queryset = Operation.objects.filter(uuid=id)
-#                 if operation_queryset.exists():
-#                     operation = operation_queryset.first()
-        
-#         if not operation:
-#             return HttpResponse(f"Operation with ID {id} not found.", status=404)
-            
-#         # Check if this operation belongs to the user's company
-#         if company and operation.company != company:
-#             return HttpResponseForbidden("You don't have permission to view this operation")
-            
-#         expenses = Expense.objects.filter(operation=operation)
-#         operation_form = OperationExpenseForm()
-        
-#         # Create expense summary by status
-#         expense_summary = {
-#             'pending': expenses.filter(approved=False, declined=False).aggregate(Sum('amount'))['amount__sum'] or 0,
-#             'approved': expenses.filter(approved=True).aggregate(Sum('amount'))['amount__sum'] or 0,
-#             'declined': expenses.filter(declined=True).aggregate(Sum('amount'))['amount__sum'] or 0,
-#         }
-        
-#         # Group expenses by category
-#         expense_categories = expenses.filter(approved=True).values('expense_category').annotate(total=Sum('amount')).order_by('-total')
-
-#         print(f"expense_categories: {expense_categories}")
-#         context = {
-#             'item': operation,
-#             'item_type': 'operation',
-#             'expenses': expenses,
-#             'expense_summary': expense_summary,
-#             'expense_categories': expense_categories,
-#             'is_admin': is_admin(user),
-#             'operation_form': operation_form,
-#         }
-#         return render(request, 'expenses/expense_detail.html', context)
-        
-#     else:
-#         # Handle individual expense
-#         expense = None
-        
-#         # First try direct id lookup
-#         expense_queryset = Expense.objects.filter(id=id)
-#         if expense_queryset.exists():
-#             expense = expense_queryset.first()
-#         else:
-#             # Check if the model has a uuid field
-#             if hasattr(Expense, 'uuid'):
-#                 expense_queryset = Expense.objects.filter(uuid=id)
-#                 if expense_queryset.exists():
-#                     expense = expense_queryset.first()
-        
-#         if not expense:
-#             return HttpResponse(f"Expense with ID {id} not found.", status=404)
-        
-#         # Permission check
-#         if not is_admin(user) and expense.created_by != user:
-#             return HttpResponseForbidden("You don't have permission to view this expense")
-        
-#         # Get related event or operation for this expense
-#         event = None
-#         operation = None
-        
-#         if hasattr(expense, 'event') and expense.event:
-#             event = expense.event
-#             # Get all expenses related to this event
-#             related_expenses = Expense.objects.filter(event=event).exclude(id=expense.id)
-#         elif hasattr(expense, 'operation') and expense.operation:
-#             operation = expense.operation
-#             # Get all expenses related to this operation
-#             related_expenses = Expense.objects.filter(operation=operation).exclude(id=expense.id)
-#         else:
-#             related_expenses = Expense.objects.none()
-        
-#         approval_form = None
-#         if is_admin(user) and not expense.approved and not expense.declined:
-#             approval_form = ExpenseApprovalForm(instance=expense)
-        
-#         payment_form = None
-#         if expense.approved and not expense.declined:
-#             payment_form = PaymentForm(user=user, company=company, initial={'expense': expense})
-        
-#         # Add expense request summary by category
-#         # For individual expense view
-#         from collections import Counter
-#         expense_requests = []
-#         if hasattr(expense, 'event') and expense.event:
-#             # Get all expenses in the same category for this event
-#             expense_categories = Expense.objects.filter(
-#                 event=expense.event
-#             ).values('expense_category').annotate(
-#                 amount=Sum('amount')
-#             ).order_by('-amount')
-            
-#             expense_requests = [
-#                 {'category': cat['expense_category'], 'amount': cat['amount']} 
-#                 for cat in expense_categories
-#             ]
-#         elif hasattr(expense, 'operation') and expense.operation:
-#             # Get all expenses in the same category for this operation
-#             expense_categories = Expense.objects.filter(
-#                 operation=expense.operation
-#             ).values('expense_category').annotate(
-#                 amount=Sum('amount')
-#             ).order_by('-amount')
-            
-#             expense_requests = [
-#                 {'category': cat['expense_category'], 'amount': cat['amount']} 
-#                 for cat in expense_categories
-#             ]
-        
-#         # Get summary stats for this expense
-#         summaries = [
-#             {'status': 'Current Status', 'amount': expense.amount},
-#         ]
-        
-#         # Get all approved expense requests related to this expense
-#         approved_requests = []
-#         if hasattr(expense, 'event') and expense.event:
-#             approved_requests = Expense.objects.filter(
-#                 event=expense.event, 
-#                 approved=True
-#             ).values(
-#                 'created_by__first_name', 
-#                 'created_by__last_name', 
-#                 'expense_category', 
-#                 'amount'
-#             )
-#         elif hasattr(expense, 'operation') and expense.operation:
-#             approved_requests = Expense.objects.filter(
-#                 operation=expense.operation, 
-#                 approved=True
-#             ).values(
-#                 'created_by__first_name', 
-#                 'created_by__last_name', 
-#                 'expense_category', 
-#                 'amount'
-#             )
-            
-#         # Format approved requests for template
-#         formatted_approved_requests = []
-#         for req in approved_requests:
-#             formatted_approved_requests.append({
-#                 'created_by': f"{req['created_by__first_name']} {req['created_by__last_name']}",
-#                 'expense_type': req['expense_category'],
-#                 'status': 'Approved',
-#                 'amount': req['amount']
-#             })
-        
-#         context = {
-#             'expense': expense,
-#             'approval_form': approval_form,
-#             'payment_form': payment_form,
-#             'is_admin': is_admin(user),
-#             'related_expenses': related_expenses,
-#             'event': event,
-#             'operation': operation,
-#             'summaries': summaries,
-#             'expense_requests': expense_requests,
-#             'approved_requests': formatted_approved_requests,
-#         }
-        
-#         return render(request, 'expenses/expense_detail.html', context)
-
 
 
 @login_required
@@ -543,7 +311,7 @@ def expense_detail(request, id, item_type=None):
             
         expenses = Expense.objects.filter(event=event)
         approved_expenses = expenses.filter(approved=True, declined=False)
-        event_form = EventExpenseForm()
+        event_form = EventExpenseForm(instance=event)
         
         # Create expense summary by status
         expense_summary = {
@@ -557,6 +325,9 @@ def expense_detail(request, id, item_type=None):
                 'expense_category__name'
             ).annotate(total=Sum('amount')).order_by('-total')
         print(f"expense_categories: {expense_categories}") 
+        
+        # Calculate grand total for approved expenses
+        total_amount = sum(cat['total'] for cat in expense_categories) if expense_categories else 0
             
         context = {
             'item': event,
@@ -565,6 +336,7 @@ def expense_detail(request, id, item_type=None):
             'approved_expenses': approved_expenses,
             'expense_summary': expense_summary,
             'expense_categories': expense_categories,
+            'total_amount': total_amount,  # Add grand total
             'is_admin': is_admin(user),
             'event_form': event_form,
         }
@@ -594,7 +366,7 @@ def expense_detail(request, id, item_type=None):
             
         expenses = Expense.objects.filter(operation=operation)
         approved_expenses = expenses.filter(approved=True, declined=False)
-        operation_form = OperationExpenseForm()
+        operation_form = OperationExpenseForm(instance=operation)
         
         # Create expense summary by status
         expense_summary = {
@@ -609,6 +381,10 @@ def expense_detail(request, id, item_type=None):
             ).annotate(total=Sum('amount')).order_by('-total')
 
         print(f"expense_categories: {expense_categories}")
+        
+        # Calculate grand total for approved expenses
+        total_amount = sum(cat['total'] for cat in expense_categories) if expense_categories else 0
+        
         context = {
             'item': operation,
             'item_type': 'operation',
@@ -616,6 +392,7 @@ def expense_detail(request, id, item_type=None):
             'approved_expenses': approved_expenses,
             'expense_summary': expense_summary,
             'expense_categories': expense_categories,
+            'total_amount': total_amount,  # Add grand total
             'is_admin': is_admin(user),
             'operation_form': operation_form,
         }
@@ -698,6 +475,9 @@ def expense_detail(request, id, item_type=None):
                 for cat in expense_categories
             ]
         
+        # Calculate grand total for individual expense view
+        total_amount = sum(request['amount'] for request in expense_requests) if expense_requests else 0
+        
         # Get summary stats for this expense
         summaries = [
             {'status': 'Current Status', 'amount': expense.amount},
@@ -748,11 +528,11 @@ def expense_detail(request, id, item_type=None):
             'operation': operation,
             'summaries': summaries,
             'expense_requests': expense_requests,
+            'total_amount': total_amount,  # Add grand total for individual view
             'approved_requests': formatted_approved_requests,
         }
         
         return render(request, 'expenses/expense_detail.html', context)
-
 
 @login_required
 def edit_item(request, id, item_type):

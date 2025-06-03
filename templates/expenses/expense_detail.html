@@ -47,6 +47,10 @@
                                   <div>{{ item.created_by.first_name }} {{ item.created_by.last_name }}</div>
                                 </div>
                                 <div class="col-12 border-bottom">
+                                  <small class="text-muted d-block">Budget</small>
+                                  <div>{{ item.budget|intcomma }}</div>
+                                </div>
+                                <div class="col-12 border-bottom">
                                   <small class="text-muted d-block">Start Date</small>
                                   <div>{{ item.start_date }}</div>
                                 </div>
@@ -72,8 +76,8 @@
                                   <div>{{ item.created_by.first_name }} {{ item.created_by.last_name }}</div>
                                 </div>
                                 <div class="col-12 border-bottom">
-                                  <small class="text-muted d-block">Description</small>
-                                  <div>{{ item.description|default:"No description available" }}</div>
+                                  <small class="text-muted d-block">Budget</small>
+                                  <div>{{ item.budget|intcomma }}</div>
                                 </div>
                                 <div class="col-12">
                                   <small class="text-muted d-block">Created On</small>
@@ -165,56 +169,73 @@
                 </div>
                 
                 <div class="col-md-4">
-                    <div class="card shadow-sm">
-                        <div class="card-header bg-secondary text-white">
-                            {% if item_type == 'event' or item_type == 'operation' %}
-                                Total Approved Expenses
-                            {% else %}
-                                Expense Requests
-                            {% endif %}
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-borderless">
-                                    <thead>
-                                        <tr>
-                                            <th>CATEGORY</th>
-                                            <th>TOTAL AMOUNT</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% if item_type == 'event' or item_type == 'operation' %}
-                                            {% if expense_categories %}
-                                                {% for category in expense_categories %}
-                                                    <tr>
-                                                        <td>{{ category.expense_category__name }}</td>
-                                                        <td>{{ category.total|intcomma }}</td>
-                                                    </tr>
-                                                {% endfor %}
-                                            {% else %}
-                                                <tr>
-                                                    <td colspan="2">No approved expenses found.</td>
-                                                </tr>
-                                            {% endif %}
-                                        {% else %}
-                                            {% if expense_requests %}
-                                                {% for request in expense_requests %}
-                                                    <tr>
-                                                        <td>{{ request.category }}</td>
-                                                        <td>{{ request.amount|intcomma }}</td>
-                                                    </tr>
-                                                {% endfor %}
-                                            {% else %}
-                                                <tr>
-                                                    <td colspan="2">No results found.</td>
-                                                </tr>
-                                            {% endif %}
-                                        {% endif %}
-                                    </tbody>
-                                </table>
-                            </div>
+                <div class="card shadow-sm">
+                    <div class="card-header bg-secondary text-white">
+                        {% if item_type == 'event' or item_type == 'operation' %}
+                        Total Approved Expenses
+                        {% else %}
+                        Expense Requests
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-borderless">
+                                <thead>
+                                    <tr>
+                                        <th>CATEGORY</th>
+                                        <th>TOTAL AMOUNT</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% if item_type == 'event' or item_type == 'operation' %}
+                                    {% if expense_categories %}
+                                    {% for category in expense_categories %}
+                                    <tr>
+                                        <td>{{ category.expense_category__name }}</td>
+                                        <td>{{ category.total|intcomma }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="2">No approved expenses found.</td>
+                                    </tr>
+                                    {% endif %}
+                                    {% else %}
+                                    {% if expense_requests %}
+                                    {% for request in expense_requests %}
+                                    <tr>
+                                        <td>{{ request.category }}</td>
+                                        <td>{{ request.amount|intcomma }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="2">No results found.</td>
+                                    </tr>
+                                    {% endif %}
+                                    {% endif %}
+                                </tbody>
+                                <tfoot class="table-dark">
+                                    {% if item_type == 'event' or item_type == 'operation' %}
+                                    {% if expense_categories %}
+                                    <tr>
+                                        <th>GRAND TOTAL</th>
+                                        <th>{{ total_amount|intcomma }}</th>
+                                    </tr>
+                                    {% endif %}
+                                    {% else %}
+                                    {% if expense_requests %}
+                                    <tr>
+                                        <th>GRAND TOTAL</th>
+                                        <th>{{ total_amount|intcomma }}</th>
+                                    </tr>
+                                    {% endif %}
+                                    {% endif %}
+                                </tfoot>
+                            </table>
                         </div>
                     </div>
+                </div>
                 </div>
             </div>
             
@@ -408,51 +429,21 @@
                     {% csrf_token %}
                     <div class="row">
                         {% if item_type == 'event' %}
+                            
                             <div class="col-md-6 mb-3">
-                                <label for="start_date" class="form-label">Start Date</label>
-                                <input type="date" class="form-control" id="start_date" name="start_date" 
-                                       value="{{ item.start_date|date:'Y-m-d' }}" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="end_date" class="form-label">End Date</label>
-                                <input type="date" class="form-control" id="end_date" name="end_date" 
-                                       value="{{ item.end_date|date:'Y-m-d' }}" required>
+                                {{event_form}}
                             </div>
                         {% else %}
+                            
                             <div class="col-md-6 mb-3">
-                                <label for="start_date" class="form-label">Start Date</label>
-                                <input type="date" class="form-control" id="start_date" name="start_date" 
-                                       value="{% if item.start_date %}{{ item.start_date|date:'Y-m-d' }}{% endif %}">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="end_date" class="form-label">End Date</label>
-                                <input type="date" class="form-control" id="end_date" name="end_date" 
-                                       value="{% if item.end_date %}{{ item.end_date|date:'Y-m-d' }}{% endif %}">
+                                {{operation_form}}
                             </div>
                         {% endif %}
                     </div>
                     
-                    <!-- Display non-editable information -->
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="alert alert-info">
-                                <small>
-                                    <strong>Note:</strong> Only dates can be modified. Other details like name, category, and description cannot be changed.
-                                </small>
-                            </div>
-                        </div>
-                    </div>
+            
                     
-                    <div class="row">
-                        <div class="col-md-6">
-                            <label class="form-label">Name</label>
-                            <input type="text" class="form-control" value="{{ item.name }}" readonly>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Category</label>
-                            <input type="text" class="form-control" value="{{ item.category }}" readonly>
-                        </div>
-                    </div>
+                    
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
