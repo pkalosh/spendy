@@ -36,12 +36,7 @@
                     <h5 class="mb-0">{{ kyc.company_name|title }} ! Welcome to Spendy</h5>
                     <p class="mb-0">Manage your expenses efficiently.</p>
                 </div>
-                <div class="d-flex gap-2 mt-2 mt-md-0">
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newWalletModal">+ New Wallet</button>
-                    
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#sendModal">Wallet Transfer</button>
-                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#fundWalletModal">Fund Wallet</button>
-                </div>
+                
             </div>
 
            
@@ -51,21 +46,22 @@
                 </div>
             {% endif %}
 
-            <!-- Wallets Row - Horizontal Display -->
-            <div class="row">
+            <!-- Wallets Section - Priority 1 -->
+            <div class="row mb-5">
                 <div class="col-12">
+
                     <div class="row">
                         {% if primary_wallets %}
                             {% for c in primary_wallets %}
-                                <div class="col-md-4 mb-4">
-                                    <div class="wallet-card bg-white p-4 rounded shadow border-l-4 border-blue-500 h-100">
-                                        <div class="d-flex justify-content-between mb-2">
-                                            <h5 class="font-semibold">{{ c.wallet_name }}</h5>
-                                            <span class="text-sm">{{ c.currency }} {{ c.balance|intcomma }}</span>
+                                <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+                                    <div class="wallet-card bg-white p-4 rounded-3 shadow-sm border h-100" style="border-left: 4px solid #3b82f6 !important;">
+                                        <div class="text-center mb-3">
+                                            <h6 class="fw-semibold mb-2 text-dark">{{ c.wallet_name }}</h6>
+                                            <div class="h4 mb-0 text-primary fw-bold">{{ c.currency }} {{ c.balance|intcomma }}</div>
                                         </div>
                                         {% if c.utilization is not None %}
-                                            <div class="mb-2">
-                                                <small class="text-muted">
+                                            <div class="text-center">
+                                                <small class="text-muted d-block mb-2">
                                                     Utilized: {{ c.total_utilized|intcomma }} / {{ c.limit|intcomma }} ({{ c.utilization }}%)
                                                 </small>
                                                 <div class="progress mt-1" style="height: 6px;">
@@ -73,30 +69,26 @@
                                                 </div>
                                             </div>
                                         {% else %}
-                                            <small class="text-muted">No utilization data</small>
+                                            <div class="text-center">
+                                                <small class="text-muted">No utilization data</small>
+                                            </div>
                                         {% endif %}
                                     </div>
                                 </div>
                             {% endfor %}
-                        {% else %}
-                            <div class="col-12">
-                                <div class="alert alert-info">
-                                    You don't have any primary wallets yet. Create one to get started!
-                                </div>
-                            </div>
                         {% endif %}
             
                         {% if wallets %}
                             {% for c in wallets %}
-                                <div class="col-md-4 mb-4">
-                                    <div class="wallet-card bg-white p-4 rounded shadow border-l-4 border-blue-500 h-100">
-                                        <div class="d-flex justify-content-between mb-2">
-                                            <h5 class="font-semibold">{{ c.wallet_name }}</h5>
-                                            <span class="text-sm">{{ c.currency }} {{ c.balance|intcomma }}</span>
+                                <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+                                    <div class="wallet-card bg-white p-4 rounded-3 shadow-sm border h-100" style="border-left: 4px solid #3b82f6 !important;">
+                                        <div class="text-center mb-3">
+                                            <h6 class="fw-semibold mb-2 text-dark">{{ c.wallet_name }}</h6>
+                                            <div class="h4 mb-0 text-primary fw-bold">{{ c.currency }} {{ c.balance|intcomma }}</div>
                                         </div>
                                         {% if c.utilization is not None %}
-                                            <div class="mb-2">
-                                                <small class="text-muted">
+                                            <div class="text-center">
+                                                <small class="text-muted d-block mb-2">
                                                     Utilized: {{ c.total_utilized|intcomma }} / {{ c.limit|intcomma }} ({{ c.utilization }}%)
                                                 </small>
                                                 <div class="progress mt-1" style="height: 6px;">
@@ -104,18 +96,84 @@
                                                 </div>
                                             </div>
                                         {% else %}
-                                            <small class="text-muted">No utilization data</small>
+                                            <div class="text-center">
+                                                <small class="text-muted">No utilization data</small>
+                                            </div>
                                         {% endif %}
                                     </div>
                                 </div>
                             {% endfor %}
-                        {% else %}
+                        {% endif %}
+
+                        {% if not primary_wallets and not wallets %}
                             <div class="col-12">
-                                <div class="alert alert-info">
-                                    You don't have any wallets yet. Create one to get started!
+                                <div class="alert alert-info border-0 rounded-3" style="background: linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 100%);">
+                                    <div class="text-center">
+                                        <i class="fas fa-wallet fa-2x text-info mb-2"></i>
+                                        <p class="mb-0">You don't have any wallets yet. Create one to get started!</p>
+                                    </div>
                                 </div>
                             </div>
                         {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Cards Row - Priority 2 -->
+            <div class="row mb-5">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0 text-secondary">Request Overview</h5>
+                        <small class="text-muted">Track your expense requests</small>
+                    </div>
+                    <div class="row">
+                        <div class="col-xl-3 col-lg-6 col-md-6 mb-4">
+                            <div class="card border-0 shadow-sm h-100 rounded-3" style="background: linear-gradient(135deg, #e1f5fe 0%, #b3e5fc 100%);">
+                                <div class="card-body text-center position-relative p-4">
+                                    <i class="fas fa-chart-line fa-3x text-info mb-3 opacity-75"></i>
+                                    <h2 class="mb-2 fw-bold text-dark">{{ total_requests|default:0 }}</h2>
+                                    <p class="mb-1 fw-semibold text-dark">Total Requests</p>
+                                    <small class="text-muted">All time requests</small>
+                                    <a href="{% url 'expense:expense_approvals' %}" class="stretched-link"></a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-3 col-lg-6 col-md-6 mb-4">
+                            <div class="card border-0 shadow-sm h-100 rounded-3" style="background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);">
+                                <div class="card-body text-center position-relative p-4">
+                                    <i class="fas fa-clock fa-3x text-warning mb-3 opacity-75"></i>
+                                    <h2 class="mb-2 fw-bold text-dark">{{ pending_requests|default:0 }}</h2>
+                                    <p class="mb-1 fw-semibold text-dark">Pending</p>
+                                    <small class="text-muted">Awaiting processing</small>
+                                    <a href="{% url 'expense:expense_approvals' %}" class="stretched-link"></a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-3 col-lg-6 col-md-6 mb-4">
+                            <div class="card border-0 shadow-sm h-100 rounded-3" style="background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);">
+                                <div class="card-body text-center position-relative p-4">
+                                    <i class="fas fa-check-circle fa-3x text-success mb-3 opacity-75"></i>
+                                    <h2 class="mb-2 fw-bold text-dark">{{ completed_requests|default:0 }}</h2>
+                                    <p class="mb-1 fw-semibold text-dark">Completed</p>
+                                    <small class="text-muted">Successfully processed</small>
+                                    <a href="{% url 'expense:expense_approvals' %}" class="stretched-link"></a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-3 col-lg-6 col-md-6 mb-4">
+                            <div class="card border-0 shadow-sm h-100 rounded-3" style="background: linear-gradient(135deg, #fce4ec 0%, #f8bbd9 100%);">
+                                <div class="card-body text-center position-relative p-4">
+                                    <i class="fas fa-times-circle fa-3x text-danger mb-3 opacity-75"></i>
+                                    <h2 class="mb-2 fw-bold text-dark">{{ declined_requests|default:0 }}</h2>
+                                    <p class="mb-1 fw-semibold text-dark">Declined</p>
+                                    <small class="text-muted">Declined requests</small>
+                                    <a href="{% url 'expense:expense_approvals' %}" class="stretched-link"></a>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -123,7 +181,7 @@
             <!-- Main Content Row with 8:4 Layout -->
             <div class="row g-4 mt-2">
                 <!-- Left Section (8) - Transactions -->
-                <div class="col-lg-8">
+                <div class="col-lg-12">
                     <div class="card p-4  rounded">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h5 class="mb-0">Recent Payments</h5>
@@ -176,60 +234,42 @@
                                 </tbody>
                             </table>
                         </div>
+                                        <!-- Pagination Controls -->
+                <nav aria-label="Page navigation" class="mt-3">
+                    <ul class="pagination justify-content-center">
+                        {% if transactions.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ transactions.previous_page_number }}">Previous</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">Previous</span></li>
+                        {% endif %}
+
+                        {% for num in transactions.paginator.page_range %}
+                            {% if transactions.number == num %}
+                                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                            {% elif num > transactions.number|add:'-3' and num < transactions.number|add:'3' %}
+                                <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if transactions.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ transactions.next_page_number }}">Next</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">Next</span></li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                <!-- End Pagination Controls -->
                     </div>
                 </div>
                 
-                <!-- Right Section (4) - Alerts and Notifications -->
-                <div class="col-lg-4">
- 
-                    <div class="card p-4 shadow-sm rounded-4">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="mb-0">Alerts & Updates</h5>
-                            <a href="#" class="text-decoration-none">Settings <i class="fas fa-cog"></i></a>
-                        </div>
-                        
-                        <div class="alert-container">
-                            <!-- Sample alerts - replace with your dynamic alerts -->
-                            <div class="alert-card bg-white p-3 mb-3 rounded shadow-sm">
-                                <div class="d-flex justify-content-between">
-                                    <h6 class="font-semibold mb-1">Payment Due</h6>
-                                    <small class="text-muted">Today</small>
-                                </div>
-                                <p class="text-sm mb-1">Invoice #1234 is due in 3 days</p>
-                                <a href="#" class="text-primary text-sm">View Details</a>
-                            </div>
-                            
-                            <div class="alert-card bg-white p-3 mb-3 rounded shadow-sm">
-                                <div class="d-flex justify-content-between">
-                                    <h6 class="font-semibold mb-1">Balance Low</h6>
-                                    <small class="text-muted">Yesterday</small>
-                                </div>
-                                <p class="text-sm mb-1">Your Operations wallet is running low</p>
-                                <a href="#" class="text-primary text-sm">Add Funds</a>
-                            </div>
-                            
-                            <div class="alert-card bg-white p-3 mb-3 rounded shadow-sm">
-                                <div class="d-flex justify-content-between">
-                                    <h6 class="font-semibold mb-1">New Feature</h6>
-                                    <small class="text-muted">2 days ago</small>
-                                </div>
-                                <p class="text-sm mb-1">Try our new budgeting tools</p>
-                                <a href="#" class="text-primary text-sm">Explore Now</a>
-                            </div>
-                        </div>
-                        
-                        <div class="text-center mt-3">
-                            <a href="#" class="btn btn-outline-primary btn-sm">View All Alerts</a>
-                        </div>
-                    </div>
-                    
 
-                </div>
             </div>
         </div>
     </div>
 </section>
-{% include 'partials/transfer.html' %}
-{% include 'partials/new_wallet.html' %}
-{% include 'partials/fund.html' %}
+
 {% endblock content %}

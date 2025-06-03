@@ -16,7 +16,7 @@ from django.db.models import Q
 from django.utils.html import escape
 from django.http import JsonResponse
 from django.db import transaction
-
+from django.core.paginator import Paginator
 
 
 from .models import Wallet, Transaction
@@ -451,12 +451,12 @@ def create_wallet(request):
             wallet.save()
 
             messages.success(request, f"Wallet '{wallet.wallet_name}' created successfully!")
-            return redirect('wallet:dashboard')
+            return redirect('wallet:wallet')
         else:
             messages.error(request, "Wallet name is required.")
-            return redirect('wallet:dashboard')
+            return redirect('wallet:wallet')
 
-    return redirect('wallet:dashboard')
+    return redirect('wallet:wallet')
 
 @login_required
 @user_passes_test(is_admin)
@@ -468,11 +468,11 @@ def wallet_transfer(request):
 
         if not all([from_wallet_id, to_wallet_id, amount_str]):
             messages.error(request, "All fields are required.")
-            return redirect('wallet:dashboard')
+            return redirect('wallet:wallet')
 
         if from_wallet_id == to_wallet_id:
             messages.error(request, "Source and destination wallets must be different.")
-            return redirect('wallet:dashboard')
+            return redirect('wallet:wallet')
 
         try:
             amount = Decimal(amount_str)
@@ -480,7 +480,7 @@ def wallet_transfer(request):
                 raise ValueError
         except:
             messages.error(request, "Amount must be a positive number.")
-            return redirect('wallet:dashboard')
+            return redirect('wallet:wallet')
 
         # Fetch wallets by ID
         from_wallet = get_object_or_404(Wallet, id=from_wallet_id, company=request.user.companykyc)
@@ -488,7 +488,7 @@ def wallet_transfer(request):
 
         if from_wallet.balance < amount:
             messages.error(request, "Insufficient balance in the source wallet.")
-            return redirect('wallet:dashboard')
+            return redirect('wallet:wallet')
 
         # Perform transfer
         from_wallet.balance -= amount
@@ -500,10 +500,10 @@ def wallet_transfer(request):
             request,
             f"Transferred KES {amount} from {from_wallet.wallet_name.title()} to {to_wallet.wallet_name.title()}."
         )
-        return redirect('wallet:dashboard')
+        return redirect('wallet:wallet')
     
     messages.error(request, "Invalid request method.")
-    return redirect('wallet:dashboard')
+    return redirect('wallet:wallet')
 
 
 
@@ -519,7 +519,7 @@ def fund_wallet(request):
 
         if not all([business_id, amount_str]):
             messages.error(request, "Mobile number and amount are required.")
-            return redirect('wallet:dashboard')
+            return redirect('wallet:wallet')
 
         try:
             amount = Decimal(amount_str)
@@ -527,7 +527,7 @@ def fund_wallet(request):
                 raise ValueError
         except:
             messages.error(request, "Amount must be a positive number.")
-            return redirect('wallet:dashboard')
+            return redirect('wallet:wallet')
 
         # Fund the primary wallet
         wallet = get_object_or_404(Wallet, id = int(wallet_id), company=request.user.companykyc)
@@ -536,10 +536,10 @@ def fund_wallet(request):
         wallet.save()
 
         messages.success(request, f"Wallet funded with KES {amount} via mobile {business_id}.")
-        return redirect('wallet:dashboard')
+        return redirect('wallet:wallet')
     else:
         messages.error(request, "Invalid request method.")
-        return redirect('wallet:dashboard')
+        return redirect('wallet:wallet')
 
 
 
@@ -740,7 +740,13 @@ def dashboard(request):
         return redirect("wallet:kyc-reg")
 
     # Fetch transactions and wallets
-    transactions = Transaction.objects.filter(company=kyc).order_by("-id")
+    # transactions = Transaction.objects.filter(company=kyc).order_by("-id")
+    transactions_queryset = Transaction.objects.filter(company=kyc).order_by("-id")
+
+    paginator = Paginator(transactions_queryset, 10)  # Show 10 per page
+    page_number = request.GET.get("page")
+    transactions = paginator.get_page(page_number)
+
     primary_wallets = Wallet.objects.filter(company=kyc, wallet_type="PRIMARY").order_by("-id")
     wallets = Wallet.objects.filter(company=kyc).exclude(wallet_type="PRIMARY").order_by("-id")
 
@@ -767,6 +773,10 @@ def dashboard(request):
 
     context = {
         "kyc": kyc,
+        "total_requests": Expense.objects.filter(company=kyc).count(),
+        "pending_requests": Expense.objects.filter(company=kyc, approved=False, declined=False, paid=False).count(),
+        "completed_requests": Expense.objects.filter(company=kyc, approved=True, declined=False, paid=True).count(),
+        "declined_requests": Expense.objects.filter(company=kyc, declined=True).count(),
         "wallets": wallets,
         "primary_wallets": primary_wallets,
         "form": form,
