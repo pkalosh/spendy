@@ -786,6 +786,13 @@ def dashboard(request):
 
     return render(request, "account/dashboard.html", context)
 
+
+@login_required
+def notifications(request):
+    alerts = Notification.objects.filter(user=request.user)
+    return render(request, 'notifications.html', {'alerts': alerts})
+
+
 from django.http import HttpResponse, JsonResponse
 from expense.models import Expense, ExpenseGroup,Event,Operation
 from expense.forms import ExpenseRequestForm, PaymentForm
