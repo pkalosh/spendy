@@ -9,45 +9,82 @@
     <div class="container-fluid">
       <div class="row mt-4">
         <div class="col-12">
-          <h4 class="mb-3 mt-2">Approvals</h4>
-          <p class="mb-3">Review and approve Event/Operational requests.</p>
+          <h4 class="mb-3 mt-2">Expense Approvals</h4>
+          <p class="mb-3">Review and approve Event/Operational expense requests.</p>
+          
+        
         </div>
 
-        <!-- Filter Form -->
-        <form method="get" class="row g-3 mb-3">
-          <div class="col-md-4">
-            <input type="text" class="form-control" name="q" placeholder="Search by user or description" value="{{ query }}">
-          </div>
-          <div class="col-md-3">
-            <select name="status" class="form-select">
-              <option value="all" {% if status == 'all' %}selected{% endif %}>All</option>
-              <option value="pending" {% if status == 'pending' %}selected{% endif %}>Pending</option>
-              <option value="approved" {% if status == 'approved' %}selected{% endif %}>Approved</option>
-              <option value="rejected" {% if status == 'rejected' %}selected{% endif %}>Rejected</option>
-            </select>
-          </div>
-          <div class="col-md-2">
-            <button type="submit" class="btn btn-primary">Filter</button>
-          </div>
-        </form>
-
         <!-- Tabs Navigation -->
-        <ul class="nav nav-tabs" id="approvalTabs" role="tablist">
+        <ul class="nav nav-tabs mb-4" id="approvalTabs" role="tablist">
           <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="event-tab" data-bs-toggle="tab" data-bs-target="#event" type="button" role="tab">Event Requests</button>
+            <button class="nav-link active" id="event-tab" data-bs-toggle="tab" data-bs-target="#event" type="button" role="tab" aria-controls="event" aria-selected="true">
+              Event Requests
+              <span class="badge bg-secondary ms-1">{{ event_requests.paginator.count }}</span>
+            </button>
           </li>
           <li class="nav-item" role="presentation">
-            <button class="nav-link" id="operation-tab" data-bs-toggle="tab" data-bs-target="#operation" type="button" role="tab">Operation Requests</button>
+            <button class="nav-link" id="operation-tab" data-bs-toggle="tab" data-bs-target="#operation" type="button" role="tab" aria-controls="operation" aria-selected="false">
+              Operation Requests
+              <span class="badge bg-secondary ms-1">{{ operation_requests.paginator.count }}</span>
+            </button>
           </li>
           <li class="nav-item" role="presentation">
-            <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab">Request History</button>
+            <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab" aria-controls="history" aria-selected="false">
+              Request History
+              <span class="badge bg-secondary ms-1">{{ past_requests.paginator.count }}</span>
+            </button>
           </li>
         </ul>
 
+        <!-- Filter Controls -->
+        <div class="card mb-4">
+          <div class="card-body">
+            <form method="get" id="filterForm">
+              <div class="row">
+                <div class="col-md-8">
+                  <div class="btn-group" role="group" aria-label="Request filter">
+                    <button type="button" class="btn btn-outline-primary {% if status == 'all' %}active{% endif %}" data-filter="all">
+                      All Requests
+                      <span class="badge bg-primary ms-1">{{ summary.total_all }}</span>
+                    </button>
+                    <button type="button" class="btn btn-outline-warning {% if status == 'pending' %}active{% endif %}" data-filter="pending">
+                      Pending
+                      <span class="badge bg-warning ms-1">{{ summary.total_pending }}</span>
+                    </button>
+                    <button type="button" class="btn btn-outline-success {% if status == 'approved' %}active{% endif %}" data-filter="approved">
+                      Approved
+                      <span class="badge bg-success ms-1">{{ summary.total_approved }}</span>
+                    </button>
+                    <button type="button" class="btn btn-outline-danger {% if status == 'rejected' %}active{% endif %}" data-filter="rejected">
+                      Rejected
+                      <span class="badge bg-danger ms-1">{{ summary.total_rejected }}</span>
+                    </button>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="input-group">
+                    <input type="text" class="form-control" id="requestSearch" name="q" placeholder="Search requests..." value="{{ query }}">
+                    <button class="btn btn-outline-secondary" type="submit">
+                      <i class="fas fa-search"></i>
+                    </button>
+                    {% if query %}
+                    <a href="{% url 'expense:approvals' %}" class="btn btn-outline-danger">
+                      <i class="fas fa-times"></i>
+                    </a>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+              <input type="hidden" name="status" id="statusFilter" value="{{ status }}">
+            </form>
+          </div>
+        </div>
+
         <!-- Tabs Content -->
-        <div class="tab-content mt-3" id="approvalTabsContent">
+        <div class="tab-content" id="approvalTabsContent">
           <!-- Event Requests Tab -->
-          <div class="tab-pane fade show active" id="event" role="tabpanel">
+          <div class="tab-pane fade show active" id="event" role="tabpanel" aria-labelledby="event-tab">
             <div class="table-responsive">
               <table class="table table-bordered table-striped">
                 <thead class="table-dark">
@@ -58,74 +95,135 @@
                     <th>Amount</th>
                     <th>Description</th>
                     <th>Location</th>
+                    <th>Date Requested</th>
+                    <th>Status</th>
                     <th>Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {% for expense in event_requests %}
                   <tr>
-                    <td>{{ expense.created_by.get_full_name }}</td>
-                    <td>{{ expense.event.name }}</td>
-                    <td>{{ expense.expense_category.name }}</td>
-                    <td>KSH: {{ expense.amount }}</td>
-                    <td>{{ expense.description }}</td>
+                    <td>
+                      <div class="d-flex align-items-center">
+                        <div class="avatar-sm me-2">
+                          <span class="avatar-title rounded-circle bg-primary text-white">
+                            {{ expense.created_by.get_full_name|first|upper }}
+                          </span>
+                        </div>
+                        <div>
+                          <strong>{{ expense.created_by.get_full_name }}</strong>
+                          <br>
+                          <small class="text-muted">{{ expense.created_by.email }}</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <strong>{{ expense.event.name }}</strong>
+                      <br>
+                      <small class="text-muted">{{ expense.event.date|date:"M d, Y" }}</small>
+                    </td>
+                    <td>
+                      <span class="badge bg-info">{{ expense.expense_category.name }}</span>
+                    </td>
+                    <td>
+                      <strong>KSH {{ expense.amount|floatformat:2|intcomma }}</strong>
+                    </td>
+                    <td>
+                      <div class="description-cell">
+                        {{ expense.description|truncatewords:10 }}
+                        {% if expense.description|length > 50 %}
+                        <br>
+                        <small>
+                          <a href="#" class="text-primary" data-bs-toggle="tooltip" 
+                             title="{{ expense.description }}">View full description</a>
+                        </small>
+                        {% endif %}
+                      </div>
+                    </td>
                     <td>{{ expense.event.location }}</td>
                     <td>
-                      {% if not expense.approved and not expense.declined %}
-                      <form method="post" action="{% url 'expense:approve_expense' expense.id %}" class="d-inline-block approve-form">
-                        {% csrf_token %}
-                        <button class="btn btn-success btn-sm" type="submit">Approve</button>
-                      </form>
-                      <form method="post" action="{% url 'expense:decline_expense' expense.id %}" class="d-inline-block decline-form">
-                        {% csrf_token %}
-                        <button class="btn btn-danger btn-sm" type="submit">Reject</button>
-                      </form>
-                      {% elif expense.approved %}
-                      <span class="badge bg-success">Approved</span>
+                      <small>{{ expense.created_at|date:"M d, Y" }}<br>{{ expense.created_at|time:"g:i A" }}</small>
+                    </td>
+                    <td>
+                      {% if expense.approved %}
+                        <span class="badge bg-success">Approved</span>
+                        {% if expense.approved_by %}
+                        <br><small class="text-muted">by {{ expense.approved_by.get_full_name }}</small>
+                        {% endif %}
                       {% elif expense.declined %}
-                      <span class="badge bg-danger">Rejected</span>
+                        <span class="badge bg-danger">Rejected</span>
+                        {% if expense.approved_by %}
+                        <br><small class="text-muted">by {{ expense.approved_by.get_full_name }}</small>
+                        {% endif %}
+                      {% else %}
+                        <span class="badge bg-warning text-dark">Pending</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if not expense.approved and not expense.declined %}
+                      <div class="btn-group-vertical" role="group">
+                        <button class="btn btn-success btn-sm approve-btn" 
+                                data-expense-id="{{ expense.id }}"
+                                data-requester="{{ expense.created_by.get_full_name }}"
+                                data-amount="KSH {{ expense.amount|floatformat:2|intcomma }}"
+                                data-description="{{ expense.description }}">
+                          <i class="fas fa-check"></i> Approve
+                        </button>
+                        <button class="btn btn-danger btn-sm decline-btn" 
+                                data-expense-id="{{ expense.id }}"
+                                data-requester="{{ expense.created_by.get_full_name }}"
+                                data-amount="KSH {{ expense.amount|floatformat:2|intcomma }}"
+                                data-description="{{ expense.description }}">
+                          <i class="fas fa-times"></i> Reject
+                        </button>
+                      </div>
+                      {% else %}
+                      <span class="text-muted">—</span>
                       {% endif %}
                     </td>
                   </tr>
                   {% empty %}
                   <tr>
-                    <td colspan="7" class="text-center">No event requests found.</td>
+                    <td colspan="9" class="text-center py-4">
+                      <div class="empty-state">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <h5>No event requests found</h5>
+                        <p class="text-muted">
+                          {% if query %}
+                          No requests match your search criteria.
+                          {% else %}
+                          There are no event expense requests at the moment.
+                          {% endif %}
+                        </p>
+                      </div>
+                    </td>
                   </tr>
                   {% endfor %}
                 </tbody>
               </table>
             </div>
-            <!-- Pagination for Event Requests -->
+            
+            <!-- Event Pagination -->
             {% if event_requests.has_other_pages %}
-            <nav>
+            <nav aria-label="Event requests pagination">
               <ul class="pagination justify-content-center">
                 {% if event_requests.has_previous %}
                 <li class="page-item">
-                  <a class="page-link" href="?q={{ query }}&status={{ status }}&event_page={{ event_requests.previous_page_number }}">Previous</a>
-                </li>
-                {% else %}
-                <li class="page-item disabled">
-                  <span class="page-link">Previous</span>
+                  <a class="page-link" href="?event_page={{ event_requests.previous_page_number }}&q={{ query }}&status={{ status }}">Previous</a>
                 </li>
                 {% endif %}
+                
                 {% for num in event_requests.paginator.page_range %}
-                {% if event_requests.number == num %}
-                <li class="page-item active">
-                  <span class="page-link">{{ num }}</span>
-                </li>
-                {% else %}
-                <li class="page-item">
-                  <a class="page-link" href="?q={{ query }}&status={{ status }}&event_page={{ num }}">{{ num }}</a>
-                </li>
-                {% endif %}
+                  {% if event_requests.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                  {% elif num > event_requests.number|add:'-3' and num < event_requests.number|add:'3' %}
+                    <li class="page-item"><a class="page-link" href="?event_page={{ num }}&q={{ query }}&status={{ status }}">{{ num }}</a></li>
+                  {% endif %}
                 {% endfor %}
+                
                 {% if event_requests.has_next %}
                 <li class="page-item">
-                  <a class="page-link" href="?q={{ query }}&status={{ status }}&event_page={{ event_requests.next_page_number }}">Next</a>
-                </li>
-                {% else %}
-                <li class="page-item disabled">
-                  <span class="page-link">Next</span>
+                  <a class="page-link" href="?event_page={{ event_requests.next_page_number }}&q={{ query }}&status={{ status }}">Next</a>
                 </li>
                 {% endif %}
               </ul>
@@ -134,89 +232,155 @@
           </div>
 
           <!-- Operation Requests Tab -->
-          <div class="tab-pane fade" id="operation" role="tabpanel">
+          <div class="tab-pane fade" id="operation" role="tabpanel" aria-labelledby="operation-tab">
             <div class="table-responsive">
               <table class="table table-bordered table-striped">
                 <thead class="table-dark">
                   <tr>
                     <th>Requested By</th>
-                    <th>Operation Category</th>
+                    <th>Operation</th>
+                    <th>Category</th>
                     <th>Amount</th>
                     <th>Description</th>
+                    <th>Date Requested</th>
+                    <th>Status</th>
                     <th>Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {% for expense in operation_requests %}
                   <tr>
-                    <td>{{ expense.created_by.get_full_name }}</td>
-                    <td>{{ expense.expense_category.name }}</td>
-                    <td>KSH: {{ expense.amount }}</td>
-                    <td>{{ expense.description }}</td>
+                    <td>
+                      <div class="d-flex align-items-center">
+                        <div class="avatar-sm me-2">
+                          <span class="avatar-title rounded-circle bg-secondary text-white">
+                            {{ expense.created_by.get_full_name|first|upper }}
+                          </span>
+                        </div>
+                        <div>
+                          <strong>{{ expense.created_by.get_full_name }}</strong>
+                          <br>
+                          <small class="text-muted">{{ expense.created_by.email }}</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      {% if expense.operation %}
+                      <strong>{{ expense.operation.name }}</strong>
+                      {% else %}
+                      <span class="text-muted">General Operation</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <span class="badge bg-secondary">{{ expense.expense_category.name }}</span>
+                    </td>
+                    <td>
+                      <strong>KSH {{ expense.amount|floatformat:2|intcomma }}</strong>
+                    </td>
+                    <td>
+                      <div class="description-cell">
+                        {{ expense.description|truncatewords:10 }}
+                        {% if expense.description|length > 50 %}
+                        <br>
+                        <small>
+                          <a href="#" class="text-primary" data-bs-toggle="tooltip" 
+                             title="{{ expense.description }}">View full description</a>
+                        </small>
+                        {% endif %}
+                      </div>
+                    </td>
+                    <td>
+                      <small>{{ expense.created_at|date:"M d, Y" }}<br>{{ expense.created_at|time:"g:i A" }}</small>
+                    </td>
+                    <td>
+                      {% if expense.approved %}
+                        <span class="badge bg-success">Approved</span>
+                        {% if expense.approved_by %}
+                        <br><small class="text-muted">by {{ expense.approved_by.get_full_name }}</small>
+                        {% endif %}
+                      {% elif expense.declined %}
+                        <span class="badge bg-danger">Rejected</span>
+                        {% if expense.approved_by %}
+                        <br><small class="text-muted">by {{ expense.approved_by.get_full_name }}</small>
+                        {% endif %}
+                      {% else %}
+                        <span class="badge bg-warning text-dark">Pending</span>
+                      {% endif %}
+                    </td>
                     <td>
                       {% if not expense.approved and not expense.declined %}
-                      <form method="post" action="{% url 'expense:approve_expense' expense.id %}" class="d-inline-block approve-form">
-                        {% csrf_token %}
-                        <button class="btn btn-success btn-sm" type="submit">Approve</button>
-                      </form>
-                      <form method="post" action="{% url 'expense:decline_expense' expense.id %}" class="d-inline-block decline-form">
-                        {% csrf_token %}
-                        <button class="btn btn-danger btn-sm" type="submit">Reject</button>
-                      </form>
-                      {% elif expense.approved %}
-                      <span class="badge bg-success">Approved</span>
-                      {% elif expense.declined %}
-                      <span class="badge bg-danger">Rejected</span>
+                      <div class="btn-group-vertical" role="group">
+                        <button class="btn btn-success btn-sm approve-btn" 
+                                data-expense-id="{{ expense.id }}"
+                                data-requester="{{ expense.created_by.get_full_name }}"
+                                data-amount="KSH {{ expense.amount|floatformat:2|intcomma }}"
+                                data-description="{{ expense.description }}">
+                          <i class="fas fa-check"></i> Approve
+                        </button>
+                        <button class="btn btn-danger btn-sm decline-btn" 
+                                data-expense-id="{{ expense.id }}"
+                                data-requester="{{ expense.created_by.get_full_name }}"
+                                data-amount="KSH {{ expense.amount|floatformat:2|intcomma }}"
+                                data-description="{{ expense.description }}">
+                          <i class="fas fa-times"></i> Reject
+                        </button>
+                      </div>
+                      {% else %}
+                      <span class="text-muted">—</span>
                       {% endif %}
                     </td>
                   </tr>
                   {% empty %}
                   <tr>
-                    <td colspan="5" class="text-center">No operation requests found.</td>
+                    <td colspan="8" class="text-center py-4">
+                      <div class="empty-state">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <h5>No operation requests found</h5>
+                        <p class="text-muted">
+                          {% if query %}
+                          No requests match your search criteria.
+                          {% else %}
+                          There are no operation expense requests at the moment.
+                          {% endif %}
+                        </p>
+                      </div>
+                    </td>
                   </tr>
                   {% endfor %}
                 </tbody>
               </table>
             </div>
-            <!-- Pagination for Operation Requests -->
+            
+            <!-- Operation Pagination -->
             {% if operation_requests.has_other_pages %}
-            <nav>
+            <nav aria-label="Operation requests pagination">
               <ul class="pagination justify-content-center">
                 {% if operation_requests.has_previous %}
                 <li class="page-item">
-                  <a class="page-link" href="?q={{ query }}&status={{ status }}&op_page={{ operation_requests.previous_page_number }}">Previous</a>
-                </li>
-                {% else %}
-                <li class="page-item disabled">
-                  <span class="page-link">Previous</span>
+                  <a class="page-link" href="?op_page={{ operation_requests.previous_page_number }}&q={{ query }}&status={{ status }}">Previous</a>
                 </li>
                 {% endif %}
+                
                 {% for num in operation_requests.paginator.page_range %}
-                {% if operation_requests.number == num %}
-                <li class="page-item active">
-                  <span class="page-link">{{ num }}</span>
-                </li>
-                {% else %}
-                <li class="page-item">
-                  <a class="page-link" href="?q={{ query }}&status={{ status }}&op_page={{ num }}">{{ num }}</a>
-                </li>
-                {% endif %}
+                  {% if operation_requests.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                  {% elif num > operation_requests.number|add:'-3' and num < operation_requests.number|add:'3' %}
+                    <li class="page-item"><a class="page-link" href="?op_page={{ num }}&q={{ query }}&status={{ status }}">{{ num }}</a></li>
+                  {% endif %}
                 {% endfor %}
+                
                 {% if operation_requests.has_next %}
                 <li class="page-item">
-                  <a class="page-link" href="?q={{ query }}&status={{ status }}&op_page={{ operation_requests.next_page_number }}">Next</a>
-                </li>
-                {% else %}
-                <li class="page-item disabled">
-                  <span class="page-link">Next</span>
+                  <a class="page-link" href="?op_page={{ operation_requests.next_page_number }}&q={{ query }}&status={{ status }}">Next</a>
                 </li>
                 {% endif %}
               </ul>
             </nav>
             {% endif %}
           </div>
-          <!-- Requests History Tab -->
-          <div class="tab-pane fade" id="history" role="tabpanel">
+
+          <!-- Request History Tab -->
+          <div class="tab-pane fade" id="history" role="tabpanel" aria-labelledby="history-tab">
             <div class="table-responsive">
               <table class="table table-bordered table-striped">
                 <thead class="table-dark">
@@ -227,79 +391,118 @@
                     <th>Amount</th>
                     <th>Description</th>
                     <th>Status</th>
-                    <th>Location (if Event)</th>
+                    <th>Processed By</th>
+                    <th>Date Processed</th>
                   </tr>
                 </thead>
                 <tbody>
                   {% for expense in past_requests %}
                   <tr>
-                    <td>{{ expense.created_by.get_full_name }}</td>
+                    <td>
+                      <div class="d-flex align-items-center">
+                        <div class="avatar-sm me-2">
+                          <span class="avatar-title rounded-circle bg-dark text-white">
+                            {{ expense.created_by.get_full_name|first|upper }}
+                          </span>
+                        </div>
+                        <div>
+                          <strong>{{ expense.created_by.get_full_name }}</strong>
+                          <br>
+                          <small class="text-muted">{{ expense.created_by.email }}</small>
+                        </div>
+                      </div>
+                    </td>
                     <td>
                       {% if expense.event %}
-                        Event
+                        <span class="badge bg-info">Event</span>
+                        <br>
+                        <small>{{ expense.event.name }}</small>
                       {% else %}
-                        Operation
+                        <span class="badge bg-secondary">Operation</span>
+                        {% if expense.operation %}
+                        <br>
+                        <small>{{ expense.operation.name }}</small>
+                        {% endif %}
                       {% endif %}
                     </td>
                     <td>{{ expense.expense_category.name }}</td>
-                    <td>KSH: {{ expense.amount }}</td>
-                    <td>{{ expense.description }}</td>
+                    <td><strong>KSH {{ expense.amount|floatformat:2|intcomma }}</strong></td>
+                    <td>
+                      {{ expense.description|truncatewords:8 }}
+                      {% if expense.description|length > 40 %}
+                      <br>
+                      <small>
+                        <a href="#" class="text-primary" data-bs-toggle="tooltip" 
+                           title="{{ expense.description }}">View full</a>
+                      </small>
+                      {% endif %}
+                    </td>
                     <td>
                       {% if expense.approved %}
                         <span class="badge bg-success">Approved</span>
                       {% elif expense.declined %}
                         <span class="badge bg-danger">Rejected</span>
-                      {% else %}
-                        <span class="badge bg-warning text-dark">Pending</span>
+                        {% if expense.decline_reason %}
+                        <br>
+                        <small class="text-muted" data-bs-toggle="tooltip" title="{{ expense.decline_reason }}">
+                          Reason: {{ expense.decline_reason|truncatewords:3 }}
+                        </small>
+                        {% endif %}
                       {% endif %}
                     </td>
                     <td>
-                      {% if expense.event %}
-                        {{ expense.event.location }}
+                      {% if expense.approved_by %}
+                      {{ expense.approved_by.get_full_name }}
                       {% else %}
-                        —
+                      <span class="text-muted">—</span>
                       {% endif %}
+                    </td>
+                    <td>
+                      <small>{{ expense.updated_at|date:"M d, Y" }}<br>{{ expense.updated_at|time:"g:i A" }}</small>
                     </td>
                   </tr>
                   {% empty %}
                   <tr>
-                    <td colspan="7" class="text-center">No request history found.</td>
+                    <td colspan="8" class="text-center py-4">
+                      <div class="empty-state">
+                        <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                        <h5>No request history found</h5>
+                        <p class="text-muted">
+                          {% if query %}
+                          No processed requests match your search criteria.
+                          {% else %}
+                          There are no processed requests at the moment.
+                          {% endif %}
+                        </p>
+                      </div>
+                    </td>
                   </tr>
                   {% endfor %}
                 </tbody>
               </table>
             </div>
-            <!-- Pagination for Request History -->
+            
+            <!-- History Pagination -->
             {% if past_requests.has_other_pages %}
-            <nav>
+            <nav aria-label="Request history pagination">
               <ul class="pagination justify-content-center">
                 {% if past_requests.has_previous %}
                 <li class="page-item">
-                  <a class="page-link" href="?q={{ query }}&status={{ status }}&history_page={{ past_requests.previous_page_number }}">Previous</a>
-                </li>
-                {% else %}
-                <li class="page-item disabled">
-                  <span class="page-link">Previous</span>
+                  <a class="page-link" href="?history_page={{ past_requests.previous_page_number }}&q={{ query }}&status={{ status }}">Previous</a>
                 </li>
                 {% endif %}
+                
                 {% for num in past_requests.paginator.page_range %}
-                {% if past_requests.number == num %}
-                <li class="page-item active">
-                  <span class="page-link">{{ num }}</span>
-                </li>
-                {% else %}
-                <li class="page-item">
-                  <a class="page-link" href="?q={{ query }}&status={{ status }}&history_page={{ num }}">{{ num }}</a>
-                </li>
-                {% endif %}
+                  {% if past_requests.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                  {% elif num > past_requests.number|add:'-3' and num < past_requests.number|add:'3' %}
+                    <li class="page-item"><a class="page-link" href="?history_page={{ num }}&q={{ query }}&status={{ status }}">{{ num }}</a></li>
+                  {% endif %}
                 {% endfor %}
+                
                 {% if past_requests.has_next %}
                 <li class="page-item">
-                  <a class="page-link" href="?q={{ query }}&status={{ status }}&history_page={{ past_requests.next_page_number }}">Next</a>
-                </li>
-                {% else %}
-                <li class="page-item disabled">
-                  <span class="page-link">Next</span>
+                  <a class="page-link" href="?history_page={{ past_requests.next_page_number }}&q={{ query }}&status={{ status }}">Next</a>
                 </li>
                 {% endif %}
               </ul>
@@ -316,6 +519,7 @@
   let approveForm = null;
   let declineFormAction = '';
 
+  // Approval/Decline form handlers
   document.querySelectorAll(".approve-form").forEach(form => {
     form.addEventListener("submit", function (e) {
       e.preventDefault();
@@ -355,6 +559,91 @@
     `;
     document.body.appendChild(realForm);
     realForm.submit();
+  });
+
+  // Filter functionality
+  document.addEventListener('DOMContentLoaded', function() {
+    const filterButtons = document.querySelectorAll('[data-filter]');
+    const searchInput = document.getElementById('requestSearch');
+    const statusFilter = document.getElementById('statusFilter');
+
+    // Initialize filter state
+    const currentStatus = statusFilter.value;
+    filterButtons.forEach(btn => {
+      btn.classList.remove('active');
+      if (btn.dataset.filter === currentStatus) {
+        btn.classList.add('active');
+      }
+    });
+
+    // Filter button click handlers
+    filterButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        // Update active button
+        filterButtons.forEach(btn => btn.classList.remove('active'));
+        this.classList.add('active');
+        
+        // Update hidden input
+        statusFilter.value = this.dataset.filter;
+        
+        // Apply filters
+        applyFilters();
+      });
+    });
+
+    // Search input handler
+    searchInput.addEventListener('input', function() {
+      applyFilters();
+    });
+
+    function applyFilters() {
+      const searchTerm = searchInput.value.toLowerCase().trim();
+      const statusFilter = document.querySelector('[data-filter].active').dataset.filter;
+      
+      // Get all tables
+      const tables = ['eventTable', 'operationTable', 'historyTable'];
+      
+      tables.forEach(tableId => {
+        const table = document.getElementById(tableId);
+        if (!table) return;
+        
+        const rows = table.querySelectorAll('tbody tr:not(.no-results)');
+        let visibleCount = 0;
+        
+        rows.forEach(row => {
+          const rowStatus = row.dataset.status;
+          const rowSearch = row.dataset.search || '';
+          
+          // Check status filter
+          const statusMatch = statusFilter === 'all' || rowStatus === statusFilter;
+          
+          // Check search filter
+          const searchMatch = !searchTerm || rowSearch.includes(searchTerm);
+          
+          // Show/hide row
+          if (statusMatch && searchMatch) {
+            row.style.display = '';
+            visibleCount++;
+          } else {
+            row.style.display = 'none';
+          }
+        });
+        
+        // Handle no results message
+        const noResultsRow = table.querySelector('.no-results');
+        if (noResultsRow) {
+          if (visibleCount === 0 && rows.length > 0) {
+            noResultsRow.style.display = '';
+            noResultsRow.querySelector('td').textContent = 'No requests match your filter criteria.';
+          } else {
+            noResultsRow.style.display = 'none';
+          }
+        }
+      });
+    }
+
+    // Apply initial filters
+    applyFilters();
   });
 </script>
 {% endblock content %}

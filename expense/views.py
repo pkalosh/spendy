@@ -752,16 +752,21 @@ def approve_expense(request, expense_id):
 def expense_approvals(request):
     company = request.user.companykyc
     query = request.GET.get('q', '')
-    status = request.GET.get('status', 'pending')
-
+    status = request.GET.get('status', 'all')
+    
+    # Base filter for company
     base_filter = Q(company=company)
+    
+    # Add search filter
     if query:
         base_filter &= (
             Q(created_by__first_name__icontains=query) |
             Q(created_by__last_name__icontains=query) |
-            Q(description__icontains=query)
+            Q(description__icontains=query) |
+            Q(event__name__icontains=query) |
+            Q(expense_category__name__icontains=query)
         )
-
+    
     def filter_expenses(base_queryset):
         if status == 'approved':
             return base_queryset.filter(approved=True)
@@ -770,35 +775,65 @@ def expense_approvals(request):
         elif status == 'pending':
             return base_queryset.filter(approved=False, declined=False)
         return base_queryset  # 'all'
-
-    # Event and Operation expenses
+    
+    # Event expenses
     event_expenses = filter_expenses(
-        Expense.objects.filter(base_filter & Q(event__isnull=False)).select_related('event', 'expense_category', 'created_by')
+        Expense.objects.filter(base_filter & Q(event__isnull=False))
+        .select_related('event', 'expense_category', 'created_by', 'approved_by')
+        .order_by('-created_at')
     )
-
+    
+    # Operation expenses
     operation_expenses = filter_expenses(
-        Expense.objects.filter(base_filter & Q(operation__isnull=False)).select_related('expense_category', 'created_by')
+        Expense.objects.filter(base_filter & Q(operation__isnull=False))
+        .select_related('operation', 'expense_category', 'created_by', 'approved_by')
+        .order_by('-created_at')
     )
-
-    past_requests = Expense.objects.filter(base_filter).filter(Q(approved=True) | Q(declined=True)).select_related('expense_category', 'created_by', 'approved_by')
-
+    
+    # Past requests (approved or declined)
+    past_requests = Expense.objects.filter(base_filter).filter(
+        Q(approved=True) | Q(declined=True)
+    ).select_related(
+        'expense_category', 'created_by', 'approved_by', 'event', 'operation'
+    ).order_by('-updated_at')
+    
     # Pagination
-    event_page = request.GET.get('event_page')
-    op_page = request.GET.get('op_page')
-    history_page = request.GET.get('history_page')
-
+    event_page = request.GET.get('event_page', 1)
+    op_page = request.GET.get('op_page', 1)
+    history_page = request.GET.get('history_page', 1)
+    
     event_paginator = Paginator(event_expenses, 10)
     operation_paginator = Paginator(operation_expenses, 10)
     history_paginator = Paginator(past_requests, 10)
-
+    
+    # Get page objects
+    event_requests = event_paginator.get_page(event_page)
+    operation_requests = operation_paginator.get_page(op_page)
+    past_requests_page = history_paginator.get_page(history_page)
+    
+    # Summary counts
+    summary = {
+        'total_pending': Expense.objects.filter(
+            base_filter & Q(approved=False, declined=False)
+        ).count(),
+        'total_approved': Expense.objects.filter(
+            base_filter & Q(approved=True)
+        ).count(),
+        'total_rejected': Expense.objects.filter(
+            base_filter & Q(declined=True)
+        ).count(),
+    }
+    summary['total_all'] = summary['total_pending'] + summary['total_approved'] + summary['total_rejected']
+    
     context = {
-        'event_requests': event_paginator.get_page(event_page),
-        'operation_requests': operation_paginator.get_page(op_page),
-        'past_requests': history_paginator.get_page(history_page),
+        'event_requests': event_requests,
+        'operation_requests': operation_requests,
+        'past_requests': past_requests_page,
         'query': query,
         'status': status,
+        'summary': summary,
     }
-
+    
     return render(request, 'expenses/approvals.html', context)
 
 
