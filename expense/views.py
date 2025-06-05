@@ -17,6 +17,7 @@ from django.db.models.functions import TruncMonth, TruncYear
 from datetime import datetime, timedelta
 import csv
 import io
+from django.core.paginator import Paginator
 from collections import defaultdict
 from datetime import datetime, timedelta
 import calendar
@@ -313,6 +314,26 @@ def expense_detail(request, id, item_type=None):
         approved_expenses = expenses.filter(approved=True, declined=False)
         event_form = EventExpenseForm(instance=event)
         
+        # Get transactions
+        approved_paid_expenses = expenses.filter(approved=True, declined=False, paid=True)
+
+        expense_transactions = []
+
+        if approved_paid_expenses.exists():
+            for expense in approved_paid_expenses:
+                transaction = Transaction.objects.filter(
+                    expense=expense,
+                    status="completed"
+                ).first()  # get the first matching transaction, or None
+                if transaction:
+                    expense_transactions.append(transaction)
+
+                    print(f"transaction: {transaction}")
+        else:
+            expense_transactions = []
+        
+        print(f"expense_transactions: {expense_transactions}")
+
         # Create expense summary by status
         expense_summary = {
             'pending': expenses.filter(approved=False, declined=False).aggregate(Sum('amount'))['amount__sum'] or 0,
@@ -334,6 +355,7 @@ def expense_detail(request, id, item_type=None):
             'item_type': 'event',
             'expenses': expenses,
             'approved_expenses': approved_expenses,
+            'expense_transactions': expense_transactions,
             'expense_summary': expense_summary,
             'expense_categories': expense_categories,
             'total_amount': total_amount,  # Add grand total
@@ -368,6 +390,25 @@ def expense_detail(request, id, item_type=None):
         approved_expenses = expenses.filter(approved=True, declined=False)
         operation_form = OperationExpenseForm(instance=operation)
         
+        # Get transactions
+        approved_paid_expenses = expenses.filter(approved=True, declined=False, paid=True)
+
+        expense_transactions = []
+
+        if approved_paid_expenses.exists():
+            for expense in approved_paid_expenses:
+                transaction = Transaction.objects.filter(
+                    expense=expense,
+                    status="completed"
+                ).first()  # get the first matching transaction, or None
+                print(f"transaction: {transaction}")
+                if transaction:
+                    expense_transactions.append(transaction)
+        else:
+            expense_transactions = []
+        
+        print(f"expense_transactions: {expense_transactions}")
+
         # Create expense summary by status
         expense_summary = {
             'pending': expenses.filter(approved=False, declined=False).aggregate(Sum('amount'))['amount__sum'] or 0,
@@ -390,6 +431,7 @@ def expense_detail(request, id, item_type=None):
             'item_type': 'operation',
             'expenses': expenses,
             'approved_expenses': approved_expenses,
+            'expense_transactions': expense_transactions,
             'expense_summary': expense_summary,
             'expense_categories': expense_categories,
             'total_amount': total_amount,  # Add grand total
@@ -708,23 +750,56 @@ def approve_expense(request, expense_id):
 
 @login_required
 def expense_approvals(request):
-    # Event requests are those linked to an Event and not yet approved/declined
-    event_requests = Expense.objects.filter(event__isnull=False, approved=False, declined=False,company=request.user.companykyc)
+    company = request.user.companykyc
+    query = request.GET.get('q', '')
+    status = request.GET.get('status', 'pending')
 
-    # Operation requests are those linked to an Operation and not yet approved/declined
-    operation_requests = Expense.objects.filter(operation__isnull=False, approved=False, declined=False,company=request.user.companykyc)
-    past_requests = Expense.objects.filter(company = request.user.companykyc).exclude(approved=False, declined=False).order_by('-created_at')
-    print(past_requests)
+    base_filter = Q(company=company)
+    if query:
+        base_filter &= (
+            Q(created_by__first_name__icontains=query) |
+            Q(created_by__last_name__icontains=query) |
+            Q(description__icontains=query)
+        )
+
+    def filter_expenses(base_queryset):
+        if status == 'approved':
+            return base_queryset.filter(approved=True)
+        elif status == 'rejected':
+            return base_queryset.filter(declined=True)
+        elif status == 'pending':
+            return base_queryset.filter(approved=False, declined=False)
+        return base_queryset  # 'all'
+
+    # Event and Operation expenses
+    event_expenses = filter_expenses(
+        Expense.objects.filter(base_filter & Q(event__isnull=False)).select_related('event', 'expense_category', 'created_by')
+    )
+
+    operation_expenses = filter_expenses(
+        Expense.objects.filter(base_filter & Q(operation__isnull=False)).select_related('expense_category', 'created_by')
+    )
+
+    past_requests = Expense.objects.filter(base_filter).filter(Q(approved=True) | Q(declined=True)).select_related('expense_category', 'created_by', 'approved_by')
+
+    # Pagination
+    event_page = request.GET.get('event_page')
+    op_page = request.GET.get('op_page')
+    history_page = request.GET.get('history_page')
+
+    event_paginator = Paginator(event_expenses, 10)
+    operation_paginator = Paginator(operation_expenses, 10)
+    history_paginator = Paginator(past_requests, 10)
 
     context = {
-        'event_requests': event_requests,
-        'operation_requests': operation_requests,
-        'past_requests': past_requests,
+        'event_requests': event_paginator.get_page(event_page),
+        'operation_requests': operation_paginator.get_page(op_page),
+        'past_requests': history_paginator.get_page(history_page),
+        'query': query,
+        'status': status,
     }
-    # print(context)
 
     return render(request, 'expenses/approvals.html', context)
-
 
 
 

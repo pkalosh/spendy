@@ -316,45 +316,99 @@
                                     <table id="expenses-table" class="table table-hover">
                                         <thead>
                                             <tr>
-                                                <th>CATEGORY</th>
-                                                 <th>DESCRIPTION</th>
-                                                <th>AMOUNT</th>
-                                                <th>CREATED BY</th>
-                                                <th>STATUS</th>
-                                                <th>ACTIONS</th>
+                                                <th>Initiated By</th>
+                                                <th>Recipient</th>
+                                                <th>Amount</th>
+                                                <th>Expense</th>
+                                                <th>Reference Code</th>
+                                                <th>Type</th>
+                                                <th>Status</th>
+                                                <th>Date and Time</th>
+                                                <th>Description of Payment</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {% if expenses %}
-                                                {% for expense in expenses %}
+                                            {% if expense_transactions %}
+                                                {% for txn in expense_transactions %}
                                                     <tr>
-                                                        <td>{{ expense.expense_category }}</td>
-                                                        <td>{{ expense.description }}</td>
-                                                        <td>{{ expense.amount|intcomma }}</td>
-                                                        <td>{{ expense.created_by.first_name }} {{ expense.created_by.last_name }}</td>
+                                                        <td>{{ txn.user.get_full_name}}</td>
+                                                        <td>{{ txn.reciever.get_full_name|default:"-" }}</td>
+                                                        <td>{{ txn.sender_wallet.currency|default:"KES" }} {{ txn.amount|floatformat:2|intcomma }}</td>
+                                                        <td>{{ txn.expense }}</td>
+                                                        <td>{{ txn.transaction_code }}</td>
                                                         <td>
-                                                            {% if expense.approved %}
-                                                                <span class="badge bg-success">Approved</span>
-                                                            {% elif expense.declined %}
-                                                                <span class="badge bg-danger">Declined</span>
+                                                            {% if txn.transaction_type == 'send_money' %}
+                                                                <span class="badge bg-info">Send Money</span>
+                                                            {% elif txn.transaction_type == 'till' %}
+                                                                <span class="badge bg-primary">Till Payment</span>
+                                                            {% elif txn.transaction_type == 'paybill' %}
+                                                                <span class="badge bg-secondary">Paybill</span>
                                                             {% else %}
-                                                                <span class="badge bg-warning">Pending</span>
+                                                                <span class="badge bg-light text-dark">{{ txn.transaction_type|title }}</span>
                                                             {% endif %}
                                                         </td>
                                                         <td>
-                                                            <a href="{% url 'expense:expense_detail' expense.id %}" class="btn btn-sm btn-primary">View</a>
+                                                            {% if txn.status == 'completed' %}
+                                                                <span class="badge bg-success">{{ txn.status|title }}</span>
+                                                            {% elif txn.status == 'failed' or txn.status == 'cancelled' %}
+                                                                <span class="badge bg-danger">{{ txn.status|title }}</span>
+                                                            {% else %}
+                                                                <span class="badge bg-warning">{{ txn.status|title }}</span>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>{{ txn.date|date:"M d, Y H:i" }}</td>
+                                                        <td>
+                                                            <span class="text-truncate d-inline-block"  title="{{ txn.description }}">
+                                                                {{ txn.description|default:"-" }}
+                                                            </span>
                                                         </td>
                                                     </tr>
                                                 {% endfor %}
                                             {% else %}
                                                 <tr>
-                                                    <td colspan="6" class="text-center">No expenses found.</td>
+                                                    <td colspan="8" class="text-center">No expenses found.</td>
                                                 </tr>
                                             {% endif %}
                                         </tbody>
                                     </table>
+
+                                    <!-- Pagination block -->
+                                    {% if is_paginated %}
+                                        <nav aria-label="Page navigation">
+                                            <ul class="pagination justify-content-center">
+                                                {% if page_obj.has_previous %}
+                                                    <li class="page-item">
+                                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                                                    </li>
+                                                {% else %}
+                                                    <li class="page-item disabled">
+                                                        <span class="page-link">Previous</span>
+                                                    </li>
+                                                {% endif %}
+
+                                                {% for num in paginator.page_range %}
+                                                    {% if page_obj.number == num %}
+                                                        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                                                    {% else %}
+                                                        <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                                                    {% endif %}
+                                                {% endfor %}
+
+                                                {% if page_obj.has_next %}
+                                                    <li class="page-item">
+                                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                                                    </li>
+                                                {% else %}
+                                                    <li class="page-item disabled">
+                                                        <span class="page-link">Next</span>
+                                                    </li>
+                                                {% endif %}
+                                            </ul>
+                                        </nav>
+                                    {% endif %}
                                 </div>
                             </div>
+
                         </div>
                     </div>
                     </div>

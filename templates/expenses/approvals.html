@@ -4,8 +4,6 @@
 {% load custom_filters %}
 
 {% block content %}
-<!-- Bootstrap 5 CSS (ensure it's loaded only once in base) -->
-
 <section class="dashboard-section body-collapse">
   <div class="overlay pt-4 pt-md-5">
     <div class="container-fluid">
@@ -14,6 +12,24 @@
           <h4 class="mb-3 mt-2">Approvals</h4>
           <p class="mb-3">Review and approve Event/Operational requests.</p>
         </div>
+
+        <!-- Filter Form -->
+        <form method="get" class="row g-3 mb-3">
+          <div class="col-md-4">
+            <input type="text" class="form-control" name="q" placeholder="Search by user or description" value="{{ query }}">
+          </div>
+          <div class="col-md-3">
+            <select name="status" class="form-select">
+              <option value="all" {% if status == 'all' %}selected{% endif %}>All</option>
+              <option value="pending" {% if status == 'pending' %}selected{% endif %}>Pending</option>
+              <option value="approved" {% if status == 'approved' %}selected{% endif %}>Approved</option>
+              <option value="rejected" {% if status == 'rejected' %}selected{% endif %}>Rejected</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <button type="submit" class="btn btn-primary">Filter</button>
+          </div>
+        </form>
 
         <!-- Tabs Navigation -->
         <ul class="nav nav-tabs" id="approvalTabs" role="tablist">
@@ -55,6 +71,7 @@
                     <td>{{ expense.description }}</td>
                     <td>{{ expense.event.location }}</td>
                     <td>
+                      {% if not expense.approved and not expense.declined %}
                       <form method="post" action="{% url 'expense:approve_expense' expense.id %}" class="d-inline-block approve-form">
                         {% csrf_token %}
                         <button class="btn btn-success btn-sm" type="submit">Approve</button>
@@ -63,16 +80,57 @@
                         {% csrf_token %}
                         <button class="btn btn-danger btn-sm" type="submit">Reject</button>
                       </form>
+                      {% elif expense.approved %}
+                      <span class="badge bg-success">Approved</span>
+                      {% elif expense.declined %}
+                      <span class="badge bg-danger">Rejected</span>
+                      {% endif %}
                     </td>
                   </tr>
                   {% empty %}
                   <tr>
-                    <td colspan="7" class="text-center">No pending event requests.</td>
+                    <td colspan="7" class="text-center">No event requests found.</td>
                   </tr>
                   {% endfor %}
                 </tbody>
               </table>
             </div>
+            <!-- Pagination for Event Requests -->
+            {% if event_requests.has_other_pages %}
+            <nav>
+              <ul class="pagination justify-content-center">
+                {% if event_requests.has_previous %}
+                <li class="page-item">
+                  <a class="page-link" href="?q={{ query }}&status={{ status }}&event_page={{ event_requests.previous_page_number }}">Previous</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                  <span class="page-link">Previous</span>
+                </li>
+                {% endif %}
+                {% for num in event_requests.paginator.page_range %}
+                {% if event_requests.number == num %}
+                <li class="page-item active">
+                  <span class="page-link">{{ num }}</span>
+                </li>
+                {% else %}
+                <li class="page-item">
+                  <a class="page-link" href="?q={{ query }}&status={{ status }}&event_page={{ num }}">{{ num }}</a>
+                </li>
+                {% endif %}
+                {% endfor %}
+                {% if event_requests.has_next %}
+                <li class="page-item">
+                  <a class="page-link" href="?q={{ query }}&status={{ status }}&event_page={{ event_requests.next_page_number }}">Next</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                  <span class="page-link">Next</span>
+                </li>
+                {% endif %}
+              </ul>
+            </nav>
+            {% endif %}
           </div>
 
           <!-- Operation Requests Tab -->
@@ -96,6 +154,7 @@
                     <td>KSH: {{ expense.amount }}</td>
                     <td>{{ expense.description }}</td>
                     <td>
+                      {% if not expense.approved and not expense.declined %}
                       <form method="post" action="{% url 'expense:approve_expense' expense.id %}" class="d-inline-block approve-form">
                         {% csrf_token %}
                         <button class="btn btn-success btn-sm" type="submit">Approve</button>
@@ -104,16 +163,57 @@
                         {% csrf_token %}
                         <button class="btn btn-danger btn-sm" type="submit">Reject</button>
                       </form>
+                      {% elif expense.approved %}
+                      <span class="badge bg-success">Approved</span>
+                      {% elif expense.declined %}
+                      <span class="badge bg-danger">Rejected</span>
+                      {% endif %}
                     </td>
                   </tr>
                   {% empty %}
                   <tr>
-                    <td colspan="5" class="text-center">No pending operation requests.</td>
+                    <td colspan="5" class="text-center">No operation requests found.</td>
                   </tr>
                   {% endfor %}
                 </tbody>
               </table>
             </div>
+            <!-- Pagination for Operation Requests -->
+            {% if operation_requests.has_other_pages %}
+            <nav>
+              <ul class="pagination justify-content-center">
+                {% if operation_requests.has_previous %}
+                <li class="page-item">
+                  <a class="page-link" href="?q={{ query }}&status={{ status }}&op_page={{ operation_requests.previous_page_number }}">Previous</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                  <span class="page-link">Previous</span>
+                </li>
+                {% endif %}
+                {% for num in operation_requests.paginator.page_range %}
+                {% if operation_requests.number == num %}
+                <li class="page-item active">
+                  <span class="page-link">{{ num }}</span>
+                </li>
+                {% else %}
+                <li class="page-item">
+                  <a class="page-link" href="?q={{ query }}&status={{ status }}&op_page={{ num }}">{{ num }}</a>
+                </li>
+                {% endif %}
+                {% endfor %}
+                {% if operation_requests.has_next %}
+                <li class="page-item">
+                  <a class="page-link" href="?q={{ query }}&status={{ status }}&op_page={{ operation_requests.next_page_number }}">Next</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                  <span class="page-link">Next</span>
+                </li>
+                {% endif %}
+              </ul>
+            </nav>
+            {% endif %}
           </div>
           <!-- Requests History Tab -->
           <div class="tab-pane fade" id="history" role="tabpanel">
@@ -122,85 +222,95 @@
                 <thead class="table-dark">
                   <tr>
                     <th>Requested By</th>
-                    <th>Reviewed By</th>
-                    <th>Expense Category</th>
+                    <th>Type</th>
+                    <th>Category</th>
                     <th>Amount</th>
                     <th>Description</th>
                     <th>Status</th>
-                    <th>Decline Reason</th>
+                    <th>Location (if Event)</th>
                   </tr>
                 </thead>
                 <tbody>
                   {% for expense in past_requests %}
                   <tr>
                     <td>{{ expense.created_by.get_full_name }}</td>
-                    <td>{{ expense.approved_by.get_full_name }}</td>
+                    <td>
+                      {% if expense.event %}
+                        Event
+                      {% else %}
+                        Operation
+                      {% endif %}
+                    </td>
                     <td>{{ expense.expense_category.name }}</td>
                     <td>KSH: {{ expense.amount }}</td>
                     <td>{{ expense.description }}</td>
-                    <td>{% if expense.approved %}Approved{% else %}Declined{% endif %}</td>
-                    <td>{% if expense.declined %}{{ expense.decline_reason }}{% else %}-{% endif %}</td>
-                   
+                    <td>
+                      {% if expense.approved %}
+                        <span class="badge bg-success">Approved</span>
+                      {% elif expense.declined %}
+                        <span class="badge bg-danger">Rejected</span>
+                      {% else %}
+                        <span class="badge bg-warning text-dark">Pending</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if expense.event %}
+                        {{ expense.event.location }}
+                      {% else %}
+                        —
+                      {% endif %}
+                    </td>
                   </tr>
                   {% empty %}
                   <tr>
-                    <td colspan="5" class="text-center">No History requests.</td>
+                    <td colspan="7" class="text-center">No request history found.</td>
                   </tr>
                   {% endfor %}
                 </tbody>
               </table>
             </div>
+            <!-- Pagination for Request History -->
+            {% if past_requests.has_other_pages %}
+            <nav>
+              <ul class="pagination justify-content-center">
+                {% if past_requests.has_previous %}
+                <li class="page-item">
+                  <a class="page-link" href="?q={{ query }}&status={{ status }}&history_page={{ past_requests.previous_page_number }}">Previous</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                  <span class="page-link">Previous</span>
+                </li>
+                {% endif %}
+                {% for num in past_requests.paginator.page_range %}
+                {% if past_requests.number == num %}
+                <li class="page-item active">
+                  <span class="page-link">{{ num }}</span>
+                </li>
+                {% else %}
+                <li class="page-item">
+                  <a class="page-link" href="?q={{ query }}&status={{ status }}&history_page={{ num }}">{{ num }}</a>
+                </li>
+                {% endif %}
+                {% endfor %}
+                {% if past_requests.has_next %}
+                <li class="page-item">
+                  <a class="page-link" href="?q={{ query }}&status={{ status }}&history_page={{ past_requests.next_page_number }}">Next</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                  <span class="page-link">Next</span>
+                </li>
+                {% endif %}
+              </ul>
+            </nav>
+            {% endif %}
           </div>
-
         </div>
       </div>
     </div>
   </div>
 </section>
-
-<!-- Approve Confirmation Modal -->
-<div class="modal fade" id="confirmApproveModal" tabindex="-1" aria-labelledby="confirmApproveLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Confirm Approval</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        Are you sure you want to approve this request?
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-success" id="confirmApproveBtn">Yes, Approve</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Decline Reason Modal -->
-<div class="modal fade" id="declineReasonModal" tabindex="-1" aria-labelledby="declineReasonLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <form method="post" id="declineReasonForm">
-      {% csrf_token %}
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Reject Request</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <label for="declineReason" class="form-label">Reason for rejection:</label>
-          <textarea class="form-control" id="declineReason" name="reason" required></textarea>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-danger">Submit Rejection</button>
-        </div>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- Bootstrap JS -->
 
 <script>
   let approveForm = null;
