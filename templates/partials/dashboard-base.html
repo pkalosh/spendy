@@ -75,12 +75,8 @@
                                         <li class="border-area">
                                             <a href="{% url 'wallet:kyc-reg' %}"><i class="fas fa-user"></i>Profile</a>
                                         </li>
-                                        <li class="border-area">
-                                            <a href="{% url 'wallet:wallet' %}"><i class="fas fa-user"></i>Wallets</a>
-                                        </li>
-                                        <li class="border-area">
-                                            <a href="{% url 'wallet:settings_view' %}"><i class="fas fa-cog"></i>Settings</a>
-                                        </li>
+
+                                        
                                         <li>
                                             <a href="{% url 'userauths:sign-out' %}"><i class="fas fa-sign-out"></i>Logout</a>
                                         </li>
@@ -139,7 +135,7 @@
 
                             <li>
                                 <a href="{% url 'wallet:settings_view' %}">
-                                    <img src="{% static 'assets1/images/icon/support.png' %}" alt="Support"> <span>Settings</span>
+                                    <img src="{% static 'assets1/images/icon/support.png' %}" alt="Support"> <span>System Setup</span>
                                 </a>
                             </li>
                             <li>

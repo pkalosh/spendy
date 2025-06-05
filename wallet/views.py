@@ -782,14 +782,192 @@ def kyc_registration(request):
 
 @login_required
 def transactions(request):
+    """
+    Display transactions with filtering capabilities
+    """
     user = request.user
-    txn = Transaction.objects.filter(company= get_object_or_404(CompanyKYC, user=request.user))
-
-    context = {
-        "transactions": txn,
+    
+    # Get all transactions for the user's company
+    company = get_object_or_404(CompanyKYC, user=request.user)
+    txn_queryset = Transaction.objects.filter(company=company).select_related(
+        'user', 'receiver', 'sender_wallet', 'receiver_wallet'
+    ).order_by('-date')
+    
+    # Get filter parameters from request
+    user_filter = request.GET.get('user', '')
+    status_filter = request.GET.get('status', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+    
+    # Apply filters
+    if user_filter:
+        txn_queryset = txn_queryset.filter(
+            Q(user__id=user_filter) | Q(receiver__id=user_filter)
+        )
+    
+    if status_filter:
+        txn_queryset = txn_queryset.filter(status=status_filter)
+    
+    if date_from:
+        try:
+            date_from_obj = datetime.strptime(date_from, '%Y-%m-%d').date()
+            txn_queryset = txn_queryset.filter(date__date__gte=date_from_obj)
+        except ValueError:
+            pass  # Invalid date format, ignore filter
+    
+    if date_to:
+        try:
+            date_to_obj = datetime.strptime(date_to, '%Y-%m-%d').date()
+            txn_queryset = txn_queryset.filter(date__date__lte=date_to_obj)
+        except ValueError:
+            pass  # Invalid date format, ignore filter
+    
+    # Get all users associated with transactions for the filter dropdown
+    transaction_user_ids = set()
+    all_company_transactions = Transaction.objects.filter(company=company)
+    for txn in all_company_transactions:
+        transaction_user_ids.add(txn.user.id)
+        if txn.receiver:
+            transaction_user_ids.add(txn.receiver.id)
+    
+    users = User.objects.filter(id__in=transaction_user_ids).order_by('first_name', 'last_name', 'email')
+    
+    # Pagination
+    paginator = Paginator(txn_queryset, 20)  # Show 20 transactions per page
+    page_number = request.GET.get('page', 1)
+    transactions_page = paginator.get_page(page_number)
+    
+    # Count transactions by status for dashboard stats
+    status_counts = {
+        'total': txn_queryset.count(),
+        'completed': txn_queryset.filter(status='completed').count(),
+        'pending': txn_queryset.filter(status='pending').count(),
+        'failed': txn_queryset.filter(status='failed').count(),
+        'cancelled': txn_queryset.filter(status='cancelled').count(),
     }
+    
+    # Create query parameters for pagination links (preserve filters)
+    query_params = []
+    if user_filter:
+        query_params.append(f'user={user_filter}')
+    if status_filter:
+        query_params.append(f'status={status_filter}')
+    if date_from:
+        query_params.append(f'date_from={date_from}')
+    if date_to:
+        query_params.append(f'date_to={date_to}')
+    
+    base_query_string = '&'.join(query_params)
+    
+    context = {
+        "transactions": transactions_page,
+        "users": users,
+        "status_counts": status_counts,
+        "base_query_string": base_query_string,  # Add this for pagination
+        # Preserve filter values for form
+        "current_filters": {
+            "user": user_filter,
+            "status": status_filter,
+            "date_from": date_from,
+            "date_to": date_to,
+        }
+    }
+    
     return render(request, "transaction/transactions.html", context)
 
+@login_required
+def transaction_export(request):
+    """
+    Export transactions to CSV (optional feature)
+    """
+    import csv
+    from django.http import HttpResponse
+    
+    user = request.user
+    company = get_object_or_404(CompanyKYC, user=request.user)
+    
+    # Apply same filters as the main view
+    txn_queryset = Transaction.objects.filter(company=company).select_related(
+        'user', 'receiver', 'sender_wallet', 'receiver_wallet'
+    ).order_by('-date')
+    
+    # Apply filters from GET parameters (same logic as main view)
+    user_filter = request.GET.get('user', '')
+    status_filter = request.GET.get('status', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+    
+    if user_filter:
+        txn_queryset = txn_queryset.filter(
+            Q(user__id=user_filter) | Q(receiver__id=user_filter)
+        )
+    
+    if status_filter:
+        txn_queryset = txn_queryset.filter(status=status_filter)
+    
+    if date_from:
+        try:
+            date_from_obj = datetime.strptime(date_from, '%Y-%m-%d').date()
+            txn_queryset = txn_queryset.filter(date__date__gte=date_from_obj)
+        except ValueError:
+            pass
+    
+    if date_to:
+        try:
+            date_to_obj = datetime.strptime(date_to, '%Y-%m-%d').date()
+            txn_queryset = txn_queryset.filter(date__date__lte=date_to_obj)
+        except ValueError:
+            pass
+    
+    # Create HTTP response with CSV content type
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="transactions.csv"'
+    
+    writer = csv.writer(response)
+    
+    # Write CSV header
+    writer.writerow([
+        'Reference Code',
+        'Initiated By',
+        'Recipient',
+        'Amount',
+        'Currency',
+        'Type',
+        'Status',
+        'Date & Time',
+        'Description',
+        'Sender Wallet',
+        'Receiver Wallet'
+    ])
+    
+    # Write transaction data
+    for txn in txn_queryset:
+        # Format transaction type
+        txn_type = txn.transaction_type
+        if txn_type == 'send_money':
+            txn_type = 'Send Money'
+        elif txn_type == 'till':
+            txn_type = 'Till Payment'
+        elif txn_type == 'paybill':
+            txn_type = 'Paybill'
+        else:
+            txn_type = txn_type.title()
+        
+        writer.writerow([
+            txn.transaction_id,
+            txn.user.get_full_name() or txn.user.username,
+            txn.receiver.get_full_name() if txn.receiver else '-',
+            f"{txn.amount:.2f}",
+            txn.sender_wallet.currency if txn.sender_wallet else 'KES',
+            txn_type,
+            txn.status.title(),
+            txn.date.strftime('%Y-%m-%d %H:%M:%S'),
+            txn.description or '',
+            txn.sender_wallet.wallet_id if txn.sender_wallet else '',
+            txn.receiver_wallet.wallet_id if txn.receiver_wallet else ''
+        ])
+    
+    return response
 
 
 @login_required

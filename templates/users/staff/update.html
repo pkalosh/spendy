@@ -15,14 +15,14 @@
                             </div>
                         {% endif %}
 
-                        <h2 class="mb-4">{% if staff %}Edit{% else %}Create{% endif %} Staff</h2>
+                        <h2 class="mb-4">{% if staff %}Edit{% else %}Create{% endif %} User</h2>
                         <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
                             {% csrf_token %}
 
                             <!-- Unified Staff Form Card -->
                             <div class="card mb-4 shadow-sm rounded-4">
                                 <div class="card-header bg-info text-white">
-                                    <h5 class="mb-0">Staff Form</h5>
+                                    <h5 class="mb-0">User Form</h5>
                                 </div>
                                 <div class="card-body">
                                     <div class="row g-3">
