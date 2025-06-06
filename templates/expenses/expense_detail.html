@@ -1,8 +1,8 @@
 {% extends "partials/dashboard-base.html" %}
 {% load static %}
 {% load humanize %}
+{% load custom_filters %}
 {% block content %}
-{% load custom_filters %} 
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 
 <section class="dashboard-section body-collapse">
@@ -34,91 +34,88 @@
                         </div>
                         <div class="card-body">
                             <div class="row g-3">
-                              {% if item_type == 'event' %}
-                                <div class="col-12 border-bottom">
-                                  <h5>{{ item.name }}</h5>
-                                </div>
-                                <div class="col-12 border-bottom">
-                                  <small class="text-muted d-block">Category</small>
-                                  <div>{{ item.category }}</div>
-                                </div>
-                                <div class="col-12 border-bottom">
-                                  <small class="text-muted d-block">Created By</small>
-                                  <div>{{ item.created_by.first_name }} {{ item.created_by.last_name }}</div>
-                                </div>
-                                <div class="col-12 border-bottom">
-                                  <small class="text-muted d-block">Budget</small>
-                                  <div>{{ item.budget|intcomma }}</div>
-                                </div>
-                                <div class="col-12 border-bottom">
-                                  <small class="text-muted d-block">Start Date</small>
-                                  <div>{{ item.start_date }}</div>
-                                </div>
-                                <div class="col-12 border-bottom">
-                                  <small class="text-muted d-block">End Date</small>
-                                  <div>{{ item.end_date }}</div>
-                                </div>
-                                <div class="col-12">
-                                  <small class="text-muted d-block">Created On</small>
-                                  <div>{{ item.created_at }}</div>
-                                </div>
-                          
-                              {% elif item_type == 'operation' %}
-                                <div class="col-12 border-bottom">
-                                  <h5>{{ item.name }}</h5>
-                                </div>
-                                <div class="col-12 border-bottom">
-                                  <small class="text-muted d-block">Category</small>
-                                  <div>{{ item.category }}</div>
-                                </div>
-                                <div class="col-12 border-bottom">
-                                  <small class="text-muted d-block">Created By</small>
-                                  <div>{{ item.created_by.first_name }} {{ item.created_by.last_name }}</div>
-                                </div>
-                                <div class="col-12 border-bottom">
-                                  <small class="text-muted d-block">Budget</small>
-                                  <div>{{ item.budget|intcomma }}</div>
-                                </div>
-                                <div class="col-12">
-                                  <small class="text-muted d-block">Created On</small>
-                                  <div>{{ item.created_at }}</div>
-                                </div>
-                          
-                              {% else %}
-                                <div class="col-12 border-bottom">
-                                  <small class="text-muted d-block">Name</small>
-                                  <div>
-                                    {% if expense.event %}{{ expense.event.name }}
-                                    {% elif expense.operation %}{{ expense.operation.name }}
-                                    {% endif %}
-                                  </div>
-                                </div>
-                                <div class="col-12 border-bottom">
-                                  <small class="text-muted d-block">Created By</small>
-                                  <div>{{ expense.created_by.first_name }} {{ expense.created_by.last_name }}</div>
-                                </div>
-                                <div class="col-12 border-bottom">
-                                  <small class="text-muted d-block">Expense Category</small>
-                                  <div>{{ expense.expense_category }}</div>
-                                </div>
-                                <div class="col-12 border-bottom">
-                                  <small class="text-muted d-block">Start Date</small>
-                                  <div>{{ expense.start_date }}</div>
-                                </div>
-                                <div class="col-12 border-bottom">
-                                  <small class="text-muted d-block">End Date</small>
-                                  <div>{{ expense.end_date }}</div>
-                                </div>
-                                <div class="col-12">
-                                  <small class="text-muted d-block">Created On</small>
-                                  <div>{{ expense.created_at }}</div>
-                                </div>
-                              {% endif %}
+                                {% if item_type == 'event' %}
+                                    <div class="col-12 border-bottom">
+                                        <h5>{{ item.name }}</h5>
+                                    </div>
+                                    <div class="col-12 border-bottom">
+                                        <small class="text-muted d-block">Category</small>
+                                        <div>{{ item.category }}</div>
+                                    </div>
+                                    <div class="col-12 border-bottom">
+                                        <small class="text-muted d-block">Created By</small>
+                                        <div>{{ item.created_by.first_name }} {{ item.created_by.last_name }}</div>
+                                    </div>
+                                    <div class="col-12 border-bottom">
+                                        <small class="text-muted d-block">Budget</small>
+                                        <div>{{ item.budget|intcomma }}</div>
+                                    </div>
+                                    <div class="col-12 border-bottom">
+                                        <small class="text-muted d-block">Start Date</small>
+                                        <div>{{ item.start_date }}</div>
+                                    </div>
+                                    <div class="col-12 border-bottom">
+                                        <small class="text-muted d-block">End Date</small>
+                                        <div>{{ item.end_date }}</div>
+                                    </div>
+                                    <div class="col-12">
+                                        <small class="text-muted d-block">Created On</small>
+                                        <div>{{ item.created_at }}</div>
+                                    </div>
+                                {% elif item_type == 'operation' %}
+                                    <div class="col-12 border-bottom">
+                                        <h5>{{ item.name }}</h5>
+                                    </div>
+                                    <div class="col-12 border-bottom">
+                                        <small class="text-muted d-block">Category</small>
+                                        <div>{{ item.category }}</div>
+                                    </div>
+                                    <div class="col-12 border-bottom">
+                                        <small class="text-muted d-block">Created By</small>
+                                        <div>{{ item.created_by.first_name }} {{ item.created_by.last_name }}</div>
+                                    </div>
+                                    <div class="col-12 border-bottom">
+                                        <small class="text-muted d-block">Budget</small>
+                                        <div>{{ item.budget|intcomma }}</div>
+                                    </div>
+                                    <div class="col-12">
+                                        <small class="text-muted d-block">Created On</small>
+                                        <div>{{ item.created_at }}</div>
+                                    </div>
+                                {% else %}
+                                    <div class="col-12 border-bottom">
+                                        <small class="text-muted d-block">Name</small>
+                                        <div>
+                                            {% if expense.event %}{{ expense.event.name }}
+                                            {% elif expense.operation %}{{ expense.operation.name }}
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-12 border-bottom">
+                                        <small class="text-muted d-block">Created By</small>
+                                        <div>{{ expense.created_by.first_name }} {{ expense.created_by.last_name }}</div>
+                                    </div>
+                                    <div class="col-12 border-bottom">
+                                        <small class="text-muted d-block">Expense Category</small>
+                                        <div>{{ expense.expense_category }}</div>
+                                    </div>
+                                    <div class="col-12 border-bottom">
+                                        <small class="text-muted d-block">Start Date</small>
+                                        <div>{{ expense.start_date }}</div>
+                                    </div>
+                                    <div class="col-12 border-bottom">
+                                        <small class="text-muted d-block">End Date</small>
+                                        <div>{{ expense.end_date }}</div>
+                                    </div>
+                                    <div class="col-12">
+                                        <small class="text-muted d-block">Created On</small>
+                                        <div>{{ expense.created_at }}</div>
+                                    </div>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
                 </div>
-                
                 <div class="col-md-4">
                     <div class="card shadow-sm">
                         <div class="card-header bg-secondary text-white">
@@ -167,306 +164,604 @@
                         </div>
                     </div>
                 </div>
-                
                 <div class="col-md-4">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-secondary text-white">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-secondary text-white">
+                            {% if item_type == 'event' or item_type == 'operation' %}
+                                Total Approved Expenses
+                            {% else %}
+                                Expense Requests
+                            {% endif %}
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-borderless">
+                                    <thead>
+                                        <tr>
+                                            <th>CATEGORY</th>
+                                            <th>TOTAL AMOUNT</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% if item_type == 'event' or item_type == 'operation' %}
+                                            {% if expense_categories %}
+                                                {% for category in expense_categories %}
+                                                    <tr>
+                                                        <td>{{ category.expense_category__name }}</td>
+                                                        <td>{{ category.total|intcomma }}</td>
+                                                    </tr>
+                                                {% endfor %}
+                                            {% else %}
+                                                <tr>
+                                                    <td colspan="2">No approved expenses found.</td>
+                                                </tr>
+                                            {% endif %}
+                                        {% else %}
+                                            {% if expense_requests %}
+                                                {% for request in expense_requests %}
+                                                    <tr>
+                                                        <td>{{ request.category }}</td>
+                                                        <td>{{ request.amount|intcomma }}</td>
+                                                    </tr>
+                                                {% endfor %}
+                                            {% else %}
+                                                <tr>
+                                                    <td colspan="2">No results found.</td>
+                                                </tr>
+                                            {% endif %}
+                                        {% endif %}
+                                    </tbody>
+                                    <tfoot class="table-dark">
+                                        {% if item_type == 'event' or item_type == 'operation' %}
+                                            {% if expense_categories %}
+                                                <tr>
+                                                    <th>GRAND TOTAL</th>
+                                                    <th>{{ total_amount|intcomma }}</th>
+                                                </tr>
+                                            {% endif %}
+                                        {% else %}
+                                            {% if expense_requests %}
+                                                <tr>
+                                                    <th>GRAND TOTAL</th>
+                                                    <th>{{ total_amount|intcomma }}</th>
+                                                </tr>
+                                            {% endif %}
+                                        {% endif %}
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Second Row: Accordion for Expense List and Transactions -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="accordion" id="expenseAccordion">
+                        <!-- Expense List Accordion Item -->
                         {% if item_type == 'event' or item_type == 'operation' %}
-                        Total Approved Expenses
-                        {% else %}
-                        Expense Requests
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#expenseList" aria-expanded="true" aria-controls="expenseList">
+                                        Expense List
+                                    </button>
+                                </h2>
+                                <div id="expenseList" class="accordion-collapse collapse show" data-bs-parent="#expenseAccordion">
+                                    <div class="accordion-body">
+                                        <div class="card shadow-sm">
+                                            <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                                                <span>{% if item_type == 'event' %}Event{% else %}Operation{% endif %} Requests</span>
+                                                <button class="btn btn-outline-light" type="button" data-bs-toggle="collapse" data-bs-target="#expenseFilterSection" aria-expanded="false" aria-controls="expenseFilterSection">
+                                                    <i class="fas fa-filter"></i> Filters
+                                                </button>
+                                            </div>
+                                            <div class="card-body">
+                                                <!-- Expense Filter Section -->
+                                                <div class="collapse mb-4" id="expenseFilterSection">
+                                                    <div class="card card-body">
+                                                        <form method="GET" id="expenseFilterForm">
+                                                            <div class="row">
+                                                                <div class="col-md-3">
+                                                                    <label for="expense_user_filter" class="form-label">User</label>
+                                                                    <select name="expense_user" id="expense_user_filter" class="form-select">
+                                                                        <option value="">All Users</option>
+                                                                        {% for user in users %}
+                                                                            <option value="{{ user.id }}" {% if request.GET.expense_user == user.id|stringformat:"s" %}selected{% endif %}>
+                                                                                {{ user.get_full_name|default:user.username }}
+                                                                            </option>
+                                                                        {% endfor %}
+                                                                    </select>
+                                                                </div>
+                                                                <div class="col-md-3">
+                                                                    <label for="expense_category_filter" class="form-label">Category</label>
+                                                                    <select name="expense_category" id="expense_category_filter" class="form-select">
+                                                                        <option value="">All Categories</option>
+                                                                        {% for category in expense_category_choices %}
+                                                                            <option value="{{ category.id }}" {% if request.GET.expense_category == category.id|stringformat:"s" %}selected{% endif %}>
+                                                                                {{ category.name }}
+                                                                            </option>
+                                                                        {% endfor %}
+                                                                    </select>
+                                                                </div>
+                                                                <div class="col-md-3">
+                                                                    <label for="expense_status_filter" class="form-label">Status</label>
+                                                                    <select name="expense_status" id="expense_status_filter" class="form-select">
+                                                                        <option value="">All Status</option>
+                                                                        <option value="pending" {% if request.GET.expense_status == 'pending' %}selected{% endif %}>Pending</option>
+                                                                        <option value="approved" {% if request.GET.expense_status == 'approved' %}selected{% endif %}>Approved</option>
+                                                                        <option value="declined" {% if request.GET.expense_status == 'declined' %}selected{% endif %}>Declined</option>
+                                                                    </select>
+                                                                </div>
+                                                                <div class="col-md-3 d-flex align-items-end">
+                                                                    <button type="submit" class="btn btn-primary me-2">Apply</button>
+                                                                    <a href="" class="btn btn-secondary">Clear</a>
+                                                                </div>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                                <!-- Desktop Expense Table -->
+                                                <div class="table-responsive d-none d-md-block">
+                                                    <table id="expenses-table" class="table table-hover">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>CATEGORY</th>
+                                                                <th>DESCRIPTION</th>
+                                                                <th>AMOUNT</th>
+                                                                <th>CREATED BY</th>
+                                                                <th>STATUS</th>
+                                                                <th>ACTIONS</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {% if expenses %}
+                                                                {% for expense in expenses %}
+                                                                    <tr>
+                                                                        <td>{{ expense.expense_category }}</td>
+                                                                        <td>{{ expense.description }}</td>
+                                                                        <td>{{ expense.amount|intcomma }}</td>
+                                                                        <td>{{ expense.created_by.first_name }} {{ expense.created_by.last_name }}</td>
+                                                                        <td>
+                                                                            {% if expense.approved %}
+                                                                                <span class="badge bg-success">Approved</span>
+                                                                            {% elif expense.declined %}
+                                                                                <span class="badge bg-danger">Declined</span>
+                                                                            {% else %}
+                                                                                <span class="badge bg-warning">Pending</span>
+                                                                            {% endif %}
+                                                                        </td>
+                                                                        <td>
+                                                                            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#expenseModal{{ expense.id }}">View</button>
+                                                                        </td>
+                                                                    </tr>
+                                                                {% endfor %}
+                                                            {% else %}
+                                                                <tr>
+                                                                    <td colspan="6" class="text-center">No expenses found.</td>
+                                                                </tr>
+                                                            {% endif %}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                                <!-- Mobile Expense Cards -->
+                                                <div class="d-md-none">
+                                                    {% for expense in expenses %}
+                                                        <div class="card mb-3">
+                                                            <div class="card-body">
+                                                                <h6 class="card-subtitle text-muted mb-2">{{ expense.expense_category }}</h6>
+                                                                <p class="card-text">
+                                                                    <strong>Description:</strong> {{ expense.description }}<br>
+                                                                    <strong>Amount:</strong> {{ expense.amount|intcomma }}<br>
+                                                                    <strong>Created By:</strong> {{ expense.created_by.first_name }} {{ expense.created_by.last_name }}<br>
+                                                                    <strong>Status:</strong>
+                                                                    {% if expense.approved %}
+                                                                        <span class="badge bg-success">Approved</span>
+                                                                    {% elif expense.declined %}
+                                                                        <span class="badge bg-danger">Declined</span>
+                                                                    {% else %}
+                                                                        <span class="badge bg-warning">Pending</span>
+                                                                    {% endif %}
+                                                                </p>
+                                                                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#expenseModal{{ expense.id }}">View Details</button>
+                                                            </div>
+                                                        </div>
+                                                    {% empty %}
+                                                        <div class="alert alert-info">No expenses found.</div>
+                                                    {% endfor %}
+                                                </div>
+                                                <!-- Pagination -->
+                                                {% if expenses.has_other_pages %}
+                                                    <nav aria-label="Expense pagination" class="mt-4">
+                                                        <ul class="pagination justify-content-center">
+                                                            {% if expenses.has_previous %}
+                                                                <li class="page-item">
+                                                                    <a class="page-link" href="?{% if expense_query_string %}{{ expense_query_string }}&{% endif %}page={{ expenses.previous_page_number }}">Previous</a>
+                                                                </li>
+                                                            {% else %}
+                                                                <li class="page-item disabled">
+                                                                    <span class="page-link">Previous</span>
+                                                                </li>
+                                                            {% endif %}
+                                                            {% for num in expenses.paginator.page_range %}
+                                                                {% if expenses.number == num %}
+                                                                    <li class="page-item active" aria-current="page">
+                                                                        <span class="page-link">{{ num }}</span>
+                                                                    </li>
+                                                                {% elif num > expenses.number|add:'-3' and num < expenses.number|add:'3' %}
+                                                                    <li class="page-item">
+                                                                        <a class="page-link" href="?{% if expense_query_string %}{{ expense_query_string }}&{% endif %}page={{ num }}">{{ num }}</a>
+                                                                    </li>
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                            {% if expenses.has_next %}
+                                                                <li class="page-item">
+                                                                    <a class="page-link" href="?{% if expense_query_string %}{{ expense_query_string }}&{% endif %}page={{ expenses.next_page_number }}">Next</a>
+                                                                </li>
+                                                            {% else %}
+                                                                <li class="page-item disabled">
+                                                                    <span class="page-link">Next</span>
+                                                                </li>
+                                                            {% endif %}
+                                                        </ul>
+                                                    </nav>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Transaction List Accordion Item -->
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#transactionList" aria-expanded="false" aria-controls="transactionList">
+                                        Payments
+                                    </button>
+                                </h2>
+                                <div id="transactionList" class="accordion-collapse collapse" data-bs-parent="#expenseAccordion">
+                                    <div class="accordion-body">
+                                        <div class="card shadow-sm">
+                                            <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                                                <span>{% if item_type == 'event' %}Event{% elif item_type == 'operation' %}Operation{% endif %} Payments</span>
+                                                <button class="btn btn-outline-light" type="button" data-bs-toggle="collapse" data-bs-target="#transactionFilterSection" aria-expanded="false" aria-controls="transactionFilterSection">
+                                                    <i class="fas fa-filter"></i> Filters
+                                                </button>
+                                            </div>
+                                            <div class="card-body">
+                                                <!-- Transaction Filter Section -->
+                                                <div class="collapse mb-4" id="transactionFilterSection">
+                                                    <div class="card card-body">
+                                                        <form method="GET" id="transactionFilterForm">
+                                                            <div class="row">
+                                                                <div class="col-md-3">
+                                                                    <label for="txn_user_filter" class="form-label">User</label>
+                                                                    <select name="txn_user" id="txn_user_filter" class="form-select">
+                                                                        <option value="">All Users</option>
+                                                                        {% for user in users %}
+                                                                            <option value="{{ user.id }}" {% if request.GET.txn_user == user.id|stringformat:"s" %}selected{% endif %}>
+                                                                                {{ user.get_full_name|default:user.username }}
+                                                                            </option>
+                                                                        {% endfor %}
+                                                                    </select>
+                                                                </div>
+                                                                <div class="col-md-3">
+                                                                    <label for="txn_status_filter" class="form-label">Status</label>
+                                                                    <select name="txn_status" id="txn_status_filter" class="form-select">
+                                                                        <option value="">All Status</option>
+                                                                        <option value="completed" {% if request.GET.txn_status == 'completed' %}selected{% endif %}>Completed</option>
+                                                                        <option value="pending" {% if request.GET.txn_status == 'pending' %}selected{% endif %}>Pending</option>
+                                                                        <option value="failed" {% if request.GET.txn_status == 'failed' %}selected{% endif %}>Failed</option>
+                                                                        <option value="cancelled" {% if request.GET.txn_status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                                                                    </select>
+                                                                </div>
+                                                                <div class="col-md-2">
+                                                                    <label for="txn_date_from" class="form-label">From Date</label>
+                                                                    <input type="date" name="txn_date_from" id="txn_date_from" class="form-control" value="{{ request.GET.txn_date_from }}">
+                                                                </div>
+                                                                <div class="col-md-2">
+burgo
+                                                                    <label for="txn_date_to" class="form-label">To Date</label>
+                                                                    <input type="date" name="txn_date_to" id="txn_date_to" class="form-control" value="{{ request.GET.txn_date_to }}">
+                                                                </div>
+                                                                <div class="col-md-2 d-flex align-items-end">
+                                                                    <button type="submit" class="btn btn-primary me-2">Apply</button>
+                                                                    <a href="" class="btn btn-secondary">Clear</a>
+                                                                </div>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                                <!-- Desktop Transaction Table -->
+                                                <div class="table-responsive d-none d-md-block">
+                                                    <table id="transactions-table" class="table table-hover">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Initiated By</th>
+                                                                <th>Recipient</th>
+                                                                <th>Amount</th>
+                                                                <th>Expense</th>
+                                                                <th>Reference Code</th>
+                                                                <th>Type</th>
+                                                                <th>Status</th>
+                                                                <th>Date and Time</th>
+                                                                <th>Description</th>
+                                                                <th>Actions</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {% if expense_transactions %}
+                                                                {% for txn in expense_transactions %}
+                                                                    <tr>
+                                                                        <td>{{ txn.user.get_full_name }}</td>
+                                                                        <td>{{ txn.receiver.get_full_name|default:"-" }}</td>
+                                                                        <td>{{ txn.sender_wallet.currency|default:"KES" }} {{ txn.amount|floatformat:2|intcomma }}</td>
+                                                                        <td>{{ txn.expense }}</td>
+                                                                        <td>{{ txn.transaction_code }}</td>
+                                                                        <td>
+                                                                            {% if txn.transaction_type == 'send_money' %}
+                                                                                <span class="badge bg-info">Send Money</span>
+                                                                            {% elif txn.transaction_type == 'till' %}
+                                                                                <span class="badge bg-primary">Till Payment</span>
+                                                                            {% elif txn.transaction_type == 'paybill' %}
+                                                                                <span class="badge bg-secondary">Paybill</span>
+                                                                            {% else %}
+                                                                                <span class="badge bg-light text-dark">{{ txn.transaction_type|title }}</span>
+                                                                            {% endif %}
+                                                                        </td>
+                                                                        <td>
+                                                                            {% if txn.status == 'completed' %}
+                                                                                <span class="badge bg-success">{{ txn.status|title }}</span>
+                                                                            {% elif txn.status == 'failed' or txn.status == 'cancelled' %}
+                                                                                <span class="badge bg-danger">{{ txn.status|title }}</span>
+                                                                            {% else %}
+                                                                                <span class="badge bg-warning">{{ txn.status|title }}</span>
+                                                                            {% endif %}
+                                                                        </td>
+                                                                        <td>{{ txn.date|date:"M d, Y H:i" }}</td>
+                                                                        <td>
+                                                                            <span class="text-truncate d-inline-block" style="max-width: 150px;" title="{{ txn.description }}">
+                                                                                {{ txn.description|default:"-" }}
+                                                                            </span>
+                                                                        </td>
+                                                                        <td>
+                                                                            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#txnModal{{ txn.id }}">View</button>
+                                                                        </td>
+                                                                    </tr>
+                                                                {% endfor %}
+                                                            {% else %}
+                                                                <tr>
+                                                                    <td colspan="10" class="text-center">No transactions found.</td>
+                                                                </tr>
+                                                            {% endif %}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                                <!-- Mobile Transaction Cards -->
+                                                <div class="d-md-none">
+                                                    {% for txn in expense_transactions %}
+                                                        <div class="card mb-3">
+                                                            <div class="card-body">
+                                                                <h6 class="card-subtitle text-muted mb-2">{{ txn.transaction_code }}</h6>
+                                                                <p class="card-text">
+                                                                    <strong>Initiated By:</strong> {{ txn.user.get_full_name }}<br>
+                                                                    <strong>Recipient:</strong> {{ txn.receiver.get_full_name|default:"-" }}<br>
+                                                                    <strong>Amount:</strong> {{ txn.sender_wallet.currency|default:"KES" }} {{ txn.amount|floatformat:2|intcomma }}<br>
+                                                                    <strong>Expense:</strong> {{ txn.expense }}<br>
+                                                                    <strong>Type:</strong>
+                                                                    {% if txn.transaction_type == 'send_money' %}
+                                                                        <span class="badge bg-info">Send Money</span>
+                                                                    {% elif txn.transaction_type == 'till' %}
+                                                                        <span class="badge bg-primary">Till Payment</span>
+                                                                    {% elif txn.transaction_type == 'paybill' %}
+                                                                        <span class="badge bg-secondary">Paybill</span>
+                                                                    {% else %}
+                                                                        <span class="badge bg-light text-dark">{{ txn.transaction_type|title }}</span>
+                                                                    {% endif %}<br>
+                                                                    <strong>Status:</strong>
+                                                                    {% if txn.status == 'completed' %}
+                                                                        <span class="badge bg-success">{{ txn.status|title }}</span>
+                                                                    {% elif txn.status == 'failed' or txn.status == 'cancelled' %}
+                                                                        <span class="badge bg-danger">{{ txn.status|title }}</span>
+                                                                    {% else %}
+                                                                        <span class="badge bg-warning">{{ txn.status|title }}</span>
+                                                                    {% endif %}<br>
+                                                                    <strong>Date:</strong> {{ txn.date|date:"M d, Y H:i" }}<br>
+                                                                    <strong>Description:</strong> {{ txn.description|default:"-" }}
+                                                                </p>
+                                                                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#txnModal{{ txn.id }}">View Details</button>
+                                                            </div>
+                                                        </div>
+                                                    {% empty %}
+                                                        <div class="alert alert-info">No transactions found.</div>
+                                                    {% endfor %}
+                                                </div>
+                                                <!-- Transaction Pagination -->
+                                                {% if expense_transactions.has_other_pages %}
+                                                    <nav aria-label="Transaction pagination" class="mt-4">
+                                                        <ul class="pagination justify-content-center">
+                                                            {% if expense_transactions.has_previous %}
+                                                                <li class="page-item">
+                                                                    <a class="page-link" href="?{% if txn_query_string %}{{ txn_query_string }}&{% endif %}txn_page={{ expense_transactions.previous_page_number }}">Previous</a>
+                                                                </li>
+                                                            {% else %}
+                                                                <li class="page-item disabled">
+                                                                    <span class="page-link">Previous</span>
+                                                                </li>
+                                                            {% endif %}
+                                                            {% for num in expense_transactions.paginator.page_range %}
+                                                                {% if expense_transactions.number == num %}
+                                                                    <li class="page-item active" aria-current="page">
+                                                                        <span class="page-link">{{ num }}</span>
+                                                                    </li>
+                                                                {% elif num > expense_transactions.number|add:'-3' and num < expense_transactions.number|add:'3' %}
+                                                                    <li class="page-item">
+                                                                        <a class="page-link" href="?{% if txn_query_string %}{{ txn_query_string }}&{% endif %}txn_page={{ num }}">{{ num }}</a>
+                                                                    </li>
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                            {% if expense_transactions.has_next %}
+                                                                <li class="page-item">
+                                                                    <a class="page-link" href="?{% if txn_query_string %}{{ txn_query_string }}&{% endif %}txn_page={{ expense_transactions.next_page_number }}">Next</a>
+                                                                </li>
+                                                            {% else %}
+                                                                <li class="page-item disabled">
+                                                                    <span class="page-link">Next</span>
+                                                                </li>
+                                                            {% endif %}
+                                                        </ul>
+                                                    </nav>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         {% endif %}
                     </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-borderless">
-                                <thead>
-                                    <tr>
-                                        <th>CATEGORY</th>
-                                        <th>TOTAL AMOUNT</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% if item_type == 'event' or item_type == 'operation' %}
-                                    {% if expense_categories %}
-                                    {% for category in expense_categories %}
-                                    <tr>
-                                        <td>{{ category.expense_category__name }}</td>
-                                        <td>{{ category.total|intcomma }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                    {% else %}
-                                    <tr>
-                                        <td colspan="2">No approved expenses found.</td>
-                                    </tr>
-                                    {% endif %}
-                                    {% else %}
-                                    {% if expense_requests %}
-                                    {% for request in expense_requests %}
-                                    <tr>
-                                        <td>{{ request.category }}</td>
-                                        <td>{{ request.amount|intcomma }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                    {% else %}
-                                    <tr>
-                                        <td colspan="2">No results found.</td>
-                                    </tr>
-                                    {% endif %}
-                                    {% endif %}
-                                </tbody>
-                                <tfoot class="table-dark">
-                                    {% if item_type == 'event' or item_type == 'operation' %}
-                                    {% if expense_categories %}
-                                    <tr>
-                                        <th>GRAND TOTAL</th>
-                                        <th>{{ total_amount|intcomma }}</th>
-                                    </tr>
-                                    {% endif %}
-                                    {% else %}
-                                    {% if expense_requests %}
-                                    <tr>
-                                        <th>GRAND TOTAL</th>
-                                        <th>{{ total_amount|intcomma }}</th>
-                                    </tr>
-                                    {% endif %}
-                                    {% endif %}
-                                </tfoot>
-                            </table>
-                        </div>
-                    </div>
-                </div>
                 </div>
             </div>
-            
-            <!-- Second Row: Details and Forms -->
-            <div class="row mb-4">
-                {% if item_type == 'event' or item_type == 'operation' %}
-                    <div class="col-12">    
-                        <h4 class="mb-3">Expense List</h4>
-                    </div>
-                    <div class="col-md-12">
-                        <div class="card shadow-sm">
-                            <div class="card-header bg-secondary text-white">
-                                {% if item_type == 'event' %}Event{% else %}Operation{% endif %} Requests
-                            </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table id="expenses-table" class="table table-hover">
-                                        <thead>
-                                            <tr>
-                                                <th>CATEGORY</th>
-                                                 <th>DESCRIPTION</th>
-                                                <th>AMOUNT</th>
-                                                <th>CREATED BY</th>
-                                                <th>STATUS</th>
-                                                <th>ACTIONS</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% if expenses %}
-                                                {% for expense in expenses %}
-                                                    <tr>
-                                                        <td>{{ expense.expense_category }}</td>
-                                                        <td>{{ expense.description }}</td>
-                                                        <td>{{ expense.amount|intcomma }}</td>
-                                                        <td>{{ expense.created_by.first_name }} {{ expense.created_by.last_name }}</td>
-                                                        <td>
-                                                            {% if expense.approved %}
-                                                                <span class="badge bg-success">Approved</span>
-                                                            {% elif expense.declined %}
-                                                                <span class="badge bg-danger">Declined</span>
-                                                            {% else %}
-                                                                <span class="badge bg-warning">Pending</span>
-                                                            {% endif %}
-                                                        </td>
-                                                        <td>
-                                                            <a href="{% url 'expense:expense_detail' expense.id %}" class="btn btn-sm btn-primary">View</a>
-                                                        </td>
-                                                    </tr>
-                                                {% endfor %}
-                                            {% else %}
-                                                <tr>
-                                                    <td colspan="6" class="text-center">No expenses found.</td>
-                                                </tr>
-                                            {% endif %}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-         
-                
-                  
-                {% endif %}
-            </div>
-            <div class="row mb-4">
-                    <div class="col-12">
-                        <h4 class="mb-3">Payments
-</h4>
-                    </div>
-                    <div class="col-md-12">
-                        <div class="card shadow-sm">
-                            <div class="card-header bg-secondary text-white">
-                            {% if item_type == 'event' %} Event {% elif  item_type == 'operation' %} Operation {% endif %} Payments    
-                            </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table id="expenses-table" class="table table-hover">
-                                        <thead>
-                                            <tr>
-                                                <th>Initiated By</th>
-                                                <th>Recipient</th>
-                                                <th>Amount</th>
-                                                <th>Expense</th>
-                                                <th>Reference Code</th>
-                                                <th>Type</th>
-                                                <th>Status</th>
-                                                <th>Date and Time</th>
-                                                <th>Description of Payment</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% if expense_transactions %}
-                                                {% for txn in expense_transactions %}
-                                                    <tr>
-                                                        <td>{{ txn.user.get_full_name}}</td>
-                                                        <td>{{ txn.reciever.get_full_name|default:"-" }}</td>
-                                                        <td>{{ txn.sender_wallet.currency|default:"KES" }} {{ txn.amount|floatformat:2|intcomma }}</td>
-                                                        <td>{{ txn.expense }}</td>
-                                                        <td>{{ txn.transaction_code }}</td>
-                                                        <td>
-                                                            {% if txn.transaction_type == 'send_money' %}
-                                                                <span class="badge bg-info">Send Money</span>
-                                                            {% elif txn.transaction_type == 'till' %}
-                                                                <span class="badge bg-primary">Till Payment</span>
-                                                            {% elif txn.transaction_type == 'paybill' %}
-                                                                <span class="badge bg-secondary">Paybill</span>
-                                                            {% else %}
-                                                                <span class="badge bg-light text-dark">{{ txn.transaction_type|title }}</span>
-                                                            {% endif %}
-                                                        </td>
-                                                        <td>
-                                                            {% if txn.status == 'completed' %}
-                                                                <span class="badge bg-success">{{ txn.status|title }}</span>
-                                                            {% elif txn.status == 'failed' or txn.status == 'cancelled' %}
-                                                                <span class="badge bg-danger">{{ txn.status|title }}</span>
-                                                            {% else %}
-                                                                <span class="badge bg-warning">{{ txn.status|title }}</span>
-                                                            {% endif %}
-                                                        </td>
-                                                        <td>{{ txn.date|date:"M d, Y H:i" }}</td>
-                                                        <td>
-                                                            <span class="text-truncate d-inline-block"  title="{{ txn.description }}">
-                                                                {{ txn.description|default:"-" }}
-                                                            </span>
-                                                        </td>
-                                                    </tr>
-                                                {% endfor %}
-                                            {% else %}
-                                                <tr>
-                                                    <td colspan="8" class="text-center">No expenses found.</td>
-                                                </tr>
-                                            {% endif %}
-                                        </tbody>
-                                    </table>
-
-                                    <!-- Pagination block -->
-                                    {% if is_paginated %}
-                                        <nav aria-label="Page navigation">
-                                            <ul class="pagination justify-content-center">
-                                                {% if page_obj.has_previous %}
-                                                    <li class="page-item">
-                                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
-                                                    </li>
-                                                {% else %}
-                                                    <li class="page-item disabled">
-                                                        <span class="page-link">Previous</span>
-                                                    </li>
-                                                {% endif %}
-
-                                                {% for num in paginator.page_range %}
-                                                    {% if page_obj.number == num %}
-                                                        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-                                                    {% else %}
-                                                        <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
-                                                    {% endif %}
-                                                {% endfor %}
-
-                                                {% if page_obj.has_next %}
-                                                    <li class="page-item">
-                                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
-                                                    </li>
-                                                {% else %}
-                                                    <li class="page-item disabled">
-                                                        <span class="page-link">Next</span>
-                                                    </li>
-                                                {% endif %}
-                                            </ul>
-                                        </nav>
-                                    {% endif %}
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-                    </div>
-
-
         </div>
     </div>
 </section>
 
-<!-- Edit Item Modal -->
-{% if item_type == 'event' or item_type == 'operation' %}
-<div class="modal fade" id="editItemModal" tabindex="-1" aria-labelledby="editItemModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editItemModalLabel">
-                    Edit {% if item_type == 'event' %}Event{% else %}Operation{% endif %} Details
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form method="post" action="{% url 'expense:edit_item' item.id item_type %}">
+<!-- Expense Modals -->
+{% for expense in expenses %}
+    <div class="modal fade" id="expenseModal{{ expense.id }}" tabindex="-1" aria-labelledby="expenseModalLabel{{ expense.id }}" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="expenseModalLabel{{ expense.id }}">Expense Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
                 <div class="modal-body">
-                    {% csrf_token %}
-                    <div class="row">
-                        {% if item_type == 'event' %}
-                            
-                            <div class="col-md-6 mb-3">
-                                {{event_form}}
-                            </div>
-                        {% else %}
-                            
-                            <div class="col-md-6 mb-3">
-                                {{operation_form}}
-                            </div>
-                        {% endif %}
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Category:</strong> {{ expense.expense_category }}<br>
+                            <strong>Amount:</strong> {{ expense.amount|intcomma }}<br>
+                            <strong>Created By:</strong> {{ expense.created_by.first_name }} {{ expense.created_by.last_name }}<br>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Status:</strong>
+                            {% if expense.approved %}
+                                <span class="badge bg-success">Approved</span>
+                            {% elif expense.declined %}
+                                <span class="badge bg-danger">Declined</span>
+                            {% else %}
+                                <span class="badge bg-warning">Pending</span>
+                            {% endif %}<br>
+                            <strong>Date Created:</strong> {{ expense.created_at|date:"Y-m-d H:i:s" }}<br>
+                            <strong>Last Updated:</strong> {{ expense.updated_at|date:"Y-m-d H:i:s" }}<br>
+                        </div>
                     </div>
-                    
-            
-                    
-                    
+                    <div class="row">
+                        <div class="col-12">
+                            <strong>Description:</strong><br>
+                            <div class="p-2 bg-light rounded">{{ expense.description|default:"No description provided." }}</div>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
-</div>
+{% endfor %}
+
+<!-- Transaction Modals -->
+{% for txn in expense_transactions %}
+    <div class="modal fade" id="txnModal{{ txn.id }}" tabindex="-1" aria-labelledby="txnModalLabel{{ txn.id }}" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="txnModalLabel{{ txn.id }}">Transaction Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Reference Code:</strong> {{ txn.transaction_code }}<br>
+                            <strong>Amount:</strong> {{ txn.sender_wallet.currency|default:"KES" }} {{ txn.amount|floatformat:2|intcomma }}<br>
+                            <strong>Initiated By:</strong> {{ txn.user.get_full_name }}<br>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Recipient:</strong> {{ txn.receiver.get_full_name|default:"-" }}<br>
+                            <strong>Expense:</strong> {{ txn.expense }}<br>
+                            <strong>Type:</strong> {{ txn.transaction_type|title }}<br>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Status:</strong>
+                            {% if txn.status == 'completed' %}
+                                <span class="badge bg-success">{{ txn.status|title }}</span>
+                            {% elif txn.status == 'failed' or txn.status == 'cancelled' %}
+                                <span class="badge bg-danger">{{ txn.status|title }}</span>
+                            {% else %}
+                                <span class="badge bg-warning">{{ txn.status|title }}</span>
+                            {% endif %}<br>
+                            <strong>Date:</strong> {{ txn.date|date:"Y-m-d H:i:s" }}<br>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <strong>Description:</strong><br>
+                            <div class="p-2 bg-light rounded">{{ txn.description|default:"No description provided." }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endfor %}
+
+<!-- Edit Item Modal -->
+{% if item_type == 'event' or item_type == 'operation' %}
+    <div class="modal fade" id="editItemModal" tabindex="-1" aria-labelledby="editItemModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editItemModalLabel">
+                        Edit {% if item_type == 'event' %}Event{% else %}Operation{% endif %} Details
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="post" action="{% url 'expense:edit_item' item.id item_type %}">
+                    <div class="modal-body">
+                        {% csrf_token %}
+                        <div class="row">
+                            {% if item_type == 'event' %}
+                                <div class="col-md-12 mb-3">
+                                    {{ event_form.as_p }}
+                                </div>
+                            {% else %}
+                                <div class="col-md-12 mb-3">
+                                    {{ operation_form.as_p }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 {% endif %}
+
 {% endblock %}
 
 {% block extra_js %}
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script>
     $(document).ready(function() {
-        $('#expenses-table').DataTable({
-            "order": [[4, "desc"]], // Sort by status column by default
+        $('#expenses-table, #transactions-table').DataTable({
+            "order": [[4, "desc"]],
             "pageLength": 10,
             "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]]
         });
@@ -477,43 +772,45 @@
 {% block extra_css %}
 <style>
     .table-borderless td {
-    border-bottom: 1px solid #e9ecef; /* Bootstrap muted gray */
-  }
+        border-bottom: 1px solid #e9ecef;
+    }
     .card-header {
         background-color: #5c6b7e !important;
         color: white !important;
     }
-    
     .table th {
         font-weight: normal;
         color: #666;
     }
-    
     .badge {
         padding: 5px 10px;
         border-radius: 4px;
     }
-    
     .text-muted {
         margin-bottom: 15px;
     }
-    
     .badge.bg-success {
         background-color: #28a745 !important;
     }
-    
     .badge.bg-danger {
         background-color: #dc3545 !important;
     }
-    
     .badge.bg-warning {
         background-color: #ffc107 !important;
         color: #212529;
     }
-    
     h4 {
         color: #384353;
         font-weight: 600;
+    }
+    .accordion-button {
+        background-color: #f8f9fa;
+        color: #384353;
+        font-weight: 600;
+    }
+    .accordion-button:not(.collapsed) {
+        background-color: #5c6b7e;
+        color: white;
     }
 </style>
 {% endblock %}
