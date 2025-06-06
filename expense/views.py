@@ -1098,7 +1098,6 @@ def reports(request):
         'event': [monthly_data[m]['event'] for m in monthly_data],
         'operation': [monthly_data[m]['operation'] for m in monthly_data]
     }
-    print(trend_chart)
 
     # Prepare category distribution data
     category_data = expenses.values('expense_category__name') \
@@ -1109,6 +1108,10 @@ def reports(request):
         'amounts': [float(c['total']) for c in category_data],
     }
 
+    # Prepare status bar chart data
+    last_12_months = get_past_12_months()
+    status_bar_chart = get_status_bar_chart_data(expenses, last_12_months)
+
     context = {
         'categories': ExpenseCategory.objects.filter(is_active=True),
         'request_types': ExpenseRequestType.objects.filter(is_active=True),
@@ -1116,10 +1119,10 @@ def reports(request):
         'operations': Operation.objects.filter(is_active=True, company=company),
         'trend_chart': trend_chart,
         'pie_chart': pie_chart,
+        'status_bar_chart': status_bar_chart,
     }
 
     return render(request, 'reports/analytics.html', context)
-
 
 
 def get_past_12_months():
@@ -1131,6 +1134,73 @@ def get_past_12_months():
         months.append(f"{year}-{month:02}")
     return months
 
+
+def get_status_bar_chart_data(expenses, months):
+    """Generate status bar chart data for events and operations"""
+    
+    # Initialize data structure
+    status_data = {
+        'events': {
+            'approved': [0] * len(months),
+            'completed': [0] * len(months),
+            'declined': [0] * len(months)
+        },
+        'operations': {
+            'approved': [0] * len(months),
+            'completed': [0] * len(months),
+            'declined': [0] * len(months)
+        }
+    }
+    
+    # Process expenses and categorize by status and type
+    for exp in expenses:
+        month = exp.created_at.strftime('%Y-%m')
+        if month in months:
+            month_index = months.index(month)
+            
+            # Determine expense type
+            exp_type = 'events' if exp.event else 'operations'
+            
+            # Determine status - adjust these field names based on your Expense model
+            status = get_expense_status(exp)
+            
+            if status in status_data[exp_type]:
+                status_data[exp_type][status][month_index] += float(exp.amount)
+    
+    return {
+        'labels': months,
+        'events': status_data['events'],
+        'operations': status_data['operations']
+    }
+
+
+def get_expense_status(expense):
+    """
+    Determine the status of an expense based on your model fields.
+    Adjust this function based on your actual Expense model structure.
+    """
+    # Example implementation - modify based on your actual model fields
+    if hasattr(expense, 'status'):
+        status = expense.status.lower() if expense.status else 'pending'
+        if status in ['approved', 'accept', 'accepted']:
+            return 'approved'
+        elif status in ['completed', 'complete', 'done']:
+            return 'completed'
+        elif status in ['declined', 'rejected', 'reject', 'deny', 'denied']:
+            return 'declined'
+    
+    # If you have separate boolean fields, use this approach:
+    # if hasattr(expense, 'is_approved') and expense.is_approved:
+    #     return 'approved'
+    # elif hasattr(expense, 'is_completed') and expense.is_completed:
+    #     return 'completed'
+    # elif hasattr(expense, 'is_declined') and expense.is_declined:
+    #     return 'declined'
+    
+    # Default to approved if no clear status
+    return 'approved'
+
+
 @require_GET
 @login_required
 def analytics_data(request):
@@ -1140,19 +1210,22 @@ def analytics_data(request):
     if not company:
         return JsonResponse({'error': 'No associated company'}, status=400)
 
-    # Optional: filter by date range
+    # Get filter parameters
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
-    print(start_date, end_date)
-
+    status_filter = request.GET.get('status')
 
     expenses = Expense.objects.filter(company=company)
-    # if start_date and end_date:
-    #     expenses = expenses.filter(created_at__range=[start_date, end_date])
+    
+    # Apply date filters
     if start_date and end_date:
         start_date = timezone.make_aware(datetime.strptime(start_date, "%Y-%m-%d"))
         end_date = timezone.make_aware(datetime.strptime(end_date, "%Y-%m-%d")) + timezone.timedelta(days=1)
         expenses = expenses.filter(created_at__range=[start_date, end_date])
+
+    # Apply status filter
+    if status_filter:
+        expenses = filter_expenses_by_status(expenses, status_filter)
 
     # Trend chart data (12-monthly)
     monthly_data = defaultdict(lambda: {'event': 0, 'operation': 0})
@@ -1178,7 +1251,32 @@ def analytics_data(request):
         'amounts': [float(c['total']) for c in category_data]
     }
 
+    # Status bar chart data
+    status_bar_chart = get_status_bar_chart_data(expenses, last_12_months)
+
     return JsonResponse({
         'trend_chart': trend_chart,
         'pie_chart': pie_chart,
+        'status_bar_chart': status_bar_chart,
     })
+
+
+def filter_expenses_by_status(expenses, status_filter):
+    """Filter expenses based on status - adjust based on your model structure"""
+    
+    if status_filter == 'approved':
+        # Modify this condition based on your actual model fields
+        return expenses.filter(status__iexact='approved')
+        # or if using boolean fields: return expenses.filter(is_approved=True)
+        
+    elif status_filter == 'completed':
+        return expenses.filter(status__iexact='completed')
+        # or: return expenses.filter(is_completed=True)
+        
+    elif status_filter == 'declined':
+        return expenses.filter(status__iexact='declined')
+        # or: return expenses.filter(is_declined=True)
+        # or for multiple declined statuses: 
+        # return expenses.filter(status__iexact__in=['declined', 'rejected'])
+    
+    return expenses

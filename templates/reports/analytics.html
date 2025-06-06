@@ -5,6 +5,8 @@
 
 <!-- Dashboard Section start -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <section class="dashboard-section body-collapse">
     <div class="overlay pt-120">
@@ -35,19 +37,32 @@
                             <label class="form-label">End Date</label>
                             <input type="date" class="form-control" id="endDate">
                         </div>
+                        
                         <div class="col-md-3 mt-4 pt-2">
                             <button class="btn btn-primary mt-3" id="filterChartsBtn">
                                 <i class="fas fa-sync-alt me-2"></i>Update Analytics
                             </button>
-                            <button class="btn btn-outline-secondary mt-3 ms-2" onclick="exportData()">
-                                <i class="fas fa-download me-2"></i>Export Data
-                            </button>
+                            <div class="dropdown d-inline-block mt-3 ms-2">
+                                <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-download me-2"></i>Export
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="exportDropdown">
+                                    <li><a class="dropdown-item" href="#" onclick="exportChartAsPNG('all')"><i class="fas fa-image me-2"></i>All Charts as PNG</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="exportChartAsPNG('trend')"><i class="fas fa-chart-line me-2"></i>Trend Chart as PNG</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="exportChartAsPNG('pie')"><i class="fas fa-chart-pie me-2"></i>Pie Chart as PNG</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="exportChartAsPNG('bar')"><i class="fas fa-chart-bar me-2"></i>Bar Chart as PNG</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="#" onclick="exportChartAsPDF()"><i class="fas fa-file-pdf me-2"></i>Export as PDF</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="exportDataAsCSV()"><i class="fas fa-file-csv me-2"></i>Export Data as CSV</a></li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Charts -->
                 <div class="row mt-5 mb-4">
+                    <!-- Monthly Spending Trend -->
                     <div class="col-lg-8 mb-4">
                         <div class="card dashboard-card">
                             <div class="card-header bg-transparent">
@@ -61,6 +76,7 @@
                         </div>
                     </div>
 
+                    <!-- Category Distribution -->
                     <div class="col-lg-4 mb-4">
                         <div class="card dashboard-card">
                             <div class="card-header bg-transparent">
@@ -75,21 +91,41 @@
                     </div>
                 </div>
 
+                <!-- Status Bar Chart -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card dashboard-card">
+                            <div class="card-header bg-transparent">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-chart-bar me-2"></i>Events & Operations Status Overview (Last 12 Months)
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="statusBarChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
 </section>
 
 <script>
-    let trendChart, pieChart;
+    let trendChart, pieChart, statusBarChart;
 
     function initCharts(data) {
         const t = document.getElementById('trendChart');
         const p = document.getElementById('pieChart');
+        const s = document.getElementById('statusBarChart');
 
+        // Destroy existing charts
         if (trendChart) trendChart.destroy();
         if (pieChart) pieChart.destroy();
+        if (statusBarChart) statusBarChart.destroy();
 
+        // Trend Chart
         trendChart = new Chart(t, {
             type: 'line',
             data: {
@@ -99,22 +135,35 @@
                         label: 'Event Expenses',
                         data: data.trend_chart.event,
                         borderColor: '#007bff',
+                        backgroundColor: 'rgba(0, 123, 255, 0.1)',
                         fill: false
                     },
                     {
                         label: 'Operation Expenses',
                         data: data.trend_chart.operation,
                         borderColor: '#ffc107',
+                        backgroundColor: 'rgba(255, 193, 7, 0.1)',
                         fill: false
                     }
                 ]
             },
             options: {
                 responsive: true,
-                plugins: { legend: { position: 'bottom' } }
+                plugins: { legend: { position: 'bottom' } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return new Intl.NumberFormat().format(value);
+                            }
+                        }
+                    }
+                }
             }
         });
 
+        // Pie Chart
         pieChart = new Chart(p, {
             type: 'pie',
             data: {
@@ -124,21 +173,163 @@
                     data: data.pie_chart.amounts,
                     backgroundColor: [
                         '#007bff', '#28a745', '#ffc107', '#dc3545',
-                        '#17a2b8', '#6f42c1', '#fd7e14'
+                        '#17a2b8', '#6f42c1', '#fd7e14', '#e83e8c'
                     ]
                 }]
             },
             options: {
                 responsive: true,
-                plugins: { legend: { position: 'bottom' } }
+                plugins: { 
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': ' + new Intl.NumberFormat().format(context.parsed);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Status Bar Chart - Grouped bars for better comparison
+        statusBarChart = new Chart(s, {
+            type: 'bar',
+            data: {
+                labels: data.status_bar_chart.labels,
+                datasets: [
+                    {
+                        label: 'Events - Approved',
+                        data: data.status_bar_chart.events.approved,
+                        backgroundColor: '#28a745',
+                        borderColor: '#1e7e34',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Events - Completed',
+                        data: data.status_bar_chart.events.completed,
+                        backgroundColor: '#007bff',
+                        borderColor: '#0056b3',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Events - Declined',
+                        data: data.status_bar_chart.events.declined,
+                        backgroundColor: '#dc3545',
+                        borderColor: '#bd2130',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Operations - Approved',
+                        data: data.status_bar_chart.operations.approved,
+                        backgroundColor: '#20c997',
+                        borderColor: '#17a085',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Operations - Completed',
+                        data: data.status_bar_chart.operations.completed,
+                        backgroundColor: '#17a2b8',
+                        borderColor: '#117a8b',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Operations - Declined',
+                        data: data.status_bar_chart.operations.declined,
+                        backgroundColor: '#e83e8c',
+                        borderColor: '#d91a72',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                plugins: { 
+                    legend: { 
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 15,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + new Intl.NumberFormat().format(context.parsed.y);
+                            },
+                            footer: function(tooltipItems) {
+                                let total = 0;
+                                tooltipItems.forEach(function(tooltipItem) {
+                                    total += tooltipItem.parsed.y;
+                                });
+                                return 'Month Total: ' + new Intl.NumberFormat().format(total);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Months',
+                            font: {
+                                weight: 'bold'
+                            }
+                        },
+                        grid: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Amount',
+                            font: {
+                                weight: 'bold'
+                            }
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return new Intl.NumberFormat().format(value);
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0,0,0,0.1)'
+                        }
+                    }
+                },
+                elements: {
+                    bar: {
+                        borderSkipped: false,
+                        borderRadius: 2
+                    }
+                }
             }
         });
     }
 
-    function fetchChartData(start = '', end = '') {
+    function fetchChartData(start = '', end = '', status = '') {
         let url = '{% url "expense:analytics_data" %}';
+        const params = new URLSearchParams();
+        
         if (start && end) {
-            url += `?start_date=${start}&end_date=${end}`;
+            params.append('start_date', start);
+            params.append('end_date', end);
+        }
+        if (status) {
+            params.append('status', status);
+        }
+        
+        if (params.toString()) {
+            url += '?' + params.toString();
         }
 
         fetch(url)
@@ -150,7 +341,173 @@
     function updateAnalytics() {
         const start = document.getElementById('startDate').value;
         const end = document.getElementById('endDate').value;
-        fetchChartData(start, end);
+        const status = document.getElementById('statusFilter').value;
+        fetchChartData(start, end, status);
+    }
+
+    function exportChartAsPNG(chartType) {
+        let canvas, filename;
+        
+        switch(chartType) {
+            case 'trend':
+                canvas = document.getElementById('trendChart');
+                filename = 'trend-chart.png';
+                break;
+            case 'pie':
+                canvas = document.getElementById('pieChart');
+                filename = 'category-distribution.png';
+                break;
+            case 'bar':
+                canvas = document.getElementById('statusBarChart');
+                filename = 'status-bar-chart.png';
+                break;
+            case 'all':
+                exportAllChartsAsPNG();
+                return;
+            default:
+                console.error('Unknown chart type');
+                return;
+        }
+        
+        if (canvas) {
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+    }
+
+    function exportAllChartsAsPNG() {
+        const charts = [
+            { canvas: document.getElementById('trendChart'), filename: 'trend-chart.png' },
+            { canvas: document.getElementById('pieChart'), filename: 'category-distribution.png' },
+            { canvas: document.getElementById('statusBarChart'), filename: 'status-bar-chart.png' }
+        ];
+        
+        charts.forEach(chart => {
+            if (chart.canvas) {
+                setTimeout(() => {
+                    const link = document.createElement('a');
+                    link.download = chart.filename;
+                    link.href = chart.canvas.toDataURL('image/png');
+                    link.click();
+                }, 100);
+            }
+        });
+    }
+
+    async function exportChartAsPDF() {
+        try {
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('landscape', 'mm', 'a4');
+            
+            // Add title
+            pdf.setFontSize(20);
+            pdf.text('Expense Analytics Report', 20, 20);
+            
+            // Add date
+            pdf.setFontSize(12);
+            pdf.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 30);
+            
+            let yPosition = 50;
+            
+            // Export trend chart
+            if (trendChart) {
+                const trendCanvas = document.getElementById('trendChart');
+                const trendImgData = trendCanvas.toDataURL('image/png');
+                pdf.text('Monthly Spending Trend', 20, yPosition - 5);
+                pdf.addImage(trendImgData, 'PNG', 20, yPosition, 120, 60);
+                yPosition += 70;
+            }
+            
+            // Export pie chart
+            if (pieChart) {
+                const pieCanvas = document.getElementById('pieChart');
+                const pieImgData = pieCanvas.toDataURL('image/png');
+                pdf.text('Category Distribution', 150, yPosition - 65);
+                pdf.addImage(pieImgData, 'PNG', 150, yPosition - 60, 80, 60);
+            }
+            
+            // Add new page for status bar chart
+            if (statusBarChart) {
+                pdf.addPage();
+                const barCanvas = document.getElementById('statusBarChart');
+                const barImgData = barCanvas.toDataURL('image/png');
+                pdf.text('Status Overview (Last 12 Months)', 20, 20);
+                pdf.addImage(barImgData, 'PNG', 20, 30, 250, 120);
+            }
+            
+            // Save PDF
+            pdf.save('expense-analytics-report.pdf');
+            
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+            alert('Error generating PDF. Please try again.');
+        }
+    }
+
+    function exportDataAsCSV() {
+        // Get current chart data
+        fetchChartData().then(() => {
+            let csvContent = "data:text/csv;charset=utf-8,";
+            
+            // Add trend data
+            csvContent += "Monthly Trend Data\n";
+            csvContent += "Month,Event Expenses,Operation Expenses\n";
+            
+            if (trendChart && trendChart.data) {
+                const labels = trendChart.data.labels;
+                const eventData = trendChart.data.datasets[0].data;
+                const operationData = trendChart.data.datasets[1].data;
+                
+                labels.forEach((label, index) => {
+                    csvContent += `${label},${eventData[index]},${operationData[index]}\n`;
+                });
+            }
+            
+            csvContent += "\n\nCategory Distribution\n";
+            csvContent += "Category,Amount\n";
+            
+            if (pieChart && pieChart.data) {
+                const labels = pieChart.data.labels;
+                const amounts = pieChart.data.datasets[0].data;
+                
+                labels.forEach((label, index) => {
+                    csvContent += `${label},${amounts[index]}\n`;
+                });
+            }
+            
+            // Status bar chart data
+            csvContent += "\n\nStatus Overview\n";
+            csvContent += "Month,Events Approved,Events Completed,Events Declined,Operations Approved,Operations Completed,Operations Declined\n";
+            
+            if (statusBarChart && statusBarChart.data) {
+                const labels = statusBarChart.data.labels;
+                const datasets = statusBarChart.data.datasets;
+                
+                labels.forEach((label, index) => {
+                    const row = [label];
+                    datasets.forEach(dataset => {
+                        row.push(dataset.data[index] || 0);
+                    });
+                    csvContent += row.join(',') + '\n';
+                });
+            }
+            
+            // Download CSV
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "expense-analytics-data.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    }
+
+    function exportData() {
+        // Legacy function - redirect to new export options
+        exportDataAsCSV();
     }
 
     document.addEventListener('DOMContentLoaded', function () {
