@@ -805,53 +805,75 @@ def expense_approvals(request):
 
 
 
+@require_POST
 @login_required
 def approve_expenses(request, expense_id):
-    if request.method == 'POST':
+    try:
         expense = get_object_or_404(Expense, id=expense_id)
 
-        # Optional: prevent re-approving already processed items
+        # Prevent re-approving already processed items
         if expense.approved or expense.declined:
-            messages.warning(request, "This expense has already been processed.")
-            return redirect('expense:expense_approvals')
+            return JsonResponse(
+                {'error': 'This expense has already been processed.'},
+                status=400
+            )
+
+        # Optional: Add permission check if needed
+        # if not request.user.has_perm('your_app.can_approve_expense'):
+        #     return JsonResponse({'error': 'Permission denied'}, status=403)
 
         expense.approved = True
         expense.approved_by = request.user
-        expense.approved_at = timezone.now()  # Add this field in model if needed
+        expense.approved_at = timezone.now()
+        expense.declined = False  # Ensure declined is reset
+        expense.decline_reason = None  # Clear any previous decline reason
         expense.save()
 
-        messages.success(request, "Expense approved successfully.")
-    else:
-        messages.error(request, "Invalid request method.")
+        return JsonResponse({
+            'message': 'Expense approved successfully.',
+            'approved_by_name': request.user.get_full_name() or request.user.username
+        }, status=200)
 
-    return redirect('expense:expense_approvals')
+    except Exception as e:
+        return JsonResponse({'error': f'Failed to approve expense: {str(e)}'}, status=500)
+@require_POST
 @login_required
 def decline_expense(request, expense_id):
-    if request.method == 'POST':
+    try:
         reason = request.POST.get("reason", "").strip()
-
         if not reason:
-            messages.error(request, "Decline reason is required.")
-            return redirect('expense:expense_approvals')
+            return JsonResponse(
+                {'error': 'Decline reason is required.'},
+                status=400
+            )
 
         expense = get_object_or_404(Expense, id=expense_id)
 
-        # Optional: Prevent declining already processed expenses
+        # Prevent declining already processed expenses
         if expense.approved or expense.declined:
-            messages.warning(request, "This expense has already been processed.")
-            return redirect('expense:expense_approvals')
+            return JsonResponse(
+                {'error': 'This expense has already been processed.'},
+                status=400
+            )
+
+        # Optional: Add permission check if needed
+        # if not request.user.has_perm('your_app.can_decline_expense'):
+        #     return JsonResponse({'error': 'Permission denied'}, status=403)
 
         expense.declined = True
         expense.declined_at = timezone.now()
         expense.decline_reason = reason
+        expense.approved = False  # Ensure approved is reset
         expense.approved_by = request.user
         expense.save()
 
-        messages.success(request, "Expense has been declined successfully.")
-    else:
-        messages.error(request, "Invalid request method.")
+        return JsonResponse({
+            'message': 'Expense has been declined successfully.',
+            'approved_by_name': request.user.get_full_name() or request.user.username
+        }, status=200)
 
-    return redirect('expense:expense_approvals')
+    except Exception as e:
+        return JsonResponse({'error': f'Failed to decline expense: {str(e)}'}, status=500)
 @login_required
 def make_payment(request):
     """Handle payments for approved expenses via selected method"""
