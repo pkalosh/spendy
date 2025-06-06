@@ -2,7 +2,6 @@
 {% load static %}
 {% load humanize %}
 {% block content %}
-<!-- Pay Page - Wallet and Payment Transactions -->
 <section class="dashboard-section body-collapse">
     <div class="overlay pt-120">
         <div class="container-fluid">
@@ -10,15 +9,28 @@
                 <div class="col-12">
                     <!-- Transactions Section -->
                     <div id="transactions" class="content-section mb-4">
-                        <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap mb-4 mt-4">
                             <div>
                                 <h5>Transactions</h5>
                                 <p>View all payment transactions with filtering options.</p>
                             </div>
-                            <!-- Filter Toggle Button -->
-                            <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#filterSection" aria-expanded="false" aria-controls="filterSection">
-                                <i class="fas fa-filter"></i> Filters
-                            </button>
+                            <div class="d-flex align-items-center gap-2">
+                                <!-- Export Buttons -->
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="fas fa-download"></i> Export
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="?{% if base_query_string %}{{ base_query_string }}&{% endif %}export=csv">Export as CSV</a></li>
+                                        <li><a class="dropdown-item" href="?{% if base_query_string %}{{ base_query_string }}&{% endif %}export=excel">Export as Excel</a></li>
+                                        <li><a class="dropdown-item" href="?{% if base_query_string %}{{ base_query_string }}&{% endif %}export=pdf">Export as PDF</a></li>
+                                    </ul>
+                                </div>
+                                <!-- Filter Toggle Button -->
+                                <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#filterSection" aria-expanded="false" aria-controls="filterSection">
+                                    <i class="fas fa-filter"></i> Filters
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Filter Section -->
@@ -65,7 +77,7 @@
                         </div>
 
                         <!-- Desktop Table View -->
-                        <div class="table-responsive d-none d-md-block">
+                        <div class="table-responsive  d-md-block">
                             <table class="table table-bordered table-hover">
                                 <thead class="bg-light">
                                     <tr>
@@ -83,20 +95,12 @@
                                 <tbody>
                                     {% for txn in transactions %}
                                         <tr>
-                                            <td>{{ txn.user.get_full_name}}</td>
+                                            <td>{{ txn.user.get_full_name|default:txn.user.username }}</td>
                                             <td>{{ txn.reciever.get_full_name|default:"-" }}</td>
                                             <td>{{ txn.sender_wallet.currency|default:"KES" }} {{ txn.amount|floatformat:2|intcomma }}</td>
                                             <td>{{ txn.transaction_id }}</td>
                                             <td>
-                                                {% if txn.transaction_type == 'send_money' %}
-                                                    <span class="badge bg-info">Send Money</span>
-                                                {% elif txn.transaction_type == 'till' %}
-                                                    <span class="badge bg-primary">Till Payment</span>
-                                                {% elif txn.transaction_type == 'paybill' %}
-                                                    <span class="badge bg-secondary">Paybill</span>
-                                                {% else %}
-                                                    <span class="badge bg-light text-dark">{{ txn.transaction_type|title }}</span>
-                                                {% endif %}
+                                                <span class="badge bg-info">{{ txn.transaction_type|title }}</span>
                                             </td>
                                             <td>
                                                 {% if txn.status == 'completed' %}
@@ -116,173 +120,60 @@
                                             <td>
                                                 <div class="btn-group btn-group-sm" role="group">
                                                     <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#viewTransactionModal{{ txn.id }}">View</button>
-                                                    <button class="btn btn-outline-secondary" onclick="copyPaymentDetails({{ txn.id }})">
+                                                    <button class="btn btn-outline-secondary" onclick="copyPaymentDetails('{{ txn.id }}')">
                                                         <i class="fas fa-copy"></i>
                                                     </button>
                                                 </div>
                                             </td>
                                         </tr>
-
-                                        <!-- View Transaction Modal -->
-                                        <div class="modal fade" id="viewTransactionModal{{ txn.id }}" tabindex="-1" aria-labelledby="viewTransactionModalLabel{{ txn.id }}" aria-hidden="true">
-                                            <div class="modal-dialog modal-lg" style="margin-top: 80px;">
-                                              <div class="modal-content">
-                                                <div class="modal-header">
-                                                  <h5 class="modal-title" id="viewTransactionModalLabel{{ txn.id }}">Transaction Details</h5>
-                                                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                  <div class="row mb-3">
-                                                    <div class="col-md-6">
-                                                        <strong>Reference Code:</strong> {{ txn.transaction_id }}
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <strong>Amount:</strong> {{ txn.sender_wallet.currency|default:"KES" }} {{ txn.amount|floatformat:2|intcomma }}
-                                                    </div>
-                                                  </div>
-                                                  <div class="row mb-3">
-                                                    <div class="col-md-6">
-                                                        <strong>Initiated By:</strong> {{ txn.user.get_full_name }}
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <strong>Recipient:</strong> {{ txn.reciever.get_full_name|default:"-" }}
-                                                    </div>
-                                                  </div>
-                                                  <div class="row mb-3">
-                                                    <div class="col-md-6">
-                                                        <strong>Sender Wallet:</strong> {{ txn.sender_wallet.wallet_id }}
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <strong>Receiver Wallet:</strong> {{ txn.reciever_wallet.wallet_id|default:"-" }}
-                                                    </div>
-                                                  </div>
-                                                  <div class="row mb-3">
-                                                    <div class="col-md-6">
-                                                        <strong>Status:</strong> 
-                                                        {% if txn.status == 'completed' %}
-                                                            <span class="badge bg-success">{{ txn.status|title }}</span>
-                                                        {% elif txn.status == 'failed' or txn.status == 'cancelled' %}
-                                                            <span class="badge bg-danger">{{ txn.status|title }}</span>
-                                                        {% else %}
-                                                            <span class="badge bg-warning">{{ txn.status|title }}</span>
-                                                        {% endif %}
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <strong>Transaction Type:</strong> 
-                                                        {% if txn.transaction_type == 'send_money' %}
-                                                            Send Money
-                                                        {% elif txn.transaction_type == 'till' %}
-                                                            Till Payment
-                                                        {% elif txn.transaction_type == 'paybill' %}
-                                                            Paybill
-                                                        {% else %}
-                                                            {{ txn.transaction_type|title }}
-                                                        {% endif %}
-                                                    </div>
-                                                  </div>
-                                                  <div class="row mb-3">
-                                                    <div class="col-md-12">
-                                                        <strong>Description:</strong><br>
-                                                        <div class="p-2 bg-light rounded">
-                                                            {{ txn.description|default:"No description provided." }}
-                                                        </div>
-                                                    </div>
-                                                  </div>
-                                                  <div class="row mb-3">
-                                                    <div class="col-md-6">
-                                                        <strong>Date Created:</strong> {{ txn.date|date:"Y-m-d H:i:s" }}
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <strong>Last Updated:</strong> {{ txn.updated|date:"Y-m-d H:i:s" }}
-                                                    </div>
-                                                  </div>
-                                                  <!-- Payment Details for Copying -->
-                                                  <div class="row">
-                                                    <div class="col-12">
-                                                        <div class="card bg-light">
-                                                            <div class="card-header d-flex justify-content-between align-items-center">
-                                                                <strong>Payment Proof Details</strong>
-                                                                <button class="btn btn-sm btn-outline-primary" onclick="copyPaymentDetails({{ txn.id }})">
-                                                                    <i class="fas fa-copy"></i> Copy Details
-                                                                </button>
-                                                            </div>
-                                                            <div class="card-body" id="paymentDetails{{ txn.id }}">
-                                                                <div class="payment-details">
-                                                                    Reference: {{ txn.transaction_id }}<br>
-                                                                    Amount: {{ txn.sender_wallet.currency|default:"KES" }} {{ txn.amount|floatformat:2|intcomma }}<br>
-                                                                    From: {{ txn.user.get_full_name }}<br>
-                                                                    To: {{ txn.reciever.get_full_name|default:"N/A" }}<br>
-                                                                    Date: {{ txn.date|date:"Y-m-d H:i:s" }}<br>
-                                                                    Status: {{ txn.status|title }}<br>
-                                                                    Type: {% if txn.transaction_type == 'send_money' %}Send Money{% elif txn.transaction_type == 'till' %}Till Payment{% elif txn.transaction_type == 'paybill' %}Paybill{% else %}{{ txn.transaction_type|title }}{% endif %}<br>
-                                                                    Description: {{ txn.description|default:"No description provided." }}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                              </div>
-                                            </div>
-                                        </div>
-                                    {% endfor %}
-
-                                    {% if not transactions %}
+                                    {% empty %}
                                         <tr>
                                             <td colspan="9" class="text-center">No transactions found matching your criteria.</td>
                                         </tr>
-                                    {% endif %}
+                                    {% endfor %}
                                 </tbody>
                             </table>
                         </div>
                         
                         <!-- Mobile-only transaction cards -->
-                        <div class="d-md-none">
-                            {% for txn in transactions %}
+                       <div class="d-md-none">
+                        <p style="color: red;">Debug: Mobile view active, {{ transactions|length }} transactions found</p>
+                        {% for txn in transactions %}
                             <div class="card mb-3">
                                 <div class="card-body">
+                                    <p>Debug: Transaction ID {{ txn.id }}</p>
                                     <div class="d-flex justify-content-between align-items-start mb-2">
                                         <h6 class="card-subtitle text-muted mb-0">{{ txn.transaction_id }}</h6>
-                                        <button class="btn btn-sm btn-outline-secondary" onclick="copyPaymentDetails({{ txn.id }})">
+                                        <button class="btn btn-sm btn-outline-secondary" onclick="copyPaymentDetails('{{ txn.id }}')">
                                             <i class="fas fa-copy"></i>
                                         </button>
                                     </div>
                                     <p class="card-text">
-                                        <strong>Initiated By:</strong> {{ txn.user.get_full_name }}<br>
-                                        <strong>Recipient:</strong> {{ txn.reciever.get_full_name|default:"-" }}<br>
+                                        <strong>Initiated By:</strong> {{ txn.user.get_full_name|default:txn.user.username }}<br>
+                                        <strong>Recipient:</strong> {{ txn.receiver.get_full_name|default:"-" }}<br>
                                         <strong>Amount:</strong> {{ txn.sender_wallet.currency|default:"KES" }} {{ txn.amount|floatformat:2|intcomma }}<br>
-                                        <strong>Type:</strong> 
-                                        {% if txn.transaction_type == 'send_money' %}
-                                            <span class="badge bg-info">Send Money</span>
-                                        {% elif txn.transaction_type == 'till' %}
-                                            <span class="badge bg-primary">Till Payment</span>
-                                        {% elif txn.transaction_type == 'paybill' %}
-                                            <span class="badge bg-secondary">Paybill</span>
-                                        {% else %}
-                                            <span class="badge bg-light text-dark">{{ txn.transaction_type|title }}</span>
-                                        {% endif %}<br>
+                                        <strong>Type:</strong> <span class="badge bg-info">{{ txn.transaction_type|default:"N/A"|title }}</span><br>
                                         <strong>Status:</strong> 
                                         {% if txn.status == 'completed' %}
-                                            <span class="badge bg-success">{{ txn.status|title }}</span>
+                                            <span class="badge bg-success">{{ txn.status| Grown</span>
                                         {% elif txn.status == 'failed' or txn.status == 'cancelled' %}
                                             <span class="badge bg-danger">{{ txn.status|title }}</span>
                                         {% else %}
                                             <span class="badge bg-warning">{{ txn.status|title }}</span>
                                         {% endif %}<br>
-                                        <strong>Date:</strong> {{ txn.date|date:"M d, Y H:i" }}<br>
-                                        <strong>Description:</strong> {{ txn.description|default:"-" }}
+                                        <strong>Date:</strong> {{ txn.date|date:"M d, Y H:i" }}
                                     </p>
                                     <div class="d-flex">
                                         <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#viewTransactionModal{{ txn.id }}">View Details</button>
                                     </div>
                                 </div>
                             </div>
-                            {% empty %}
+                        {% empty %}
                             <div class="alert alert-info">No transactions found matching your criteria.</div>
-                            {% endfor %}
-                        </div>
+                        {% endfor %}
+                    </div>
 
-                        <!-- Fixed Pagination -->
+                        <!-- Pagination -->
                         {% if transactions.has_other_pages %}
                         <nav aria-label="Transaction pagination" class="mt-4">
                             <ul class="pagination justify-content-center">
@@ -290,11 +181,15 @@
                                     <li class="page-item">
                                         <a class="page-link" href="?{% if base_query_string %}{{ base_query_string }}&{% endif %}page={{ transactions.previous_page_number }}">Previous</a>
                                     </li>
+                                {% else %}
+                                     <li class="page-item disabled">
+                                        <span class="page-link">Previous</span>
+                                    </li>
                                 {% endif %}
                                 
                                 {% for num in transactions.paginator.page_range %}
                                     {% if transactions.number == num %}
-                                        <li class="page-item active">
+                                        <li class="page-item active" aria-current="page">
                                             <span class="page-link">{{ num }}</span>
                                         </li>
                                     {% elif num > transactions.number|add:'-3' and num < transactions.number|add:'3' %}
@@ -308,6 +203,10 @@
                                     <li class="page-item">
                                         <a class="page-link" href="?{% if base_query_string %}{{ base_query_string }}&{% endif %}page={{ transactions.next_page_number }}">Next</a>
                                     </li>
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">Next</span>
+                                    </li>
                                 {% endif %}
                             </ul>
                         </nav>
@@ -318,6 +217,104 @@
         </div>
     </div>
 </section>
+
+<!-- Modals for each transaction -->
+{% for txn in transactions %}
+<div class="modal fade" id="viewTransactionModal{{ txn.id }}" tabindex="-1" aria-labelledby="viewTransactionModalLabel{{ txn.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-lg" style="margin-top: 80px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="viewTransactionModalLabel{{ txn.id }}">Transaction Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Reference Code:</strong> {{ txn.transaction_id }}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Amount:</strong> {{ txn.sender_wallet.currency|default:"KES" }} {{ txn.amount|floatformat:2|intcomma }}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Initiated By:</strong> {{ txn.user.get_full_name|default:txn.user.username }}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Recipient:</strong> {{ txn.reciever.get_full_name|default:"-" }}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Sender Wallet:</strong> {{ txn.sender_wallet.wallet_id }}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Receiver Wallet:</strong> {{ txn.reciever_wallet.wallet_id|default:"-" }}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Status:</strong> 
+                        {% if txn.status == 'completed' %}
+                            <span class="badge bg-success">{{ txn.status|title }}</span>
+                        {% elif txn.status == 'failed' or txn.status == 'cancelled' %}
+                            <span class="badge bg-danger">{{ txn.status|title }}</span>
+                        {% else %}
+                            <span class="badge bg-warning">{{ txn.status|title }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Transaction Type:</strong> 
+                        {{ txn.transaction_type|default:"N/A"|title }}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <strong>Description:</strong><br>
+                        <div class="p-2 bg-light rounded">
+                            {{ txn.description|default:"No description provided." }}
+                        </div>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Date Created:</strong> {{ txn.date|date:"Y-m-d H:i:s" }}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Last Updated:</strong> {{ txn.updated|date:"Y-m-d H:i:s" }}
+                    </div>
+                </div>
+                <!-- Payment Details for Copying -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card bg-light">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <strong>Payment Proof Details</strong>
+                                <button class="btn btn-sm btn-outline-primary" onclick="copyPaymentDetails('{{ txn.id }}')">
+                                    <i class="fas fa-copy"></i> Copy Details
+                                </button>
+                            </div>
+                            <div class="card-body" id="paymentDetails{{ txn.id }}">
+                                <div class="payment-details">
+                                    Reference: {{ txn.transaction_id }}<br>
+                                    Amount: {{ txn.sender_wallet.currency|default:"KES" }} {{ txn.amount|floatformat:2|intcomma }}<br>
+                                    From: {{ txn.user.get_full_name|default:txn.user.username }}<br>
+                                    To: {{ txn.reciever.get_full_name|default:"N/A" }}<br>
+                                    Date: {{ txn.date|date:"Y-m-d H:i:s" }}<br>
+                                    Status: {{ txn.status|title }}<br>
+                                    Type: {{ txn.transaction_type|default:"N/A"|title }}<br>
+                                    Description: {{ txn.description|default:"No description provided." }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
 
 <!-- Toast notification for copy success -->
 <div class="toast-container position-fixed bottom-0 end-0 p-3">
@@ -333,61 +330,45 @@
 </div>
 
 <style>
-    .hidden {
-        display: none;
-    }
-    .required:after {
-        content: " *";
-        color: red;
-    }
-    .text-truncate {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
     .payment-details {
         font-family: monospace;
         font-size: 0.9em;
         line-height: 1.6;
-    }
-    .btn-group-sm > .btn {
-        padding: 0.25rem 0.5rem;
-        font-size: 0.75rem;
     }
 </style>
 
 <script>
 function copyPaymentDetails(transactionId) {
     const paymentDetailsElement = document.getElementById('paymentDetails' + transactionId);
+    if (!paymentDetailsElement) return;
+
     const paymentText = paymentDetailsElement.querySelector('.payment-details').innerText;
     
-    // Create a temporary textarea to copy text
-    const textarea = document.createElement('textarea');
-    textarea.value = paymentText;
-    document.body.appendChild(textarea);
-    textarea.select();
-    document.execCommand('copy');
-    document.body.removeChild(textarea);
-    
-    // Show toast notification
-    const toast = new bootstrap.Toast(document.getElementById('copyToast'));
-    toast.show();
-}
-
-// Auto-submit form when filters change
-document.addEventListener('DOMContentLoaded', function() {
-    const filterForm = document.getElementById('filterForm');
-    const filterInputs = filterForm.querySelectorAll('select, input');
-    
-    // Optional: Auto-submit on change (comment out if you prefer manual submission)
-    /*
-    filterInputs.forEach(input => {
-        input.addEventListener('change', function() {
-            filterForm.submit();
+    // Use the modern clipboard API if available, with a fallback
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(paymentText).then(() => {
+            const toast = new bootstrap.Toast(document.getElementById('copyToast'));
+            toast.show();
+        }).catch(err => {
+            console.error('Failed to copy text: ', err);
         });
-    });
-    */
-});
+    } else {
+        // Fallback for older browsers
+        const textarea = document.createElement('textarea');
+        textarea.value = paymentText;
+        textarea.style.position = 'fixed'; // Prevent scrolling to bottom of page in MS Edge.
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+            document.execCommand('copy');
+            const toast = new bootstrap.Toast(document.getElementById('copyToast'));
+            toast.show();
+        } catch (err) {
+            console.error('Fallback: Oops, unable to copy', err);
+        }
+        document.body.removeChild(textarea);
+    }
+}
 </script>
 
 {% endblock %}

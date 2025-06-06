@@ -2,37 +2,47 @@
 {% load static %}
 {% load humanize %}
 {% load custom_filters %}
-
 {% block content %}
+
 <section class="dashboard-section body-collapse">
   <div class="overlay pt-4 pt-md-5">
     <div class="container-fluid">
       <div class="row mt-4">
         <div class="col-12">
-          <h4 class="mb-3 mt-2">Expense Approvals</h4>
+          <h4 class="mb-3 mt-4">Expense Approvals</h4>
           <p class="mb-3">Review and approve Event/Operational expense requests.</p>
-          
-        
         </div>
 
         <!-- Tabs Navigation -->
         <ul class="nav nav-tabs mb-4" id="approvalTabs" role="tablist">
           <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="event-tab" data-bs-toggle="tab" data-bs-target="#event" type="button" role="tab" aria-controls="event" aria-selected="true">
+            <button class="nav-link {% if active_tab == 'event' or not active_tab %}active{% endif %}"
+                    id="event-tab" data-bs-toggle="tab" data-bs-target="#event"
+                    type="button" role="tab" aria-controls="event"
+                    aria-selected="{% if active_tab == 'event' or not active_tab %}true{% else %}false{% endif %}"
+                    data-tab="event">
               Event Requests
-              <span class="badge bg-secondary ms-1">{{ event_requests.paginator.count }}</span>
+              <span class="badge bg-secondary ms-1" id="event-count">{{ event_summary.total }}</span>
             </button>
           </li>
           <li class="nav-item" role="presentation">
-            <button class="nav-link" id="operation-tab" data-bs-toggle="tab" data-bs-target="#operation" type="button" role="tab" aria-controls="operation" aria-selected="false">
+            <button class="nav-link {% if active_tab == 'operation' %}active{% endif %}"
+                    id="operation-tab" data-bs-toggle="tab" data-bs-target="#operation"
+                    type="button" role="tab" aria-controls="operation"
+                    aria-selected="{% if active_tab == 'operation' %}true{% else %}false{% endif %}"
+                    data-tab="operation">
               Operation Requests
-              <span class="badge bg-secondary ms-1">{{ operation_requests.paginator.count }}</span>
+              <span class="badge bg-secondary ms-1" id="operation-count">{{ operation_summary.total }}</span>
             </button>
           </li>
           <li class="nav-item" role="presentation">
-            <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab" aria-controls="history" aria-selected="false">
+            <button class="nav-link {% if active_tab == 'history' %}active{% endif %}"
+                    id="history-tab" data-bs-toggle="tab" data-bs-target="#history"
+                    type="button" role="tab" aria-controls="history"
+                    aria-selected="{% if active_tab == 'history' %}true{% else %}false{% endif %}"
+                    data-tab="history">
               Request History
-              <span class="badge bg-secondary ms-1">{{ past_requests.paginator.count }}</span>
+              <span class="badge bg-secondary ms-1" id="history-count">{{ history_summary.total }}</span>
             </button>
           </li>
         </ul>
@@ -41,42 +51,55 @@
         <div class="card mb-4">
           <div class="card-body">
             <form method="get" id="filterForm">
-              <div class="row">
-                <div class="col-md-8">
+              <div class="row align-items-center">
+                <div class="col-md-6 mb-3 mb-md-0">
                   <div class="btn-group" role="group" aria-label="Request filter">
-                    <button type="button" class="btn btn-outline-primary {% if status == 'all' %}active{% endif %}" data-filter="all">
-                      All Requests
-                      <span class="badge bg-primary ms-1">{{ summary.total_all }}</span>
+                    <button type="button" class="btn btn-outline-primary {% if status == 'all' or not status %}active{% endif %}" data-filter="all">
+                      All
+                      <span class="badge bg-primary ms-1 filter-count" data-count-type="all">{{ event_summary.all|default:0 }}</span>
                     </button>
                     <button type="button" class="btn btn-outline-warning {% if status == 'pending' %}active{% endif %}" data-filter="pending">
                       Pending
-                      <span class="badge bg-warning ms-1">{{ summary.total_pending }}</span>
+                      <span class="badge bg-warning ms-1 filter-count" data-count-type="pending">{{ event_summary.pending|default:0 }}</span>
                     </button>
                     <button type="button" class="btn btn-outline-success {% if status == 'approved' %}active{% endif %}" data-filter="approved">
                       Approved
-                      <span class="badge bg-success ms-1">{{ summary.total_approved }}</span>
+                      <span class="badge bg-success ms-1 filter-count" data-count-type="approved">{{ event_summary.approved|default:0 }}</span>
                     </button>
                     <button type="button" class="btn btn-outline-danger {% if status == 'rejected' %}active{% endif %}" data-filter="rejected">
                       Rejected
-                      <span class="badge bg-danger ms-1">{{ summary.total_rejected }}</span>
+                      <span class="badge bg-danger ms-1 filter-count" data-count-type="rejected">{{ event_summary.rejected|default:0 }}</span>
                     </button>
                   </div>
                 </div>
-                <div class="col-md-4">
-                  <div class="input-group">
-                    <input type="text" class="form-control" id="requestSearch" name="q" placeholder="Search requests..." value="{{ query }}">
-                    <button class="btn btn-outline-secondary" type="submit">
-                      <i class="fas fa-search"></i>
+
+                <div class="col-md-4 mb-3 mb-md-0">
+                    <input type="text" class="form-control" id="searchInput" placeholder="Search requests..." value="{{ query }}">
+                </div>
+
+                <div class="col-md-2">
+                  <div class="dropdown">
+                    <button class="btn btn-outline-info dropdown-toggle w-100" type="button"
+                            id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                      <i class="fas fa-download"></i> Export
                     </button>
-                    {% if query %}
-                    <a href="{% url 'expense:approvals' %}" class="btn btn-outline-danger">
-                      <i class="fas fa-times"></i>
-                    </a>
-                    {% endif %}
+                    <ul class="dropdown-menu" aria-labelledby="exportDropdown">
+                      <li><a class="dropdown-item" href="#" data-export-type="csv">
+                        <i class="fas fa-file-csv"></i> Export CSV
+                      </a></li>
+                      <li><a class="dropdown-item" href="#" data-export-type="pdf">
+                        <i class="fas fa-file-pdf"></i> Export PDF
+                      </a></li>
+                      <li><a class="dropdown-item" href="#" data-export-type="excel">
+                        <i class="fas fa-file-excel"></i> Export Excel
+                      </a></li>
+                    </ul>
                   </div>
                 </div>
               </div>
-              <input type="hidden" name="status" id="statusFilter" value="{{ status }}">
+              <input type="hidden" name="status" id="statusFilter" value="{{ status|default:'all' }}">
+              <input type="hidden" name="tab" id="tabFilter" value="{{ active_tab|default:'event' }}">
+              <input type="hidden" name="q" id="queryFilter" value="{{ query|default:'' }}">
             </form>
           </div>
         </div>
@@ -84,14 +107,15 @@
         <!-- Tabs Content -->
         <div class="tab-content" id="approvalTabsContent">
           <!-- Event Requests Tab -->
-          <div class="tab-pane fade show active" id="event" role="tabpanel" aria-labelledby="event-tab">
+          <div class="tab-pane fade {% if active_tab == 'event' or not active_tab %}show active{% endif %}"
+               id="event" role="tabpanel" aria-labelledby="event-tab">
             <div class="table-responsive">
-              <table class="table table-bordered table-striped">
+              <table class="table table-bordered table-striped" id="eventTable">
                 <thead class="table-dark">
                   <tr>
                     <th>Requested By</th>
                     <th>Event Name</th>
-                    <th>Expense Category</th>
+                    <th>Category</th>
                     <th>Amount</th>
                     <th>Description</th>
                     <th>Location</th>
@@ -102,14 +126,11 @@
                 </thead>
                 <tbody>
                   {% for expense in event_requests %}
-                  <tr>
+                  <tr data-status="{% if expense.approved %}approved{% elif expense.declined %}rejected{% else %}pending{% endif %}"
+                      data-search="{{ expense.created_by.get_full_name|lower }} {{ expense.event.name|lower }} {{ expense.expense_category.name|lower }} {{ expense.description|lower }}">
                     <td>
                       <div class="d-flex align-items-center">
-                        <div class="avatar-sm me-2">
-                          <span class="avatar-title rounded-circle bg-primary text-white">
-                            {{ expense.created_by.get_full_name|first|upper }}
-                          </span>
-                        </div>
+                        
                         <div>
                           <strong>{{ expense.created_by.get_full_name }}</strong>
                           <br>
@@ -134,13 +155,13 @@
                         {% if expense.description|length > 50 %}
                         <br>
                         <small>
-                          <a href="#" class="text-primary" data-bs-toggle="tooltip" 
-                             title="{{ expense.description }}">View full description</a>
+                          <a href="#" class="text-primary view-full-description"
+                             data-full-description="{{ expense.description }}">View full description</a>
                         </small>
                         {% endif %}
                       </div>
                     </td>
-                    <td>{{ expense.event.location }}</td>
+                    <td>{{ expense.event.location|default:"—" }}</td>
                     <td>
                       <small>{{ expense.created_at|date:"M d, Y" }}<br>{{ expense.created_at|time:"g:i A" }}</small>
                     </td>
@@ -162,19 +183,25 @@
                     <td>
                       {% if not expense.approved and not expense.declined %}
                       <div class="btn-group-vertical" role="group">
-                        <button class="btn btn-success btn-sm approve-btn" 
+                        <button class="btn btn-success btn-sm approve-btn"
+                                data-bs-toggle="modal" data-bs-target="#approveModal"
                                 data-expense-id="{{ expense.id }}"
+                                data-expense-type="event"
                                 data-requester="{{ expense.created_by.get_full_name }}"
                                 data-amount="KSH {{ expense.amount|floatformat:2|intcomma }}"
-                                data-description="{{ expense.description }}">
-                          <i class="fas fa-check"></i> Approve
+                                data-description="{{ expense.description }}"
+                                data-item-name="{{ expense.event.name }}">
+                            Approve
                         </button>
-                        <button class="btn btn-danger btn-sm decline-btn" 
+                        <button class="btn btn-danger btn-sm reject-btn"
+                                data-bs-toggle="modal" data-bs-target="#rejectModal"
                                 data-expense-id="{{ expense.id }}"
+                                data-expense-type="event"
                                 data-requester="{{ expense.created_by.get_full_name }}"
                                 data-amount="KSH {{ expense.amount|floatformat:2|intcomma }}"
-                                data-description="{{ expense.description }}">
-                          <i class="fas fa-times"></i> Reject
+                                data-description="{{ expense.description }}"
+                                data-item-name="{{ expense.event.name }}">
+                            Reject
                         </button>
                       </div>
                       {% else %}
@@ -183,7 +210,7 @@
                     </td>
                   </tr>
                   {% empty %}
-                  <tr>
+                  <tr class="no-results">
                     <td colspan="9" class="text-center py-4">
                       <div class="empty-state">
                         <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
@@ -202,28 +229,28 @@
                 </tbody>
               </table>
             </div>
-            
+
             <!-- Event Pagination -->
             {% if event_requests.has_other_pages %}
             <nav aria-label="Event requests pagination">
               <ul class="pagination justify-content-center">
                 {% if event_requests.has_previous %}
                 <li class="page-item">
-                  <a class="page-link" href="?event_page={{ event_requests.previous_page_number }}&q={{ query }}&status={{ status }}">Previous</a>
+                  <a class="page-link" href="?event_page={{ event_requests.previous_page_number }}&q={{ query }}&status={{ status }}&tab=event">Previous</a>
                 </li>
                 {% endif %}
-                
+
                 {% for num in event_requests.paginator.page_range %}
                   {% if event_requests.number == num %}
                     <li class="page-item active"><span class="page-link">{{ num }}</span></li>
                   {% elif num > event_requests.number|add:'-3' and num < event_requests.number|add:'3' %}
-                    <li class="page-item"><a class="page-link" href="?event_page={{ num }}&q={{ query }}&status={{ status }}">{{ num }}</a></li>
+                    <li class="page-item"><a class="page-link" href="?event_page={{ num }}&q={{ query }}&status={{ status }}&tab=event">{{ num }}</a></li>
                   {% endif %}
                 {% endfor %}
-                
+
                 {% if event_requests.has_next %}
                 <li class="page-item">
-                  <a class="page-link" href="?event_page={{ event_requests.next_page_number }}&q={{ query }}&status={{ status }}">Next</a>
+                  <a class="page-link" href="?event_page={{ event_requests.next_page_number }}&q={{ query }}&status={{ status }}&tab=event">Next</a>
                 </li>
                 {% endif %}
               </ul>
@@ -232,9 +259,10 @@
           </div>
 
           <!-- Operation Requests Tab -->
-          <div class="tab-pane fade" id="operation" role="tabpanel" aria-labelledby="operation-tab">
+          <div class="tab-pane fade {% if active_tab == 'operation' %}show active{% endif %}"
+               id="operation" role="tabpanel" aria-labelledby="operation-tab">
             <div class="table-responsive">
-              <table class="table table-bordered table-striped">
+              <table class="table table-bordered table-striped" id="operationTable">
                 <thead class="table-dark">
                   <tr>
                     <th>Requested By</th>
@@ -249,7 +277,8 @@
                 </thead>
                 <tbody>
                   {% for expense in operation_requests %}
-                  <tr>
+                  <tr data-status="{% if expense.approved %}approved{% elif expense.declined %}rejected{% else %}pending{% endif %}"
+                      data-search="{{ expense.created_by.get_full_name|lower }} {{ expense.operation.name|default:''|lower }} {{ expense.expense_category.name|lower }} {{ expense.description|lower }}">
                     <td>
                       <div class="d-flex align-items-center">
                         <div class="avatar-sm me-2">
@@ -283,8 +312,8 @@
                         {% if expense.description|length > 50 %}
                         <br>
                         <small>
-                          <a href="#" class="text-primary" data-bs-toggle="tooltip" 
-                             title="{{ expense.description }}">View full description</a>
+                          <a href="#" class="text-primary view-full-description"
+                             data-full-description="{{ expense.description }}">View full description</a>
                         </small>
                         {% endif %}
                       </div>
@@ -310,19 +339,25 @@
                     <td>
                       {% if not expense.approved and not expense.declined %}
                       <div class="btn-group-vertical" role="group">
-                        <button class="btn btn-success btn-sm approve-btn" 
+                        <button class="btn btn-success btn-sm approve-btn"
+                                data-bs-toggle="modal" data-bs-target="#approveModal"
                                 data-expense-id="{{ expense.id }}"
+                                data-expense-type="operation"
                                 data-requester="{{ expense.created_by.get_full_name }}"
                                 data-amount="KSH {{ expense.amount|floatformat:2|intcomma }}"
-                                data-description="{{ expense.description }}">
-                          <i class="fas fa-check"></i> Approve
+                                data-description="{{ expense.description }}"
+                                data-item-name="{% if expense.operation %}{{ expense.operation.name }}{% else %}General Operation{% endif %}">
+                            <i class="fas fa-check"></i> Approve
                         </button>
-                        <button class="btn btn-danger btn-sm decline-btn" 
+                        <button class="btn btn-danger btn-sm reject-btn"
+                                data-bs-toggle="modal" data-bs-target="#rejectModal"
                                 data-expense-id="{{ expense.id }}"
+                                data-expense-type="operation"
                                 data-requester="{{ expense.created_by.get_full_name }}"
                                 data-amount="KSH {{ expense.amount|floatformat:2|intcomma }}"
-                                data-description="{{ expense.description }}">
-                          <i class="fas fa-times"></i> Reject
+                                data-description="{{ expense.description }}"
+                                data-item-name="{% if expense.operation %}{{ expense.operation.name }}{% else %}General Operation{% endif %}">
+                            <i class="fas fa-times"></i> Reject
                         </button>
                       </div>
                       {% else %}
@@ -331,7 +366,7 @@
                     </td>
                   </tr>
                   {% empty %}
-                  <tr>
+                  <tr class="no-results">
                     <td colspan="8" class="text-center py-4">
                       <div class="empty-state">
                         <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
@@ -350,28 +385,28 @@
                 </tbody>
               </table>
             </div>
-            
+
             <!-- Operation Pagination -->
             {% if operation_requests.has_other_pages %}
             <nav aria-label="Operation requests pagination">
               <ul class="pagination justify-content-center">
                 {% if operation_requests.has_previous %}
                 <li class="page-item">
-                  <a class="page-link" href="?op_page={{ operation_requests.previous_page_number }}&q={{ query }}&status={{ status }}">Previous</a>
+                  <a class="page-link" href="?op_page={{ operation_requests.previous_page_number }}&q={{ query }}&status={{ status }}&tab=operation">Previous</a>
                 </li>
                 {% endif %}
-                
+
                 {% for num in operation_requests.paginator.page_range %}
                   {% if operation_requests.number == num %}
                     <li class="page-item active"><span class="page-link">{{ num }}</span></li>
                   {% elif num > operation_requests.number|add:'-3' and num < operation_requests.number|add:'3' %}
-                    <li class="page-item"><a class="page-link" href="?op_page={{ num }}&q={{ query }}&status={{ status }}">{{ num }}</a></li>
+                    <li class="page-item"><a class="page-link" href="?op_page={{ num }}&q={{ query }}&status={{ status }}&tab=operation">{{ num }}</a></li>
                   {% endif %}
                 {% endfor %}
-                
+
                 {% if operation_requests.has_next %}
                 <li class="page-item">
-                  <a class="page-link" href="?op_page={{ operation_requests.next_page_number }}&q={{ query }}&status={{ status }}">Next</a>
+                  <a class="page-link" href="?op_page={{ operation_requests.next_page_number }}&q={{ query }}&status={{ status }}&tab=operation">Next</a>
                 </li>
                 {% endif %}
               </ul>
@@ -380,9 +415,10 @@
           </div>
 
           <!-- Request History Tab -->
-          <div class="tab-pane fade" id="history" role="tabpanel" aria-labelledby="history-tab">
+          <div class="tab-pane fade {% if active_tab == 'history' %}show active{% endif %}"
+               id="history" role="tabpanel" aria-labelledby="history-tab">
             <div class="table-responsive">
-              <table class="table table-bordered table-striped">
+              <table class="table table-bordered table-striped" id="historyTable">
                 <thead class="table-dark">
                   <tr>
                     <th>Requested By</th>
@@ -397,7 +433,8 @@
                 </thead>
                 <tbody>
                   {% for expense in past_requests %}
-                  <tr>
+                  <tr data-status="{% if expense.approved %}approved{% elif expense.declined %}rejected{% else %}pending{% endif %}"
+                      data-search="{{ expense.created_by.get_full_name|lower }} {% if expense.event %}{{ expense.event.name|default:''|lower }}{% else %}{{ expense.operation.name|default:''|lower }}{% endif %} {{ expense.expense_category.name|lower }} {{ expense.description|lower }}">
                     <td>
                       <div class="d-flex align-items-center">
                         <div class="avatar-sm me-2">
@@ -432,8 +469,8 @@
                       {% if expense.description|length > 40 %}
                       <br>
                       <small>
-                        <a href="#" class="text-primary" data-bs-toggle="tooltip" 
-                           title="{{ expense.description }}">View full</a>
+                        <a href="#" class="text-primary view-full-description"
+                           data-full-description="{{ expense.description }}">View full</a>
                       </small>
                       {% endif %}
                     </td>
@@ -444,7 +481,8 @@
                         <span class="badge bg-danger">Rejected</span>
                         {% if expense.decline_reason %}
                         <br>
-                        <small class="text-muted" data-bs-toggle="tooltip" title="{{ expense.decline_reason }}">
+                        <small class="text-muted view-decline-reason"
+                               data-full-reason="{{ expense.decline_reason }}">
                           Reason: {{ expense.decline_reason|truncatewords:3 }}
                         </small>
                         {% endif %}
@@ -462,7 +500,7 @@
                     </td>
                   </tr>
                   {% empty %}
-                  <tr>
+                  <tr class="no-results">
                     <td colspan="8" class="text-center py-4">
                       <div class="empty-state">
                         <i class="fas fa-history fa-3x text-muted mb-3"></i>
@@ -481,28 +519,28 @@
                 </tbody>
               </table>
             </div>
-            
+
             <!-- History Pagination -->
             {% if past_requests.has_other_pages %}
             <nav aria-label="Request history pagination">
               <ul class="pagination justify-content-center">
                 {% if past_requests.has_previous %}
                 <li class="page-item">
-                  <a class="page-link" href="?history_page={{ past_requests.previous_page_number }}&q={{ query }}&status={{ status }}">Previous</a>
+                  <a class="page-link" href="?history_page={{ past_requests.previous_page_number }}&q={{ query }}&status={{ status }}&tab=history">Previous</a>
                 </li>
                 {% endif %}
-                
+
                 {% for num in past_requests.paginator.page_range %}
                   {% if past_requests.number == num %}
                     <li class="page-item active"><span class="page-link">{{ num }}</span></li>
                   {% elif num > past_requests.number|add:'-3' and num < past_requests.number|add:'3' %}
-                    <li class="page-item"><a class="page-link" href="?history_page={{ num }}&q={{ query }}&status={{ status }}">{{ num }}</a></li>
+                    <li class="page-item"><a class="page-link" href="?history_page={{ num }}&q={{ query }}&status={{ status }}&tab=history">{{ num }}</a></li>
                   {% endif %}
                 {% endfor %}
-                
+
                 {% if past_requests.has_next %}
                 <li class="page-item">
-                  <a class="page-link" href="?history_page={{ past_requests.next_page_number }}&q={{ query }}&status={{ status }}">Next</a>
+                  <a class="page-link" href="?history_page={{ past_requests.next_page_number }}&q={{ query }}&status={{ status }}&tab=history">Next</a>
                 </li>
                 {% endif %}
               </ul>
@@ -515,135 +553,626 @@
   </div>
 </section>
 
+<!-- Approve Confirmation Modal -->
+<div class="modal fade" id="approveModal" tabindex="-1" aria-labelledby="approveModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="approveModalLabel">
+          <i class="fas fa-check-circle text-success"></i> Confirm Approval
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-info">
+          <strong>Request Details:</strong>
+        </div>
+        <div class="row">
+          <div class="col-sm-4"><strong>Requester:</strong></div>
+          <div class="col-sm-8" id="approve-requester">—</div>
+        </div>
+        <div class="row mt-2">
+          <div class="col-sm-4"><strong>Expense For:</strong></div>
+          <div class="col-sm-8" id="approve-item-name">—</div>
+        </div>
+        <div class="row mt-2">
+          <div class="col-sm-4"><strong>Type:</strong></div>
+          <div class="col-sm-8" id="approve-type">—</div>
+        </div>
+        <div class="row mt-2">
+          <div class="col-sm-4"><strong>Amount:</strong></div>
+          <div class="col-sm-8" id="approve-amount">—</div>
+        </div>
+        <div class="row mt-2">
+          <div class="col-sm-4"><strong>Description:</strong></div>
+          <div class="col-sm-8" id="approve-description">—</div>
+        </div>
+        <hr>
+        <p class="text-center mb-0">Are you sure you want to <strong class="text-success">approve</strong> this expense request?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-success" id="confirmApprove">
+          <i class="fas fa-check"></i> Approve Request
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Reject Reason Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="rejectModalLabel">
+          <i class="fas fa-times-circle text-danger"></i> Reject Request
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-warning">
+          <strong>Request Details:</strong>
+        </div>
+        <div class="row">
+          <div class="col-sm-4"><strong>Requester:</strong></div>
+          <div class="col-sm-8" id="reject-requester">—</div>
+        </div>
+        <div class="row mt-2">
+          <div class="col-sm-4"><strong>Expense For:</strong></div>
+          <div class="col-sm-8" id="reject-item-name">—</div>
+        </div>
+        <div class="row mt-2">
+          <div class="col-sm-4"><strong>Type:</strong></div>
+          <div class="col-sm-8" id="reject-type">—</div>
+        </div>
+        <div class="row mt-2">
+          <div class="col-sm-4"><strong>Amount:</strong></div>
+          <div class="col-sm-8" id="reject-amount">—</div>
+        </div>
+        <div class="row mt-2">
+          <div class="col-sm-4"><strong>Description:</strong></div>
+          <div class="col-sm-8" id="reject-description">—</div>
+        </div>
+        <hr>
+        <div class="mb-3">
+          <label for="declineReason" class="form-label">Reason for Rejection:</label>
+          <textarea class="form-control" id="declineReason" rows="3" placeholder="Please provide a reason for rejecting this request (required)."></textarea>
+          <div class="invalid-feedback">
+            Rejection reason cannot be empty.
+          </div>
+        </div>
+        <p class="text-center mb-0">Are you sure you want to <strong class="text-danger">reject</strong> this expense request?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmReject">
+          <i class="fas fa-times"></i> Reject Request
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 <script>
-  let approveForm = null;
-  let declineFormAction = '';
-
-  // Approval/Decline form handlers
-  document.querySelectorAll(".approve-form").forEach(form => {
-    form.addEventListener("submit", function (e) {
-      e.preventDefault();
-      approveForm = form;
-      new bootstrap.Modal(document.getElementById("confirmApproveModal")).show();
+  document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Bootstrap Tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
     });
-  });
 
-  document.getElementById("confirmApproveBtn").addEventListener("click", function () {
-    if (approveForm) approveForm.submit();
-  });
-
-  document.querySelectorAll(".decline-form").forEach(form => {
-    form.addEventListener("submit", function (e) {
-      e.preventDefault();
-      declineFormAction = form.action;
-      new bootstrap.Modal(document.getElementById("declineReasonModal")).show();
-    });
-  });
-
-  document.getElementById("declineReasonForm").addEventListener("submit", function (e) {
-    e.preventDefault();
-    const reason = document.getElementById("declineReason").value.trim();
-    if (!reason) {
-      alert("Please enter a reason.");
-      return;
+    /**
+     * Retrieves the CSRF token from a meta tag or a hidden input.
+     * Assumes a meta tag <meta name="csrf-token" content="YOUR_CSRF_TOKEN"> or
+     * a hidden input <input type="hidden" name="csrfmiddlewaretoken" value="YOUR_CSRF_TOKEN"> exists.
+     * @returns {string|null} The CSRF token if found, otherwise null.
+     */
+    function getCsrfToken() {
+        // Try to get from a meta tag
+        const metaTag = document.querySelector('meta[name="csrf-token"]');
+        if (metaTag) {
+            return metaTag.getAttribute('content');
+        }
+        // Try to get from a hidden input (e.g., if it's in the form)
+        const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+        if (csrfInput) {
+            return csrfInput.value;
+        }
+        console.warn("CSRF token not found. Ensure a meta tag 'csrf-token' or a hidden input 'csrfmiddlewaretoken' exists.");
+        return null;
     }
 
-    const realForm = document.createElement("form");
-    realForm.method = "POST";
-    realForm.action = declineFormAction;
+    /**
+     * Displays a custom message box instead of alert/confirm.
+     * @param {string} title The title of the message.
+     * @param {string} message The content of the message.
+     * @param {string} type The type of message (e.g., 'info', 'success', 'danger').
+     */
+    function showMessageBox(title, message, type = 'info') {
+        const modalId = 'messageBoxModal';
+        let modalElement = document.getElementById(modalId);
 
-    const csrfToken = document.querySelector("#declineReasonForm [name='csrfmiddlewaretoken']").value;
-    realForm.innerHTML = `
-      <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
-      <input type="hidden" name="reason" value="${reason}">
-    `;
-    document.body.appendChild(realForm);
-    realForm.submit();
-  });
+        if (!modalElement) {
+            // Create the modal HTML if it doesn't exist
+            modalElement = document.createElement('div');
+            modalElement.id = modalId;
+            modalElement.classList.add('modal', 'fade');
+            modalElement.setAttribute('tabindex', '-1');
+            modalElement.setAttribute('aria-labelledby', modalId + 'Label');
+            modalElement.setAttribute('aria-hidden', 'true');
+            modalElement.innerHTML = `
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="${modalId}Label"></h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body"></div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modalElement);
+        }
 
-  // Filter functionality
-  document.addEventListener('DOMContentLoaded', function() {
-    const filterButtons = document.querySelectorAll('[data-filter]');
-    const searchInput = document.getElementById('requestSearch');
-    const statusFilter = document.getElementById('statusFilter');
+        const modalTitle = modalElement.querySelector('.modal-title');
+        const modalBody = modalElement.querySelector('.modal-body');
 
-    // Initialize filter state
-    const currentStatus = statusFilter.value;
-    filterButtons.forEach(btn => {
-      btn.classList.remove('active');
-      if (btn.dataset.filter === currentStatus) {
-        btn.classList.add('active');
-      }
-    });
+        modalTitle.textContent = title;
+        modalTitle.className = `modal-title text-${type}`; // Set text color based on type
+        modalBody.innerHTML = message;
 
-    // Filter button click handlers
-    filterButtons.forEach(button => {
-      button.addEventListener('click', function() {
-        // Update active button
-        filterButtons.forEach(btn => btn.classList.remove('active'));
-        this.classList.add('active');
-        
-        // Update hidden input
-        statusFilter.value = this.dataset.filter;
-        
-        // Apply filters
-        applyFilters();
-      });
-    });
+        const bsModal = new bootstrap.Modal(modalElement);
+        bsModal.show();
+    }
 
-    // Search input handler
-    searchInput.addEventListener('input', function() {
-      applyFilters();
-    });
+    // Get references to relevant DOM elements
+    const approvalTabsContainer = document.getElementById('approvalTabs');
+    const statusFilterButtons = document.querySelectorAll('.btn-group button[data-filter]');
+    const searchInput = document.getElementById('searchInput');
 
-    function applyFilters() {
-      const searchTerm = searchInput.value.toLowerCase().trim();
-      const statusFilter = document.querySelector('[data-filter].active').dataset.filter;
-      
-      // Get all tables
-      const tables = ['eventTable', 'operationTable', 'historyTable'];
-      
-      tables.forEach(tableId => {
-        const table = document.getElementById(tableId);
-        if (!table) return;
-        
-        const rows = table.querySelectorAll('tbody tr:not(.no-results)');
-        let visibleCount = 0;
-        
-        rows.forEach(row => {
-          const rowStatus = row.dataset.status;
-          const rowSearch = row.dataset.search || '';
-          
-          // Check status filter
-          const statusMatch = statusFilter === 'all' || rowStatus === statusFilter;
-          
-          // Check search filter
-          const searchMatch = !searchTerm || rowSearch.includes(searchTerm);
-          
-          // Show/hide row
-          if (statusMatch && searchMatch) {
-            row.style.display = '';
-            visibleCount++;
-          } else {
-            row.style.display = 'none';
-          }
+    // Helper to get URL parameters
+    function getUrlParams() {
+        const params = new URLSearchParams(window.location.search);
+        return {
+            tab: params.get('tab') || 'event', // Default to 'event'
+            status: params.get('status') || 'all', // Default to 'all'
+            query: params.get('q') || '' // Default to empty string
+        };
+    }
+
+    // Helper to update URL parameters without reloading
+    function updateUrlParams(newParams) {
+        const params = new URLSearchParams(window.location.search);
+        for (const key in newParams) {
+            if (newParams[key] !== null && newParams[key] !== undefined) {
+                params.set(key, newParams[key]);
+            } else {
+                params.delete(key);
+            }
+        }
+        const newUrl = `${window.location.pathname}?${params.toString()}${window.location.hash}`;
+        history.pushState({ path: newUrl }, '', newUrl);
+    }
+
+    // --- Initial State Setup ---
+    function initializeDashboardState() {
+        const params = getUrlParams();
+
+        // Activate the correct tab
+        const targetTabButton = document.getElementById(`${params.tab}-tab`);
+        if (targetTabButton) {
+            const tabInstance = bootstrap.Tab.getInstance(targetTabButton);
+            if (!tabInstance) { // If not initialized, create one
+                new bootstrap.Tab(targetTabButton).show();
+            } else {
+                tabInstance.show();
+            }
+        }
+
+        // Set the active status filter button
+        statusFilterButtons.forEach(button => {
+            if (button.dataset.filter === params.status) {
+                button.classList.add('active');
+            } else {
+                button.classList.remove('active');
+            }
         });
-        
-        // Handle no results message
+
+        // Set the search input value
+        searchInput.value = params.query;
+
+        // Apply filters to the initially active table
+        filterTableRows(params.query, params.status);
+    }
+
+
+    /**
+     * Filters table rows based on the search query and active status filter.
+     * This performs client-side filtering on the currently active table.
+     * @param {string} query The search string.
+     * @param {string} currentStatusFilter The current status filter ('all', 'pending', 'approved', 'rejected').
+     */
+    function filterTableRows(query, currentStatusFilter) {
+        const activePane = document.querySelector('.tab-pane.show.active');
+        if (!activePane) return;
+
+        const table = activePane.querySelector('table');
+        if (!table) return;
+
+        const rows = table.querySelectorAll('tbody tr:not(.no-results)'); // Exclude empty state row
+        let visibleRowCount = 0;
+
+        rows.forEach(row => {
+            const rowSearchData = row.dataset.search || '';
+            const rowStatus = row.dataset.status || '';
+
+            const matchesSearch = rowSearchData.includes(query.toLowerCase().trim());
+            const matchesStatus = currentStatusFilter === 'all' || rowStatus === currentStatusFilter;
+
+            if (matchesSearch && matchesStatus) {
+                row.style.display = ''; // Show row
+                visibleRowCount++;
+            } else {
+                row.style.display = 'none'; // Hide row
+            }
+        });
+
+        // Toggle empty state message
         const noResultsRow = table.querySelector('.no-results');
         if (noResultsRow) {
-          if (visibleCount === 0 && rows.length > 0) {
-            noResultsRow.style.display = '';
-            noResultsRow.querySelector('td').textContent = 'No requests match your filter criteria.';
-          } else {
-            noResultsRow.style.display = 'none';
-          }
+            noResultsRow.style.display = visibleRowCount === 0 ? '' : 'none';
+            // Update the text of the empty state message based on search/filters
+            const emptyStateMessage = noResultsRow.querySelector('.empty-state p');
+            if (emptyStateMessage) {
+                if (query || currentStatusFilter !== 'all') {
+                    emptyStateMessage.textContent = 'No requests match your current criteria.';
+                } else {
+                    emptyStateMessage.textContent = 'There are no requests at the moment.';
+                }
+            }
         }
-      });
+        updateFilterCounts(activePane.id, query); // Update filter counts after client-side filtering
     }
 
-    // Apply initial filters
-    applyFilters();
-  });
+    /**
+     * Updates the status filter counts for the currently active tab.
+     * This re-scans the visible rows to get accurate counts after client-side filtering.
+     * @param {string} activeTabId The ID of the currently active tab (e.g., 'event', 'operation', 'history').
+     * @param {string} currentQuery The current search query.
+     */
+    function updateFilterCounts(activeTabId, currentQuery) {
+        const activeTable = document.getElementById(activeTabId + 'Table');
+        if (!activeTable) return;
+
+        const allRows = activeTable.querySelectorAll('tbody tr:not(.no-results)');
+        const counts = {
+            all: 0,
+            pending: 0,
+            approved: 0,
+            rejected: 0
+        };
+
+        // Populate counts based on all rows and current search query
+        allRows.forEach(row => {
+            const rowSearchData = row.dataset.search || '';
+            const rowStatus = row.dataset.status || '';
+
+            if (rowSearchData.includes(currentQuery.toLowerCase().trim())) {
+                counts.all++;
+                if (rowStatus === 'pending') {
+                    counts.pending++;
+                } else if (rowStatus === 'approved') {
+                    counts.approved++;
+                } else if (rowStatus === 'rejected') {
+                    counts.rejected++;
+                }
+            }
+        });
+
+        // Update the badge counts in the filter group
+        document.querySelectorAll('.filter-count').forEach(badge => {
+            const type = badge.dataset.countType;
+            if (counts[type] !== undefined) {
+                badge.textContent = counts[type];
+            }
+        });
+    }
+
+    // --- Event Listeners ---
+
+    // Tab switching listener
+    approvalTabsContainer.addEventListener('click', function(event) {
+        const clickedTabButton = event.target.closest('.nav-link');
+        if (clickedTabButton) {
+            const newTab = clickedTabButton.dataset.tab;
+            const currentParams = getUrlParams();
+            if (currentParams.tab !== newTab) {
+                updateUrlParams({ tab: newTab, status: 'all', q: '' }); // Reset status and query when changing tabs
+                // Bootstrap's JS handles the tab content visibility
+                // We just need to re-apply filtering for the new tab
+                filterTableRows('', 'all');
+            }
+        }
+    });
+
+    // Status filter button listener
+    statusFilterButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const newStatus = this.dataset.filter;
+            const currentParams = getUrlParams();
+            if (currentParams.status !== newStatus) {
+                updateUrlParams({ status: newStatus });
+                // Update active class immediately for visual feedback
+                statusFilterButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                filterTableRows(currentParams.query, newStatus);
+            }
+        });
+    });
+
+    // Search input listener
+    let searchTimeout;
+    searchInput.addEventListener('keyup', function() {
+        clearTimeout(searchTimeout);
+        const currentQuery = this.value.toLowerCase().trim();
+        const currentParams = getUrlParams();
+
+        searchTimeout = setTimeout(() => {
+            if (currentParams.query !== currentQuery) {
+                updateUrlParams({ q: currentQuery });
+                filterTableRows(currentQuery, currentParams.status);
+            }
+        }, 300); // Debounce search for 300ms
+    });
+
+    // --- Modal Functionality ---
+
+    // Approve Modal
+    const approveModal = document.getElementById('approveModal');
+    if (approveModal) {
+        approveModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget; // Button that triggered the modal
+            const expenseId = button.dataset.expenseId;
+            const expenseType = button.dataset.expenseType; // 'event' or 'operation'
+            const requester = button.dataset.requester;
+            const amount = button.dataset.amount;
+            const description = button.dataset.description;
+            const itemName = button.dataset.itemName; // event.name or operation.name
+
+            // Update the modal's content.
+            approveModal.querySelector('#approve-requester').textContent = requester;
+            approveModal.querySelector('#approve-item-name').textContent = itemName;
+            approveModal.querySelector('#approve-type').textContent = expenseType.charAt(0).toUpperCase() + expenseType.slice(1) + ' Expense';
+            approveModal.querySelector('#approve-amount').textContent = amount;
+            approveModal.querySelector('#approve-description').textContent = description;
+
+            const confirmApproveBtn = approveModal.querySelector('#confirmApprove');
+            confirmApproveBtn.dataset.expenseId = expenseId;
+            confirmApproveBtn.dataset.expenseType = expenseType;
+        });
+
+        const confirmApproveBtn = document.getElementById('confirmApprove');
+        if (confirmApproveBtn) {
+            confirmApproveBtn.addEventListener('click', async function() {
+                const expenseId = this.dataset.expenseId;
+                const expenseType = this.dataset.expenseType;
+                const csrfToken = getCsrfToken();
+
+                if (!csrfToken) {
+                    showMessageBox('Error', 'Security token missing. Please refresh the page.', 'danger');
+                    return;
+                }
+
+                // Close the modal
+                const modalInstance = bootstrap.Modal.getInstance(approveModal);
+                modalInstance.hide();
+
+                try {
+                    const response = await fetch(`/approve_expense/${expenseType}/${expenseId}/`, { // Adjust URL as per your Django setup
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrfToken
+                        },
+                        body: JSON.stringify({}) // No additional data needed for approval
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        showMessageBox('Success', data.message || 'Expense request approved successfully!', 'success');
+                        // Update the UI without full page reload
+                        updateTableRowStatus(expenseId, expenseType, 'approved', data.approved_by_name || 'You');
+                        const currentParams = getUrlParams();
+                        updateFilterCounts(currentParams.tab, currentParams.query);
+                    } else {
+                        const errorData = await response.json();
+                        showMessageBox('Error', errorData.error || 'Failed to approve expense request.', 'danger');
+                    }
+                } catch (error) {
+                    console.error('Error approving expense:', error);
+                    showMessageBox('Error', 'An unexpected error occurred during approval. Please try again.', 'danger');
+                }
+            });
+        }
+    }
+
+    // Reject Modal
+    const rejectModal = document.getElementById('rejectModal');
+    if (rejectModal) {
+        rejectModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget; // Button that triggered the modal
+            const expenseId = button.dataset.expenseId;
+            const expenseType = button.dataset.expenseType; // 'event' or 'operation'
+            const requester = button.dataset.requester;
+            const amount = button.dataset.amount;
+            const description = button.dataset.description;
+            const itemName = button.dataset.itemName; // event.name or operation.name
+
+            // Update the modal's content.
+            rejectModal.querySelector('#reject-requester').textContent = requester;
+            rejectModal.querySelector('#reject-item-name').textContent = itemName;
+            rejectModal.querySelector('#reject-type').textContent = expenseType.charAt(0).toUpperCase() + expenseType.slice(1) + ' Expense';
+            rejectModal.querySelector('#reject-amount').textContent = amount;
+            rejectModal.querySelector('#reject-description').textContent = description;
+
+            const declineReasonInput = rejectModal.querySelector('#declineReason');
+            declineReasonInput.value = ''; // Clear previous reason
+            declineReasonInput.classList.remove('is-invalid'); // Clear validation state
+
+            const confirmRejectBtn = rejectModal.querySelector('#confirmReject');
+            confirmRejectBtn.dataset.expenseId = expenseId;
+            confirmRejectBtn.dataset.expenseType = expenseType;
+        });
+
+        const confirmRejectBtn = document.getElementById('confirmReject');
+        if (confirmRejectBtn) {
+            confirmRejectBtn.addEventListener('click', async function() {
+                const expenseId = this.dataset.expenseId;
+                const expenseType = this.dataset.expenseType;
+                const declineReasonInput = rejectModal.querySelector('#declineReason');
+                const declineReason = declineReasonInput.value.trim();
+                const csrfToken = getCsrfToken();
+
+                if (!declineReason) {
+                    declineReasonInput.classList.add('is-invalid');
+                    return;
+                } else {
+                    declineReasonInput.classList.remove('is-invalid');
+                }
+
+                if (!csrfToken) {
+                    showMessageBox('Error', 'Security token missing. Please refresh the page.', 'danger');
+                    return;
+                }
+
+                // Close the modal
+                const modalInstance = bootstrap.Modal.getInstance(rejectModal);
+                modalInstance.hide();
+
+                try {
+                    const response = await fetch(`/reject_expense/${expenseType}/${expenseId}/`, { // Adjust URL as per your Django setup
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrfToken
+                        },
+                        body: JSON.stringify({ reason: declineReason })
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        showMessageBox('Success', data.message || 'Expense request rejected successfully!', 'success');
+                        // Update the UI without full page reload
+                        updateTableRowStatus(expenseId, expenseType, 'rejected', data.approved_by_name || 'You', declineReason);
+                        const currentParams = getUrlParams();
+                        updateFilterCounts(currentParams.tab, currentParams.query);
+                    } else {
+                        const errorData = await response.json();
+                        showMessageBox('Error', errorData.error || 'Failed to reject expense request.', 'danger');
+                    }
+                } catch (error) {
+                    console.error('Error rejecting expense:', error);
+                    showMessageBox('Error', 'An unexpected error occurred during rejection. Please try again.', 'danger');
+                }
+            });
+        }
+    }
+
+    /**
+     * Updates the status of a specific table row after approval/rejection.
+     * @param {string} expenseId The ID of the expense.
+     * @param {string} expenseType 'event' or 'operation'.
+     * @param {string} newStatus 'approved' or 'rejected'.
+     * @param {string} processedByName Name of the user who processed the request.
+     * @param {string} [declineReason=''] The reason for decline (only for rejected status).
+     */
+    function updateTableRowStatus(expenseId, expenseType, newStatus, processedByName, declineReason = '') {
+        const tableId = (expenseType === 'event' ? 'eventTable' : 'operationTable');
+        const table = document.getElementById(tableId);
+        if (!table) return;
+
+        const row = table.querySelector(`tr[data-expense-id="${expenseId}"]`);
+        if (row) {
+            // Update data-status attribute for client-side filtering
+            row.dataset.status = newStatus;
+
+            // Update status badge and text
+            // Assuming status is in the 8th column (index 7) for eventTable, and 7th (index 6) for operationTable
+            // This is a bit fragile if table structure changes; consider a more robust selector if possible.
+            let statusCellIndex = -1;
+            if (table.id === 'eventTable') statusCellIndex = 7; // 8th column (index 7)
+            else if (table.id === 'operationTable') statusCellIndex = 6; // 7th column (index 6)
+
+            const statusCell = row.cells[statusCellIndex]; // Get cell by index
+            if (statusCell) {
+                let statusHtml = '';
+                if (newStatus === 'approved') {
+                    statusHtml = `<span class="badge bg-success">Approved</span>`;
+                } else if (newStatus === 'rejected') {
+                    statusHtml = `<span class="badge bg-danger">Rejected</span>`;
+                    if (declineReason) {
+                        // Truncate decline reason for display in table
+                        const displayedReason = declineReason.length > 20 ? declineReason.substring(0, 17) + '...' : declineReason;
+                        statusHtml += `<br><small class="text-muted view-decline-reason" data-full-reason="${declineReason}">Reason: ${displayedReason}</small>`;
+                    }
+                }
+                statusHtml += `<br><small class="text-muted">by ${processedByName}</small>`;
+                statusCell.innerHTML = statusHtml;
+            }
+
+            // Hide action buttons
+            const actionCell = row.querySelector('td:last-child');
+            if (actionCell) {
+                actionCell.innerHTML = '<span class="text-muted">—</span>';
+            }
+        }
+    }
+
+    // --- Export Functionality ---
+    document.querySelectorAll('#exportDropdown .dropdown-item').forEach(item => {
+        item.addEventListener('click', function(event) {
+            event.preventDefault(); // Prevent default link behavior
+            const exportType = this.dataset.exportType;
+            // Get current filter parameters from the URL
+            const currentParams = getUrlParams();
+
+            // Construct URL for export (this will be handled by Django backend)
+            const exportUrl = `/export_expenses/?tab=${currentParams.tab}&status=${currentParams.status}&q=${currentParams.query}&format=${exportType}`;
+            window.location.href = exportUrl; // Trigger download
+        });
+    });
+
+    // --- Full Description and Decline Reason Viewers ---
+    document.addEventListener('click', function(event) {
+        if (event.target.classList.contains('view-full-description')) {
+            event.preventDefault();
+            const fullDescription = event.target.dataset.fullDescription;
+            showMessageBox('Full Description', fullDescription, 'info');
+        } else if (event.target.classList.contains('view-decline-reason')) {
+            event.preventDefault();
+            const fullReason = event.target.dataset.fullReason;
+            showMessageBox('Rejection Reason', fullReason, 'warning');
+        }
+    });
+
+    // Initialize dashboard state based on URL parameters on page load
+    initializeDashboardState();
+
+    // Attach event listener for Bootstrap tab 'shown.bs.tab' event
+    // This ensures that when a tab becomes active, client-side filters are re-applied to its content
+    document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tabElement => {
+        tabElement.addEventListener('shown.bs.tab', event => {
+            const newTabId = event.target.dataset.tab;
+            const currentParams = getUrlParams();
+            // Re-apply filters to the newly shown tab's content
+            // Note: status and query parameters are preserved across tabs
+            filterTableRows(currentParams.query, currentParams.status);
+        });
+    });
+});
+
 </script>
-{% endblock content %}
+{% endblock %}

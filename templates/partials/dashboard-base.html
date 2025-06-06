@@ -46,10 +46,10 @@
                            
                             <div class="single-item notifications-area">
                                 <div class="notifications-btn">
-                                    <img src="{% static 'assets1/images/icon/bell.png' %}" class="bell-icon" alt="icon"><span class="mdr">{{ counts }}</span>
+                                    <img src="{% static 'assets1/images/icon/bell.png' %}" class="bell-icon" alt="icon">
                                 </div>
                                 <div class="main-area notifications-content">
-                                        <a  class="head-area d-flex justify-content-between" href="{% url 'wallet:notifications' %}">View All</a> 
+                                        <a  class="head-area d-flex justify-content-between" href="{% url 'wallet:notifications' %}">you have {{ pending }} new notifications</a> 
                                   
                                 </div>
                             </div>

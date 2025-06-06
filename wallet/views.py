@@ -19,7 +19,11 @@ from django.http import JsonResponse,HttpResponseForbidden
 from django.db import transaction
 from django.core.paginator import Paginator
 from datetime import datetime
-
+import csv
+from openpyxl import Workbook
+from reportlab.lib.pagesizes import letter, landscape
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 from .models import Wallet, Transaction
 def is_admin(user):
     return user.is_authenticated and user.is_admin
@@ -783,10 +787,8 @@ def kyc_registration(request):
 @login_required
 def transactions(request):
     """
-    Display transactions with filtering capabilities
+    Display transactions with filtering, pagination, and export capabilities.
     """
-    user = request.user
-    
     # Get all transactions for the user's company
     company = get_object_or_404(CompanyKYC, user=request.user)
     txn_queryset = Transaction.objects.filter(company=company).select_related(
@@ -821,6 +823,16 @@ def transactions(request):
             txn_queryset = txn_queryset.filter(date__date__lte=date_to_obj)
         except ValueError:
             pass  # Invalid date format, ignore filter
+
+    # Handle Exporting Data before pagination
+    export_format = request.GET.get('export')
+    if export_format:
+        if export_format == 'csv':
+            return export_to_csv(txn_queryset)
+        elif export_format == 'excel':
+            return export_to_excel(txn_queryset)
+        elif export_format == 'pdf':
+            return export_to_pdf(txn_queryset)
     
     # Get all users associated with transactions for the filter dropdown
     transaction_user_ids = set()
@@ -832,12 +844,7 @@ def transactions(request):
     
     users = User.objects.filter(id__in=transaction_user_ids).order_by('first_name', 'last_name', 'email')
     
-    # Pagination
-    paginator = Paginator(txn_queryset, 20)  # Show 20 transactions per page
-    page_number = request.GET.get('page', 1)
-    transactions_page = paginator.get_page(page_number)
-    
-    # Count transactions by status for dashboard stats
+    # Count transactions by status for dashboard stats before pagination
     status_counts = {
         'total': txn_queryset.count(),
         'completed': txn_queryset.filter(status='completed').count(),
@@ -846,25 +853,23 @@ def transactions(request):
         'cancelled': txn_queryset.filter(status='cancelled').count(),
     }
     
-    # Create query parameters for pagination links (preserve filters)
-    query_params = []
-    if user_filter:
-        query_params.append(f'user={user_filter}')
-    if status_filter:
-        query_params.append(f'status={status_filter}')
-    if date_from:
-        query_params.append(f'date_from={date_from}')
-    if date_to:
-        query_params.append(f'date_to={date_to}')
+    # Pagination
+    paginator = Paginator(txn_queryset, 10)  # Show 20 transactions per page
+    page_number = request.GET.get('page', 1)
+    transactions_page = paginator.get_page(page_number)
     
-    base_query_string = '&'.join(query_params)
+    # Create query parameters for pagination links to preserve filters
+    query_params = request.GET.copy()
+    if 'page' in query_params:
+        del query_params['page']
+    base_query_string = query_params.urlencode()
     
     context = {
         "transactions": transactions_page,
         "users": users,
         "status_counts": status_counts,
-        "base_query_string": base_query_string,  # Add this for pagination
-        # Preserve filter values for form
+        "base_query_string": base_query_string,
+        # Preserve filter values for the form
         "current_filters": {
             "user": user_filter,
             "status": status_filter,
@@ -874,6 +879,102 @@ def transactions(request):
     }
     
     return render(request, "transaction/transactions.html", context)
+
+
+# --- Export Functions ---
+
+def export_to_csv(queryset):
+    """
+    Exports a queryset of transactions to a CSV file.
+    """
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="transactions.csv"'
+    
+    writer = csv.writer(response)
+    writer.writerow(['Transaction ID', 'Initiated By', 'Recipient', 'Amount', 'Status', 'Type', 'Date', 'Description'])
+    
+    for txn in queryset:
+        writer.writerow([
+            txn.transaction_id,
+            txn.user.get_full_name() or txn.user.username,
+            txn.receiver.get_full_name() if txn.receiver else "-",
+            f"{txn.sender_wallet.currency if txn.sender_wallet else 'KES'} {txn.amount}",
+            txn.status.title(),
+            txn.transaction_type.replace('_', ' ').title(),
+            txn.date.strftime('%Y-%m-%d %H:%M:%S'),
+            txn.description or "-"
+        ])
+        
+    return response
+
+
+def export_to_excel(queryset):
+    """
+    Exports a queryset of transactions to an Excel file.
+    """
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename="transactions.xlsx"'
+    
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Transactions"
+    
+    columns = ['Transaction ID', 'Initiated By', 'Recipient', 'Amount', 'Status', 'Type', 'Date', 'Description']
+    ws.append(columns)
+    
+    for txn in queryset:
+        ws.append([
+            txn.transaction_id,
+            txn.user.get_full_name() or txn.user.username,
+            txn.receiver.get_full_name() if txn.receiver else "-",
+            f"{txn.sender_wallet.currency if txn.sender_wallet else 'KES'} {txn.amount}",
+            txn.status.title(),
+            txn.transaction_type.replace('_', ' ').title(),
+            txn.date.strftime('%Y-%m-%d %H:%M:%S'),
+            txn.description or "-"
+        ])
+        
+    wb.save(response)
+    return response
+
+def export_to_pdf(queryset):
+    """
+    Exports a queryset of transactions to a PDF file.
+    """
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="transactions.pdf"'
+
+    doc = SimpleDocTemplate(response, pagesize=landscape(letter))
+    elements = []
+    
+    data = [['ID', 'Initiated By', 'Recipient', 'Amount', 'Status', 'Type', 'Date']]
+    for txn in queryset:
+        data.append([
+            txn.transaction_id,
+            (txn.user.get_full_name() or txn.user.username)[:20],
+            (txn.receiver.get_full_name() or "-")[:20] if txn.receiver else "-",
+            f"{txn.amount}",
+            txn.status.title(),
+            txn.transaction_type.replace('_', ' ').title(),
+            txn.date.strftime('%Y-%m-%d %H:%M')
+        ])
+
+    table = Table(data)
+    style = TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+    ])
+    table.setStyle(style)
+
+    elements.append(table)
+    doc.build(elements)
+    
+    return response
 
 @login_required
 def transaction_export(request):
@@ -1102,6 +1203,7 @@ def dashboard(request):
 @login_required
 def notifications(request):
     alerts = Notification.objects.filter(user=request.user)
+    pending = alerts.filter(is_read=False).count()
     alert_type = request.GET.get('type')
     if alert_type:
         alerts = alerts.filter(notification_type=alert_type)
@@ -1110,7 +1212,23 @@ def notifications(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    return render(request, 'notifications.html', {'alerts': page_obj, 'counts': alerts.count()})
+    return render(request, 'notifications.html', {'alerts': page_obj, 'pending': pending})
+
+
+@login_required
+def staff_notifications(request):
+    alerts = Notification.objects.filter(user=request.user)
+    pending = alerts.filter(is_read=False).count()
+    alert_type = request.GET.get('type')
+    if alert_type:
+        alerts = alerts.filter(notification_type=alert_type)
+
+    paginator = Paginator(alerts.order_by('-date'), 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'staffnotification.html', {'alerts': page_obj, 'pending': pending})
+
 
 @login_required
 @require_POST
