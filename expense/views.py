@@ -24,6 +24,8 @@ import calendar
 from django.db.models import F, Sum
 from django.db.models.functions import Coalesce
 from userauths.models import User
+from wallet.utility import NotificationService,  notify_expense_workflow
+from wallet.models import Notification
 
 def is_admin(user):
     """Check if user is admin either through Django admin or through StaffProfile"""
@@ -112,6 +114,9 @@ def submit_expense(request):
             expense.wallet = wallet
             expense.save()
 
+            # Notify expense workflow
+            notify_expense_workflow(expense, 'created')
+
             messages.success(request, "Expense request submitted successfully.")
             return redirect('wallet:expense-requests')
         else:
@@ -131,6 +136,8 @@ def event_operation(request):
             event.created_by = request.user
             event.company = get_object_or_404(CompanyKYC, user=request.user)
             event.save()
+            # Notify expense workflow
+            notify_expense_workflow(event, 'created')
             messages.success(request, 'Event created successfully.')
             return redirect('expenses:expense')
         else:
@@ -148,6 +155,8 @@ def create_event(request):
             event.created_by = request.user
             event.company = get_object_or_404(CompanyKYC, user=request.user)
             event.save()
+            # Notify expense workflow
+            notify_expense_workflow(event, 'created')
             messages.success(request, 'Event created successfully.')
             return redirect('expenses:expense')
         else:
@@ -220,6 +229,9 @@ def event_operation(request):
                 # Run model validation
                 event.full_clean()
                 event.save()
+                
+                # Notify expense workflow
+                notify_expense_workflow(event, 'created')
                 messages.success(request, 'Event request submitted successfully.')
                 return redirect('wallet:expenses')
                 # Validate required fields
@@ -265,6 +277,9 @@ def event_operation(request):
                 # Run model validation
                 operation.full_clean()
                 operation.save()
+                
+                # Notify expense workflow
+                notify_expense_workflow(operation, 'created')
                 messages.success(request, 'Operation request submitted successfully.')
                 return redirect('wallet:expenses')
                 
@@ -708,6 +723,9 @@ def approve_expense(request, expense_id):
                 approval.approved_by = user
                 approval.save()
                 
+                # Notify expense workflow
+                notify_expense_workflow(expense, 'approved' if approval.approved else 'declined', approver_name=user.get_full_name())
+                
                 return redirect('expense:expense_detail', id=expense.id)
         else:
             messages.error(request, 'Please correct the errors below.')
@@ -828,6 +846,7 @@ def approve_expenses(request, expense_id):
         expense.declined = False  # Ensure declined is reset
         expense.decline_reason = None  # Clear any previous decline reason
         expense.save()
+        notify_expense_workflow(expense, 'approved' if expense.approved else 'declined', approver_name=expense.approved_by.get_full_name())
 
         return JsonResponse({
             'message': 'Expense approved successfully.',
@@ -866,6 +885,7 @@ def decline_expense(request, expense_id):
         expense.approved = False  # Ensure approved is reset
         expense.approved_by = request.user
         expense.save()
+        notify_expense_workflow(expense, 'declined' if expense.approved else 'declined', approver_name=expense.declined_by.get_full_name())
 
         return JsonResponse({
             'message': 'Expense has been declined successfully.',
