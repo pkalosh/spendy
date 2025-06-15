@@ -1,8 +1,12 @@
+africastalking==1.2.9
 asgiref==3.8.1
+certifi==2025.4.26
 chardet==5.2.0
+charset-normalizer==3.4.2
 Django==5.2
 django-jazzmin==3.0.1
 et_xmlfile==2.0.0
+idna==3.10
 mysqlclient==2.2.7
 openpyxl==3.1.5
 pillow==11.1.0
@@ -10,6 +14,9 @@ python-decouple==3.8
 python-dotenv==1.0.0
 pytz==2025.2
 reportlab==4.4.1
+requests==2.32.4
+schema==0.7.7
 shortuuid==1.0.13
 sqlparse==0.5.3
 typing_extensions==4.13.2
+urllib3==2.4.0
