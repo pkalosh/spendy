@@ -64,9 +64,9 @@ class SMSService:
             # Send SMS
             response = self.sms.send(
                 message=truncated_message,
-                recipients=[formatted_number],
-                sender=self.at_sms_shortcode
+                recipients=[formatted_number]
             )
+            print(response)
             
             # Parse response
             if response['SMSMessageData']['Recipients']:
@@ -205,7 +205,9 @@ class SMSService:
         """
         try:
             from .models import SMSLog
-            
+           # my fields 
+
+
             SMSLog.objects.create(
                 phone_number=phone_number,
                 message=message,

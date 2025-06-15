@@ -115,7 +115,7 @@ def submit_expense(request):
             expense.save()
 
             # Notify expense workflow
-            notify_expense_workflow(expense, 'created')
+            notify_expense_workflow(expense=expense, action='created', send_sms=True)
 
             messages.success(request, "Expense request submitted successfully.")
             return redirect('wallet:expense-requests')
@@ -137,7 +137,7 @@ def event_operation(request):
             event.company = get_object_or_404(CompanyKYC, user=request.user)
             event.save()
             # Notify expense workflow
-            notify_expense_workflow(event, 'created')
+            notify_expense_workflow(expense=event, action='created', send_sms=True)
             messages.success(request, 'Event created successfully.')
             return redirect('expenses:expense')
         else:
@@ -156,7 +156,7 @@ def create_event(request):
             event.company = get_object_or_404(CompanyKYC, user=request.user)
             event.save()
             # Notify expense workflow
-            notify_expense_workflow(event, 'created')
+            notify_expense_workflow(expense=event, action='created', send_sms=True)
             messages.success(request, 'Event created successfully.')
             return redirect('expenses:expense')
         else:
