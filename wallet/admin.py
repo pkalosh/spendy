@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Wallet,CompanyKYC,Notification,Transaction,StaffProfile,Role,Module,SMSLog
+from .models import Wallet,CompanyKYC,Notification,Transaction,StaffProfile,Role,Module,SMSLog,MpesaCallbackLog,MpesaTransaction
 # Register your models here.
 # admin.site.register(Wallet)
 # admin.site.register(CompanyKYC)
@@ -9,6 +9,8 @@ admin.site.register(StaffProfile)
 admin.site.register(Role)
 admin.site.register(Module)
 admin.site.register(SMSLog)
+admin.site.register(MpesaCallbackLog)
+admin.site.register(MpesaTransaction)
 
 @admin.register(CompanyKYC)
 class CompanyKYCAdmin(admin.ModelAdmin):

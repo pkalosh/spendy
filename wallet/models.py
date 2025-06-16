@@ -299,3 +299,267 @@ class SMSLog(models.Model):
     
     def __str__(self):
         return f"SMS to {self.phone_number} - {self.status}"
+
+
+
+class MpesaTransaction(models.Model):
+    """
+    Comprehensive M-Pesa transaction model for all transaction types:
+    STK Push, C2B, B2C, B2B, Transaction Status, Balance Query, Reversal
+    """
+    
+    TRANSACTION_TYPES = [
+        ('STK_PUSH', 'STK Push'),
+        ('C2B', 'Customer to Business'),
+        ('B2C', 'Business to Customer'),
+        ('B2B', 'Business to Business'),
+        ('TRANSACTION_STATUS', 'Transaction Status Query'),
+        ('ACCOUNT_BALANCE', 'Account Balance Query'),
+        ('REVERSAL', 'Transaction Reversal'),
+    ]
+    
+    TRANSACTION_STATUS = [
+        ('PENDING', 'Pending'),
+        ('COMPLETED', 'Completed'),
+        ('FAILED', 'Failed'),
+        ('CANCELLED', 'Cancelled'),
+        ('TIMEOUT', 'Timeout'),
+        ('REVERSED', 'Reversed'),
+    ]
+    
+    COMMAND_IDS = [
+        ('CustomerPayBillOnline', 'Customer Pay Bill Online'),
+        ('CustomerBuyGoodsOnline', 'Customer Buy Goods Online'),
+        ('BusinessPayment', 'Business Payment'),
+        ('SalaryPayment', 'Salary Payment'),
+        ('PromotionPayment', 'Promotion Payment'),
+        ('BusinessPayBill', 'Business Pay Bill'),
+        ('BusinessBuyGoods', 'Business Buy Goods'),
+        ('TransactionStatusQuery', 'Transaction Status Query'),
+        ('AccountBalance', 'Account Balance'),
+        ('TransactionReversal', 'Transaction Reversal'),
+    ]
+    
+    # Primary identifiers
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    transaction_type = models.CharField(max_length=20, choices=TRANSACTION_TYPES)
+    status = models.CharField(max_length=15, choices=TRANSACTION_STATUS, default='PENDING')
+    
+    # M-Pesa transaction identifiers
+    merchant_request_id = models.CharField(max_length=100, blank=True, null=True, help_text="STK Push merchant request ID")
+    checkout_request_id = models.CharField(max_length=100, blank=True, null=True, help_text="STK Push checkout request ID")
+    conversation_id = models.CharField(max_length=100, blank=True, null=True, help_text="M-Pesa conversation ID")
+    originator_conversation_id = models.CharField(max_length=100, blank=True, null=True, help_text="Originator conversation ID")
+    mpesa_receipt_number = models.CharField(max_length=50, blank=True, null=True, help_text="M-Pesa receipt number")
+    transaction_id = models.CharField(max_length=50, blank=True, null=True, help_text="M-Pesa transaction ID")
+    
+    # Transaction details
+    command_id = models.CharField(max_length=30, choices=COMMAND_IDS, blank=True, null=True)
+    amount = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)
+    transaction_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, blank=True, null=True)
+    
+    # Party information
+    party_a = models.CharField(max_length=15, blank=True, null=True, help_text="Sender party")
+    party_b = models.CharField(max_length=15, blank=True, null=True, help_text="Receiver party")
+    phone_number = models.CharField(max_length=15, blank=True, null=True, help_text="Customer phone number")
+    
+    # Transaction descriptions
+    account_reference = models.CharField(max_length=100, blank=True, null=True, help_text="Account reference/Bill reference")
+    transaction_desc = models.TextField(blank=True, null=True, help_text="Transaction description")
+    remarks = models.TextField(blank=True, null=True, help_text="Transaction remarks")
+    occasion = models.CharField(max_length=100, blank=True, null=True, help_text="Transaction occasion")
+    
+    # Callback response data (stored as JSON)
+    callback_data = models.JSONField(blank=True, null=True, help_text="Complete callback response data")
+    result_code = models.CharField(max_length=10, blank=True, null=True, help_text="Result code from callback")
+    result_desc = models.TextField(blank=True, null=True, help_text="Result description from callback")
+    
+    # STK Push specific fields
+    customer_message = models.TextField(blank=True, null=True, help_text="Message sent to customer")
+    
+    # Balance query specific fields
+    account_balance = models.DecimalField(max_digits=15, decimal_places=2, blank=True, null=True)
+    available_balance = models.DecimalField(max_digits=15, decimal_places=2, blank=True, null=True)
+    reserved_balance = models.DecimalField(max_digits=15, decimal_places=2, blank=True, null=True)
+    uncleared_balance = models.DecimalField(max_digits=15, decimal_places=2, blank=True, null=True)
+    
+    # Reversal specific fields
+    original_transaction_id = models.CharField(max_length=50, blank=True, null=True, help_text="Original transaction ID for reversals")
+    reversal_reason = models.TextField(blank=True, null=True, help_text="Reason for reversal")
+    
+    # User association (optional)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name='mpesa_transactions')
+    
+    # API response details
+    response_code = models.CharField(max_length=10, blank=True, null=True, help_text="API response code")
+    response_description = models.TextField(blank=True, null=True, help_text="API response description")
+    error_code = models.CharField(max_length=20, blank=True, null=True, help_text="Error code if transaction failed")
+    error_message = models.TextField(blank=True, null=True, help_text="Error message if transaction failed")
+    
+    # Metadata
+    ip_address = models.GenericIPAddressField(blank=True, null=True, help_text="Client IP address")
+    user_agent = models.TextField(blank=True, null=True, help_text="Client user agent")
+    
+    # Timestamps
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+    completed_at = models.DateTimeField(blank=True, null=True)
+    
+    # Additional tracking
+    retry_count = models.PositiveIntegerField(default=0, help_text="Number of retry attempts")
+    is_processed = models.BooleanField(default=False, help_text="Whether transaction has been processed by business logic")
+    notes = models.TextField(blank=True, null=True, help_text="Internal notes")
+    
+    class Meta:
+        db_table = 'mpesa_transactions'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['transaction_type', 'status']),
+            models.Index(fields=['mpesa_receipt_number']),
+            models.Index(fields=['phone_number']),
+            models.Index(fields=['checkout_request_id']),
+            models.Index(fields=['conversation_id']),
+            models.Index(fields=['created_at']),
+            models.Index(fields=['account_reference']),
+        ]
+        verbose_name = 'M-Pesa Transaction'
+        verbose_name_plural = 'M-Pesa Transactions'
+    
+    def __str__(self):
+        if self.mpesa_receipt_number:
+            return f"{self.transaction_type} - {self.mpesa_receipt_number} - KES {self.amount}"
+        elif self.checkout_request_id:
+            return f"{self.transaction_type} - {self.checkout_request_id} - KES {self.amount}"
+        else:
+            return f"{self.transaction_type} - {self.id} - KES {self.amount}"
+    
+    def save(self, *args, **kwargs):
+        """Override save to update timestamps"""
+        if self.status == 'COMPLETED' and not self.completed_at:
+            self.completed_at = timezone.now()
+        super().save(*args, **kwargs)
+    
+    @property
+    def is_successful(self):
+        """Check if transaction was successful"""
+        return self.status == 'COMPLETED' and self.result_code == '0'
+    
+    @property
+    def is_pending(self):
+        """Check if transaction is still pending"""
+        return self.status == 'PENDING'
+    
+    @property
+    def is_failed(self):
+        """Check if transaction failed"""
+        return self.status in ['FAILED', 'CANCELLED', 'TIMEOUT']
+    
+    @property
+    def formatted_phone_number(self):
+        """Return formatted phone number"""
+        if self.phone_number:
+            if self.phone_number.startswith('254'):
+                return f"+{self.phone_number}"
+            elif self.phone_number.startswith('0'):
+                return f"+254{self.phone_number[1:]}"
+        return self.phone_number
+    
+    @classmethod
+    def get_by_checkout_request_id(cls, checkout_request_id):
+        """Get transaction by checkout request ID"""
+        try:
+            return cls.objects.get(checkout_request_id=checkout_request_id)
+        except cls.DoesNotExist:
+            return None
+    
+    @classmethod
+    def get_by_mpesa_receipt(cls, receipt_number):
+        """Get transaction by M-Pesa receipt number"""
+        try:
+            return cls.objects.get(mpesa_receipt_number=receipt_number)
+        except cls.DoesNotExist:
+            return None
+    
+    @classmethod
+    def get_user_transactions(cls, user, transaction_type=None):
+        """Get all transactions for a user"""
+        queryset = cls.objects.filter(user=user)
+        if transaction_type:
+            queryset = queryset.filter(transaction_type=transaction_type)
+        return queryset
+    
+    @classmethod
+    def get_successful_transactions(cls, start_date=None, end_date=None):
+        """Get all successful transactions within date range"""
+        queryset = cls.objects.filter(status='COMPLETED', result_code='0')
+        if start_date:
+            queryset = queryset.filter(created_at__gte=start_date)
+        if end_date:
+            queryset = queryset.filter(created_at__lte=end_date)
+        return queryset
+    
+    def update_from_callback(self, callback_data):
+        """Update transaction from M-Pesa callback data"""
+        self.callback_data = callback_data
+        
+        # Extract common fields
+        result_code = callback_data.get('Body', {}).get('stkCallback', {}).get('ResultCode') or \
+                     callback_data.get('Result', {}).get('ResultCode')
+        
+        result_desc = callback_data.get('Body', {}).get('stkCallback', {}).get('ResultDesc') or \
+                     callback_data.get('Result', {}).get('ResultDesc')
+        
+        if result_code is not None:
+            self.result_code = str(result_code)
+            self.result_desc = result_desc
+            
+            if result_code == 0:
+                self.status = 'COMPLETED'
+                self.completed_at = timezone.now()
+                
+                # Extract transaction details from callback metadata
+                callback_metadata = callback_data.get('Body', {}).get('stkCallback', {}).get('CallbackMetadata', {}).get('Item', []) or \
+                                  callback_data.get('Result', {}).get('ResultParameters', {}).get('ResultParameter', [])
+                
+                for item in callback_metadata:
+                    name = item.get('Name', '')
+                    value = item.get('Value')
+                    
+                    if name == 'MpesaReceiptNumber' and value:
+                        self.mpesa_receipt_number = str(value)
+                    elif name == 'TransactionDate' and value:
+                        # Handle transaction date if needed
+                        pass
+                    elif name == 'PhoneNumber' and value:
+                        self.phone_number = str(value)
+                    elif name == 'Amount' and value:
+                        self.amount = float(value)
+            else:
+                self.status = 'FAILED'
+                
+        self.save()
+
+class MpesaCallbackLog(models.Model):
+    """
+    Log all M-Pesa callbacks for debugging and audit purposes
+    """
+    transaction = models.ForeignKey(MpesaTransaction, on_delete=models.CASCADE, blank=True, null=True, related_name='callback_logs')
+    callback_type = models.CharField(max_length=50, help_text="Type of callback (STK, C2B, B2C, etc.)")
+    raw_data = models.JSONField(help_text="Raw callback data")
+    ip_address = models.GenericIPAddressField(help_text="Callback source IP")
+    user_agent = models.TextField(blank=True, null=True)
+    processed = models.BooleanField(default=False)
+    error_message = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    
+    class Meta:
+        db_table = 'mpesa_callback_logs'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['callback_type']),
+            models.Index(fields=['processed']),
+            models.Index(fields=['created_at']),
+        ]
+    
+    def __str__(self):
+        return f"{self.callback_type} - {self.created_at}"
