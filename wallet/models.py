@@ -376,7 +376,7 @@ class MpesaTransaction(models.Model):
     
     # STK Push specific fields
     customer_message = models.TextField(blank=True, null=True, help_text="Message sent to customer")
-    
+    company = models.ForeignKey(CompanyKYC, on_delete=models.CASCADE, blank=True, null=True)
     # Balance query specific fields
     account_balance = models.DecimalField(max_digits=15, decimal_places=2, blank=True, null=True)
     available_balance = models.DecimalField(max_digits=15, decimal_places=2, blank=True, null=True)
