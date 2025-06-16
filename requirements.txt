@@ -1,8 +1,10 @@
 africastalking==1.2.9
 asgiref==3.8.1
 certifi==2025.4.26
+cffi==1.17.1
 chardet==5.2.0
 charset-normalizer==3.4.2
+cryptography==45.0.4
 Django==5.2
 django-jazzmin==3.0.1
 et_xmlfile==2.0.0
@@ -10,6 +12,7 @@ idna==3.10
 mysqlclient==2.2.7
 openpyxl==3.1.5
 pillow==11.1.0
+pycparser==2.22
 python-decouple==3.8
 python-dotenv==1.0.0
 pytz==2025.2
