@@ -231,7 +231,6 @@ def event_operation(request):
                 event.save()
                 
                 # Notify expense workflow
-                notify_expense_workflow(event, 'created')
                 messages.success(request, 'Event request submitted successfully.')
                 return redirect('wallet:expenses')
                 # Validate required fields
@@ -279,7 +278,6 @@ def event_operation(request):
                 operation.save()
                 
                 # Notify expense workflow
-                notify_expense_workflow(operation, 'created')
                 messages.success(request, 'Operation request submitted successfully.')
                 return redirect('wallet:expenses')
                 
@@ -846,7 +844,7 @@ def approve_expenses(request, expense_id):
         expense.declined = False  # Ensure declined is reset
         expense.decline_reason = None  # Clear any previous decline reason
         expense.save()
-        notify_expense_workflow(expense, 'approved' if expense.approved else 'declined', approver_name=expense.approved_by.get_full_name())
+        notify_expense_workflow(expense=expense, action = 'approved' if expense.approved else 'declined', approver_name=expense.approved_by.get_full_name())
 
         return JsonResponse({
             'message': 'Expense approved successfully.',
@@ -885,7 +883,7 @@ def decline_expense(request, expense_id):
         expense.approved = False  # Ensure approved is reset
         expense.approved_by = request.user
         expense.save()
-        notify_expense_workflow(expense, 'declined' if expense.approved else 'declined', approver_name=expense.declined_by.get_full_name())
+        notify_expense_workflow(expense=expense, action='declined' if expense.approved else 'declined', approver_name=expense.declined_by.get_full_name())
 
         return JsonResponse({
             'message': 'Expense has been declined successfully.',
