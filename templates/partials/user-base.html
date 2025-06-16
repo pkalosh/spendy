@@ -77,12 +77,17 @@
                                 <div class="main-area user-content">
                            
                                     <ul>
+                                        {% if request.user.is_admin %}
                                         <li class="border-area">
-                                            <a href="{% url 'wallet:staff-dashboard' %}"><i class="fas fa-home"></i>Wallet</a>
+                                            <a href="{% url 'wallet:dashboard' %}"><i class="fas fa-home"></i>Admin</a>
+                                        </li> 
+                                        {% endif %}
+                                        <li class="border-area">
+                                            <a href="{% url 'wallet:staff-dashboard' %}"><i class="fas fa-wallet"></i>Wallet</a>
                                         </li>
                                   
                                         <li class="border-area">
-                                            <a href="{% url 'userauths:change-password' %}"><i class="fas fa-home"></i>Change Password</a>
+                                            <a href="{% url 'userauths:change-password' %}"><i class="fas fa-adjust"></i>Change Password</a>
                                         </li>
                                     
                                         <li>

@@ -844,7 +844,7 @@ def approve_expenses(request, expense_id):
         expense.declined = False  # Ensure declined is reset
         expense.decline_reason = None  # Clear any previous decline reason
         expense.save()
-        notify_expense_workflow(expense=expense, action = 'approved' if expense.approved else 'declined', approver_name=expense.approved_by.get_full_name())
+        notify_expense_workflow(expense=expense, action = 'approved', approver_name=expense.approved_by.get_full_name())
 
         return JsonResponse({
             'message': 'Expense approved successfully.',
@@ -883,7 +883,7 @@ def decline_expense(request, expense_id):
         expense.approved = False  # Ensure approved is reset
         expense.approved_by = request.user
         expense.save()
-        notify_expense_workflow(expense=expense, action='declined' if expense.approved else 'declined', approver_name=expense.declined_by.get_full_name())
+        notify_expense_workflow(expense=expense, action='declined', approver_name=expense.approved_by.get_full_name())
 
         return JsonResponse({
             'message': 'Expense has been declined successfully.',
