@@ -549,6 +549,7 @@ class MpesaCallbackLog(models.Model):
     ip_address = models.GenericIPAddressField(help_text="Callback source IP")
     user_agent = models.TextField(blank=True, null=True)
     processed = models.BooleanField(default=False)
+    company  = models.ForeignKey(CompanyKYC, blank=True, null=True, related_name='callback', on_delete=models.CASCADE)
     error_message = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(default=timezone.now)
     
