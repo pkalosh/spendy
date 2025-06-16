@@ -68,9 +68,7 @@
                                 <div class="main-area user-content">
                            
                                     <ul>
-                                        <li class="border-area">
-                                            <a href="{% url 'wallet:staff-dashboard' %}"><i class="fas fa-home"></i>My Account</a>
-                                        </li>
+
                                   
                                         <li class="border-area">
                                             <a href="{% url 'wallet:kyc-reg' %}"><i class="fas fa-user"></i>Profile</a>
@@ -132,7 +130,10 @@
                             </li>       
                         </ul>
                         <ul class="bottom-item">
-
+                        <li class="border-area">
+                            <a href="{% url 'wallet:staff-dashboard' %}">
+                                <img src="{% static 'assets1/images/icon/dashboard.png' %}" alt="Support"> <span>My Account</span></a>
+                        </li>
                             <li>
                                 <a href="{% url 'wallet:settings_view' %}">
                                     <img src="{% static 'assets1/images/icon/exchange.png' %}" alt="Support"> <span>System Setup</span>

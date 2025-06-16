@@ -77,11 +77,7 @@
                                 <div class="main-area user-content">
                            
                                     <ul>
-                                        {% if request.user.is_admin %}
-                                        <li class="border-area">
-                                            <a href="{% url 'wallet:dashboard' %}"><i class="fas fa-home"></i>Admin</a>
-                                        </li> 
-                                        {% endif %}
+
                                         <li class="border-area">
                                             <a href="{% url 'wallet:staff-dashboard' %}"><i class="fas fa-wallet"></i>Wallet</a>
                                         </li>
@@ -123,7 +119,12 @@
                                 
                         </ul>
                         <ul class="bottom-item">
-
+                            {% if request.user.is_admin %}
+                            <li class="border-area">
+                                 <a href="{% url 'wallet:dashboard' %}">
+                                <img src="{% static 'assets1/images/icon/dashboard.png' %}" alt="Support"> <span>Admin Dashboard</span></a>
+                            </li> 
+                            {% endif %}
 
                             <li>
                                 <a href="{% url 'userauths:sign-out' %}">
