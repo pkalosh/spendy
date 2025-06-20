@@ -104,9 +104,19 @@ class Expense(models.Model):
     decline_reason = models.TextField( null=True, blank=True)
     declined_at = models.DateTimeField(null=True, blank=True)
     approved_at = models.DateTimeField(null=True, blank=True)  # optional
+
+    @property
+    def related_item(self):
+        if not self.request_type:
+            return None
+        
+        if self.request_type.name.lower() == 'event':
+            return self.event
+        elif self.request_type.name.lower() == 'operation':
+            return self.operation
+        return None
     def __str__(self):
-        related_item = self.event if self.request_type == "Event" else self.operation
-        return f"Expense: {self.amount} for {related_item if related_item else 'N/A'}"
+        return f"Expense: {self.amount} for {self.related_item or 'N/A'}"
 
 
     def save(self, *args, **kwargs):
