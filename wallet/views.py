@@ -31,6 +31,7 @@ from .utility import NotificationService,  notify_expense_workflow
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.utils.decorators import method_decorator
+from .mpesa_service import MpesaDaraja
 
 logger = logging.getLogger(__name__)
 
@@ -526,36 +527,131 @@ def wallet_transfer(request):
 @user_passes_test(is_admin)
 def fund_wallet(request):
     if request.method == 'POST':
-        business_id = request.POST.get('business_id')  # e.g. mobile number
+        business_id = request.POST.get('business_id')  # Phone number for STK/B2C or shortcode for B2B
         amount_str = request.POST.get('amount')
         wallet_id = request.POST.get('wallet_id')
-        print(wallet_id)
-
-        if not all([business_id, amount_str]):
-            messages.error(request, "Mobile number and amount are required.")
+        payment_method = request.POST.get('payment_method', 'stk')  # stk, b2b, b2c
+        
+        # Validation
+        if not all([business_id, amount_str, wallet_id]):
+            messages.error(request, "All fields are required.")
             return redirect('wallet:wallet')
-
+        
         try:
             amount = Decimal(amount_str)
             if amount <= 0:
-                raise ValueError
-        except:
+                raise ValueError("Amount must be positive")
+        except (ValueError, TypeError):
             messages.error(request, "Amount must be a positive number.")
             return redirect('wallet:wallet')
-
-        # Fund the primary wallet
-        wallet = get_object_or_404(Wallet, id = int(wallet_id), company=request.user.companykyc)
-        # Simulate MPESA funding success
-        wallet.balance += amount
-        wallet.save()
-
-        messages.success(request, f"Wallet funded with KES {amount} via mobile {business_id}.")
+        
+        # Get wallet
+        try:
+            wallet = get_object_or_404(Wallet, id=int(wallet_id), company=request.user.companykyc)
+        except ValueError:
+            messages.error(request, "Invalid wallet ID.")
+            return redirect('wallet:wallet')
+        
+        # Initialize M-Pesa client
+        mpesa = MpesaDaraja()
+        
+        try:
+            if payment_method == 'stk':
+                # STK Push - Customer pays to business
+                response = initiate_stk_push(mpesa, business_id, amount, wallet)
+                
+            elif payment_method == 'b2c':
+                # B2C - Business pays to customer (reverse funding scenario)
+                response = initiate_b2c_payment(mpesa, business_id, amount, wallet)
+                
+            elif payment_method == 'b2b':
+                # B2B - Business to business payment
+                response = initiate_b2b_payment(mpesa, business_id, amount, wallet)
+                
+            else:
+                messages.error(request, "Invalid payment method selected.")
+                return redirect('wallet:wallet')
+            
+            # Handle response
+            if response.get('ResponseCode') == '0':
+                messages.success(request, f"Payment request initiated successfully. Check your phone for payment prompt.")
+                logger.info(f"Payment initiated for wallet {wallet_id}: {response}")
+            else:
+                error_msg = response.get('errorMessage', 'Payment initiation failed')
+                messages.error(request, f"Payment failed: {error_msg}")
+                logger.error(f"Payment failed for wallet {wallet_id}: {response}")
+                
+        except Exception as e:
+            logger.error(f"Error processing payment: {str(e)}")
+            messages.error(request, f"Payment processing error: {str(e)}")
+        
         return redirect('wallet:wallet')
+    
     else:
         messages.error(request, "Invalid request method.")
         return redirect('wallet:wallet')
 
+def initiate_stk_push(mpesa, phone_number, amount, wallet):
+    """
+    Initiate STK Push for wallet funding
+    Customer pays money to fund their wallet
+    """
+    # Format phone number (ensure it starts with 254)
+    if phone_number.startswith('0'):
+        phone_number = '254' + phone_number[1:]
+    elif phone_number.startswith('+254'):
+        phone_number = phone_number[1:]
+    elif not phone_number.startswith('254'):
+        phone_number = '254' + phone_number
+    
+    account_reference = f"WALLET-{wallet.id}"
+    transaction_desc = f"Wallet funding for {wallet.company.name}"
+    
+    return mpesa.stk_push(
+        phone_number=phone_number,
+        amount=int(amount),
+        account_reference=account_reference,
+        transaction_desc=transaction_desc
+    )
 
+def initiate_b2c_payment(mpesa, phone_number, amount, wallet):
+    """
+    Initiate B2C payment
+    Business sends money to customer (e.g., refunds, bonuses)
+    """
+    # Format phone number
+    if phone_number.startswith('0'):
+        phone_number = '254' + phone_number[1:]
+    elif phone_number.startswith('+254'):
+        phone_number = phone_number[1:]
+    elif not phone_number.startswith('254'):
+        phone_number = '254' + phone_number
+    
+    remarks = f"Wallet credit for {wallet.company.name}"
+    
+    return mpesa.b2c_payment(
+        amount=float(amount),
+        phone_number=phone_number,
+        remarks=remarks,
+        command_id='BusinessPayment',  # or 'SalaryPayment', 'PromotionPayment'
+        occasion=f"Wallet funding - {wallet.id}"
+    )
+
+def initiate_b2b_payment(mpesa, receiver_shortcode, amount, wallet):
+    """
+    Initiate B2B payment
+    Business to business payment
+    """
+    account_reference = f"WALLET-{wallet.id}"
+    remarks = f"B2B wallet funding for {wallet.company.name}"
+    
+    return mpesa.b2b_payment(
+        amount=float(amount),
+        receiver_shortcode=receiver_shortcode,
+        account_reference=account_reference,
+        remarks=remarks,
+        command_id='BusinessPayBill'  # or 'BusinessBuyGoods'
+    )
 
 
 @login_required
