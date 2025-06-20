@@ -1,3 +1,5 @@
+import json
+import logging
 from itertools import chain
 from django.views.decorators.http import require_POST
 from django.shortcuts import render, get_object_or_404, redirect
@@ -5,7 +7,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from wallet.forms import KYCForm, StaffProfileForm, UserForm,RoleForm,WalletForm
 from expense.forms import ExpenseRequestForm ,ExpenseApprovalForm,EventExpenseForm,OperationExpenseForm
 from django.contrib import messages
-from wallet.models import Wallet, Notification, Transaction,CompanyKYC, StaffProfile,Role
+from wallet.models import Wallet, Notification, Transaction,CompanyKYC, StaffProfile,Role,MpesaTransaction,MpesaCallbackLog
 from expense.models import ExpenseCategory, OperationCategory, EventCategory,Expense,ExpenseRequestType
 from userauths.models import User
 from django.core.paginator import Paginator
@@ -26,6 +28,12 @@ from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 from .models import Wallet, Transaction
 from .utility import NotificationService,  notify_expense_workflow
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+from django.utils.decorators import method_decorator
+
+logger = logging.getLogger(__name__)
+
 def is_admin(user):
     return user.is_authenticated and user.is_admin
 
@@ -1414,3 +1422,649 @@ def get_pending_approved_expense_sum(user):
 
     return result['total'] or Decimal('0.00')
 
+
+
+
+#Mpesa c2b, b2b, b2c callbacks
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def stk_push_callback(request):
+    """
+    STK Push callback handler
+    Handles responses from M-Pesa STK Push requests
+    """
+    try:
+        callback_data = json.loads(request.body)
+        logger.info(f"STK Push callback received: {callback_data}")
+        
+        stk_callback = callback_data.get('Body', {}).get('stkCallback', {})
+        merchant_request_id = stk_callback.get('MerchantRequestID')
+        checkout_request_id = stk_callback.get('CheckoutRequestID')
+        result_code = stk_callback.get('ResultCode')
+        result_desc = stk_callback.get('ResultDesc')
+        
+        # Find the transaction in database
+        try:
+            transaction = MpesaTransaction.objects.get(
+                checkout_request_id=checkout_request_id,
+                merchant_request_id=merchant_request_id
+            )
+        except MpesaTransaction.DoesNotExist:
+            logger.error(f"Transaction not found for CheckoutRequestID: {checkout_request_id}")
+            return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Transaction not found'})
+        
+        # Update transaction based on result code
+        if result_code == 0:  # Success
+            # Extract callback metadata
+            callback_metadata = stk_callback.get('CallbackMetadata', {}).get('Item', [])
+            metadata_dict = {}
+            
+            for item in callback_metadata:
+                name = item.get('Name')
+                value = item.get('Value')
+                if name and value is not None:
+                    metadata_dict[name] = value
+            
+            # Update transaction with success details
+            transaction.status = 'COMPLETED'
+            transaction.mpesa_receipt_number = metadata_dict.get('MpesaReceiptNumber')
+            transaction.transaction_date = timezone.now()
+            transaction.phone_number = metadata_dict.get('PhoneNumber')
+            transaction.amount = metadata_dict.get('Amount', transaction.amount)
+            transaction.result_code = result_code
+            transaction.result_desc = result_desc
+            transaction.callback_data = callback_data
+            
+            logger.info(f"STK Push completed successfully: {transaction.mpesa_receipt_number}")
+            
+        else:  # Failed
+            transaction.status = 'FAILED'
+            transaction.result_code = result_code
+            transaction.result_desc = result_desc
+            transaction.callback_data = callback_data
+            
+            logger.warning(f"STK Push failed: {result_desc}")
+        
+        transaction.save()
+        
+        # Return success response to M-Pesa
+        return JsonResponse({
+            'ResultCode': 0,
+            'ResultDesc': 'Callback processed successfully'
+        })
+        
+    except json.JSONDecodeError:
+        logger.error("Invalid JSON in STK Push callback")
+        return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Invalid JSON'})
+    except Exception as e:
+        logger.error(f"Error processing STK Push callback: {str(e)}")
+        return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Internal server error'})
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def c2b_validation(request):
+    """
+    C2B Validation callback
+    Validates incoming C2B payments before processing
+    """
+    try:
+        validation_data = json.loads(request.body)
+        logger.info(f"C2B Validation received: {validation_data}")
+        
+        # Extract validation data
+        trans_type = validation_data.get('TransType')
+        trans_id = validation_data.get('TransID')
+        trans_time = validation_data.get('TransTime')
+        trans_amount = validation_data.get('TransAmount')
+        business_short_code = validation_data.get('BusinessShortCode')
+        bill_ref_number = validation_data.get('BillRefNumber')
+        invoice_number = validation_data.get('InvoiceNumber')
+        org_account_balance = validation_data.get('OrgAccountBalance')
+        third_party_trans_id = validation_data.get('ThirdPartyTransID')
+        msisdn = validation_data.get('MSISDN')
+        first_name = validation_data.get('FirstName')
+        middle_name = validation_data.get('MiddleName')
+        last_name = validation_data.get('LastName')
+        
+        # Add your validation logic here
+        # For example, check if the account reference is valid
+        # or if the amount meets minimum requirements
+        
+        # Example validation logic
+        if not bill_ref_number or len(bill_ref_number) < 3:
+            logger.warning(f"Invalid account reference: {bill_ref_number}")
+            return JsonResponse({
+                'ResultCode': 'C2B00012',
+                'ResultDesc': 'Invalid Account Reference'
+            })
+        
+        if trans_amount < 1:
+            logger.warning(f"Amount too low: {trans_amount}")
+            return JsonResponse({
+                'ResultCode': 'C2B00011',
+                'ResultDesc': 'Invalid Amount'
+            })
+        
+        # If validation passes
+        logger.info(f"C2B validation passed for transaction: {trans_id}")
+        return JsonResponse({
+            'ResultCode': '0',
+            'ResultDesc': 'Accepted'
+        })
+        
+    except json.JSONDecodeError:
+        logger.error("Invalid JSON in C2B validation")
+        return JsonResponse({'ResultCode': 'C2B00013', 'ResultDesc': 'Invalid JSON'})
+    except Exception as e:
+        logger.error(f"Error in C2B validation: {str(e)}")
+        return JsonResponse({'ResultCode': 'C2B00014', 'ResultDesc': 'Internal server error'})
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def c2b_confirmation(request):
+    """
+    C2B Confirmation callback
+    Processes confirmed C2B payments
+    """
+    try:
+        confirmation_data = json.loads(request.body)
+        logger.info(f"C2B Confirmation received: {confirmation_data}")
+        
+        # Extract confirmation data
+        trans_type = confirmation_data.get('TransType')
+        trans_id = confirmation_data.get('TransID')
+        trans_time = confirmation_data.get('TransTime')
+        trans_amount = confirmation_data.get('TransAmount')
+        business_short_code = confirmation_data.get('BusinessShortCode')
+        bill_ref_number = confirmation_data.get('BillRefNumber')
+        invoice_number = confirmation_data.get('InvoiceNumber')
+        org_account_balance = confirmation_data.get('OrgAccountBalance')
+        third_party_trans_id = confirmation_data.get('ThirdPartyTransID')
+        msisdn = confirmation_data.get('MSISDN')
+        first_name = confirmation_data.get('FirstName')
+        middle_name = confirmation_data.get('MiddleName')
+        last_name = confirmation_data.get('LastName')
+        
+        # Create or update transaction record
+        transaction, created = MpesaTransaction.objects.get_or_create(
+            transaction_id=trans_id,
+            defaults={
+                'transaction_type': 'C2B',
+                'amount': trans_amount,
+                'party_a': msisdn,
+                'party_b': business_short_code,
+                'phone_number': msisdn,
+                'account_reference': bill_ref_number,
+                'transaction_desc': f"C2B Payment - {trans_type}",
+                'mpesa_receipt_number': trans_id,
+                'transaction_date': timezone.now(),
+                'status': 'COMPLETED',
+                'callback_data': confirmation_data,
+                'first_name': first_name,
+                'middle_name': middle_name,
+                'last_name': last_name
+            }
+        )
+        
+        if not created:
+            # Update existing transaction
+            transaction.status = 'COMPLETED'
+            transaction.callback_data = confirmation_data
+            transaction.save()
+        
+        logger.info(f"C2B payment confirmed: {trans_id} - Amount: {trans_amount}")
+        
+        # Process the payment in your business logic here
+        # For example, credit user account, send notifications, etc.
+        
+        return JsonResponse({
+            'ResultCode': '0',
+            'ResultDesc': 'Confirmation processed successfully'
+        })
+        
+    except json.JSONDecodeError:
+        logger.error("Invalid JSON in C2B confirmation")
+        return JsonResponse({'ResultCode': '1', 'ResultDesc': 'Invalid JSON'})
+    except Exception as e:
+        logger.error(f"Error processing C2B confirmation: {str(e)}")
+        return JsonResponse({'ResultCode': '1', 'ResultDesc': 'Internal server error'})
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def b2c_result_callback(request):
+    """
+    B2C Result callback handler
+    Handles responses from B2C payment requests
+    """
+    try:
+        result_data = json.loads(request.body)
+        logger.info(f"B2C Result callback received: {result_data}")
+        
+        result = result_data.get('Result', {})
+        result_type = result.get('ResultType')
+        result_code = result.get('ResultCode')
+        result_desc = result.get('ResultDesc')
+        originator_conversation_id = result.get('OriginatorConversationID')
+        conversation_id = result.get('ConversationID')
+        transaction_id = result.get('TransactionID')
+        
+        # Find the transaction
+        try:
+            transaction = MpesaTransaction.objects.get(
+                originator_conversation_id=originator_conversation_id,
+                conversation_id=conversation_id
+            )
+        except MpesaTransaction.DoesNotExist:
+            logger.error(f"B2C Transaction not found: {originator_conversation_id}")
+            return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Transaction not found'})
+        
+        # Update transaction status
+        if result_code == 0:  # Success
+            transaction.status = 'COMPLETED'
+            transaction.transaction_id = transaction_id
+            
+            # Extract result parameters if available
+            result_parameters = result.get('ResultParameters', {}).get('ResultParameter', [])
+            for param in result_parameters:
+                key = param.get('Key')
+                value = param.get('Value')
+                if key == 'TransactionReceipt':
+                    transaction.mpesa_receipt_number = value
+                elif key == 'TransactionAmount':
+                    transaction.amount = float(value)
+                elif key == 'B2CWorkingAccountAvailableFunds':
+                    # You might want to store this separately
+                    pass
+                elif key == 'B2CUtilityAccountAvailableFunds':
+                    # You might want to store this separately
+                    pass
+                elif key == 'TransactionCompletedDateTime':
+                    # Parse and store completion time if needed
+                    pass
+                elif key == 'B2CRecipientIsRegisteredCustomer':
+                    # Store recipient registration status if needed
+                    pass
+                elif key == 'B2CChargesPaidAccountAvailableFunds':
+                    # Store charges info if needed
+                    pass
+            
+            logger.info(f"B2C payment completed: {transaction_id}")
+        else:
+            transaction.status = 'FAILED'
+            logger.warning(f"B2C payment failed: {result_desc}")
+        
+        transaction.result_code = result_code
+        transaction.result_desc = result_desc
+        transaction.callback_data = result_data
+        transaction.transaction_date = timezone.now()
+        transaction.save()
+        
+        return JsonResponse({
+            'ResultCode': 0,
+            'ResultDesc': 'B2C result processed successfully'
+        })
+        
+    except json.JSONDecodeError:
+        logger.error("Invalid JSON in B2C result callback")
+        return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Invalid JSON'})
+    except Exception as e:
+        logger.error(f"Error processing B2C result: {str(e)}")
+        return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Internal server error'})
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def b2c_timeout_callback(request):
+    """
+    B2C Timeout callback handler
+    Handles B2C payment timeouts
+    """
+    try:
+        timeout_data = json.loads(request.body)
+        logger.info(f"B2C Timeout callback received: {timeout_data}")
+        
+        result = timeout_data.get('Result', {})
+        originator_conversation_id = result.get('OriginatorConversationID')
+        conversation_id = result.get('ConversationID')
+        
+        # Find and update transaction
+        try:
+            transaction = MpesaTransaction.objects.get(
+                originator_conversation_id=originator_conversation_id,
+                conversation_id=conversation_id
+            )
+            transaction.status = 'TIMEOUT'
+            transaction.result_desc = 'Transaction timed out'
+            transaction.callback_data = timeout_data
+            transaction.save()
+            
+            logger.warning(f"B2C transaction timed out: {originator_conversation_id}")
+            
+        except MpesaTransaction.DoesNotExist:
+            logger.error(f"B2C Transaction not found for timeout: {originator_conversation_id}")
+        
+        return JsonResponse({
+            'ResultCode': 0,
+            'ResultDesc': 'Timeout processed successfully'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error processing B2C timeout: {str(e)}")
+        return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Internal server error'})
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def b2b_result_callback(request):
+    """
+    B2B Result callback handler
+    Handles responses from B2B payment requests
+    """
+    try:
+        result_data = json.loads(request.body)
+        logger.info(f"B2B Result callback received: {result_data}")
+        
+        result = result_data.get('Result', {})
+        result_code = result.get('ResultCode')
+        result_desc = result.get('ResultDesc')
+        originator_conversation_id = result.get('OriginatorConversationID')
+        conversation_id = result.get('ConversationID')
+        transaction_id = result.get('TransactionID')
+        
+        # Find the transaction
+        try:
+            transaction = MpesaTransaction.objects.get(
+                originator_conversation_id=originator_conversation_id,
+                conversation_id=conversation_id
+            )
+        except MpesaTransaction.DoesNotExist:
+            logger.error(f"B2B Transaction not found: {originator_conversation_id}")
+            return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Transaction not found'})
+        
+        # Update transaction status
+        if result_code == 0:  # Success
+            transaction.status = 'COMPLETED'
+            transaction.transaction_id = transaction_id
+            
+            # Extract result parameters
+            result_parameters = result.get('ResultParameters', {}).get('ResultParameter', [])
+            for param in result_parameters:
+                key = param.get('Key')
+                value = param.get('Value')
+                if key == 'InitiatorAccountCurrentBalance':
+                    # Store initiator balance if needed
+                    pass
+                elif key == 'DebitAccountCurrentBalance':
+                    # Store debit account balance if needed
+                    pass
+                elif key == 'Amount':
+                    transaction.amount = float(value)
+                elif key == 'DebitPartyAffectedAccountBalance':
+                    # Store affected balance if needed
+                    pass
+                elif key == 'TransCompletedTime':
+                    # Store completion time if needed
+                    pass
+                elif key == 'DebitPartyCharges':
+                    # Store charges if needed
+                    pass
+                elif key == 'ReceiverPartyPublicName':
+                    # Store receiver name if needed
+                    pass
+            
+            logger.info(f"B2B payment completed: {transaction_id}")
+        else:
+            transaction.status = 'FAILED'
+            logger.warning(f"B2B payment failed: {result_desc}")
+        
+        transaction.result_code = result_code
+        transaction.result_desc = result_desc
+        transaction.callback_data = result_data
+        transaction.transaction_date = timezone.now()
+        transaction.save()
+        
+        return JsonResponse({
+            'ResultCode': 0,
+            'ResultDesc': 'B2B result processed successfully'
+        })
+        
+    except json.JSONDecodeError:
+        logger.error("Invalid JSON in B2B result callback")
+        return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Invalid JSON'})
+    except Exception as e:
+        logger.error(f"Error processing B2B result: {str(e)}")
+        return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Internal server error'})
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def b2b_timeout_callback(request):
+    """
+    B2B Timeout callback handler
+    """
+    try:
+        timeout_data = json.loads(request.body)
+        logger.info(f"B2B Timeout callback received: {timeout_data}")
+        
+        result = timeout_data.get('Result', {})
+        originator_conversation_id = result.get('OriginatorConversationID')
+        conversation_id = result.get('ConversationID')
+        
+        # Find and update transaction
+        try:
+            transaction = MpesaTransaction.objects.get(
+                originator_conversation_id=originator_conversation_id,
+                conversation_id=conversation_id
+            )
+            transaction.status = 'TIMEOUT'
+            transaction.result_desc = 'Transaction timed out'
+            transaction.callback_data = timeout_data
+            transaction.save()
+            
+            logger.warning(f"B2B transaction timed out: {originator_conversation_id}")
+            
+        except MpesaTransaction.DoesNotExist:
+            logger.error(f"B2B Transaction not found for timeout: {originator_conversation_id}")
+        
+        return JsonResponse({
+            'ResultCode': 0,
+            'ResultDesc': 'Timeout processed successfully'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error processing B2B timeout: {str(e)}")
+        return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Internal server error'})
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def transaction_status_result_callback(request):
+    """
+    Transaction Status Query result callback
+    """
+    try:
+        result_data = json.loads(request.body)
+        logger.info(f"Transaction Status result callback received: {result_data}")
+        
+        result = result_data.get('Result', {})
+        result_code = result.get('ResultCode')
+        result_desc = result.get('ResultDesc')
+        originator_conversation_id = result.get('OriginatorConversationID')
+        conversation_id = result.get('ConversationID')
+        
+        # Process the status result
+        if result_code == 0:
+            # Extract result parameters for transaction details
+            result_parameters = result.get('ResultParameters', {}).get('ResultParameter', [])
+            transaction_details = {}
+            
+            for param in result_parameters:
+                key = param.get('Key')
+                value = param.get('Value')
+                transaction_details[key] = value
+            
+            logger.info(f"Transaction status retrieved successfully: {transaction_details}")
+        else:
+            logger.warning(f"Transaction status query failed: {result_desc}")
+        
+        # You can store this information or use it for business logic
+        # For example, update a separate TransactionStatusQuery model
+        
+        return JsonResponse({
+            'ResultCode': 0,
+            'ResultDesc': 'Status result processed successfully'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error processing transaction status result: {str(e)}")
+        return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Internal server error'})
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def transaction_status_timeout_callback(request):
+    """
+    Transaction Status Query timeout callback
+    """
+    try:
+        timeout_data = json.loads(request.body)
+        logger.info(f"Transaction Status timeout callback received: {timeout_data}")
+        
+        return JsonResponse({
+            'ResultCode': 0,
+            'ResultDesc': 'Status timeout processed successfully'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error processing transaction status timeout: {str(e)}")
+        return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Internal server error'})
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def account_balance_result_callback(request):
+    """
+    Account Balance Query result callback
+    """
+    try:
+        result_data = json.loads(request.body)
+        logger.info(f"Account Balance result callback received: {result_data}")
+        
+        result = result_data.get('Result', {})
+        result_code = result.get('ResultCode')
+        result_desc = result.get('ResultDesc')
+        
+        if result_code == 0:
+            # Extract balance information
+            result_parameters = result.get('ResultParameters', {}).get('ResultParameter', [])
+            balance_info = {}
+            
+            for param in result_parameters:
+                key = param.get('Key')
+                value = param.get('Value')
+                balance_info[key] = value
+            
+            logger.info(f"Account balance retrieved successfully: {balance_info}")
+            
+            # You can store balance information in a separate model if needed
+            # or use it for business logic
+            
+        else:
+            logger.warning(f"Account balance query failed: {result_desc}")
+        
+        return JsonResponse({
+            'ResultCode': 0,
+            'ResultDesc': 'Balance result processed successfully'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error processing account balance result: {str(e)}")
+        return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Internal server error'})
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def account_balance_timeout_callback(request):
+    """
+    Account Balance Query timeout callback
+    """
+    try:
+        timeout_data = json.loads(request.body)
+        logger.info(f"Account Balance timeout callback received: {timeout_data}")
+        
+        return JsonResponse({
+            'ResultCode': 0,
+            'ResultDesc': 'Balance timeout processed successfully'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error processing account balance timeout: {str(e)}")
+        return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Internal server error'})
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def reversal_result_callback(request):
+    """
+    Transaction Reversal result callback
+    """
+    try:
+        result_data = json.loads(request.body)
+        logger.info(f"Reversal result callback received: {result_data}")
+        
+        result = result_data.get('Result', {})
+        result_code = result.get('ResultCode')
+        result_desc = result.get('ResultDesc')
+        originator_conversation_id = result.get('OriginatorConversationID')
+        conversation_id = result.get('ConversationID')
+        
+        if result_code == 0:
+            # Extract reversal result parameters
+            result_parameters = result.get('ResultParameters', {}).get('ResultParameter', [])
+            reversal_details = {}
+            
+            for param in result_parameters:
+                key = param.get('Key')
+                value = param.get('Value')
+                reversal_details[key] = value
+            
+            logger.info(f"Transaction reversal completed successfully: {reversal_details}")
+            
+            # You might want to create a separate model for reversal tracking
+            # or update the original transaction status
+            
+        else:
+            logger.warning(f"Transaction reversal failed: {result_desc}")
+        
+        return JsonResponse({
+            'ResultCode': 0,
+            'ResultDesc': 'Reversal result processed successfully'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error processing reversal result: {str(e)}")
+        return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Internal server error'})
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def reversal_timeout_callback(request):
+    """
+    Transaction Reversal timeout callback
+    """
+    try:
+        timeout_data = json.loads(request.body)
+        logger.info(f"Reversal timeout callback received: {timeout_data}")
+        
+        return JsonResponse({
+            'ResultCode': 0,
+            'ResultDesc': 'Reversal timeout processed successfully'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error processing reversal timeout: {str(e)}")
+        return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Internal server error'})

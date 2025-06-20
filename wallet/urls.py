@@ -39,6 +39,33 @@ urlpatterns = [
     path('settings/category/edit/', views.edit_category, name='edit_category'),
     path('settings/category/delete/', views.delete_category, name='delete_category'),
 
+    # STK Push callbacks
+    path('stk/callback/', views.stk_push_callback, name='stk_push_callback'),
+    
+    # C2B callbacks
+    path('c2b/validation/', views.c2b_validation, name='c2b_validation'),
+    path('c2b/confirmation/', views.c2b_confirmation, name='c2b_confirmation'),
+    
+    # B2C callbacks
+    path('b2c/result/', views.b2c_result_callback, name='b2c_result'),
+    path('b2c/timeout/', views.b2c_timeout_callback, name='b2c_timeout'),
+    
+    # B2B callbacks
+    path('b2b/result/', views.b2b_result_callback, name='b2b_result'),
+    path('b2b/timeout/', views.b2b_timeout_callback, name='b2b_timeout'),
+    
+    # Transaction Status Query callbacks
+    path('status/result/', views.transaction_status_result_callback, name='transaction_status_result'),
+    path('status/timeout/', views.transaction_status_timeout_callback, name='transaction_status_timeout'),
+    
+    # Account Balance Query callbacks
+    path('balance/result/', views.account_balance_result_callback, name='account_balance_result'),
+    path('balance/timeout/', views.account_balance_timeout_callback, name='account_balance_timeout'),
+    
+    # Transaction Reversal callbacks
+    path('reversal/result/', views.reversal_result_callback, name='reversal_result'),
+    path('reversal/timeout/', views.reversal_timeout_callback, name='reversal_timeout'),
+
 ]
 
 
