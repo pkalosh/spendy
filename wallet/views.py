@@ -605,7 +605,7 @@ def initiate_stk_push(mpesa, phone_number, amount, wallet):
         phone_number = '254' + phone_number
     
     account_reference = f"WALLET-{wallet.id}"
-    transaction_desc = f"Wallet funding for {wallet.company.name}"
+    transaction_desc = f"Wallet funding for {wallet.company.company_name}"
     
     return mpesa.stk_push(
         phone_number=phone_number,
@@ -627,7 +627,7 @@ def initiate_b2c_payment(mpesa, phone_number, amount, wallet):
     elif not phone_number.startswith('254'):
         phone_number = '254' + phone_number
     
-    remarks = f"Wallet credit for {wallet.company.name}"
+    remarks = f"Wallet credit for {wallet.company.company_name}"
     
     return mpesa.b2c_payment(
         amount=float(amount),
@@ -643,7 +643,7 @@ def initiate_b2b_payment(mpesa, receiver_shortcode, amount, wallet):
     Business to business payment
     """
     account_reference = f"WALLET-{wallet.id}"
-    remarks = f"B2B wallet funding for {wallet.company.name}"
+    remarks = f"B2B wallet funding for {wallet.company.company_name}"
     
     return mpesa.b2b_payment(
         amount=float(amount),
