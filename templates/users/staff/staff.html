@@ -474,91 +474,390 @@
     </section>
 
 <!-- Make Payment Modal -->
+<!-- Enhanced Payment Modal -->
 <div class="modal fade" id="makePaymentModal" tabindex="-1" aria-labelledby="makePaymentModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header bg-light">
-                <h5 id="makePaymentModalLabel" class="modal-title">Make Payment</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header  text-white">
+                <h5 id="makePaymentModalLabel" class="modal-title">
+                    <i class="fas fa-mobile-alt me-2"></i>Make M-Pesa Payment
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form class="bg-white p-4 shadow rounded" method="post" action="{% url 'expense:make_payment' %}" id="paymentForm">
+                <!-- Payment Status Alert -->
+                <div id="paymentStatusAlert" class="alert d-none" role="alert">
+                    <div class="d-flex align-items-center">
+                        <div class="spinner-border spinner-border-sm me-2 d-none" id="paymentSpinner" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <span id="paymentStatusText"></span>
+                    </div>
+                </div>
+
+                <form class="bg-white p-4 shadow-sm rounded" method="post" action="{% url 'expense:make_payment' %}" id="paymentForm">
                     {% csrf_token %}
                     <input type="hidden" name="csrf_token" value="token_value_here">
+                    <input type="hidden" id="form_type" name="form_type">
 
                     <!-- Expense Selection -->
-                    <div class="mb-3">
-                        <label class="form-label fw-bold required">Select Expense to Pay</label>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-dark">
+                            <i class="fas fa-file-invoice-dollar me-1"></i>Select Expense to Pay
+                            <span class="text-danger">*</span>
+                        </label>
                         <select id="expenseSelect" class="form-select" name="expense" required>
                             <option value="">Choose a request</option>
                             {% for expense in approved_expenses %}
-                            <option value="{{ expense.id }}">{{ expense }}</option>
+                            <option value="{{ expense.id }}" data-amount="{{ expense.amount }}">
+                                {{ expense.title|default:"Expense" }} - KES {{ expense.amount|floatformat:2 }}
+                            </option>
                             {% endfor %}
                         </select>
                         <div class="invalid-feedback">Please select an expense.</div>
                     </div>
+
+                    <!-- Amount Display (Auto-filled) -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-dark">
+                            <i class="fas fa-money-bill-wave me-1"></i>Amount
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-success text-white">KES</span>
+                            <input type="number" class="form-control bg-light" name="amount" id="amount" 
+                                   placeholder="Select expense first" readonly required min="1">
+                            <div class="invalid-feedback">Amount is required.</div>
+                        </div>
+                        <small class="text-muted">Amount will be auto-filled based on selected expense</small>
+                    </div>
                     
                     <!-- Payment Method -->
-                    <div class="mb-3">
-                        <label class="form-label fw-bold required">Payment Method</label>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-dark">
+                            <i class="fas fa-credit-card me-1"></i>Payment Method
+                            <span class="text-danger">*</span>
+                        </label>
                         <select id="paymentType" name="payment_method" class="form-select" onchange="togglePaymentFields()" required>
                             <option value="">Select method</option>
-                            <option value="mpesa_number">M-Pesa Number</option>
-                            <option value="paybill_number">Paybill</option>
-                            <option value="till_number">Till Number</option>
+                            <option value="mpesa_number">
+                                <i class="fas fa-mobile-alt"></i> M-Pesa Number (B2C)
+                            </option>
+                            <option value="paybill_number">
+                                <i class="fas fa-building"></i> Paybill (B2B)
+                            </option>
+                            <option value="till_number">
+                                <i class="fas fa-store"></i> Till Number (B2B)
+                            </option>
                         </select>
                         <div class="invalid-feedback">Please select a payment method.</div>
-                        <input type="hidden" id="form_type" name="form_type">
                     </div>
 
-                    <!-- M-Pesa Number -->
-                    <div id="mpesaNumberSection" class="mb-3 payment-section hidden">
-                        <label class="form-label fw-bold required">M-Pesa Number</label>
-                        <div class="input-group">
-                            <span class="input-group-text">+254</span>
-                            <input type="text" class="form-control mpesa-field" name="mpesa_number" id="mpesa_number" placeholder="7XXXXXXXX" pattern="\d{9}" maxlength="9">
-                            <div class="invalid-feedback">Please enter a valid 9-digit number.</div>
+                    <!-- M-Pesa Number Section -->
+                    <div id="mpesaNumberSection" class="mb-4 payment-section d-none">
+                        <div class="card border-success">
+                            <div class="card-header bg-success text-white">
+                                <i class="fas fa-mobile-alt me-2"></i>M-Pesa Number Details
+                            </div>
+                            <div class="card-body">
+                                <label class="form-label fw-bold required">M-Pesa Number</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-success text-white">+254</span>
+                                    <input type="text" class="form-control mpesa-field" name="mpesa_number" 
+                                           id="mpesa_number" placeholder="7XXXXXXXX" pattern="\d{9}" maxlength="9">
+                                    <div class="invalid-feedback">Please enter a valid 9-digit number.</div>
+                                </div>
+                                <small class="text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Enter a valid 9-digit number after +254 (e.g., 712345678)
+                                </small>
+                            </div>
                         </div>
-                        <small class="text-muted">Enter a valid 9-digit number after +254</small>
                     </div>
 
                     <!-- Paybill Section -->
-                    <div id="paybillSection" class="mb-3 payment-section hidden">
-                        <label class="form-label fw-bold required">Paybill Number</label>
-                        <input type="text" class="form-control paybill-field" name="paybill_number" id="paybill_number" placeholder="Enter Paybill number" pattern="\d{5,6}" maxlength="6">
-                        <div class="invalid-feedback">Please enter a valid 5-6 digit paybill number.</div>
-                        <small class="text-muted">Enter a valid 5-6 digit paybill number</small>
+                    <div id="paybillSection" class="mb-4 payment-section d-none">
+                        <div class="card border-primary">
+                            <div class="card-header text-white">
+                                <i class="fas fa-building me-2"></i>Paybill Details
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold required">Paybill Number</label>
+                                    <input type="text" class="form-control paybill-field" name="paybill_number" 
+                                           id="paybill_number" placeholder="Enter Paybill number" pattern="\d{5,6}" maxlength="6">
+                                    <div class="invalid-feedback">Please enter a valid 5-6 digit paybill number.</div>
+                                    <small class="text-muted">Enter a valid 5-6 digit paybill number</small>
+                                </div>
 
-                        <label class="form-label mt-3 fw-bold required">Account Number</label>
-                        <input type="text" class="form-control paybill-field" name="account_number" id="account_number" placeholder="Enter account number">
-                        <div class="invalid-feedback">Please enter an account number.</div>
-                    </div>
-
-                    <!-- Till Number Section -->
-                    <div id="tillNumberSection" class="mb-3 payment-section hidden">
-                        <label class="form-label fw-bold required">Till Number</label>
-                        <input type="text" class="form-control till-field" name="till_number" id="till_number" placeholder="Enter Till number" pattern="\d{5,6}" maxlength="6">
-                        <div class="invalid-feedback">Please enter a valid 5-6 digit till number.</div>
-                        <small class="text-muted">Enter a valid 5-6 digit till number</small>
-                    </div>
-
-                    <!-- Amount -->
-                    <div class="mb-3">
-                        <label class="form-label fw-bold required">Amount</label>
-                        <div class="input-group">
-                            <span class="input-group-text">KES</span>
-                            <input type="number" class="form-control" name="amount" id="amount" placeholder="Enter amount" required min="1">
-                            <div class="invalid-feedback">Please enter a valid amount greater than 0.</div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold required">Account Number</label>
+                                    <input type="text" class="form-control paybill-field" name="account_number" 
+                                           id="account_number" placeholder="Enter account number">
+                                    <div class="invalid-feedback">Please enter an account number.</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Submit -->
-                    <button class="btn btn-success w-100 mt-3" type="submit" id="paymentSubmitBtn">Process Payment</button>
+                    <!-- Till Number Section -->
+                    <div id="tillNumberSection" class="mb-4 payment-section d-none">
+                        <div class="card border-warning">
+                            <div class="card-header  text-dark">
+                                <i class="fas fa-store me-2"></i>Till Number Details
+                            </div>
+                            <div class="card-body">
+                                <label class="form-label fw-bold required">Till Number</label>
+                                <input type="text" class="form-control till-field" name="till_number" 
+                                       id="till_number" placeholder="Enter Till number" pattern="\d{5,6}" maxlength="6">
+                                <div class="invalid-feedback">Please enter a valid 5-6 digit till number.</div>
+                                <small class="text-muted">Enter a valid 5-6 digit till number</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-success btn-lg" type="submit" id="paymentSubmitBtn">
+                            <i class="fas fa-paper-plane me-2"></i>
+                            <span id="submitButtonText">Process Payment</span>
+                        </button>
+                    </div>
                 </form>
+            </div>
+            <div class="modal-footer bg-light">
+                <small class="text-muted w-100 text-center">
+                    <i class="fas fa-shield-alt me-1"></i>
+                    Secure payment processing via M-Pesa API
+                </small>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+// Enhanced payment form functionality
+function togglePaymentFields() {
+    // Hide all payment sections first
+    document.querySelectorAll('.payment-section').forEach(section => {
+        section.classList.add('d-none');
+    });
+    
+    // Get the selected payment method
+    const paymentType = document.getElementById('paymentType').value;
+    
+    // Show the relevant section based on selection
+    if (paymentType === 'mpesa_number') {
+        document.getElementById('mpesaNumberSection').classList.remove('d-none');
+        document.getElementById('form_type').value = 'mpesa';
+        // Make required fields
+        document.querySelectorAll('.mpesa-field').forEach(field => field.required = true);
+        document.querySelectorAll('.paybill-field, .till-field').forEach(field => field.required = false);
+    } 
+    else if (paymentType === 'paybill_number') {
+        document.getElementById('paybillSection').classList.remove('d-none');
+        document.getElementById('form_type').value = 'paybill';
+        // Make required fields
+        document.querySelectorAll('.paybill-field').forEach(field => field.required = true);
+        document.querySelectorAll('.mpesa-field, .till-field').forEach(field => field.required = false);
+    } 
+    else if (paymentType === 'till_number') {
+        document.getElementById('tillNumberSection').classList.remove('d-none');
+        document.getElementById('form_type').value = 'till';
+        // Make required fields
+        document.querySelectorAll('.till-field').forEach(field => field.required = true);
+        document.querySelectorAll('.mpesa-field, .paybill-field').forEach(field => field.required = false);
+    }
+}
+
+// Auto-fill amount when expense is selected
+document.getElementById('expenseSelect').addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    const amount = selectedOption.getAttribute('data-amount');
+    const amountField = document.getElementById('amount');
+    
+    if (amount) {
+        amountField.value = parseFloat(amount).toFixed(2);
+        amountField.classList.remove('is-invalid');
+    } else {
+        amountField.value = '';
+    }
+});
+
+// Enhanced form validation
+document.getElementById('paymentForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+    
+    // Reset validations
+    this.classList.remove('was-validated');
+    let isValid = true;
+    
+    // Check required fields
+    const paymentType = document.getElementById('paymentType').value;
+    const expenseSelect = document.getElementById('expenseSelect').value;
+    const amount = document.getElementById('amount').value;
+    
+    if (!paymentType) {
+        isValid = false;
+        document.getElementById('paymentType').classList.add('is-invalid');
+    }
+    
+    if (!expenseSelect) {
+        isValid = false;
+        document.getElementById('expenseSelect').classList.add('is-invalid');
+    }
+    
+    if (!amount || parseFloat(amount) <= 0) {
+        isValid = false;
+        document.getElementById('amount').classList.add('is-invalid');
+    }
+    
+    // Validate payment method specific fields
+    if (paymentType === 'mpesa_number') {
+        const mpesaNumber = document.getElementById('mpesa_number').value;
+        if (!mpesaNumber || !/^\d{9}$/.test(mpesaNumber)) {
+            isValid = false;
+            document.getElementById('mpesa_number').classList.add('is-invalid');
+        }
+    } else if (paymentType === 'paybill_number') {
+        const paybillNumber = document.getElementById('paybill_number').value;
+        const accountNumber = document.getElementById('account_number').value;
+        if (!paybillNumber || !/^\d{5,6}$/.test(paybillNumber)) {
+            isValid = false;
+            document.getElementById('paybill_number').classList.add('is-invalid');
+        }
+        if (!accountNumber) {
+            isValid = false;
+            document.getElementById('account_number').classList.add('is-invalid');
+        }
+    } else if (paymentType === 'till_number') {
+        const tillNumber = document.getElementById('till_number').value;
+        if (!tillNumber || !/^\d{5,6}$/.test(tillNumber)) {
+            isValid = false;
+            document.getElementById('till_number').classList.add('is-invalid');
+        }
+    }
+    
+    if (isValid) {
+        processPayment();
+    } else {
+        this.classList.add('was-validated');
+        showPaymentStatus('error', 'Please correct the errors in the form');
+    }
+});
+
+// Process payment with loading states
+function processPayment() {
+    const submitBtn = document.getElementById('paymentSubmitBtn');
+    const submitText = document.getElementById('submitButtonText');
+    const originalText = submitText.textContent;
+    
+    // Show loading state
+    submitBtn.disabled = true;
+    submitText.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+    
+    showPaymentStatus('info', 'Initiating M-Pesa payment...', true);
+    
+    // Submit the form
+    const formData = new FormData(document.getElementById('paymentForm'));
+    
+    fetch(document.getElementById('paymentForm').action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+        }
+    })
+    .then(response => response.json())
+    .catch(error => {
+        console.error('Error:', error);
+        showPaymentStatus('error', 'Payment failed. Please try again.');
+        
+        // Reset button
+        submitBtn.disabled = false;
+        submitText.textContent = originalText;
+    });
+}
+
+// Show payment status
+function showPaymentStatus(type, message, showSpinner = false) {
+    const alertDiv = document.getElementById('paymentStatusAlert');
+    const spinner = document.getElementById('paymentSpinner');
+    const textSpan = document.getElementById('paymentStatusText');
+    
+    // Remove existing classes
+    alertDiv.className = 'alert';
+    
+    // Add appropriate class based on type
+    switch(type) {
+        case 'success':
+            alertDiv.classList.add('alert-success');
+            break;
+        case 'error':
+            alertDiv.classList.add('alert-danger');
+            break;
+        case 'info':
+            alertDiv.classList.add('alert-info');
+            break;
+        case 'warning':
+            alertDiv.classList.add('alert-warning');
+            break;
+    }
+    
+    // Show/hide spinner
+    if (showSpinner) {
+        spinner.classList.remove('d-none');
+    } else {
+        spinner.classList.add('d-none');
+    }
+    
+    // Set message and show alert
+    textSpan.textContent = message;
+    alertDiv.classList.remove('d-none');
+    
+    // Auto-hide after 5 seconds for non-loading messages
+    if (!showSpinner) {
+        setTimeout(() => {
+            alertDiv.classList.add('d-none');
+        }, 5000);
+    }
+}
+
+// Initialize payment fields when modal opens
+document.getElementById('makePaymentModal').addEventListener('show.bs.modal', function() {
+    // Reset form
+    document.getElementById('paymentForm').reset();
+    document.getElementById('paymentForm').classList.remove('was-validated');
+    
+    // Hide all payment sections
+    document.querySelectorAll('.payment-section').forEach(section => {
+        section.classList.add('d-none');
+    });
+    
+    // Hide status alert
+    document.getElementById('paymentStatusAlert').classList.add('d-none');
+    
+    // Reset required fields
+    document.querySelectorAll('.mpesa-field, .paybill-field, .till-field').forEach(field => {
+        field.required = false;
+        field.classList.remove('is-invalid');
+    });
+});
+
+// Auto-refresh for pending transactions
+function checkPendingTransactions() {
+    const pendingElements = document.querySelectorAll('.status-pending');
+    if (pendingElements.length > 0) {
+        setTimeout(() => {
+            location.reload();
+        }, 30000);
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    checkPendingTransactions();
+});
+</script>
 
 <style>
   .hidden {
@@ -570,129 +869,5 @@
   }
 </style>
 
-<script>
-function togglePaymentFields() {
-    // Hide all payment sections first
-    document.querySelectorAll('.payment-section').forEach(section => {
-        section.classList.add('hidden');
-    });
-    
-    // Get the selected payment method
-    const paymentType = document.getElementById('paymentType').value;
-    
-    // Show the relevant section based on selection
-    if (paymentType === 'mpesa_number') {
-        document.getElementById('mpesaNumberSection').classList.remove('hidden');
-        document.getElementById('form_type').value = 'mpesa';
-        // Make required fields
-        document.querySelectorAll('.mpesa-field').forEach(field => field.required = true);
-        document.querySelectorAll('.paybill-field, .till-field').forEach(field => field.required = false);
-    } 
-    else if (paymentType === 'paybill_number') {
-        document.getElementById('paybillSection').classList.remove('hidden');
-        document.getElementById('form_type').value = 'paybill';
-        // Make required fields
-        document.querySelectorAll('.paybill-field').forEach(field => field.required = true);
-        document.querySelectorAll('.mpesa-field, .till-field').forEach(field => field.required = false);
-    } 
-    else if (paymentType === 'till_number') {
-        document.getElementById('tillNumberSection').classList.remove('hidden');
-        document.getElementById('form_type').value = 'till';
-        // Make required fields
-        document.querySelectorAll('.till-field').forEach(field => field.required = true);
-        document.querySelectorAll('.mpesa-field, .paybill-field').forEach(field => field.required = false);
-    }
-}
-
-// Form validation
-document.getElementById('paymentForm').addEventListener('submit', function(event) {
-    // Reset validations
-    this.classList.remove('was-validated');
-    let isValid = true;
-    
-    // Check required fields
-    const paymentType = document.getElementById('paymentType').value;
-    if (!paymentType) {
-        isValid = false;
-    } else {
-        if (paymentType === 'mpesa_number') {
-            const mpesaNumber = document.getElementById('mpesa_number').value;
-            if (!mpesaNumber || !/^\d{9}$/.test(mpesaNumber)) {
-                isValid = false;
-            }
-        } else if (paymentType === 'paybill_number') {
-            const paybillNumber = document.getElementById('paybill_number').value;
-            const accountNumber = document.getElementById('account_number').value;
-            if (!paybillNumber || !accountNumber || !/^\d{5,6}$/.test(paybillNumber)) {
-                isValid = false;
-            }
-        } else if (paymentType === 'till_number') {
-            const tillNumber = document.getElementById('till_number').value;
-            if (!tillNumber || !/^\d{5,6}$/.test(tillNumber)) {
-                isValid = false;
-            }
-        }
-    }
-    
-    // Check amount
-    const amount = document.getElementById('amount').value;
-    if (!amount || parseFloat(amount) <= 0) {
-        isValid = false;
-    }
-    
-    // Check expense selection
-    const expenseSelect = document.getElementById('expenseSelect').value;
-    if (!expenseSelect) {
-        isValid = false;
-    }
-    
-    if (!isValid) {
-        event.preventDefault();
-        event.stopPropagation();
-        this.classList.add('was-validated');
-    }
-});
-
-// Initialize payment fields based on selection when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    togglePaymentFields();
-});
-function refreshTransactions() {
-    location.reload();
-}
-
-function printReceipt(transactionId) {
-    // Add print functionality
-    window.print();
-}
-
-// Add loading states for buttons
-document.addEventListener('DOMContentLoaded', function() {
-    const actionButtons = document.querySelectorAll('[data-bs-toggle="modal"]');
-    actionButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const originalText = this.innerHTML;
-            this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Loading...';
-            this.disabled = true;
-            
-            setTimeout(() => {
-                this.innerHTML = originalText;
-                this.disabled = false;
-            }, 1000);
-        });
-    });
-});
-
-// Auto-refresh transactions every 30 seconds for pending transactions
-if (document.querySelector('.status-pending')) {
-    setInterval(function() {
-        // Only refresh if there are pending transactions
-        const pendingCount = document.querySelectorAll('.status-pending').length;
-        if (pendingCount > 0) {
-            location.reload();
-        }
-    }, 30000);
-};
-</script>
 
 {% endblock %}

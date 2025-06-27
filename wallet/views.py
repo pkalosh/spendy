@@ -1,5 +1,6 @@
 import json
 import logging
+import uuid
 from itertools import chain
 from django.views.decorators.http import require_POST
 from django.shortcuts import render, get_object_or_404, redirect
@@ -32,6 +33,9 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.utils.decorators import method_decorator
 from .mpesa_service import MpesaDaraja
+from django.utils import timezone
+from decimal import Decimal
+from django.db.models import Sum
 
 logger = logging.getLogger(__name__)
 
@@ -655,16 +659,24 @@ def wallet_transfer(request):
 @user_passes_test(is_admin)
 def fund_wallet(request):
     if request.method == 'POST':
-        business_id = request.POST.get('business_id')  # Phone number for STK/B2C or shortcode for B2B
+        # Get form data matching your template field names
         amount_str = request.POST.get('amount')
         wallet_id = request.POST.get('wallet_id')
-        payment_method = request.POST.get('payment_method', 'stk')  # stk, b2b, b2c
+        payment_method = request.POST.get('payment_method')
         
-        # Validation
-        if not all([business_id, amount_str, wallet_id]):
+        # Get payment method specific fields
+        mpesa_number = request.POST.get('mpesa_number')  # For direct M-Pesa payment
+        paybill_number = request.POST.get('paybill_number')  # For paybill payment
+        till_number = request.POST.get('till_number')  # For till payment
+        account_reference = request.POST.get('account_reference')  # For paybill
+        till_reference = request.POST.get('till_reference')  # For till
+        
+        # Basic validation
+        if not all([amount_str, wallet_id, payment_method]):
             messages.error(request, "All fields are required.")
             return redirect('wallet:wallet')
         
+        # Validate amount
         try:
             amount = Decimal(amount_str)
             if amount <= 0:
@@ -680,32 +692,68 @@ def fund_wallet(request):
             messages.error(request, "Invalid wallet ID.")
             return redirect('wallet:wallet')
         
+        # Validate payment method specific fields
+        business_id = None
+        
+        if payment_method == 'mpesa_number':
+            if not mpesa_number:
+                messages.error(request, "M-Pesa number is required for direct payment.")
+                return redirect('wallet:wallet')
+            
+            # Validate phone number format (should start with 254)
+            if not mpesa_number.startswith('254') or len(mpesa_number) != 12:
+                messages.error(request, "Please enter a valid M-Pesa number (254XXXXXXXXX).")
+                return redirect('wallet:wallet')
+            
+            business_id = mpesa_number
+            actual_payment_method = 'stk'  # STK push for direct M-Pesa
+            
+        elif payment_method == 'paybill_number':
+            if not paybill_number or not account_reference:
+                messages.error(request, "Paybill details are missing.")
+                return redirect('wallet:wallet')
+            
+            business_id = paybill_number
+            actual_payment_method = 'b2b'  # B2B for paybill
+            
+        elif payment_method == 'till_number':
+            if not till_number or not till_reference:
+                messages.error(request, "Till number details are missing.")
+                return redirect('wallet:wallet')
+            
+            business_id = till_number
+            actual_payment_method = 'b2b'  # B2B for till
+            
+        else:
+            messages.error(request, "Invalid payment method selected.")
+            return redirect('wallet:wallet')
+        
         # Initialize M-Pesa client
         mpesa = MpesaDaraja()
         
         try:
-            if payment_method == 'stk':
-                # STK Push - Customer pays to business
+            if actual_payment_method == 'stk':
+                # STK Push - Customer pays to business (M-Pesa direct payment)
                 response = initiate_stk_push(mpesa, business_id, amount, wallet)
+                success_message = "Payment request sent to your phone. Please check your M-Pesa and enter your PIN to complete the transaction."
                 
-            elif payment_method == 'b2c':
-                # B2C - Business pays to customer (reverse funding scenario)
-                response = initiate_b2c_payment(mpesa, business_id, amount, wallet)
+            elif actual_payment_method == 'b2b':
+                # B2B - Business to business payment (Paybill/Till)
+                if payment_method == 'paybill_number':
+                    success_message = f"Payment instructions provided. Please use Paybill {paybill_number} with account number {account_reference} to complete your payment of KES {amount}."
+                else:  # till_number
+                    success_message = f"Payment instructions provided. Please use Till {till_number} with reference {till_reference} to complete your payment of KES {amount}."
                 
-            elif payment_method == 'b2b':
-                # B2B - Business to business payment
+                # For manual payments (paybill/till), you might want to create a pending transaction
+                # that gets confirmed via callback when the user actually pays
                 response = initiate_b2b_payment(mpesa, business_id, amount, wallet)
-                
-            else:
-                messages.error(request, "Invalid payment method selected.")
-                return redirect('wallet:wallet')
             
             # Handle response
-            if response.get('ResponseCode') == '0':
-                messages.success(request, f"Payment request initiated successfully. Check your phone for payment prompt.")
+            if response and response.get('ResponseCode') == '0':
+                messages.success(request, success_message)
                 logger.info(f"Payment initiated for wallet {wallet_id}: {response}")
             else:
-                error_msg = response.get('errorMessage', 'Payment initiation failed')
+                error_msg = response.get('errorMessage', 'Payment initiation failed') if response else 'No response from payment gateway'
                 messages.error(request, f"Payment failed: {error_msg}")
                 logger.error(f"Payment failed for wallet {wallet_id}: {response}")
                 
@@ -718,7 +766,6 @@ def fund_wallet(request):
     else:
         messages.error(request, "Invalid request method.")
         return redirect('wallet:wallet')
-
 def initiate_stk_push(mpesa, phone_number, amount, wallet):
     """
     Initiate STK Push for wallet funding
@@ -732,7 +779,7 @@ def initiate_stk_push(mpesa, phone_number, amount, wallet):
     elif not phone_number.startswith('254'):
         phone_number = '254' + phone_number
     
-    account_reference = f"WALLET-{wallet.id}"
+    account_reference = f"{wallet.company.company_name}-{wallet.wallet_number}"
     transaction_desc = f"Wallet funding for {wallet.company.company_name}"
     
     return mpesa.stk_push(
@@ -770,7 +817,7 @@ def initiate_b2b_payment(mpesa, receiver_shortcode, amount, wallet):
     Initiate B2B payment
     Business to business payment
     """
-    account_reference = f"WALLET-{wallet.id}"
+    account_reference = f"{wallet.company.company_name}-{wallet.wallet_number}"
     remarks = f"B2B wallet funding for {wallet.company.company_name}"
     
     return mpesa.b2b_payment(
@@ -1622,9 +1669,6 @@ def expense_requests(request):
         # Return to a simple error template or the login page
         return render(request, "error_template.html", {"error": "Staff profile not found"}, status=404)
 
-from decimal import Decimal
-from django.db.models import Sum
-from .models import Expense
 
 def get_pending_approved_expense_sum(user):
     """
@@ -1786,12 +1830,14 @@ def c2b_validation(request):
         return JsonResponse({'ResultCode': 'C2B00014', 'ResultDesc': 'Internal server error'})
 
 
+
 @csrf_exempt
 @require_http_methods(["POST"])
 def c2b_confirmation(request):
     """
     C2B Confirmation callback
-    Processes confirmed C2B payments
+    Processes confirmed C2B payments, creates MpesaTransaction,
+    updates Wallet balance, and creates a core Transaction record.
     """
     try:
         confirmation_data = json.loads(request.body)
@@ -1799,50 +1845,118 @@ def c2b_confirmation(request):
         
         # Extract confirmation data
         trans_type = confirmation_data.get('TransType')
-        trans_id = confirmation_data.get('TransID')
-        trans_time = confirmation_data.get('TransTime')
-        trans_amount = confirmation_data.get('TransAmount')
-        business_short_code = confirmation_data.get('BusinessShortCode')
-        bill_ref_number = confirmation_data.get('BillRefNumber')
-        invoice_number = confirmation_data.get('InvoiceNumber')
-        org_account_balance = confirmation_data.get('OrgAccountBalance')
-        third_party_trans_id = confirmation_data.get('ThirdPartyTransID')
+        mpesa_trans_id = confirmation_data.get('TransID') # M-Pesa Transaction ID (e.g., receipt number)
+        trans_time_str = confirmation_data.get('TransTime') # YYYYMMDDHHMMSS format
+        trans_amount = Decimal(confirmation_data.get('TransAmount', '0.00')) # Ensure Decimal
+        business_short_code = confirmation_data.get('BusinessShortCode') # Your Paybill/Till
+        bill_ref_number = confirmation_data.get('BillRefNumber') # WALLET_XXX
         msisdn = confirmation_data.get('MSISDN')
-        first_name = confirmation_data.get('FirstName')
-        middle_name = confirmation_data.get('MiddleName')
-        last_name = confirmation_data.get('LastName')
-        
-        # Create or update transaction record
-        transaction, created = MpesaTransaction.objects.get_or_create(
-            transaction_id=trans_id,
+        first_name = confirmation_data.get('FirstName', '')
+        middle_name = confirmation_data.get('MiddleName', '')
+        last_name = confirmation_data.get('LastName', '')
+
+        # Parse TransTime
+        try:
+            transaction_datetime = timezone.datetime.strptime(trans_time_str, '%Y%m%d%H%M%S')
+        except (ValueError, TypeError):
+            logger.error(f"Invalid TransTime format or missing: {trans_time_str}. Using current time.")
+            transaction_datetime = timezone.now()
+
+        # --- 1. Find the target Wallet ---
+        target_wallet = None
+        if bill_ref_number and bill_ref_number.startswith('WALLET_'):
+            try:
+                wallet_id_str = bill_ref_number.split('_')[1]
+                wallet_id = int(wallet_id_str)
+                target_wallet = Wallet.objects.get(id=wallet_id)
+            except (ValueError, IndexError):
+                logger.warning(f"C2B Confirmation: Invalid wallet reference format: {bill_ref_number}. Transaction {mpesa_trans_id}.")
+            except Wallet.DoesNotExist:
+                logger.warning(f"C2B Confirmation: Wallet with ID {wallet_id_str} not found for BillRefNumber: {bill_ref_number}. Transaction {mpesa_trans_id}.")
+        else:
+            logger.warning(f"C2B Confirmation: BillRefNumber is not in WALLET_XXX format or missing: {bill_ref_number}. Cannot link to wallet for {mpesa_trans_id}.")
+
+        # --- 2. Create or Update MpesaTransaction Record (Detailed M-Pesa Log) ---
+        # Use mpesa_receipt_number (which is TransID from callback) for idempotency
+        mpesa_txn_record, mpesa_txn_created = MpesaTransaction.objects.get_or_create(
+            mpesa_receipt_number=mpesa_trans_id, 
             defaults={
                 'transaction_type': 'C2B',
+                'status': 'COMPLETED', 
+                'transaction_id': mpesa_trans_id, # Store in general transaction_id field as well
                 'amount': trans_amount,
                 'party_a': msisdn,
                 'party_b': business_short_code,
                 'phone_number': msisdn,
                 'account_reference': bill_ref_number,
-                'transaction_desc': f"C2B Payment - {trans_type}",
-                'mpesa_receipt_number': trans_id,
-                'transaction_date': timezone.now(),
-                'status': 'COMPLETED',
+                'transaction_desc': f"M-Pesa C2B Payment from {first_name} {last_name} to {bill_ref_number}",
+                'transaction_date': transaction_datetime, 
+                'created_at': transaction_datetime, 
+                'completed_at': timezone.now(), 
                 'callback_data': confirmation_data,
-                'first_name': first_name,
+                'first_name': first_name, 
                 'middle_name': middle_name,
-                'last_name': last_name
+                'last_name': last_name,
+                # Link to CompanyKYC if wallet has one
+                'company': target_wallet.company if target_wallet and hasattr(target_wallet, 'company') else None,
+                # Link to User if wallet has one
+                'user': target_wallet.user if target_wallet and hasattr(target_wallet, 'user') else None,
             }
         )
         
-        if not created:
-            # Update existing transaction
-            transaction.status = 'COMPLETED'
-            transaction.callback_data = confirmation_data
-            transaction.save()
-        
-        logger.info(f"C2B payment confirmed: {trans_id} - Amount: {trans_amount}")
-        
-        # Process the payment in your business logic here
-        # For example, credit user account, send notifications, etc.
+        if not mpesa_txn_created:
+            # If transaction already exists, ensure its status is COMPLETED and update callback data
+            if mpesa_txn_record.status != 'COMPLETED':
+                mpesa_txn_record.status = 'COMPLETED'
+                mpesa_txn_record.completed_at = timezone.now()
+            mpesa_txn_record.callback_data = confirmation_data
+            mpesa_txn_record.save()
+            logger.info(f"C2B MpesaTransaction {mpesa_trans_id} already exists, status ensured to COMPLETED.")
+        else:
+            logger.info(f"New C2B MpesaTransaction {mpesa_trans_id} recorded.")
+
+            # --- 3. Create a core Transaction Record (if not already created) ---
+            # We want to create a Transaction record ONLY if this M-Pesa transaction is new to our system.
+            # Use mpesa_trans_id as transaction_code for uniqueness if possible
+            try:
+                core_transaction = Transaction.objects.get(transaction_code=mpesa_trans_id)
+                logger.info(f"Core Transaction with code {mpesa_trans_id} already exists. Skipping creation.")
+            except Transaction.DoesNotExist:
+                logger.info(f"Creating new core Transaction for {mpesa_trans_id}.")
+                try:
+                    core_transaction = Transaction.objects.create(
+                        company=target_wallet.company if target_wallet else None,
+                        user=target_wallet.user if target_wallet else None,
+                        amount=trans_amount,
+                        description=f"M-Pesa Deposit to Wallet {bill_ref_number}",
+                        receiver_wallet=target_wallet,
+                        sender_wallet=None, # External M-Pesa, no internal sender wallet
+                        status='completed', # Directly completed
+                        transaction_type='deposit', # Or 'received' as per your choices
+                        transaction_code=mpesa_trans_id, # Link to M-Pesa ID
+                        date=transaction_datetime, # Use the M-Pesa transaction time
+                    )
+                    logger.info(f"Core Transaction {core_transaction.transaction_id} created for M-Pesa {mpesa_trans_id}.")
+                except Exception as e:
+                    logger.error(f"Failed to create core Transaction record for {mpesa_trans_id}: {e}", exc_info=True)
+
+
+            # --- 4. Fund the Wallet (if successfully created and linked) ---
+            # This should happen only if the M-Pesa transaction record was new AND a wallet was found
+            if target_wallet and mpesa_txn_created: # Only fund if this is a new, processed callback
+                target_wallet.balance += trans_amount
+                target_wallet.save()
+                logger.info(f"Wallet {target_wallet.id} funded with KES {trans_amount} from transaction {mpesa_trans_id}.")
+            elif not target_wallet:
+                logger.warning(f"Wallet not found for {mpesa_trans_id}. Payment received but wallet balance not updated.")
+            elif not mpesa_txn_created:
+                 logger.info(f"Wallet for {mpesa_trans_id} not funded as MpesaTransaction already existed (handled by previous logic).")
+
+            # --- Business Logic: Send Notifications (Example) ---
+            # if target_wallet:
+            #     # Consider sending notifications here or after the save
+            #     # (e.g., via Celery task for async processing)
+            #     pass
         
         return JsonResponse({
             'ResultCode': '0',
@@ -1850,11 +1964,12 @@ def c2b_confirmation(request):
         })
         
     except json.JSONDecodeError:
-        logger.error("Invalid JSON in C2B confirmation")
-        return JsonResponse({'ResultCode': '1', 'ResultDesc': 'Invalid JSON'})
+        logger.error("Invalid JSON in C2B confirmation", exc_info=True)
+        return JsonResponse({'ResultCode': '1', 'ResultDesc': 'Invalid JSON'}, status=400)
     except Exception as e:
-        logger.error(f"Error processing C2B confirmation: {str(e)}")
-        return JsonResponse({'ResultCode': '1', 'ResultDesc': 'Internal server error'})
+        logger.error(f"Error processing C2B confirmation: {str(e)}", exc_info=True)
+        # Always return a failure code if your system had an internal error, Safaricom may retry
+        return JsonResponse({'ResultCode': '1', 'ResultDesc': f"Internal server error: {str(e)}"}, status=500)
 
 
 @csrf_exempt

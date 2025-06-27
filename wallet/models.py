@@ -564,3 +564,18 @@ class MpesaCallbackLog(models.Model):
     
     def __str__(self):
         return f"{self.callback_type} - {self.created_at}"
+
+
+class B2BTransaction(models.Model):
+    transaction_id = models.CharField(max_length=100, unique=True)
+    sender = models.CharField(max_length=100)  # source paybill
+    receiver = models.CharField(max_length=100)  # your paybill
+    reference = models.CharField(max_length=100)  # WALLET_XXX
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    status = models.CharField(max_length=20, default='pending')
+    wallet = models.ForeignKey(Wallet, on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField()
+
+    def __str__(self):
+        return self.transaction_id
+    
