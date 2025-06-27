@@ -44,9 +44,9 @@ def settings_view(request):
     company = get_object_or_404(CompanyKYC,user=request.user)
  
     context = {
-        'expense_categories': ExpenseCategory.objects.filter(company=company).order_by('name'),
-        'operation_categories': OperationCategory.objects.filter(company=company).order_by('name'),
-        'event_categories': EventCategory.objects.filter(company=company).order_by('name'),
+        'expense_categories': ExpenseCategory.objects.filter(company=company,is_active=True).order_by('name'),
+        'operation_categories': OperationCategory.objects.filter(company=company,is_active=True).order_by('name'),
+        'event_categories': EventCategory.objects.filter(company=company,is_active=True).order_by('name'),
     }
     return render(request, 'settings.html', context)
 
@@ -106,8 +106,14 @@ def edit_category(request):
     """Edit a category (expense, operation, or event)"""
     if request.method == 'POST':
         category_id = request.POST.get('category_id')
-        category_type = request.GET.get('type')
+        # Get category_type from POST data first, then fall back to GET
+        category_type = request.POST.get('category_type') or request.GET.get('type')
         name = request.POST.get('name')
+        
+        # Debug logging (remove in production)
+        print(f"Edit Category - ID: {category_id}, Type: {category_type}, Name: {name}")
+        print(f"POST data: {request.POST}")
+        print(f"GET data: {request.GET}")
         
         if not all([category_id, category_type, name]):
             messages.error(request, 'Missing required information')
@@ -123,14 +129,18 @@ def edit_category(request):
             else:
                 messages.error(request, 'Invalid category type')
                 return redirect('wallet:settings_view')
-                
-            category.name = name
+            
+            # Update the category name
+            category.name = name.strip()
             category.save()
+            
             messages.success(request, f'{category_type.title()} category updated successfully')
             
         except (ExpenseCategory.DoesNotExist, OperationCategory.DoesNotExist, EventCategory.DoesNotExist):
             messages.error(request, 'Category not found')
-            
+        except Exception as e:
+            messages.error(request, f'Error updating category: {str(e)}')
+    
     return redirect('wallet:settings_view')
 
 @login_required
@@ -138,7 +148,8 @@ def delete_category(request):
     """Delete a category (expense, operation, or event)"""
     if request.method == 'POST':
         category_id = request.POST.get('category_id')
-        category_type = request.GET.get('type')
+        # Get category_type from POST data first, then fall back to GET
+        category_type = request.POST.get('category_type') or request.GET.get('type')
         
         if not all([category_id, category_type]):
             messages.error(request, 'Missing required information')
@@ -147,20 +158,96 @@ def delete_category(request):
         try:
             if category_type == 'expense':
                 category = ExpenseCategory.objects.get(id=category_id)
+                
+                # Check for related Expense records
+                related_expenses = Expense.objects.filter(expense_category=category)
+                paid_expenses_count = related_expenses.filter(paid=True).count()
+                unpaid_expenses_count = related_expenses.filter(paid=False).count()
+                
+                if related_expenses.exists():
+                    if paid_expenses_count > 0:
+                        # If there are paid expenses, deactivate the category instead of deleting
+                        category.is_active = False
+                        category.save()
+                        messages.warning(request, 
+                            f'Expense category "{category.name}" has {paid_expenses_count} paid expense(s). '
+                            f'Category has been deactivated instead of deleted.')
+                    else:
+                        # If all expenses are unpaid, we can delete the category and related expenses
+                        related_expenses.delete()
+                        category.delete()
+                        messages.success(request, 
+                            f'Expense category "{category.name}" and {unpaid_expenses_count} '
+                            f'unpaid expense(s) deleted successfully')
+                else:
+                    # No related expenses, safe to delete
+                    category.delete()
+                    messages.success(request, f'Expense category "{category.name}" deleted successfully')
+                    
             elif category_type == 'operation':
                 category = OperationCategory.objects.get(id=category_id)
+                
+                # Check for related Operation records
+                related_operations = Operation.objects.filter(category=category)
+                paid_operations_count = related_operations.filter(paid=True).count()
+                unpaid_operations_count = related_operations.filter(paid=False).count()
+                
+                if related_operations.exists():
+                    if paid_operations_count > 0:
+                        # If there are paid operations, deactivate the category instead of deleting
+                        category.is_active = False
+                        category.save()
+                        messages.warning(request, 
+                            f'Operation category "{category.name}" has {paid_operations_count} paid operation(s). '
+                            f'Category has been deactivated instead of deleted.')
+                    else:
+                        # If all operations are unpaid, we can delete the category and related operations
+                        related_operations.delete()
+                        category.delete()
+                        messages.success(request, 
+                            f'Operation category "{category.name}" and {unpaid_operations_count} '
+                            f'unpaid operation(s) deleted successfully')
+                else:
+                    # No related operations, safe to delete
+                    category.delete()
+                    messages.success(request, f'Operation category "{category.name}" deleted successfully')
+                    
             elif category_type == 'event':
                 category = EventCategory.objects.get(id=category_id)
+                
+                # Check for related Event records
+                related_events = Event.objects.filter(category=category)
+                paid_events_count = related_events.filter(paid=True).count()
+                unpaid_events_count = related_events.filter(paid=False).count()
+                
+                if related_events.exists():
+                    if paid_events_count > 0:
+                        # If there are paid events, deactivate the category instead of deleting
+                        category.is_active = False
+                        category.save()
+                        messages.warning(request, 
+                            f'Event category "{category.name}" has {paid_events_count} paid event(s). '
+                            f'Category has been deactivated instead of deleted.')
+                    else:
+                        # If all events are unpaid, we can delete the category and related events
+                        related_events.delete()
+                        category.delete()
+                        messages.success(request, 
+                            f'Event category "{category.name}" and {unpaid_events_count} '
+                            f'unpaid event(s) deleted successfully')
+                else:
+                    # No related events, safe to delete
+                    category.delete()
+                    messages.success(request, f'Event category "{category.name}" deleted successfully')
             else:
                 messages.error(request, 'Invalid category type')
                 return redirect('wallet:settings_view')
                 
-            category.delete()
-            messages.success(request, f'{category_type.title()} category deleted successfully')
-            
         except (ExpenseCategory.DoesNotExist, OperationCategory.DoesNotExist, EventCategory.DoesNotExist):
             messages.error(request, 'Category not found')
-            
+        except Exception as e:
+            messages.error(request, f'Error deleting category: {str(e)}')
+    
     return redirect('wallet:settings_view')
 
 @login_required
@@ -445,33 +532,52 @@ def create_wallet(request):
         wallet_name = request.POST.get('wallet_name', '').strip()
         balance = request.POST.get('balance', '0').strip()
         wallet_type = request.POST.get('wallet_type')
-
+        
         # Sanitize input
         wallet_name = escape(wallet_name)
+        
         try:
             balance = float(balance)
             if balance < 0:
                 balance = 0
         except ValueError:
             balance = 0
-
-        if wallet_name:
-            wallet = Wallet(
-                wallet_name=wallet_name,
-                balance=balance,
-                user=request.user,
-                wallet_type=wallet_type,
-                company=request.user.companykyc
-            )
-            wallet.save()
-
-            messages.success(request, f"Wallet '{wallet.wallet_name}' created successfully!")
-            return redirect('wallet:wallet')
-        else:
+        
+        # Validation checks
+        if not wallet_name:
             messages.error(request, "Wallet name is required.")
             return redirect('wallet:wallet')
-
+        
+        # Deny PRIMARY wallet type creation
+        if wallet_type == 'PRIMARY':
+            messages.error(request, "PRIMARY wallet type cannot be created.")
+            return redirect('wallet:wallet')
+        
+        # Check if similar wallet_type already exists for the company
+        existing_wallet = Wallet.objects.filter(
+            wallet_type=wallet_type,
+            company=request.user.companykyc
+        ).first()
+        
+        if existing_wallet:
+            messages.error(request, f"A wallet of type '{wallet_type}' already exists for your company.")
+            return redirect('wallet:wallet')
+        
+        # Create the wallet if all validations pass
+        wallet = Wallet(
+            wallet_name=wallet_name,
+            balance=balance,
+            user=request.user,
+            wallet_type=wallet_type,
+            company=request.user.companykyc
+        )
+        wallet.save()
+        messages.success(request, f"Wallet '{wallet.wallet_name}' created successfully!")
+        return redirect('wallet:wallet')
+    
     return redirect('wallet:wallet')
+
+from django.db import transaction as db_transaction
 
 @login_required
 @user_passes_test(is_admin)
@@ -480,15 +586,16 @@ def wallet_transfer(request):
         from_wallet_id = request.POST.get('from_wallet_id')
         to_wallet_id = request.POST.get('to_wallet_id')
         amount_str = request.POST.get('amount')
-
+        description = request.POST.get('description', '').strip()  # Optional description
+        
         if not all([from_wallet_id, to_wallet_id, amount_str]):
             messages.error(request, "All fields are required.")
             return redirect('wallet:wallet')
-
+        
         if from_wallet_id == to_wallet_id:
             messages.error(request, "Source and destination wallets must be different.")
             return redirect('wallet:wallet')
-
+        
         try:
             amount = Decimal(amount_str)
             if amount <= 0:
@@ -496,30 +603,51 @@ def wallet_transfer(request):
         except:
             messages.error(request, "Amount must be a positive number.")
             return redirect('wallet:wallet')
-
+        
         # Fetch wallets by ID
         from_wallet = get_object_or_404(Wallet, id=from_wallet_id, company=request.user.companykyc)
         to_wallet = get_object_or_404(Wallet, id=to_wallet_id, company=request.user.companykyc)
-
+        
         if from_wallet.balance < amount:
             messages.error(request, "Insufficient balance in the source wallet.")
             return redirect('wallet:wallet')
-
-        # Perform transfer
-        from_wallet.balance -= amount
-        to_wallet.balance += amount
-        from_wallet.save()
-        to_wallet.save()
-
-        messages.success(
-            request,
-            f"Transferred KES {amount} from {from_wallet.wallet_name.title()} to {to_wallet.wallet_name.title()}."
-        )
+        
+        # Use database transaction for atomicity
+        try:
+            with db_transaction.atomic():
+                # Perform wallet balance updates
+                from_wallet.balance -= amount
+                to_wallet.balance += amount
+                from_wallet.save()
+                to_wallet.save()
+                
+                # Create transaction record
+                transaction_record = Transaction.objects.create(
+                    company=request.user.companykyc,
+                    user=request.user,  # Admin who performed the transfer
+                    amount=amount,
+                    description=description or f"Transfer from {from_wallet.wallet_name} to {to_wallet.wallet_name}",
+                    sender=request.user,  # Admin as sender
+                    receiver=request.user,  # Same company transfer, so same user context
+                    sender_wallet=from_wallet,
+                    receiver_wallet=to_wallet,
+                    status="completed",  # Internal transfer is immediately completed
+                    transaction_type="transfer"
+                )
+                
+                messages.success(
+                    request,
+                    f"Transferred KES {amount} from {from_wallet.wallet_name.title()} to {to_wallet.wallet_name.title()}. Transaction ID: {transaction_record.transaction_id}"
+                )
+                
+        except Exception as e:
+            messages.error(request, f"Transfer failed: {str(e)}")
+            return redirect('wallet:wallet')
+        
         return redirect('wallet:wallet')
     
     messages.error(request, "Invalid request method.")
     return redirect('wallet:wallet')
-
 
 
 

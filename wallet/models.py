@@ -75,7 +75,7 @@ class Wallet(models.Model):
         ('EMERGENCY', 'EMERGENCY'),
 
     ]
-    wallet_number = ShortUUIDField(length=7,blank=True, null=True, max_length=25, prefix="SPDY", alphabet="1234567890") #2175893745837
+    wallet_number = ShortUUIDField(length=7,blank=True, null=True, max_length=25, alphabet="1234567890") #2175893745837
     wallet_name = models.CharField(blank=True, null=True, max_length=50) #2175893745837
     company = models.ForeignKey(CompanyKYC, on_delete=models.SET_NULL, blank=True, null=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)

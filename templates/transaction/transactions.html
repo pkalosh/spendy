@@ -96,7 +96,7 @@
                                     {% for txn in transactions %}
                                         <tr>
                                             <td>{{ txn.user.get_full_name|default:txn.user.username }}</td>
-                                            <td>{{ txn.reciever.get_full_name|default:"-" }}</td>
+                                            <td>{{ txn.receiver.get_full_name|default:"-" }}</td>
                                             <td>{{ txn.sender_wallet.currency|default:"KES" }} {{ txn.amount|floatformat:2|intcomma }}</td>
                                             <td>{{ txn.transaction_id }}</td>
                                             <td>

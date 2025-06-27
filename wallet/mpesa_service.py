@@ -147,6 +147,7 @@ class MpesaDaraja:
                     status='PENDING'
                 )
                 logger.info(f"STK Push initiated successfully: {response_data}")
+                print(f"STK Push initiated successfully: {response_data}")
             else:
                 logger.error(f"STK Push failed: {response_data}")
             

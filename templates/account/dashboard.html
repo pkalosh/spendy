@@ -580,7 +580,9 @@
                             <table class="table">
                                 <thead>
                                     <tr>
-                                        <th>User / Type</th>
+                                        <th>Initiated By</th>
+                                        <th>Recipient</th>
+                                        <th>Transaction Code</th>
                                         <th>Date & Time</th>
                                         <th>Status</th>
                                         <th>Amount</th>
@@ -592,8 +594,18 @@
                                     <tr>
                                         <td data-label="User">
                                             <div>
-                                                <div class="fw-semibold text-dark">{{ s.user|title }}</div>
+                                                <div class="fw-semibold text-dark">{{ s.sender|title }}</div>
                                                 <small class="text-muted">{{ s.transaction_type|title }}</small>
+                                            </div>
+                                        </td>
+                                        <td data-label="User">
+                                            <div>
+                                                <div class="fw-semibold text-dark">{{ s.receiver|title }}</div>
+                                            </div>
+                                        </td>
+                                        <td data-label="Transaction Code">
+                                            <div>
+                                                <div class="fw-semibold text-dark">{{ s.transaction_code }}</div>
                                             </div>
                                         </td>
                                         <td data-label="Date">

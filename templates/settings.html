@@ -44,20 +44,18 @@
                                         <!-- Action Buttons -->
                                         <div class="d-flex gap-2">
                                             <button class="btn btn-primary btn-sm" id="addExpenseBtn" data-bs-toggle="modal" data-bs-target="#expenseCategoryModal">
-                                                <i class="fas fa-plus"></i> Add Expense
+                                                <i class="fas fa-plus"></i> Add Expense Category
                                             </button>
-                                            <button class="btn btn-primary btn-sm" id="addOperationBtn" data-bs-toggle="modal" data-bs-target="#operationCategoryModal" >
-                                                <i class="fas fa-plus"></i> Add Operation
+                                            <button class="btn btn-primary btn-sm d-none" id="addOperationBtn" data-bs-toggle="modal" data-bs-target="#operationCategoryModal" >
+                                                <i class="fas fa-plus"></i> Add Operation Category
                                             </button>
-                                            <button class="btn btn-primary btn-sm" id="addEventBtn" data-bs-toggle="modal" data-bs-target="#eventCategoryModal">
-                                                <i class="fas fa-plus"></i> Add Event
+                                            <button class="btn btn-primary btn-sm d-none" id="addEventBtn" data-bs-toggle="modal" data-bs-target="#eventCategoryModal">
+                                                <i class="fas fa-plus"></i> Add Event Category
                                             </button>
                                         </div>
                                     </div>
                                     
                                     <div class="card-body">
-                                      
-                                        
                                         <!-- Tab Content -->
                                         <div class="tab-content" id="categoryTabContent">
                                             <!-- Expense Categories Tab -->
@@ -301,7 +299,7 @@
                 <h5 class="modal-title" id="editCategoryModalLabel">Edit Category</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="editCategoryForm" method="post">
+            <form id="editCategoryForm" method="post" action="{% url 'wallet:edit_category' %}">
                 {% csrf_token %}
                 <div class="modal-body">
                     <div class="mb-3">
@@ -333,7 +331,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <form id="deleteCategoryForm" method="post">
+                <form id="deleteCategoryForm" method="post" action="{% url 'wallet:delete_category' %}">
                     {% csrf_token %}
                     <input type="hidden" id="deleteCategoryId" name="category_id">
                     <input type="hidden" id="deleteCategoryType" name="category_type">
@@ -386,9 +384,6 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Initialize - show expense button by default since expense tab is active
-        document.getElementById('addExpenseBtn').classList.remove('d-none');
-        
         // Tab switching functionality for action buttons
         document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(function(tabButton) {
             tabButton.addEventListener('shown.bs.tab', function(e) {
@@ -410,74 +405,54 @@
             });
         });
         
-        // Search functionality
-        document.getElementById('searchInput').addEventListener('keyup', function() {
-            const value = this.value.toLowerCase();
-            const activeTable = document.querySelector('.tab-pane.active table tbody');
-            
-            if (activeTable) {
-                const rows = activeTable.querySelectorAll('tr');
-                rows.forEach(function(row) {
-                    const categoryName = row.querySelector('.category-name');
-                    if (categoryName) {
-                        const text = categoryName.textContent.toLowerCase();
-                        if (text.indexOf(value) > -1) {
-                            row.style.display = '';
-                        } else {
-                            row.style.display = 'none';
-                        }
-                    }
-                });
-            }
-        });
-        
-        // Clear search when switching tabs
-        document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(function(tabButton) {
-            tabButton.addEventListener('shown.bs.tab', function(e) {
-                document.getElementById('searchInput').value = '';
-                // Show all rows when switching tabs
-                document.querySelectorAll('.tab-pane table tbody tr').forEach(function(row) {
-                    row.style.display = '';
-                });
-            });
-        });
-        
-        // Edit category button click handler
-        document.querySelectorAll('.edit-category').forEach(function(button) {
-            button.addEventListener('click', function() {
-                const categoryId = this.getAttribute('data-id');
-                const categoryName = this.getAttribute('data-name');
-                const categoryType = this.getAttribute('data-type');
+        // Edit category button click handler - using event delegation
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.edit-category')) {
+                const button = e.target.closest('.edit-category');
+                const categoryId = button.getAttribute('data-id');
+                const categoryName = button.getAttribute('data-name');
+                const categoryType = button.getAttribute('data-type');
                 
+                console.log('Edit button clicked:', { categoryId, categoryName, categoryType });
+                
+                // Populate the form fields
                 document.getElementById('editCategoryId').value = categoryId;
                 document.getElementById('editCategoryName').value = categoryName;
                 document.getElementById('editCategoryType').value = categoryType;
                 
-                // Set the form action based on the category type
-                const formAction = `{% url 'wallet:edit_category' %}?type=${categoryType}`;
-                document.getElementById('editCategoryForm').setAttribute('action', formAction);
+                // Update the form action to include the type parameter
+                const form = document.getElementById('editCategoryForm');
+                const baseUrl = form.getAttribute('action').split('?')[0];
+                form.setAttribute('action', baseUrl + '?type=' + categoryType);
                 
+                // Show the modal
                 const editModal = new bootstrap.Modal(document.getElementById('editCategoryModal'));
                 editModal.show();
-            });
+            }
         });
         
-        // Delete category button click handler
-        document.querySelectorAll('.delete-category').forEach(function(button) {
-            button.addEventListener('click', function() {
-                const categoryId = this.getAttribute('data-id');
-                const categoryType = this.getAttribute('data-type');
+        // Delete category button click handler - using event delegation
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.delete-category')) {
+                const button = e.target.closest('.delete-category');
+                const categoryId = button.getAttribute('data-id');
+                const categoryType = button.getAttribute('data-type');
                 
+                console.log('Delete button clicked:', { categoryId, categoryType });
+                
+                // Populate the form fields
                 document.getElementById('deleteCategoryId').value = categoryId;
                 document.getElementById('deleteCategoryType').value = categoryType;
                 
-                // Set the form action based on the category type
-                const formAction = `{% url 'wallet:delete_category' %}?type=${categoryType}`;
-                document.getElementById('deleteCategoryForm').setAttribute('action', formAction);
+                // Update the form action to include the type parameter
+                const form = document.getElementById('deleteCategoryForm');
+                const baseUrl = form.getAttribute('action').split('?')[0];
+                form.setAttribute('action', baseUrl + '?type=' + categoryType);
                 
+                // Show the modal
                 const deleteModal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
                 deleteModal.show();
-            });
+            }
         });
     });
 </script>

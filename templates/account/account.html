@@ -41,13 +41,13 @@
                                                 <i class="fas fa-plus-circle me-2"></i>Fund
                                             </a>
                                         </li>
-                                        <li>
+                                        <!-- <li>
                                           <a class="dropdown-item text-danger delete-wallet-btn" href="#" 
                                              data-bs-toggle="modal" 
                                              data-bs-target="#deleteWalletModal{{wallet.id}}">
                                               <i class="fas fa-minus-circle me-2"></i>Delete
                                           </a>
-                                      </li>
+                                      </li> -->
                                     </ul>
                                 </div>
 
@@ -91,7 +91,6 @@
                                 <label for="editWalletType{{ wallet.id }}" class="form-label">Wallet Type</label>
                                 <select class="form-control" id="editWalletType{{ wallet.id }}" name="wallet_type" required>
                                   <option value="">Select wallet type</option>
-                                  <option value="PRIMARY" {% if wallet.wallet_type == "PRIMARY" %}selected{% endif %}>Primary</option>
                                   <option value="EVENT" {% if wallet.wallet_type == "EVENT" %}selected{% endif %}>Event</option>
                                   <option value="OPERATIONS" {% if wallet.wallet_type == "OPERATIONS" %}selected{% endif %}>Operations</option>
                                   <option value="EMERGENCY" {% if wallet.wallet_type == "EMERGENCY" %}selected{% endif %}>Emergency</option>
@@ -228,9 +227,9 @@
         <h6 class="mb-3"><i class="fa fa-filter me-2"></i>Filter Transfers</h6>
         <form id="filterForm">
             <div class="row g-3">
-                <div class="col-md-3">
+                <div class="col-md-3 ">
                     <label for="userFilter" class="form-label">User/Recipient</label>
-                    <select class="form-select" id="userFilter">
+                    <select class="form-select mt-4" id="userFilter" >
                         <option value="">All Users</option>
                         {% for user in all_users %}
                         <option value="{{ user.id }}">{{ user.name }}</option>
@@ -247,7 +246,7 @@
                 </div>
                 <div class="col-md-3">
                     <label for="statusFilter" class="form-label">Status</label>
-                    <select class="form-select" id="statusFilter">
+                    <select class="form-select mt-4" id="statusFilter">
                         <option value="">All Status</option>
                         <option value="completed">Completed</option>
                         <option value="pending">Pending</option>
@@ -299,7 +298,7 @@
                                 <i class="fa fa-arrow-right text-danger me-2"></i>
                                 <div>
                                     <p class="mb-0">{{ transaction.recipient_name}}</p>
-                                    <small class="text-muted">To: {{ transaction.recipient_wallet }}</small>
+                                    <small class="text-muted">To: {{ transaction.receiver_wallet }}</small>
                                 </div>
                             </div>
                         </td>
@@ -555,10 +554,10 @@ function loadTransactions() {
         {% for transaction in all_transactions %}
         {
             id: '{{ transaction.id }}',
-            recipient_name: '{{ transaction.recipient_name|default:"" }}',
-            recipient_wallet: '{{ transaction.recipient_wallet }}',
-            from_wallet_name: '{{ transaction.from_wallet.wallet_name|default:"Primary Wallet" }}',
-            from_wallet_id: '{{ transaction.from_wallet.wallet_id }}',
+            recipient_name: '{{ transaction.receiver }}',
+            recipient_wallet: '{{ transaction.receiver_wallet.wallet_name }}-{{ transaction.receiver_wallet.wallet_number }}',
+            from_wallet_name: '{{ transaction.sender_wallet.wallet_name }}',
+            from_wallet_id: '{{ transaction.sender_wallet.wallet_number }}',
             date: '{{ transaction.date|date:"d M Y" }}',
             time: '{{ transaction.date|time:"g:i A" }}',
             datetime: '{{ transaction.created_at|date:"Y-m-d H:i" }}',
