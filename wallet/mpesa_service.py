@@ -115,7 +115,7 @@ class MpesaDaraja:
                 "PartyA": phone_number,
                 "PartyB": self.shortcode,
                 "PhoneNumber": phone_number,
-                "CallBackURL": f"{settings.BASE_URL}/mpesa/stk/callback/",
+                "CallBackURL": f"{settings.BASE_URL}/stk/callback/",
                 "AccountReference": account_reference,
                 "TransactionDesc": transaction_desc
             }
@@ -217,8 +217,8 @@ class MpesaDaraja:
             payload = {
                 "ShortCode": self.shortcode,
                 "ResponseType": response_type,
-                "ConfirmationURL": confirmation_url or f"{settings.BASE_URL}/mpesa/c2b/confirmation/",
-                "ValidationURL": validation_url or f"{settings.BASE_URL}/mpesa/c2b/validation/"
+                "ConfirmationURL": confirmation_url or f"{settings.BASE_URL}/c2b/confirmation/",
+                "ValidationURL": validation_url or f"{settings.BASE_URL}/c2b/validation/"
             }
             
             headers = {
@@ -272,8 +272,8 @@ class MpesaDaraja:
                 "PartyA": self.shortcode,
                 "PartyB": phone_number,
                 "Remarks": remarks,
-                "QueueTimeOutURL": f"{settings.BASE_URL}/mpesa/b2c/timeout/",
-                "ResultURL": f"{settings.BASE_URL}/mpesa/b2c/result/",
+                "QueueTimeOutURL": f"{settings.BASE_URL}/b2c/timeout/",
+                "ResultURL": f"{settings.BASE_URL}/b2c/result/",
                 "Occasion": occasion
             }
             
@@ -350,8 +350,8 @@ class MpesaDaraja:
                 "PartyB": receiver_shortcode,
                 "AccountReference": account_reference,
                 "Remarks": remarks,
-                "QueueTimeOutURL": f"{settings.BASE_URL}/mpesa/b2b/timeout/",
-                "ResultURL": f"{settings.BASE_URL}/mpesa/b2b/result/"
+                "QueueTimeOutURL": f"{settings.BASE_URL}/b2b/timeout/",
+                "ResultURL": f"{settings.BASE_URL}/b2b/result/"
             }
             
             headers = {
@@ -406,8 +406,8 @@ class MpesaDaraja:
                 "TransactionID": transaction_id,
                 "PartyA": party_a,
                 "IdentifierType": 4,
-                "ResultURL": f"{settings.BASE_URL}/mpesa/status/result/",
-                "QueueTimeOutURL": f"{settings.BASE_URL}/mpesa/status/timeout/",
+                "ResultURL": f"{settings.BASE_URL}/status/result/",
+                "QueueTimeOutURL": f"{settings.BASE_URL}/status/timeout/",
                 "Remarks": "Transaction status query",
                 "Occasion": ""
             }
@@ -445,8 +445,8 @@ class MpesaDaraja:
                 "PartyA": party_a,
                 "IdentifierType": 4,
                 "Remarks": "Account balance query",
-                "QueueTimeOutURL": f"{settings.BASE_URL}/mpesa/balance/timeout/",
-                "ResultURL": f"{settings.BASE_URL}/mpesa/balance/result/"
+                "QueueTimeOutURL": f"{settings.BASE_URL}/balance/timeout/",
+                "ResultURL": f"{settings.BASE_URL}/balance/result/"
             }
             
             headers = {
@@ -494,8 +494,8 @@ class MpesaDaraja:
                 "Amount": amount,
                 "ReceiverParty": receiver_party,
                 "RecieverIdentifierType": 11,
-                "ResultURL": f"{settings.BASE_URL}/mpesa/reversal/result/",
-                "QueueTimeOutURL": f"{settings.BASE_URL}/mpesa/reversal/timeout/",
+                "ResultURL": f"{settings.BASE_URL}/reversal/result/",
+                "QueueTimeOutURL": f"{settings.BASE_URL}/reversal/timeout/",
                 "Remarks": remarks,
                 "Occasion": ""
             }
