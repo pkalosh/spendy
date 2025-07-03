@@ -1745,6 +1745,7 @@ def stk_push_callback(request):
             transaction.callback_data = callback_data
             
             logger.info(f"STK Push completed successfully: {transaction.mpesa_receipt_number}")
+            print(f"STK Push completed successfully: {transaction.mpesa_receipt_number}")
             
         else:  # Failed
             transaction.status = 'FAILED'

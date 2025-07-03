@@ -226,7 +226,7 @@ MPESA_INITIATOR_PASSWORD = os.getenv('MPESA_INITIATOR_PASSWORD')
 MPESA_ENVIRONMENT = os.getenv('MPESA_ENVIRONMENT')
 MPESA_BASE_URL = os.getenv('MPESA_BASE_URL')
 MPESA_CALLBACK_URL = os.getenv('MPESA_CALLBACK_URL')
-MPESA_CERTIFICATE_PATH = BASE_DIR / 'certificates/sandbox_cert.cer'
+MPESA_CERTIFICATE_PATH = BASE_DIR / 'certificates/ProductionCertificate.cer'
 BASE_URL = os.getenv('BASE_URL')
 # Africastalking Configuration
 
