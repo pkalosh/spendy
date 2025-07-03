@@ -2,8 +2,9 @@ import requests
 import base64
 import json
 from datetime import datetime
-from cryptography.hazmat.primitives import serialization, hashes
-from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography import x509
+from cryptography.hazmat.primitives import padding, hashes
+from cryptography.hazmat.primitives.asymmetric import padding as asym_padding
 from django.conf import settings
 from django.utils import timezone
 from .models import MpesaTransaction
@@ -60,14 +61,14 @@ class MpesaDaraja:
             with open(self.certificate_path, 'rb') as cert_file:
                 cert_data = cert_file.read()
             
-            # Load the certificate
-            certificate = serialization.load_pem_x509_certificate(cert_data)
+            # Load the certificate - CORRECTED IMPORT
+            certificate = x509.load_pem_x509_certificate(cert_data)
             public_key = certificate.public_key()
             
             # Encrypt the password
             encrypted = public_key.encrypt(
                 self.initiator_password.encode(),
-                padding.PKCS1v15()
+                asym_padding.PKCS1v15()  # Also corrected the padding import
             )
             
             self.security_credential = base64.b64encode(encrypted).decode()
@@ -288,6 +289,7 @@ class MpesaDaraja:
             )
             
             response_data = response.json()
+            print(f"res {response_data}")
             
             # Save transaction to database
             if response.status_code == 200 and response_data.get('ResponseCode') == '0':

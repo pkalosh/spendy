@@ -502,7 +502,7 @@
 
                     <!-- Expense Selection -->
                     <div class="mb-4">
-                        <label class="form-label fw-bold text-dark">
+                        <label for="expenseSelect" class="form-label fw-bold text-dark">
                             <i class="fas fa-file-invoice-dollar me-1"></i>Select Expense to Pay
                             <span class="text-danger">*</span>
                         </label>
@@ -510,11 +510,12 @@
                             <option value="">Choose a request</option>
                             {% for expense in approved_expenses %}
                             <option value="{{ expense.id }}" data-amount="{{ expense.amount }}">
-                                {{ expense.title|default:"Expense" }} - KES {{ expense.amount|floatformat:2 }}
+                               {% if expense.event %}{{ expense.event }} - {% elif expense.operation %} {{ expense.operation }} - {% endif %}{{ expense.expense_category|default:"Expense" }} - KES {{ expense.amount|floatformat:2 }}
                             </option>
                             {% endfor %}
                         </select>
                         <div class="invalid-feedback">Please select an expense.</div>
+                        
                     </div>
 
                     <!-- Amount Display (Auto-filled) -->
@@ -525,7 +526,7 @@
                         <div class="input-group">
                             <span class="input-group-text bg-success text-white">KES</span>
                             <input type="number" class="form-control bg-light" name="amount" id="amount" 
-                                   placeholder="Select expense first" readonly required min="1">
+                                   placeholder="Select expense first"  required min="1">
                             <div class="invalid-feedback">Amount is required.</div>
                         </div>
                         <small class="text-muted">Amount will be auto-filled based on selected expense</small>
@@ -633,58 +634,115 @@
         </div>
     </div>
 </div>
-
 <script>
-// Enhanced payment form functionality
+    // Enhanced payment form functionality with debugging
 function togglePaymentFields() {
+    console.log('togglePaymentFields called'); // Debug log
+    
     // Hide all payment sections first
-    document.querySelectorAll('.payment-section').forEach(section => {
+    const paymentSections = document.querySelectorAll('.payment-section');
+    console.log('Found payment sections:', paymentSections.length);
+    
+    paymentSections.forEach(section => {
         section.classList.add('d-none');
+        console.log('Hiding section:', section.id); // Debug log
     });
     
     // Get the selected payment method
-    const paymentType = document.getElementById('paymentType').value;
+    const paymentTypeElement = document.getElementById('paymentType');
+    if (!paymentTypeElement) {
+        console.error('paymentType element not found');
+        return;
+    }
+    
+    const paymentType = paymentTypeElement.value;
+    console.log('Selected payment type:', paymentType); // Debug log
+    
+    // Reset all field requirements first
+    document.querySelectorAll('.mpesa-field, .paybill-field, .till-field').forEach(field => {
+        field.required = false;
+        field.classList.remove('is-invalid');
+    });
     
     // Show the relevant section based on selection
     if (paymentType === 'mpesa_number') {
-        document.getElementById('mpesaNumberSection').classList.remove('d-none');
-        document.getElementById('form_type').value = 'mpesa';
-        // Make required fields
-        document.querySelectorAll('.mpesa-field').forEach(field => field.required = true);
-        document.querySelectorAll('.paybill-field, .till-field').forEach(field => field.required = false);
+        const mpesaSection = document.getElementById('mpesaNumberSection');
+        const formType = document.getElementById('form_type');
+        
+        if (mpesaSection) {
+            mpesaSection.classList.remove('d-none');
+            console.log('Showing M-Pesa section');
+        } else {
+            console.error('mpesaNumberSection not found');
+        }
+        
+        if (formType) {
+            formType.value = 'mpesa';
+        }
+        
+        // Make M-Pesa fields required
+        document.querySelectorAll('.mpesa-field').forEach(field => {
+            field.required = true;
+            console.log('Made field required:', field.name);
+        });
     } 
     else if (paymentType === 'paybill_number') {
-        document.getElementById('paybillSection').classList.remove('d-none');
-        document.getElementById('form_type').value = 'paybill';
-        // Make required fields
-        document.querySelectorAll('.paybill-field').forEach(field => field.required = true);
-        document.querySelectorAll('.mpesa-field, .till-field').forEach(field => field.required = false);
+        const paybillSection = document.getElementById('paybillSection');
+        const formType = document.getElementById('form_type');
+        
+        if (paybillSection) {
+            paybillSection.classList.remove('d-none');
+            console.log('Showing Paybill section');
+        } else {
+            console.error('paybillSection not found');
+        }
+        
+        if (formType) {
+            formType.value = 'paybill';
+        }
+        
+        // Make Paybill fields required
+        document.querySelectorAll('.paybill-field').forEach(field => {
+            field.required = true;
+            console.log('Made field required:', field.name);
+        });
     } 
     else if (paymentType === 'till_number') {
-        document.getElementById('tillNumberSection').classList.remove('d-none');
-        document.getElementById('form_type').value = 'till';
-        // Make required fields
-        document.querySelectorAll('.till-field').forEach(field => field.required = true);
-        document.querySelectorAll('.mpesa-field, .paybill-field').forEach(field => field.required = false);
+        const tillSection = document.getElementById('tillNumberSection');
+        const formType = document.getElementById('form_type');
+        
+        if (tillSection) {
+            tillSection.classList.remove('d-none');
+            console.log('Showing Till section');
+        } else {
+            console.error('tillNumberSection not found');
+        }
+        
+        if (formType) {
+            formType.value = 'till';
+        }
+        
+        // Make Till fields required
+        document.querySelectorAll('.till-field').forEach(field => {
+            field.required = true;
+            console.log('Made field required:', field.name);
+        });
+    }
+    else {
+        console.log('No valid payment type selected or unknown type:', paymentType);
+        // Clear form_type if no valid selection
+        const formType = document.getElementById('form_type');
+        if (formType) {
+            formType.value = '';
+        }
     }
 }
 
-// Auto-fill amount when expense is selected
-document.getElementById('expenseSelect').addEventListener('change', function() {
-    const selectedOption = this.options[this.selectedIndex];
-    const amount = selectedOption.getAttribute('data-amount');
-    const amountField = document.getElementById('amount');
-    
-    if (amount) {
-        amountField.value = parseFloat(amount).toFixed(2);
-        amountField.classList.remove('is-invalid');
-    } else {
-        amountField.value = '';
-    }
-});
+// Auto-fill amount when expense is selected (moved to DOMContentLoaded)
 
-// Enhanced form validation
-document.getElementById('paymentForm').addEventListener('submit', function(event) {
+// Enhanced form validation with better error handling
+document.getElementById('paymentForm')?.addEventListener('submit', function(event) {
+    console.log('Form submission started'); // Debug log
     event.preventDefault();
     
     // Reset validations
@@ -692,50 +750,61 @@ document.getElementById('paymentForm').addEventListener('submit', function(event
     let isValid = true;
     
     // Check required fields
-    const paymentType = document.getElementById('paymentType').value;
-    const expenseSelect = document.getElementById('expenseSelect').value;
-    const amount = document.getElementById('amount').value;
+    const paymentType = document.getElementById('paymentType')?.value;
+    const expenseSelect = document.getElementById('expenseSelect')?.value;
+    const amount = document.getElementById('amount')?.value;
+    
+    console.log('Form values:', { paymentType, expenseSelect, amount }); // Debug log
     
     if (!paymentType) {
         isValid = false;
-        document.getElementById('paymentType').classList.add('is-invalid');
+        document.getElementById('paymentType')?.classList.add('is-invalid');
+        console.log('Payment type validation failed');
     }
     
     if (!expenseSelect) {
         isValid = false;
-        document.getElementById('expenseSelect').classList.add('is-invalid');
+        document.getElementById('expenseSelect')?.classList.add('is-invalid');
+        console.log('Expense select validation failed');
     }
     
     if (!amount || parseFloat(amount) <= 0) {
         isValid = false;
-        document.getElementById('amount').classList.add('is-invalid');
+        document.getElementById('amount')?.classList.add('is-invalid');
+        console.log('Amount validation failed');
     }
     
     // Validate payment method specific fields
     if (paymentType === 'mpesa_number') {
-        const mpesaNumber = document.getElementById('mpesa_number').value;
+        const mpesaNumber = document.getElementById('mpesa_number')?.value;
         if (!mpesaNumber || !/^\d{9}$/.test(mpesaNumber)) {
             isValid = false;
-            document.getElementById('mpesa_number').classList.add('is-invalid');
+            document.getElementById('mpesa_number')?.classList.add('is-invalid');
+            console.log('M-Pesa number validation failed');
         }
     } else if (paymentType === 'paybill_number') {
-        const paybillNumber = document.getElementById('paybill_number').value;
-        const accountNumber = document.getElementById('account_number').value;
+        const paybillNumber = document.getElementById('paybill_number')?.value;
+        const accountNumber = document.getElementById('account_number')?.value;
         if (!paybillNumber || !/^\d{5,6}$/.test(paybillNumber)) {
             isValid = false;
-            document.getElementById('paybill_number').classList.add('is-invalid');
+            document.getElementById('paybill_number')?.classList.add('is-invalid');
+            console.log('Paybill number validation failed');
         }
         if (!accountNumber) {
             isValid = false;
-            document.getElementById('account_number').classList.add('is-invalid');
+            document.getElementById('account_number')?.classList.add('is-invalid');
+            console.log('Account number validation failed');
         }
     } else if (paymentType === 'till_number') {
-        const tillNumber = document.getElementById('till_number').value;
+        const tillNumber = document.getElementById('till_number')?.value;
         if (!tillNumber || !/^\d{5,6}$/.test(tillNumber)) {
             isValid = false;
-            document.getElementById('till_number').classList.add('is-invalid');
+            document.getElementById('till_number')?.classList.add('is-invalid');
+            console.log('Till number validation failed');
         }
     }
+    
+    console.log('Form validation result:', isValid); // Debug log
     
     if (isValid) {
         processPayment();
@@ -745,10 +814,25 @@ document.getElementById('paymentForm').addEventListener('submit', function(event
     }
 });
 
-// Process payment with loading states
+// Process payment with better error handling and debugging
 function processPayment() {
+    console.log('processPayment function called'); // Debug log
+    
     const submitBtn = document.getElementById('paymentSubmitBtn');
     const submitText = document.getElementById('submitButtonText');
+    const form = document.getElementById('paymentForm');
+    
+    // Check if required elements exist
+    if (!submitBtn || !submitText || !form) {
+        console.error('Required form elements not found:', {
+            submitBtn: !!submitBtn,
+            submitText: !!submitText,
+            form: !!form
+        });
+        showPaymentStatus('error', 'Form elements missing. Please refresh the page.');
+        return;
+    }
+    
     const originalText = submitText.textContent;
     
     // Show loading state
@@ -757,32 +841,98 @@ function processPayment() {
     
     showPaymentStatus('info', 'Initiating M-Pesa payment...', true);
     
-    // Submit the form
-    const formData = new FormData(document.getElementById('paymentForm'));
+    // Get form action URL
+    const formAction = form.action;
+    if (!formAction) {
+        console.error('Form action URL not found');
+        showPaymentStatus('error', 'Form configuration error. Please contact support.');
+        resetSubmitButton(submitBtn, submitText, originalText);
+        return;
+    }
     
-    fetch(document.getElementById('paymentForm').action, {
+    console.log('Submitting to:', formAction); // Debug log
+    
+    // Submit the form
+    const formData = new FormData(form);
+    
+    // Log form data for debugging
+    console.log('Form data:');
+    for (let [key, value] of formData.entries()) {
+        console.log(key, value);
+    }
+    
+    fetch(formAction, {
         method: 'POST',
         body: formData,
         headers: {
-            'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+            'X-CSRFToken': formData.get('csrfmiddlewaretoken') || getCsrfToken()
         }
     })
-    .then(response => response.json())
-    .catch(error => {
-        console.error('Error:', error);
-        showPaymentStatus('error', 'Payment failed. Please try again.');
+    .then(response => {
+        console.log('Response status:', response.status); // Debug log
+        console.log('Response headers:', response.headers); // Debug log
         
-        // Reset button
-        submitBtn.disabled = false;
-        submitText.textContent = originalText;
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        return response.json();
+    })
+    .then(data => {
+        console.log('Response data:', data); // Debug log
+        
+        if (data.success) {
+            showPaymentStatus('success', data.message || 'Payment initiated successfully!');
+            // Optionally close modal or redirect
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+        } else {
+            showPaymentStatus('error', data.message || 'Payment failed. Please try again.');
+        }
+        
+        resetSubmitButton(submitBtn, submitText, originalText);
+    })
+    .catch(error => {
+        console.error('Fetch error:', error);
+        showPaymentStatus('error', 'Payment failed. Please check your connection and try again.');
+        resetSubmitButton(submitBtn, submitText, originalText);
     });
 }
 
-// Show payment status
+// Helper function to reset submit button
+function resetSubmitButton(submitBtn, submitText, originalText) {
+    submitBtn.disabled = false;
+    submitText.textContent = originalText;
+}
+
+// Helper function to get CSRF token
+function getCsrfToken() {
+    const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+    if (csrfInput) {
+        return csrfInput.value;
+    }
+    
+    // Try to get from cookie as fallback
+    const csrfCookie = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrftoken='));
+    
+    return csrfCookie ? csrfCookie.split('=')[1] : '';
+}
+
+// Show payment status with better error handling
 function showPaymentStatus(type, message, showSpinner = false) {
     const alertDiv = document.getElementById('paymentStatusAlert');
     const spinner = document.getElementById('paymentSpinner');
     const textSpan = document.getElementById('paymentStatusText');
+    
+    // Check if elements exist
+    if (!alertDiv || !textSpan) {
+        console.error('Status alert elements not found');
+        alert(message); // Fallback to browser alert
+        return;
+    }
     
     // Remove existing classes
     alertDiv.className = 'alert';
@@ -803,11 +953,13 @@ function showPaymentStatus(type, message, showSpinner = false) {
             break;
     }
     
-    // Show/hide spinner
-    if (showSpinner) {
-        spinner.classList.remove('d-none');
-    } else {
-        spinner.classList.add('d-none');
+    // Show/hide spinner if it exists
+    if (spinner) {
+        if (showSpinner) {
+            spinner.classList.remove('d-none');
+        } else {
+            spinner.classList.add('d-none');
+        }
     }
     
     // Set message and show alert
@@ -823,10 +975,15 @@ function showPaymentStatus(type, message, showSpinner = false) {
 }
 
 // Initialize payment fields when modal opens
-document.getElementById('makePaymentModal').addEventListener('show.bs.modal', function() {
-    // Reset form
-    document.getElementById('paymentForm').reset();
-    document.getElementById('paymentForm').classList.remove('was-validated');
+document.getElementById('makePaymentModal')?.addEventListener('show.bs.modal', function() {
+    console.log('Modal opening'); // Debug log
+    
+    const form = document.getElementById('paymentForm');
+    if (form) {
+        // Reset form
+        form.reset();
+        form.classList.remove('was-validated');
+    }
     
     // Hide all payment sections
     document.querySelectorAll('.payment-section').forEach(section => {
@@ -834,7 +991,10 @@ document.getElementById('makePaymentModal').addEventListener('show.bs.modal', fu
     });
     
     // Hide status alert
-    document.getElementById('paymentStatusAlert').classList.add('d-none');
+    const statusAlert = document.getElementById('paymentStatusAlert');
+    if (statusAlert) {
+        statusAlert.classList.add('d-none');
+    }
     
     // Reset required fields
     document.querySelectorAll('.mpesa-field, .paybill-field, .till-field').forEach(field => {
@@ -847,17 +1007,64 @@ document.getElementById('makePaymentModal').addEventListener('show.bs.modal', fu
 function checkPendingTransactions() {
     const pendingElements = document.querySelectorAll('.status-pending');
     if (pendingElements.length > 0) {
+        console.log('Found pending transactions, will refresh in 30 seconds');
         setTimeout(() => {
             location.reload();
         }, 30000);
     }
 }
 
-// Initialize on page load
+// Initialize on page load with error handling
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, initializing payment form');
     checkPendingTransactions();
+    
+    // Wait a bit for modal to be fully loaded if needed
+    setTimeout(function() {
+        // Check if all required elements exist
+        const requiredElements = [
+            'paymentForm',
+            'paymentType',
+            'expenseSelect',
+            'amount',
+            'paymentSubmitBtn',
+            'submitButtonText'
+        ];
+        
+        const missingElements = requiredElements.filter(id => !document.getElementById(id));
+        
+        if (missingElements.length > 0) {
+            console.error('Missing required elements:', missingElements);
+        } else {
+            console.log('All required elements found');
+        }
+        
+        // Since you're using onchange="togglePaymentFields()" in HTML, 
+        // we don't need to add another event listener
+        // But let's add the expense select listener
+        const expenseSelect = document.getElementById('expenseSelect');
+        if (expenseSelect) {
+            console.log('Adding change event listener to expenseSelect');
+            expenseSelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                const amount = selectedOption.getAttribute('data-amount');
+                const amountField = document.getElementById('amount');
+                
+                console.log('Expense selected:', selectedOption.value, 'Amount:', amount);
+                
+                if (amount && amountField) {
+                    amountField.value = parseFloat(amount).toFixed(2);
+                    amountField.classList.remove('is-invalid');
+                } else if (amountField) {
+                    amountField.value = '';
+                }
+            });
+        } else {
+            console.error('expenseSelect element not found');
+        }
+    }, 100); // Small delay to ensure DOM is fully ready
 });
-</script>
+</script>>
 
 <style>
   .hidden {

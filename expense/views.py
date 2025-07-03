@@ -1,11 +1,15 @@
+import json
+import logging
+import uuid
+from django.conf import settings
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponseForbidden,HttpResponse,HttpResponseRedirect,HttpResponseNotAllowed
 from django.db import transaction
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST,require_GET
 from django.urls import reverse
-from django.views.decorators.http import require_GET
+from django.utils.decorators import method_decorator
 from .models import Expense, Event, Operation, ExpenseGroup, CategoryBase, ExpenseCategory, EventCategory, OperationCategory,ExpenseRequestType
 from .forms import ExpenseRequestForm, ExpenseApprovalForm, PaymentForm, EventExpenseForm, OperationExpenseForm
 from wallet.models import Transaction, CompanyKYC, Wallet
@@ -26,7 +30,31 @@ from django.db.models.functions import Coalesce
 from userauths.models import User
 from wallet.utility import NotificationService,  notify_expense_workflow
 from wallet.models import Notification
+from wallet.views import (
+    initiate_b2c_payment,
+    initiate_b2b_payment    
+)
+from wallet.mpesa_service import MpesaDaraja
 
+
+logger = logging.getLogger(__name__)
+
+
+def format_phone_number(phone_number):
+    """Format phone number to M-Pesa format (254XXXXXXXXX)"""
+    
+    # Remove any non-digit characters
+    phone = ''.join(filter(str.isdigit, phone_number))
+    
+    # Handle different formats
+    if phone.startswith('254'):
+        return phone
+    elif phone.startswith('0'):
+        return '254' + phone[1:]
+    elif len(phone) == 9:
+        return '254' + phone
+    else:
+        raise ValueError(f"Invalid phone number format: {phone_number}")
 def is_admin(user):
     """Check if user is admin either through Django admin or through StaffProfile"""
     if user.is_staff or user.is_superuser:
@@ -894,119 +922,252 @@ def decline_expense(request, expense_id):
         return JsonResponse({'error': f'Failed to decline expense: {str(e)}'}, status=500)
 @login_required
 def make_payment(request):
-    """Handle payments for approved expenses via selected method"""
+    """Handle payments for approved expenses via M-Pesa API"""
+    
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Invalid request method'})
+    
+    # Get user and company
     user = request.user
     company = getattr(user, 'company', None)
     if not company and hasattr(user, 'staffprofile'):
         company = getattr(user.staffprofile, 'company', None)
 
     if not company:
-        messages.error(request, "User is not associated with any company.")
-        return redirect('wallet:staff-dashboard')
+        return JsonResponse({
+            'success': False, 
+            'message': 'User is not associated with any company.'
+        })
 
-    if request.method == 'POST':
+    try:
+        # Extract and validate form data
         expense_id = request.POST.get('expense')
         payment_method = request.POST.get('payment_method')
         amount = request.POST.get('amount')
 
         # Validate essential fields
         if not all([expense_id, payment_method, amount]):
-            messages.error(request, "All required fields must be filled.")
-            return redirect('wallet:staff-dashboard')
-        
+            return JsonResponse({
+                'success': False,
+                'message': 'All required fields must be filled.'
+            })
+
+        # Get and validate expense
         expense = get_object_or_404(Expense, id=expense_id)
 
         if not expense.approved or expense.declined:
-            messages.error(request, 'Payment can only be made for approved expenses.')
-            return redirect('wallet:staff-dashboard')
+            return JsonResponse({
+                'success': False,
+                'message': 'Payment can only be made for approved expenses.'
+            })
 
-        # Convert and validate amount matches exactly
+        if expense.paid:
+            return JsonResponse({
+                'success': False,
+                'message': 'This expense has already been paid.'
+            })
+
+        # Validate amount
         try:
-            input_amount = Decimal(amount)
+            input_amount = Decimal(str(amount))
             if input_amount <= 0:
-                raise ValueError
+                raise ValueError("Amount must be positive")
         except (InvalidOperation, ValueError):
-            messages.error(request, "Invalid amount provided.")
-            return redirect('wallet:staff-dashboard')
+            return JsonResponse({
+                'success': False,
+                'message': 'Invalid amount provided.'
+            })
 
-        # Check exact match
+        # Check exact amount match
         if input_amount != expense.amount:
-            messages.error(request, f"Amount must match the approved expense amount of KES {expense.amount}.")
-            return redirect('wallet:staff-dashboard')
-
-        # Use only the validated expense.amount
-        amount = expense.amount
-
-
-        if not expense.approved or expense.declined:
-            messages.error(request, 'Payment can only be made for approved expenses.')
-            return redirect('wallet:staff-dashboard')
+            return JsonResponse({
+                'success': False,
+                'message': f'Amount must match the approved expense amount of KES {expense.amount}.'
+            })
 
         wallet = expense.wallet
 
-        # Capture extra fields depending on method
-        extra_info = {}
+        # Validate payment method and extract details
+        payment_details = {}
+        
         if payment_method == 'mpesa_number':
-            mpesa_number = request.POST.get('mpesa_number')
+            mpesa_number = request.POST.get('mpesa_number', '').strip()
             if not mpesa_number or not mpesa_number.isdigit() or len(mpesa_number) != 9:
-                messages.error(request, 'Invalid M-Pesa number.')
-                return redirect('wallet:staff-dashboard')
-            extra_info['mpesa_number'] = f'+254{mpesa_number}'
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Invalid M-Pesa number. Please enter a valid 9-digit number.'
+                })
+            
+            # Format phone number
+            formatted_phone = format_phone_number(mpesa_number)
+            payment_details = {
+                'phone_number': formatted_phone,
+                'method_type': 'B2C'
+            }
 
         elif payment_method == 'paybill_number':
-            paybill_number = request.POST.get('paybill_number')
-            account_number = request.POST.get('account_number')
-            if not (paybill_number and account_number):
-                messages.error(request, 'Paybill and account number are required.')
-                return redirect('wallet:staff-dashboard')
-            extra_info['paybill_number'] = paybill_number
-            extra_info['account_number'] = account_number
+            paybill_number = request.POST.get('paybill_number', '').strip()
+            account_number = request.POST.get('account_number', '').strip()
+            
+            if not paybill_number or not paybill_number.isdigit() or len(paybill_number) not in [5, 6]:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Invalid paybill number. Please enter a valid 5-6 digit number.'
+                })
+            
+            if not account_number:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Account number is required for paybill payments.'
+                })
+            
+            payment_details = {
+                'paybill_number': paybill_number,
+                'account_number': account_number,
+                'method_type': 'B2B'
+            }
 
         elif payment_method == 'till_number':
-            till_number = request.POST.get('till_number')
-            if not till_number or not till_number.isdigit():
-                messages.error(request, 'Invalid Till number.')
-                return redirect('wallet:staff-dashboard')
-            extra_info['till_number'] = till_number
+            till_number = request.POST.get('till_number', '').strip()
+            
+            if not till_number or not till_number.isdigit() or len(till_number) not in [5, 6]:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Invalid till number. Please enter a valid 5-6 digit number.'
+                })
+            
+            payment_details = {
+                'till_number': till_number,
+                'method_type': 'B2B'
+            }
 
         else:
-            messages.error(request, 'Invalid payment method selected.')
-            return redirect('wallet:staff-dashboard')
+            return JsonResponse({
+                'success': False,
+                'message': 'Invalid payment method selected.'
+            })
 
-        # Process the payment
-        try:
-            with transaction.atomic():
-                wallet = Wallet.objects.select_for_update().get(pk=wallet.pk)
+        # Check wallet balance
+        if wallet.balance < input_amount:
+            return JsonResponse({
+                'success': False,
+                'message': f'Insufficient funds in wallet. Available balance: KES {wallet.balance}'
+            })
 
-                if wallet.balance >= amount:
-                    wallet.balance -= amount
-                    wallet.save()
+        # Generate unique transaction reference
+        transaction_ref = f"EXP-{expense_id}-{uuid.uuid4().hex[:8].upper()}"
 
-                    Transaction.objects.create(
-                        company=company,
-                        user=user,
-                        sender=user,
-                        sender_wallet=wallet,
-                        amount=amount,
-                        description=(
-                            f"Payment for expense #{expense.id}: "
-                            f"{getattr(expense, 'title', '')} via {payment_method} ({extra_info})"
-                        ),
-                        status="completed",
-                        transaction_type="withdraw",
-                    )
+        # Initiate M-Pesa payment
+        mpesa_response = initiate_mpesa_payment(
+            payment_method=payment_method,
+            amount=int(input_amount),
+            payment_details=payment_details,
+            transaction_ref=transaction_ref,
+            expense=expense
+        )
 
-                    expense.paid = True
-                    expense.save()
+        print(f"M-Pesa payment response: {mpesa_response}")
 
-                    messages.success(request, f'Payment of KES {amount} made successfully via {payment_method}.')
-                else:
-                    messages.error(request, f'Insufficient funds in wallet. Available balance: KES {wallet.balance}')
+        if mpesa_response.get('ResponseCode') != '0':
+            return JsonResponse({
+                'success': False,
+                'message': f'M-Pesa payment initiation failed: {mpesa_response.get("ResponseDescription", "Unknown error")}'
+            })
 
-        except Exception as e:
-            messages.error(request, f'An error occurred during payment: {str(e)}')
 
-    return redirect('wallet:staff-dashboard')
+        # Create transaction record in pending status
+        with transaction.atomic():
+            # Lock wallet for update
+            wallet = Wallet.objects.select_for_update().get(pk=wallet.pk)
+            
+            # Create pending transaction
+            transaction_record = Transaction.objects.create(
+                company=company,
+                user=user,
+                sender=user,
+                sender_wallet=wallet,
+                amount=input_amount,
+                description=f"Payment for expense #{expense.id}: {getattr(expense, 'title', 'Expense')} via {payment_method}",
+                status="pending",
+                transaction_type="withdraw",
+                reference=transaction_ref,
+                mpesa_checkout_request_id=mpesa_response.get('CheckoutRequestID'),
+                merchant_request_id=mpesa_response.get('MerchantRequestID'),
+                payment_method=payment_method,
+                payment_details=json.dumps(payment_details)
+            )
+
+            # Mark expense as being processed
+            expense.payment_initiated = True
+            expense.payment_reference = transaction_ref
+            expense.save()
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Payment initiated successfully. Please complete the payment on your phone.',
+            'transaction_ref': transaction_ref,
+            'checkout_request_id': mpesa_response.get('CheckoutRequestID')
+        })
+
+    except Exception as e:
+        logger.error(f"Payment initiation error: {str(e)}", exc_info=True)
+        return JsonResponse({
+            'success': False,
+            'message': 'An unexpected error occurred. Please try again.'
+        })
+
+
+def initiate_mpesa_payment(payment_method, amount, payment_details, transaction_ref, expense):
+    """Initiate M-Pesa payment based on method type"""
+    
+    try:
+        # Get access token
+        mpesa = MpesaDaraja()
+        access_token = mpesa.get_access_token()
+        if not access_token:
+            return {'success': False, 'message': 'Failed to authenticate with M-Pesa API'}
+
+        # Common payment parameters
+        callback_url = f"{settings.BASE_URL}{reverse('wallet:b2c_result')}"
+        timeout_url = f"{settings.BASE_URL}{reverse('wallet:b2c_timeout')}"
+        
+        if payment_method == 'mpesa_number':
+            # B2C Payment
+            response = initiate_b2c_payment(
+                mpesa=mpesa,
+                amount=amount,
+                phone_number=payment_details['phone_number'],
+                wallet=expense.wallet,
+            )
+            
+        elif payment_method in ['paybill_number', 'till_number']:
+            # B2B Payment
+            if payment_method == 'paybill_number':
+                receiver_shortcode = payment_details['paybill_number']
+                account_reference = payment_details['account_number']
+            else:  # till_number
+                receiver_shortcode = payment_details['till_number']
+                account_reference = transaction_ref
+            
+            response = initiate_b2b_payment(
+                mpesa=mpesa,
+                amount=amount,
+                receiver_shortcode=receiver_shortcode,
+                account_reference=account_reference,
+                transaction_ref=transaction_ref,
+                callback_url=callback_url,
+                timeout_url=timeout_url,
+                remarks=f"Payment for expense #{expense.id}"
+            )
+        
+        else:
+            return {'success': False, 'message': 'Unsupported payment method'}
+
+        return response
+
+    except Exception as e:
+        logger.error(f"M-Pesa payment initiation error: {str(e)}", exc_info=True)
+        return {'success': False, 'message': 'Payment service temporarily unavailable'}
 
 @login_required
 def get_expense_options(request):
