@@ -1090,7 +1090,7 @@ def make_payment(request):
                 description=f"Payment for expense #{expense.id}: {getattr(expense, 'title', 'Expense')} via {payment_method}",
                 status="pending",
                 transaction_type="withdraw",
-                reference=transaction_ref,
+                transaction_code=transaction_ref,
                 mpesa_checkout_request_id=mpesa_response.get('CheckoutRequestID'),
                 merchant_request_id=mpesa_response.get('MerchantRequestID'),
                 payment_method=payment_method,

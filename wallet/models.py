@@ -162,7 +162,11 @@ class Transaction(models.Model):
     # Transaction state
     status = models.CharField(choices=TRANSACTION_STATUS, max_length=100, default="pending")
     transaction_type = models.CharField(choices=TRANSACTION_TYPE, max_length=100, default="none")
-    
+    mpesa_checkout_request_id=models.CharField(max_length=100, blank=True, null=True)
+    merchant_request_id=models.CharField(max_length=100, blank=True, null=True)
+    payment_method=models.CharField(max_length=100, default="none")
+    payment_details=models.JSONField(default=dict, blank=True, null=True)
+
     # Related models for different transaction types
     expense = models.ForeignKey(Expense, on_delete=models.SET_NULL, null=True, blank=True, related_name='transactions')
     
