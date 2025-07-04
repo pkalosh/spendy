@@ -1153,7 +1153,7 @@ def initiate_mpesa_payment(payment_method, amount, payment_details, transaction_
                 mpesa=mpesa,
                 amount=amount,
                 receiver_shortcode=receiver_shortcode,
-                # account_reference=account_reference,
+                account_reference=account_reference,
                 transaction_ref=transaction_ref,
                 callback_url=callback_url,
                 timeout_url=timeout_url,

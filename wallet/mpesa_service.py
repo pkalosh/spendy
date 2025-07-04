@@ -352,7 +352,7 @@ class MpesaDaraja:
                 "Amount": amount,
                 "PartyA": self.shortcode,
                 "PartyB": receiver_shortcode,
-                # "AccountReference": account_reference,
+                "AccountReference": account_reference,
                 "Remarks": remarks,
                 "QueueTimeOutURL": queue_timeout_url,
                 "ResultURL": result_url
