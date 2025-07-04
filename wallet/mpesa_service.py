@@ -314,8 +314,8 @@ class MpesaDaraja:
             logger.error(f"Error initiating B2C payment: {str(e)}")
             raise
     
-    def b2b_payment(self, amount, receiver_shortcode, account_reference, remarks, 
-                   command_id='BusinessPayBill'):
+    def b2b_payment(self, amount, receiver_shortcode, remarks, account_reference=None,
+                command_id='BusinessPayBill', callback_url=None, timeout_url=None):
         """
         Initiate B2B payment
         
@@ -339,6 +339,10 @@ class MpesaDaraja:
                 self.generate_security_credential()
             
             # Prepare request payload
+            queue_timeout_url = timeout_url or f"{settings.BASE_URL}/b2b/timeout/"
+            result_url = callback_url or f"{settings.BASE_URL}/b2b/result/"
+            
+            # Prepare request payload
             payload = {
                 "Initiator": self.initiator_name,
                 "SecurityCredential": self.security_credential,
@@ -348,12 +352,12 @@ class MpesaDaraja:
                 "Amount": amount,
                 "PartyA": self.shortcode,
                 "PartyB": receiver_shortcode,
-                "AccountReference": account_reference,
+                # "AccountReference": account_reference,
                 "Remarks": remarks,
-                "QueueTimeOutURL": f"{settings.BASE_URL}/b2b/timeout/",
-                "ResultURL": f"{settings.BASE_URL}/b2b/result/"
+                "QueueTimeOutURL": queue_timeout_url,
+                "ResultURL": result_url
             }
-            
+                
             headers = {
                 'Authorization': f'Bearer {self.access_token}',
                 'Content-Type': 'application/json'
@@ -376,7 +380,7 @@ class MpesaDaraja:
                     amount=amount,
                     party_a=self.shortcode,
                     party_b=receiver_shortcode,
-                    account_reference=account_reference,
+                    # account_reference=account_reference,
                     remarks=remarks,
                     status='PENDING'
                 )

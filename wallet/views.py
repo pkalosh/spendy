@@ -812,22 +812,19 @@ def initiate_b2c_payment(mpesa, phone_number, amount, wallet):
         occasion=f"Wallet funding - {wallet.id}"
     )
 
-def initiate_b2b_payment(mpesa, receiver_shortcode, amount, wallet):
+def initiate_b2b_payment(mpesa, amount, receiver_shortcode, transaction_ref, 
+                        callback_url, timeout_url, remarks, account_reference=None):
     """
     Initiate B2B payment
     Business to business payment
     """
-    account_reference = f"{wallet.company.company_name}-{wallet.wallet_number}"
-    remarks = f"B2B wallet funding for {wallet.company.company_name}"
-    
     return mpesa.b2b_payment(
         amount=float(amount),
         receiver_shortcode=receiver_shortcode,
         account_reference=account_reference,
         remarks=remarks,
-        command_id='BusinessPayBill'  # or 'BusinessBuyGoods'
+        command_id='BusinessPayBill'  # or 'BusinessBuyGoods' for till numbers
     )
-
 
 @login_required
 def wallet(request):
