@@ -1157,7 +1157,7 @@ def initiate_mpesa_payment(payment_method, amount, payment_details, transaction_
                 transaction_ref=transaction_ref,
                 callback_url=callback_url,
                 timeout_url=timeout_url,
-                remarks=f"Payment for expense #{expense.id} {account_reference}"
+                remarks=f"Payment for expense {expense.id} {account_reference}"
             )
         
         else:
