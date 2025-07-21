@@ -166,7 +166,13 @@ class Transaction(models.Model):
     merchant_request_id=models.CharField(max_length=100, blank=True, null=True)
     payment_method=models.CharField(max_length=100, default="none")
     payment_details=models.JSONField(default=dict, blank=True, null=True)
-
+    transfer_fee = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, blank=True, null=True)
+    parent_transaction = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='child_transactions', help_text="For nested transactions like refunds or splits")
+    failure_reason = models.TextField(blank=True, null=True, help_text="Reason for transaction failure, if applicable")
+    completed_at = models.DateTimeField(blank=True, null=True, help_text="Timestamp when transaction was completed")
+    payment_wallet = models.ForeignKey('Wallet', on_delete=models.SET_NULL, null=True, blank=True, related_name="payment_transactions", help_text="Wallet used for payment in this transaction")
+    payment_completed = models.BooleanField(default=False, help_text="Whether the payment for this transaction has been completed")
+    paid_at = models.DateTimeField(blank=True, null=True, help_text="Timestamp when payment was made")
     # Related models for different transaction types
     expense = models.ForeignKey(Expense, on_delete=models.SET_NULL, null=True, blank=True, related_name='transactions')
     

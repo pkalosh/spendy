@@ -40,6 +40,33 @@ from wallet.mpesa_service import MpesaDaraja
 logger = logging.getLogger(__name__)
 
 
+
+def calculate_transfer_fee(payment_method, amount):
+    """Calculate transfer fees based on payment method and amount"""
+    amount = Decimal(str(amount))
+    
+    if payment_method == 'till_number':
+        # KES 20 flat or 1.5% (whichever is higher)
+        flat_fee = Decimal('20.00')
+        percentage_fee = amount * Decimal('0.015')
+        return max(flat_fee, percentage_fee)
+    
+    elif payment_method == 'paybill_number':
+        # KES 30 flat or 2% (whichever is higher)
+        flat_fee = Decimal('30.00')
+        percentage_fee = amount * Decimal('0.02')
+        return max(flat_fee, percentage_fee)
+    
+    elif payment_method == 'mpesa_number':
+        # Tiered fee structure for M-Pesa numbers
+        if amount <= 1000:
+            return Decimal('15.00')
+        elif amount <= 10000:
+            return Decimal('30.00')
+        else:
+            return Decimal('50.00')
+    
+    return Decimal('0.00')
 def format_phone_number(phone_number):
     """Format phone number to M-Pesa format (254XXXXXXXXX)"""
     
@@ -922,7 +949,7 @@ def decline_expense(request, expense_id):
         return JsonResponse({'error': f'Failed to decline expense: {str(e)}'}, status=500)
 @login_required
 def make_payment(request):
-    """Handle payments for approved expenses via M-Pesa API"""
+    """Handle payments for approved expenses via M-Pesa API with fee calculation"""
     
     if request.method != 'POST':
         return JsonResponse({'success': False, 'message': 'Invalid request method'})
@@ -985,7 +1012,46 @@ def make_payment(request):
                 'message': f'Amount must match the approved expense amount of KES {expense.amount}.'
             })
 
-        wallet = expense.wallet
+        # Validate expense type and get associated wallet
+        if not hasattr(expense, 'request_type') or not expense.request_type:
+            return JsonResponse({
+                'success': False,
+                'message': 'Expense must have a valid expense type.'
+            })
+
+        expense_type_wallet = expense.wallet  # Assuming this is the expense type wallet
+        
+        # Calculate transfer fee
+        transfer_fee = calculate_transfer_fee(payment_method, input_amount)
+        total_amount = input_amount + transfer_fee
+
+        # Check expense type wallet balance first
+        if expense_type_wallet.balance >= total_amount:
+            selected_wallet = expense_type_wallet
+            wallet_type = expense_type_wallet.wallet_type  # Assuming this field exists
+        else:
+            # Check primary wallet balance as fallback
+            try:
+                primary_wallet = Wallet.objects.get(
+                    company=company,
+                    wallet_type='primary'  # Adjust this field name as per your model
+                )
+                if primary_wallet.balance >= total_amount:
+                    selected_wallet = primary_wallet
+                    wallet_type = 'primary'
+                else:
+                    return JsonResponse({
+                        'success': False,
+                        'message': f'Insufficient funds. Total required: KES {total_amount} (Amount: KES {input_amount} + Fee: KES {transfer_fee}). '
+                                 f'Expense wallet balance: KES {expense_type_wallet.balance}, '
+                                 f'Primary wallet balance: KES {primary_wallet.balance}'
+                    })
+            except Wallet.DoesNotExist:
+                return JsonResponse({
+                    'success': False,
+                    'message': f'Insufficient funds in expense wallet (KES {expense_type_wallet.balance}) '
+                             f'and no primary wallet available. Total required: KES {total_amount}'
+                })
 
         # Validate payment method and extract details
         payment_details = {}
@@ -1047,15 +1113,8 @@ def make_payment(request):
                 'message': 'Invalid payment method selected.'
             })
 
-        # Check wallet balance
-        if wallet.balance < input_amount:
-            return JsonResponse({
-                'success': False,
-                'message': f'Insufficient funds in wallet. Available balance: KES {wallet.balance}'
-            })
-
         # Generate unique transaction reference
-        transaction_ref = f"EXP-{expense_id}-{uuid.uuid4().hex[:8].upper()}"
+        transaction_ref = f"EXP-{expense_id}-{uuid.uuid4().hex[:4].upper()}"
 
         # Initiate M-Pesa payment
         mpesa_response = initiate_mpesa_payment(
@@ -1074,18 +1133,17 @@ def make_payment(request):
                 'message': f'M-Pesa payment initiation failed: {mpesa_response.get("ResponseDescription", "Unknown error")}'
             })
 
-
         # Create transaction record in pending status
         with transaction.atomic():
             # Lock wallet for update
-            wallet = Wallet.objects.select_for_update().get(pk=wallet.pk)
+            selected_wallet = Wallet.objects.select_for_update().get(pk=selected_wallet.pk)
             
-            # Create pending transaction
+            # Create pending transaction for the expense amount
             transaction_record = Transaction.objects.create(
                 company=company,
                 user=user,
                 sender=user,
-                sender_wallet=wallet,
+                sender_wallet=selected_wallet,
                 amount=input_amount,
                 description=f"Payment for expense #{expense.id}: {getattr(expense, 'title', 'Expense')} via {payment_method}",
                 status="pending",
@@ -1094,19 +1152,43 @@ def make_payment(request):
                 mpesa_checkout_request_id=mpesa_response.get('CheckoutRequestID'),
                 merchant_request_id=mpesa_response.get('MerchantRequestID'),
                 payment_method=payment_method,
-                payment_details=json.dumps(payment_details)
+                payment_details=json.dumps(payment_details),
+                transfer_fee=transfer_fee
             )
+
+            # Create fee transaction if fee > 0
+            if transfer_fee > 0:
+                Transaction.objects.create(
+                    company=company,
+                    user=user,
+                    sender=user,
+                    sender_wallet=selected_wallet,
+                    amount=transfer_fee,
+                    description=f"Transfer fee for expense #{expense.id} payment via {payment_method}",
+                    status="pending",
+                    transaction_type="fee",
+                    transaction_code=f"FEE-{transaction_ref}",
+                    parent_transaction=transaction_record,
+                    payment_method=payment_method
+                )
 
             # Mark expense as being processed
             expense.payment_initiated = True
             expense.payment_reference = transaction_ref
+            expense.payment_wallet = selected_wallet
             expense.save()
 
         return JsonResponse({
             'success': True,
-            'message': 'Payment initiated successfully. Please complete the payment on your phone.',
+            'message': f'Payment initiated successfully. Total amount: KES {total_amount} '
+                      f'(Payment: KES {input_amount} + Fee: KES {transfer_fee}). '
+                      f'Please complete the payment on your phone.',
             'transaction_ref': transaction_ref,
-            'checkout_request_id': mpesa_response.get('CheckoutRequestID')
+            'checkout_request_id': mpesa_response.get('CheckoutRequestID'),
+            'amount': str(input_amount),
+            'fee': str(transfer_fee),
+            'total_amount': str(total_amount),
+            'wallet_used': wallet_type
         })
 
     except Exception as e:
@@ -1115,8 +1197,6 @@ def make_payment(request):
             'success': False,
             'message': 'An unexpected error occurred. Please try again.'
         })
-
-
 def initiate_mpesa_payment(payment_method, amount, payment_details, transaction_ref, expense):
     """Initiate M-Pesa payment based on method type"""
     
@@ -1155,8 +1235,8 @@ def initiate_mpesa_payment(payment_method, amount, payment_details, transaction_
                 receiver_shortcode=receiver_shortcode,
                 account_reference=account_reference,
                 transaction_ref=transaction_ref,
-                callback_url=callback_url,
-                timeout_url=timeout_url,
+                callback_url=f"{settings.BASE_URL}{reverse('wallet:b2b_result')}",
+                timeout_url=f"{settings.BASE_URL}{reverse('wallet:b2b_timeout')}",
                 remarks=f"Payment for expense {expense.id} {expense.wallet.wallet_number}"
             )
         

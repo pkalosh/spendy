@@ -1696,8 +1696,8 @@ def get_pending_approved_expense_sum(user):
 @require_http_methods(["POST"])
 def stk_push_callback(request):
     """
-    STK Push callback handler
-    Handles responses from M-Pesa STK Push requests
+    Enhanced STK Push callback handler
+    Handles responses from M-Pesa STK Push requests and updates both MpesaTransaction and Transport models
     """
     try:
         callback_data = json.loads(request.body)
@@ -1708,65 +1708,250 @@ def stk_push_callback(request):
         checkout_request_id = stk_callback.get('CheckoutRequestID')
         result_code = stk_callback.get('ResultCode')
         result_desc = stk_callback.get('ResultDesc')
-        
-        # Find the transaction in database
+
+        # Find the MpesaTransaction in database
         try:
-            transaction = MpesaTransaction.objects.get(
+            mpesa_transaction = MpesaTransaction.objects.get(
                 checkout_request_id=checkout_request_id,
                 merchant_request_id=merchant_request_id
             )
         except MpesaTransaction.DoesNotExist:
-            logger.error(f"Transaction not found for CheckoutRequestID: {checkout_request_id}")
+            logger.error(f"MpesaTransaction not found for CheckoutRequestID: {checkout_request_id}")
             return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Transaction not found'})
+
+        # Find related Transport record using the correct field names
+        transport_record = None
+        try:
+            # First try to find by mpesa checkout request ID
+            transport_record = Transport.objects.get(
+                mpesa_checkout_request_id=checkout_request_id,
+                merchant_request_id=merchant_request_id
+            )
+        except Transport.DoesNotExist:
+            # Try to find by transaction_code if it matches any identifier
+            try:
+                # You might need to adjust this based on how you store the relationship
+                # between Transport and the payment request
+                transport_record = Transport.objects.filter(
+                    mpesa_checkout_request_id=checkout_request_id
+                ).first()
+            except Exception:
+                logger.info(f"No Transport record found for CheckoutRequestID: {checkout_request_id}")
+
+        with transaction.atomic():
+            # Update MpesaTransaction based on result code
+            if result_code == 0:  # Success
+                # Extract callback metadata
+                callback_metadata = stk_callback.get('CallbackMetadata', {}).get('Item', [])
+                metadata_dict = {}
+                for item in callback_metadata:
+                    name = item.get('Name')
+                    value = item.get('Value')
+                    if name and value is not None:
+                        metadata_dict[name] = value
+
+                # Update MpesaTransaction with success details
+                mpesa_transaction.status = 'COMPLETED'
+                mpesa_transaction.mpesa_receipt_number = metadata_dict.get('MpesaReceiptNumber')
+                mpesa_transaction.transaction_date = timezone.now()
+                mpesa_transaction.phone_number = metadata_dict.get('PhoneNumber')
+                mpesa_transaction.amount = metadata_dict.get('Amount', mpesa_transaction.amount)
+                mpesa_transaction.result_code = result_code
+                mpesa_transaction.result_desc = result_desc
+                mpesa_transaction.callback_data = callback_data
+                mpesa_transaction.save()
+
+                logger.info(f"STK Push completed successfully: {mpesa_transaction.mpesa_receipt_number}")
+                print(f"STK Push completed successfully: {mpesa_transaction.mpesa_receipt_number}")
+
+                # Update Transport record if found
+                if transport_record:
+                    transport_record.status = "completed"
+                    transport_record.completed_at = timezone.now()
+                    transport_record.payment_completed = True
+                    transport_record.paid_at = timezone.now()
+                    
+                    # Update payment details JSON field
+                    payment_details = transport_record.payment_details or {}
+                    payment_details.update({
+                        'mpesa_receipt_number': metadata_dict.get('MpesaReceiptNumber'),
+                        'phone_number': metadata_dict.get('PhoneNumber'),
+                        'amount_paid': str(metadata_dict.get('Amount', transport_record.amount)),
+                        'payment_date': timezone.now().isoformat(),
+                        'transaction_cost': str(metadata_dict.get('TransactionCost', 0)),
+                        'payment_status': 'COMPLETED'
+                    })
+                    transport_record.payment_details = payment_details
+                    
+                    # Check amount mismatch
+                    callback_amount = metadata_dict.get('Amount')
+                    if callback_amount and Decimal(str(callback_amount)) != transport_record.amount:
+                        logger.warning(f"Amount mismatch - Expected: {transport_record.amount}, Received: {callback_amount}")
+                        # You might want to store the actual amount paid in payment_details
+                        payment_details['actual_amount_paid'] = str(callback_amount)
+                        payment_details['expected_amount'] = str(transport_record.amount)
+                        transport_record.payment_details = payment_details
+                    
+                    transport_record.save()
+                    logger.info(f"Transport record {transport_record.transaction_id} updated with payment completion")
+
+                    # Process wallet operations if applicable
+                    if transport_record.sender_wallet:
+                        wallet = transport_record.sender_wallet
+                        
+                        if transport_record.transaction_type == "deposit":
+                            # Credit wallet for deposits
+                            wallet.balance += transport_record.amount
+                            wallet.save()
+                            logger.info(f"Wallet {wallet.id} credited with {transport_record.amount}")
+                            
+                        elif transport_record.transaction_type in ["withdraw", "payment"]:
+                            # For withdrawals/payments, debit might already be handled during initiation
+                            # Add any additional logic here if needed
+                            pass
+
+                    # Handle receiver wallet operations
+                    if transport_record.receiver_wallet and transport_record.transaction_type == "transfer":
+                        receiver_wallet = transport_record.receiver_wallet
+                        receiver_wallet.balance += transport_record.amount
+                        receiver_wallet.save()
+                        logger.info(f"Receiver wallet {receiver_wallet.id} credited with {transport_record.amount}")
+
+            else:  # Payment Failed
+                mpesa_transaction.status = 'FAILED'
+                mpesa_transaction.result_code = result_code
+                mpesa_transaction.result_desc = result_desc
+                mpesa_transaction.callback_data = callback_data
+                mpesa_transaction.transaction_date = timezone.now()
+                mpesa_transaction.save()
+                
+                logger.warning(f"STK Push failed: {result_desc}")
+
+                # Update Transport record if found
+                if transport_record:
+                    transport_record.status = "failed"
+                    transport_record.failure_reason = result_desc
+                    transport_record.completed_at = timezone.now()
+                    transport_record.payment_completed = False
+                    
+                    # Update payment details with failure info
+                    payment_details = transport_record.payment_details or {}
+                    payment_details.update({
+                        'failure_reason': result_desc,
+                        'failure_code': result_code,
+                        'failure_date': timezone.now().isoformat(),
+                        'payment_status': 'FAILED'
+                    })
+                    transport_record.payment_details = payment_details
+                    transport_record.save()
+                    
+                    logger.warning(f"Transport record {transport_record.transaction_id} updated with payment failure")
+
+        # Log summary for monitoring
+        status_summary = {
+            'checkout_request_id': checkout_request_id,
+            'result_code': result_code,
+            'status': 'SUCCESS' if result_code == 0 else 'FAILED',
+            'mpesa_transaction_updated': True,
+            'transport_record_updated': transport_record is not None
+        }
         
-        # Update transaction based on result code
-        if result_code == 0:  # Success
-            # Extract callback metadata
-            callback_metadata = stk_callback.get('CallbackMetadata', {}).get('Item', [])
-            metadata_dict = {}
-            
-            for item in callback_metadata:
-                name = item.get('Name')
-                value = item.get('Value')
-                if name and value is not None:
-                    metadata_dict[name] = value
-            
-            # Update transaction with success details
-            transaction.status = 'COMPLETED'
-            transaction.mpesa_receipt_number = metadata_dict.get('MpesaReceiptNumber')
-            transaction.transaction_date = timezone.now()
-            transaction.phone_number = metadata_dict.get('PhoneNumber')
-            transaction.amount = metadata_dict.get('Amount', transaction.amount)
-            transaction.result_code = result_code
-            transaction.result_desc = result_desc
-            transaction.callback_data = callback_data
-            
-            logger.info(f"STK Push completed successfully: {transaction.mpesa_receipt_number}")
-            print(f"STK Push completed successfully: {transaction.mpesa_receipt_number}")
-            
-        else:  # Failed
-            transaction.status = 'FAILED'
-            transaction.result_code = result_code
-            transaction.result_desc = result_desc
-            transaction.callback_data = callback_data
-            
-            logger.warning(f"STK Push failed: {result_desc}")
+        if result_code == 0:
+            status_summary['mpesa_receipt'] = mpesa_transaction.mpesa_receipt_number
+            status_summary['amount'] = str(mpesa_transaction.amount)
+            if transport_record:
+                status_summary['transport_id'] = transport_record.transaction_id
         
-        transaction.save()
-        
+        logger.info(f"STK Push callback processing summary: {status_summary}")
+
         # Return success response to M-Pesa
         return JsonResponse({
             'ResultCode': 0,
             'ResultDesc': 'Callback processed successfully'
         })
-        
+
     except json.JSONDecodeError:
         logger.error("Invalid JSON in STK Push callback")
         return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Invalid JSON'})
     except Exception as e:
-        logger.error(f"Error processing STK Push callback: {str(e)}")
+        logger.error(f"Error processing STK Push callback: {str(e)}", exc_info=True)
         return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Internal server error'})
 
+
+@csrf_exempt 
+@require_http_methods(["POST"])
+def stk_push_timeout_callback(request):
+    """
+    STK Push timeout callback handler
+    Handles timeout responses from M-Pesa STK Push requests
+    """
+    try:
+        callback_data = json.loads(request.body)
+        logger.info(f"STK Push timeout callback received: {callback_data}")
+        
+        # Extract timeout data
+        stk_callback = callback_data.get('Body', {}).get('stkCallback', {})
+        merchant_request_id = stk_callback.get('MerchantRequestID')
+        checkout_request_id = stk_callback.get('CheckoutRequestID')
+        result_desc = stk_callback.get('ResultDesc', 'Payment request timed out')
+
+        # Find and update MpesaTransaction
+        try:
+            mpesa_transaction = MpesaTransaction.objects.get(
+                checkout_request_id=checkout_request_id,
+                merchant_request_id=merchant_request_id
+            )
+            
+            with transaction.atomic():
+                mpesa_transaction.status = 'TIMEOUT'
+                mpesa_transaction.result_code = 1
+                mpesa_transaction.result_desc = result_desc
+                mpesa_transaction.callback_data = callback_data
+                mpesa_transaction.transaction_date = timezone.now()
+                mpesa_transaction.save()
+
+                # Update related Transaction record
+                try:
+                    transport_record = Transaction.objects.get(
+                        mpesa_checkout_request_id=checkout_request_id,
+                        merchant_request_id=merchant_request_id
+                    )
+                    transport_record.status = "timeout"
+                    transport_record.failure_reason = result_desc
+                    transport_record.completed_at = timezone.now()
+                    transport_record.payment_completed = False
+                    
+                    # Update payment details with timeout info
+                    payment_details = transport_record.payment_details or {}
+                    payment_details.update({
+                        'timeout_reason': result_desc,
+                        'timeout_date': timezone.now().isoformat(),
+                        'payment_status': 'TIMEOUT'
+                    })
+                    transport_record.payment_details = payment_details
+                    transport_record.save()
+                    
+                    logger.warning(f"Transaction record {transport_record.transaction_id} updated with timeout")
+                    
+                except Transaction.DoesNotExist:
+                    logger.info(f"No Transaction record found for timeout: {checkout_request_id}")
+
+            logger.warning(f"STK Push timeout processed: {checkout_request_id}")
+            
+        except MpesaTransaction.DoesNotExist:
+            logger.error(f"MpesaTransaction not found for timeout: {checkout_request_id}")
+
+        return JsonResponse({
+            'ResultCode': 0,
+            'ResultDesc': 'Timeout callback processed successfully'
+        })
+
+    except json.JSONDecodeError:
+        logger.error("Invalid JSON in STK Push timeout callback")
+        return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Invalid JSON'})
+    except Exception as e:
+        logger.error(f"Error processing STK Push timeout: {str(e)}", exc_info=True)
+        return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Internal server error'})
 
 @csrf_exempt
 @require_http_methods(["POST"])
@@ -1974,82 +2159,170 @@ def c2b_confirmation(request):
 @require_http_methods(["POST"])
 def b2c_result_callback(request):
     """
-    B2C Result callback handler
-    Handles responses from B2C payment requests
+    Enhanced B2C Result callback handler
+    Similar to B2B but handles B2C payment responses
     """
     try:
         result_data = json.loads(request.body)
         logger.info(f"B2C Result callback received: {result_data}")
         
         result = result_data.get('Result', {})
-        result_type = result.get('ResultType')
         result_code = result.get('ResultCode')
         result_desc = result.get('ResultDesc')
         originator_conversation_id = result.get('OriginatorConversationID')
         conversation_id = result.get('ConversationID')
         transaction_id = result.get('TransactionID')
-        
-        # Find the transaction
+
+        # Find the MpesaTransaction
         try:
-            transaction = MpesaTransaction.objects.get(
+            mpesa_transaction = MpesaTransaction.objects.get(
                 originator_conversation_id=originator_conversation_id,
                 conversation_id=conversation_id
             )
         except MpesaTransaction.DoesNotExist:
-            logger.error(f"B2C Transaction not found: {originator_conversation_id}")
-            return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Transaction not found'})
-        
-        # Update transaction status
-        if result_code == 0:  # Success
-            transaction.status = 'COMPLETED'
-            transaction.transaction_id = transaction_id
-            
-            # Extract result parameters if available
-            result_parameters = result.get('ResultParameters', {}).get('ResultParameter', [])
-            for param in result_parameters:
-                key = param.get('Key')
-                value = param.get('Value')
-                if key == 'TransactionReceipt':
-                    transaction.mpesa_receipt_number = value
-                elif key == 'TransactionAmount':
-                    transaction.amount = float(value)
-                elif key == 'B2CWorkingAccountAvailableFunds':
-                    # You might want to store this separately
-                    pass
-                elif key == 'B2CUtilityAccountAvailableFunds':
-                    # You might want to store this separately
-                    pass
-                elif key == 'TransactionCompletedDateTime':
-                    # Parse and store completion time if needed
-                    pass
-                elif key == 'B2CRecipientIsRegisteredCustomer':
-                    # Store recipient registration status if needed
-                    pass
-                elif key == 'B2CChargesPaidAccountAvailableFunds':
-                    # Store charges info if needed
-                    pass
-            
-            logger.info(f"B2C payment completed: {transaction_id}")
-        else:
-            transaction.status = 'FAILED'
-            logger.warning(f"B2C payment failed: {result_desc}")
-        
-        transaction.result_code = result_code
-        transaction.result_desc = result_desc
-        transaction.callback_data = result_data
-        transaction.transaction_date = timezone.now()
-        transaction.save()
-        
+            logger.error(f"B2C MpesaTransaction not found: {originator_conversation_id}")
+            return JsonResponse({'ResultCode': 1, 'ResultDesc': 'MpesaTransaction not found'})
+
+        # Find the related Transaction record
+        try:
+            transaction_record = Transaction.objects.get(
+                mpesa_checkout_request_id=mpesa_transaction.checkout_request_id
+            )
+        except Transaction.DoesNotExist:
+            logger.error(f"Transaction not found for checkout request: {mpesa_transaction.checkout_request_id}")
+            transaction_record = None
+
+        with transaction.atomic():
+            # Update MpesaTransaction status
+            if result_code == 0:  # Success
+                mpesa_transaction.status = 'COMPLETED'
+                mpesa_transaction.transaction_id = transaction_id
+                
+                # Extract result parameters for B2C
+                result_parameters = result.get('ResultParameters', {}).get('ResultParameter', [])
+                amount_paid = None
+                
+                for param in result_parameters:
+                    key = param.get('Key')
+                    value = param.get('Value')
+                    
+                    if key == 'TransactionAmount':
+                        amount_paid = Decimal(str(float(value)))
+                        mpesa_transaction.amount = amount_paid
+                    elif key == 'TransactionReceipt':
+                        # Store transaction receipt
+                        pass
+                    elif key == 'B2CRecipientIsRegisteredCustomer':
+                        # Store recipient registration status
+                        pass
+                    elif key == 'B2CChargesPaidAccountAvailableFunds':
+                        # Store available funds after charges
+                        pass
+                    elif key == 'ReceiverPartyPublicName':
+                        # Store receiver name
+                        pass
+                    elif key == 'TransactionCompletedDateTime':
+                        # Store completion time
+                        pass
+                    elif key == 'B2CUtilityAccountAvailableFunds':
+                        # Store utility account funds
+                        pass
+                    elif key == 'B2CWorkingAccountAvailableFunds':
+                        # Store working account funds
+                        pass
+
+                logger.info(f"B2C payment completed: {transaction_id}")
+                
+                # Update Transaction record if found (similar to B2B logic)
+                if transaction_record:
+                    transaction_record.status = "completed"
+                    transaction_record.mpesa_transaction_id = transaction_id
+                    transaction_record.completed_at = timezone.now()
+                    transaction_record.save()
+
+                    # Update fee transaction if exists
+                    try:
+                        fee_transaction = Transaction.objects.get(
+                            parent_transaction=transaction_record,
+                            transaction_type="fee"
+                        )
+                        fee_transaction.status = "completed"
+                        fee_transaction.completed_at = timezone.now()
+                        fee_transaction.save()
+                    except Transaction.DoesNotExist:
+                        pass
+
+                    # Deduct amount and fee from wallet
+                    wallet = transaction_record.sender_wallet
+                    total_deduction = transaction_record.amount + (transaction_record.transfer_fee or 0)
+                    
+                    wallet = Wallet.objects.select_for_update().get(pk=wallet.pk)
+                    
+                    if wallet.balance >= total_deduction:
+                        wallet.balance -= total_deduction
+                        wallet.save()
+                        
+                        # Mark expense as paid
+                        try:
+                            expense_id = transaction_record.transaction_code.split('-')[1]
+                            expense = Expense.objects.get(id=expense_id)
+                            expense.paid = True
+                            expense.paid_at = timezone.now()
+                            expense.payment_completed = True
+                            expense.save()
+                        except (Expense.DoesNotExist, IndexError, ValueError):
+                            logger.error(f"Could not find or update expense for transaction: {transaction_record.transaction_code}")
+
+            else:
+                # Payment failed (similar to B2B logic)
+                mpesa_transaction.status = 'FAILED'
+                logger.warning(f"B2C payment failed: {result_desc}")
+                
+                if transaction_record:
+                    transaction_record.status = "failed"
+                    transaction_record.failure_reason = result_desc
+                    transaction_record.completed_at = timezone.now()
+                    transaction_record.save()
+
+                    # Update fee transaction and reset expense (similar to B2B)
+                    try:
+                        fee_transaction = Transaction.objects.get(
+                            parent_transaction=transaction_record,
+                            transaction_type="fee"
+                        )
+                        fee_transaction.status = "failed"
+                        fee_transaction.failure_reason = result_desc
+                        fee_transaction.completed_at = timezone.now()
+                        fee_transaction.save()
+                    except Transaction.DoesNotExist:
+                        pass
+
+                    try:
+                        expense_id = transaction_record.transaction_code.split('-')[1]
+                        expense = Expense.objects.get(id=expense_id)
+                        expense.payment_initiated = False
+                        expense.payment_reference = None
+                        expense.save()
+                    except (Expense.DoesNotExist, IndexError, ValueError):
+                        logger.error(f"Could not find or reset expense for failed transaction: {transaction_record.transaction_code}")
+
+            # Update common fields for MpesaTransaction
+            mpesa_transaction.result_code = result_code
+            mpesa_transaction.result_desc = result_desc
+            mpesa_transaction.callback_data = result_data
+            mpesa_transaction.transaction_date = timezone.now()
+            mpesa_transaction.save()
+
         return JsonResponse({
             'ResultCode': 0,
             'ResultDesc': 'B2C result processed successfully'
         })
-        
+
     except json.JSONDecodeError:
         logger.error("Invalid JSON in B2C result callback")
         return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Invalid JSON'})
     except Exception as e:
-        logger.error(f"Error processing B2C result: {str(e)}")
+        logger.error(f"Error processing B2C result: {str(e)}", exc_info=True)
         return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Internal server error'})
 
 
@@ -2098,8 +2371,8 @@ def b2c_timeout_callback(request):
 @require_http_methods(["POST"])
 def b2b_result_callback(request):
     """
-    B2B Result callback handler
-    Handles responses from B2B payment requests
+    Enhanced B2B Result callback handler
+    Handles responses from B2B payment requests and updates both MpesaTransaction and Transaction models
     """
     try:
         result_data = json.loads(request.body)
@@ -2111,71 +2384,161 @@ def b2b_result_callback(request):
         originator_conversation_id = result.get('OriginatorConversationID')
         conversation_id = result.get('ConversationID')
         transaction_id = result.get('TransactionID')
-        
-        # Find the transaction
+
+        # Find the MpesaTransaction
         try:
-            transaction = MpesaTransaction.objects.get(
+            mpesa_transaction = MpesaTransaction.objects.get(
                 originator_conversation_id=originator_conversation_id,
                 conversation_id=conversation_id
             )
         except MpesaTransaction.DoesNotExist:
-            logger.error(f"B2B Transaction not found: {originator_conversation_id}")
-            return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Transaction not found'})
-        
-        # Update transaction status
-        if result_code == 0:  # Success
-            transaction.status = 'COMPLETED'
-            transaction.transaction_id = transaction_id
-            
-            # Extract result parameters
-            result_parameters = result.get('ResultParameters', {}).get('ResultParameter', [])
-            for param in result_parameters:
-                key = param.get('Key')
-                value = param.get('Value')
-                if key == 'InitiatorAccountCurrentBalance':
-                    # Store initiator balance if needed
-                    pass
-                elif key == 'DebitAccountCurrentBalance':
-                    # Store debit account balance if needed
-                    pass
-                elif key == 'Amount':
-                    transaction.amount = float(value)
-                elif key == 'DebitPartyAffectedAccountBalance':
-                    # Store affected balance if needed
-                    pass
-                elif key == 'TransCompletedTime':
-                    # Store completion time if needed
-                    pass
-                elif key == 'DebitPartyCharges':
-                    # Store charges if needed
-                    pass
-                elif key == 'ReceiverPartyPublicName':
-                    # Store receiver name if needed
-                    pass
-            
-            logger.info(f"B2B payment completed: {transaction_id}")
-        else:
-            transaction.status = 'FAILED'
-            logger.warning(f"B2B payment failed: {result_desc}")
-        
-        transaction.result_code = result_code
-        transaction.result_desc = result_desc
-        transaction.callback_data = result_data
-        transaction.transaction_date = timezone.now()
-        transaction.save()
-        
+            logger.error(f"B2B MpesaTransaction not found: {originator_conversation_id}")
+            return JsonResponse({'ResultCode': 1, 'ResultDesc': 'MpesaTransaction not found'})
+
+        # Find the related Transaction record
+        try:
+            transaction_record = Transaction.objects.get(
+                mpesa_checkout_request_id=mpesa_transaction.checkout_request_id
+            )
+        except Transaction.DoesNotExist:
+            logger.error(f"Transaction not found for checkout request: {mpesa_transaction.checkout_request_id}")
+            # Continue processing MpesaTransaction even if Transaction not found
+            transaction_record = None
+
+        with transaction.atomic():
+            # Update MpesaTransaction status
+            if result_code == 0:  # Success
+                mpesa_transaction.status = 'COMPLETED'
+                mpesa_transaction.transaction_id = transaction_id
+                
+                # Extract result parameters
+                result_parameters = result.get('ResultParameters', {}).get('ResultParameter', [])
+                amount_paid = None
+                
+                for param in result_parameters:
+                    key = param.get('Key')
+                    value = param.get('Value')
+                    
+                    if key == 'Amount':
+                        amount_paid = Decimal(str(float(value)))
+                        mpesa_transaction.amount = amount_paid
+                    elif key == 'InitiatorAccountCurrentBalance':
+                        # Store initiator balance if needed
+                        pass
+                    elif key == 'DebitAccountCurrentBalance':
+                        # Store debit account balance if needed
+                        pass
+                    elif key == 'DebitPartyAffectedAccountBalance':
+                        # Store affected balance if needed
+                        pass
+                    elif key == 'TransCompletedTime':
+                        # Store completion time if needed
+                        pass
+                    elif key == 'DebitPartyCharges':
+                        # Store charges if needed
+                        pass
+                    elif key == 'ReceiverPartyPublicName':
+                        # Store receiver name if needed
+                        pass
+
+                logger.info(f"B2B payment completed: {transaction_id}")
+                
+                # Update Transaction record if found
+                if transaction_record:
+                    transaction_record.status = "completed"
+                    transaction_record.mpesa_transaction_id = transaction_id
+                    transaction_record.completed_at = timezone.now()
+                    transaction_record.save()
+
+                    # Update fee transaction if exists
+                    try:
+                        fee_transaction = Transaction.objects.get(
+                            parent_transaction=transaction_record,
+                            transaction_type="fee"
+                        )
+                        fee_transaction.status = "completed"
+                        fee_transaction.completed_at = timezone.now()
+                        fee_transaction.save()
+                    except Transaction.DoesNotExist:
+                        pass
+
+                    # Deduct amount and fee from wallet
+                    wallet = transaction_record.sender_wallet
+                    total_deduction = transaction_record.amount + (transaction_record.transfer_fee or 0)
+                    
+                    # Lock wallet for update
+                    wallet = Wallet.objects.select_for_update().get(pk=wallet.pk)
+                    
+                    if wallet.balance >= total_deduction:
+                        wallet.balance -= total_deduction
+                        wallet.save()
+                        
+                        # Mark expense as paid
+                        try:
+                            # Extract expense ID from transaction code
+                            expense_id = transaction_record.transaction_code.split('-')[1]
+                            expense = Expense.objects.get(id=expense_id)
+                            expense.paid = True
+                            expense.paid_at = timezone.now()
+                            expense.payment_completed = True
+                            expense.save()
+                        except (Expense.DoesNotExist, IndexError, ValueError):
+                            logger.error(f"Could not find or update expense for transaction: {transaction_record.transaction_code}")
+                    else:
+                        logger.error(f"Insufficient wallet balance for completed transaction: {transaction_record.id}")
+
+            else:
+                # Payment failed
+                mpesa_transaction.status = 'FAILED'
+                logger.warning(f"B2B payment failed: {result_desc}")
+                
+                if transaction_record:
+                    transaction_record.status = "failed"
+                    transaction_record.failure_reason = result_desc
+                    transaction_record.completed_at = timezone.now()
+                    transaction_record.save()
+
+                    # Update fee transaction if exists
+                    try:
+                        fee_transaction = Transaction.objects.get(
+                            parent_transaction=transaction_record,
+                            transaction_type="fee"
+                        )
+                        fee_transaction.status = "failed"
+                        fee_transaction.failure_reason = result_desc
+                        fee_transaction.completed_at = timezone.now()
+                        fee_transaction.save()
+                    except Transaction.DoesNotExist:
+                        pass
+
+                    # Reset expense payment status
+                    try:
+                        expense_id = transaction_record.transaction_code.split('-')[1]
+                        expense = Expense.objects.get(id=expense_id)
+                        expense.payment_initiated = False
+                        expense.payment_reference = None
+                        expense.save()
+                    except (Expense.DoesNotExist, IndexError, ValueError):
+                        logger.error(f"Could not find or reset expense for failed transaction: {transaction_record.transaction_code}")
+
+            # Update common fields for MpesaTransaction
+            mpesa_transaction.result_code = result_code
+            mpesa_transaction.result_desc = result_desc
+            mpesa_transaction.callback_data = result_data
+            mpesa_transaction.transaction_date = timezone.now()
+            mpesa_transaction.save()
+
         return JsonResponse({
             'ResultCode': 0,
             'ResultDesc': 'B2B result processed successfully'
         })
-        
+
     except json.JSONDecodeError:
         logger.error("Invalid JSON in B2B result callback")
         return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Invalid JSON'})
     except Exception as e:
-        logger.error(f"Error processing B2B result: {str(e)}")
+        logger.error(f"Error processing B2B result: {str(e)}", exc_info=True)
         return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Internal server error'})
-
 
 @csrf_exempt
 @require_http_methods(["POST"])

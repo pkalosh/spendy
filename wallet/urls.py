@@ -41,7 +41,7 @@ urlpatterns = [
 
     # STK Push callbacks
     path('stk/callback/', views.stk_push_callback, name='stk_push_callback'),
-    
+    path('stk/timeout/', views.stk_push_timeout_callback, name='stk_push_timeout_callback'),
     # C2B callbacks
     path('c2b/validation/', views.c2b_validation, name='c2b_validation'),
     path('c2b/confirmation/', views.c2b_confirmation, name='c2b_confirmation'),
