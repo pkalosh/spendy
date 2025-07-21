@@ -211,6 +211,30 @@ class Transaction(models.Model):
         self.clean()
         super().save(*args, **kwargs)
 
+class TransactionFee(models.Model):
+    transaction_id = ShortUUIDField(unique=True, length=15, max_length=20, prefix="SPNDY")
+    transaction_code = models.CharField(unique=True, max_length=50, null=True, blank=True)
+    # Core fields
+    company = models.ForeignKey('CompanyKYC', on_delete=models.SET_NULL, blank=True, null=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="userfee_transactions")
+    amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    description = models.CharField(max_length=1000, null=True, blank=True)
+    
+    # Transaction participants
+    receiver = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="receiver_transaction")
+    sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="sender_transactions")
+    receiver_wallet = models.ForeignKey('Wallet', on_delete=models.SET_NULL, null=True, blank=True, related_name="receiver_transactions")
+    sender_wallet = models.ForeignKey('Wallet', on_delete=models.SET_NULL, null=True, blank=True, related_name="sender_transactions")
+    parent_transaction = models.ForeignKey(Transaction, on_delete=models.SET_NULL, null=True, blank=True)
+    # Transaction state
+    status = models.CharField(choices=TRANSACTION_STATUS, max_length=100, default="pending")
+    transaction_type = models.CharField(choices=TRANSACTION_TYPE, max_length=100, default="none")
+    payment_method=models.CharField(max_length=100, default="none")
+
+
+    def __str__(self):
+        return f"Transaction: {self.transaction_id} - {self.amount}"
+
 
 
 class Notification(models.Model):

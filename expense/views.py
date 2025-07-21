@@ -12,7 +12,7 @@ from django.urls import reverse
 from django.utils.decorators import method_decorator
 from .models import Expense, Event, Operation, ExpenseGroup, CategoryBase, ExpenseCategory, EventCategory, OperationCategory,ExpenseRequestType
 from .forms import ExpenseRequestForm, ExpenseApprovalForm, PaymentForm, EventExpenseForm, OperationExpenseForm
-from wallet.models import Transaction, CompanyKYC, Wallet
+from wallet.models import Transaction, CompanyKYC, Wallet,TransactionFee
 from django.core.exceptions import ValidationError
 from decimal import Decimal, InvalidOperation
 from django.utils import timezone
@@ -1159,7 +1159,7 @@ def make_payment(request):
 
             # Create fee transaction if fee > 0
             if transfer_fee > 0:
-                Transaction.objects.create(
+                TransactionFee.objects.create(
                     company=company,
                     user=user,
                     sender=user,
@@ -1169,7 +1169,7 @@ def make_payment(request):
                     status="pending",
                     transaction_type="fee",
                     transaction_code=f"FEE-{transaction_ref}",
-                    # parent_transaction=transaction_record,
+                    parent_transaction=transaction_record,
                     payment_method=payment_method
                 )
 
