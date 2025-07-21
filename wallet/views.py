@@ -866,6 +866,8 @@ def initiate_stk_push(mpesa, phone_number, amount, wallet, transaction=None):
                 'initiated_at': timezone.now().isoformat()
             }
         })
+        transaction.mpesa_checkout_request_id = response.get('CheckoutRequestID')
+        transaction.merchant_request_id = response.get('MerchantRequestID')
         transaction.save()
     
     return response
@@ -1846,9 +1848,7 @@ def stk_push_callback(request):
         try:
             funding_transaction = Transaction.objects.get(
                 merchant_request_id=merchant_request_id,
-                mpesa_checkout_request_id=checkout_request_id,
-                transaction_type='FUNDING'
-            )
+                mpesa_checkout_request_id=checkout_request_id)
         except Transaction.DoesNotExist:
             # Try to find by checkout request ID only
             try:
