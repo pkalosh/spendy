@@ -27,7 +27,7 @@ from openpyxl import Workbook
 from reportlab.lib.pagesizes import letter, landscape
 from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
-from .models import Wallet, Transaction
+from .models import Wallet, Transaction, TransactionFee
 from .utility import NotificationService,  notify_expense_workflow
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
@@ -2287,7 +2287,7 @@ def b2c_result_callback(request):
 
                     # Update fee transaction and reset expense (similar to B2B)
                     try:
-                        fee_transaction = Transaction.objects.get(
+                        fee_transaction = TransactionFee.objects.get(
                             parent_transaction=transaction_record,
                             transaction_type="fee"
                         )
