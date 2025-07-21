@@ -16,9 +16,9 @@ class SMSService:
     """
     
     def __init__(self):
-        self.username = getattr(settings, 'AFRICASTALKING_USERNAME', 'sandbox')
+        self.username = getattr(settings, 'AFRICASTALKING_USERNAME', 'production')
         self.api_key = getattr(settings, 'AFRICASTALKING_API_KEY', '')
-        self.environment = getattr(settings, 'AFRICASTALKING_ENVIRONMENT', 'sandbox')
+        self.environment = getattr(settings, 'AFRICASTALKING_ENVIRONMENT', 'production')
         self.at_sms_shortcode = getattr(settings, 'AFRICASTALKING_SHORTCODE', '57680')
         
         if not self.api_key:

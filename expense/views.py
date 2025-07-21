@@ -1119,7 +1119,7 @@ def make_payment(request):
             })
 
         # Generate unique transaction reference
-        transaction_ref = f"EXP-{expense_id}-{uuid.uuid4().hex[:4].upper()}"
+        transaction_ref = f"EXP-{expense.id}"
 
         # Initiate M-Pesa payment
         mpesa_response = initiate_mpesa_payment(

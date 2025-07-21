@@ -654,7 +654,6 @@ def wallet_transfer(request):
     return redirect('wallet:wallet')
 
 
-
 @login_required
 @user_passes_test(is_admin)
 def fund_wallet(request):
@@ -694,6 +693,7 @@ def fund_wallet(request):
         
         # Validate payment method specific fields
         business_id = None
+        payment_details = {}
         
         if payment_method == 'mpesa_number':
             if not mpesa_number:
@@ -707,6 +707,7 @@ def fund_wallet(request):
             
             business_id = mpesa_number
             actual_payment_method = 'stk'  # STK push for direct M-Pesa
+            payment_details = {'mpesa_number': mpesa_number}
             
         elif payment_method == 'paybill_number':
             if not paybill_number or not account_reference:
@@ -715,6 +716,10 @@ def fund_wallet(request):
             
             business_id = paybill_number
             actual_payment_method = 'b2b'  # B2B for paybill
+            payment_details = {
+                'paybill_number': paybill_number,
+                'account_reference': account_reference
+            }
             
         elif payment_method == 'till_number':
             if not till_number or not till_reference:
@@ -723,10 +728,33 @@ def fund_wallet(request):
             
             business_id = till_number
             actual_payment_method = 'b2b'  # B2B for till
+            payment_details = {
+                'till_number': till_number,
+                'till_reference': till_reference
+            }
             
         else:
             messages.error(request, "Invalid payment method selected.")
             return redirect('wallet:wallet')
+        
+        # Create initial transaction record
+        transaction = Transaction.objects.create(
+            sender_wallet=wallet,
+            user=request.user,
+            company=request.user.companykyc,
+            transaction_type='FUNDING',
+            amount=amount,
+            status='PENDING',
+            payment_method=payment_method,
+            sender=request.user,
+            description=f"Wallet funding via {payment_method}",
+            payment_details={
+                'payment_details': payment_details,
+                'business_id': business_id,
+                'actual_payment_method': actual_payment_method,
+                'initiated_at': timezone.now().isoformat()
+            }
+        )
         
         # Initialize M-Pesa client
         mpesa = MpesaDaraja()
@@ -734,7 +762,7 @@ def fund_wallet(request):
         try:
             if actual_payment_method == 'stk':
                 # STK Push - Customer pays to business (M-Pesa direct payment)
-                response = initiate_stk_push(mpesa, business_id, amount, wallet)
+                response = initiate_stk_push(mpesa, business_id, amount, wallet, transaction)
                 success_message = "Payment request sent to your phone. Please check your M-Pesa and enter your PIN to complete the transaction."
                 
             elif actual_payment_method == 'b2b':
@@ -746,19 +774,52 @@ def fund_wallet(request):
                 
                 # For manual payments (paybill/till), you might want to create a pending transaction
                 # that gets confirmed via callback when the user actually pays
-                response = initiate_b2b_payment(mpesa, business_id, amount, wallet)
+                response = initiate_b2b_payment(mpesa, business_id, amount, wallet, transaction)
             
-            # Handle response
+            # Handle response and update transaction
             if response and response.get('ResponseCode') == '0':
+                # Update transaction with success details
+                transaction.status = 'PROCESSING'
+                transaction.external_reference = response.get('MerchantRequestID') or response.get('ConversationID')
+                transaction.checkout_request_id = response.get('CheckoutRequestID')
+                transaction.payment_details.update({
+                    'mpesa_response': response,
+                    'response_code': response.get('ResponseCode'),
+                    'response_description': response.get('ResponseDescription'),
+                    'updated_at': timezone.now().isoformat()
+                })
+                transaction.save()
+                
                 messages.success(request, success_message)
-                logger.info(f"Payment initiated for wallet {wallet_id}: {response}")
+                logger.info(f"Payment initiated for wallet {wallet_id}, Transaction ID: {transaction.id}, Response: {response}")
+                
             else:
+                # Update transaction with failure details
                 error_msg = response.get('errorMessage', 'Payment initiation failed') if response else 'No response from payment gateway'
+                transaction.status = 'FAILED'
+                transaction.failure_reason = error_msg
+                transaction.payment_details.update({
+                    'mpesa_response': response,
+                    'error_message': error_msg,
+                    'failed_at': timezone.now().isoformat()
+                })
+                transaction.save()
+                
                 messages.error(request, f"Payment failed: {error_msg}")
-                logger.error(f"Payment failed for wallet {wallet_id}: {response}")
+                logger.error(f"Payment failed for wallet {wallet_id}, Transaction ID: {transaction.id}, Response: {response}")
                 
         except Exception as e:
-            logger.error(f"Error processing payment: {str(e)}")
+            # Update transaction with exception details
+            transaction.status = 'FAILED'
+            transaction.failure_reason = f"Exception: {str(e)}"
+            transaction.payment_details.update({
+                'exception': str(e),
+                'exception_type': type(e).__name__,
+                'failed_at': timezone.now().isoformat()
+            })
+            transaction.save()
+            
+            logger.error(f"Error processing payment: {str(e)}, Transaction ID: {transaction.id}")
             messages.error(request, f"Payment processing error: {str(e)}")
         
         return redirect('wallet:wallet')
@@ -766,7 +827,8 @@ def fund_wallet(request):
     else:
         messages.error(request, "Invalid request method.")
         return redirect('wallet:wallet')
-def initiate_stk_push(mpesa, phone_number, amount, wallet):
+
+def initiate_stk_push(mpesa, phone_number, amount, wallet, transaction=None):
     """
     Initiate STK Push for wallet funding
     Customer pays money to fund their wallet
@@ -782,14 +844,33 @@ def initiate_stk_push(mpesa, phone_number, amount, wallet):
     account_reference = f"{wallet.company.company_name}-{wallet.wallet_number}"
     transaction_desc = f"Wallet funding for {wallet.company.company_name}"
     
-    return mpesa.stk_push(
+    # Add transaction reference if provided
+    if transaction:
+        account_reference = f"TXN-{transaction.id}-{account_reference}"
+        transaction_desc = f"{transaction_desc} (Ref: {transaction.id})"
+    
+    response = mpesa.stk_push(
         phone_number=phone_number,
         amount=int(amount),
         account_reference=account_reference,
         transaction_desc=transaction_desc
     )
+    
+    # Log STK push initiation
+    if transaction:
+        transaction.payment_details.update({
+            'stk_push_details': {
+                'phone_number': phone_number,
+                'account_reference': account_reference,
+                'transaction_desc': transaction_desc,
+                'initiated_at': timezone.now().isoformat()
+            }
+        })
+        transaction.save()
+    
+    return response
 
-def initiate_b2c_payment(mpesa, phone_number, amount, wallet):
+def initiate_b2c_payment(mpesa, phone_number, amount, wallet, transaction=None):
     """
     Initiate B2C payment
     Business sends money to customer (e.g., refunds, bonuses)
@@ -803,28 +884,68 @@ def initiate_b2c_payment(mpesa, phone_number, amount, wallet):
         phone_number = '254' + phone_number
     
     remarks = f"Wallet credit for {wallet.company.company_name}"
+    occasion = f"Wallet funding - {wallet.id}"
     
-    return mpesa.b2c_payment(
+    if transaction:
+        remarks = f"{remarks} (Ref: {transaction.id})"
+        occasion = f"{occasion} - TXN:{transaction.id}"
+    
+    response = mpesa.b2c_payment(
         amount=float(amount),
         phone_number=phone_number,
         remarks=remarks,
         command_id='BusinessPayment',  # or 'SalaryPayment', 'PromotionPayment'
-        occasion=f"Wallet funding - {wallet.id}"
+        occasion=occasion
     )
+    
+    # Log B2C payment initiation
+    if transaction:
+        transaction.payment_details.update({
+            'b2c_payment_details': {
+                'phone_number': phone_number,
+                'remarks': remarks,
+                'occasion': occasion,
+                'initiated_at': timezone.now().isoformat()
+            }
+        })
+        transaction.save()
+    
+    return response
 
-def initiate_b2b_payment(mpesa, amount, receiver_shortcode, transaction_ref, 
-                        callback_url, timeout_url, remarks, account_reference=None):
+def initiate_b2b_payment(mpesa, business_id, amount, wallet, transaction=None):
     """
     Initiate B2B payment
     Business to business payment
     """
-    return mpesa.b2b_payment(
+    account_reference = f"{wallet.company.company_name}-{wallet.wallet_number}"
+    remarks = f"Wallet funding for {wallet.company.company_name}"
+    
+    if transaction:
+        account_reference = f"TXN-{transaction.id}-{account_reference}"
+        remarks = f"{remarks} (Ref: {transaction.id})"
+    
+    response = mpesa.b2b_payment(
         amount=float(amount),
-        receiver_shortcode=receiver_shortcode,
+        receiver_shortcode=business_id,
         account_reference=account_reference,
         remarks=remarks,
         command_id='BusinessPayBill'  # or 'BusinessBuyGoods' for till numbers
     )
+    
+    # Log B2B payment initiation
+    if transaction:
+        transaction.payment_details.update({
+            'b2b_payment_details': {
+                'receiver_shortcode': business_id,
+                'account_reference': account_reference,
+                'remarks': remarks,
+                'initiated_at': timezone.now().isoformat()
+            }
+        })
+        transaction.save()
+    
+    return response
+
 
 @login_required
 def wallet(request):
@@ -1701,7 +1822,7 @@ def stk_push_callback(request):
     """
     try:
         callback_data = json.loads(request.body)
-        logger.info(f"STK Push callback received: {callback_data}")
+        logger.info(f"Wallet funding STK Push callback received: {callback_data}")
         
         stk_callback = callback_data.get('Body', {}).get('stkCallback', {})
         merchant_request_id = stk_callback.get('MerchantRequestID')
@@ -1710,6 +1831,7 @@ def stk_push_callback(request):
         result_desc = stk_callback.get('ResultDesc')
 
         # Find the MpesaTransaction in database
+        mpesa_transaction = None
         try:
             mpesa_transaction = MpesaTransaction.objects.get(
                 checkout_request_id=checkout_request_id,
@@ -1717,26 +1839,25 @@ def stk_push_callback(request):
             )
         except MpesaTransaction.DoesNotExist:
             logger.error(f"MpesaTransaction not found for CheckoutRequestID: {checkout_request_id}")
-            return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Transaction not found'})
+            return JsonResponse({'ResultCode': 1, 'ResultDesc': 'MpesaTransaction not found'})
 
-        # Find related Transport record using the correct field names
-        transport_record = None
+        # Find related Transaction record for wallet funding
+        funding_transaction = None
         try:
-            # First try to find by mpesa checkout request ID
-            transport_record = Transaction.objects.get(
+            funding_transaction = Transaction.objects.get(
+                merchant_request_id=merchant_request_id,
                 mpesa_checkout_request_id=checkout_request_id,
-                merchant_request_id=merchant_request_id
+                transaction_type='FUNDING'
             )
         except Transaction.DoesNotExist:
-            # Try to find by transaction_code if it matches any identifier
+            # Try to find by checkout request ID only
             try:
-                # You might need to adjust this based on how you store the relationship
-                # between Transport and the payment request
-                transport_record = Transaction.objects.filter(
-                    mpesa_checkout_request_id=checkout_request_id
+                funding_transaction = Transaction.objects.filter(
+                    mpesa_checkout_request_id=checkout_request_id,
+                    transaction_type='FUNDING'
                 ).first()
             except Exception:
-                logger.info(f"No Transport record found for CheckoutRequestID: {checkout_request_id}")
+                logger.error(f"No wallet funding Transaction record found for CheckoutRequestID: {checkout_request_id}")
 
         with transaction.atomic():
             # Update MpesaTransaction based on result code
@@ -1761,61 +1882,81 @@ def stk_push_callback(request):
                 mpesa_transaction.callback_data = callback_data
                 mpesa_transaction.save()
 
-                logger.info(f"STK Push completed successfully: {mpesa_transaction.mpesa_receipt_number}")
-                print(f"STK Push completed successfully: {mpesa_transaction.mpesa_receipt_number}")
+                logger.info(f"Wallet funding STK Push completed successfully: {mpesa_transaction.mpesa_receipt_number}")
+                print(f"Wallet funding STK Push completed successfully: {mpesa_transaction.mpesa_receipt_number}")
 
-                # Update Transport record if found
-                if transport_record:
-                    transport_record.status = "completed"
-                    transport_record.completed_at = timezone.now()
-                    transport_record.payment_completed = True
-                    transport_record.paid_at = timezone.now()
+                # Update wallet funding Transaction record if found
+                if funding_transaction:
+                    funding_transaction.status = "COMPLETED"
+                    funding_transaction.completed_at = timezone.now()
+                    funding_transaction.payment_completed = True
+                    funding_transaction.paid_at = timezone.now()
                     
-                    # Update payment details JSON field
-                    payment_details = transport_record.payment_details or {}
-                    payment_details.update({
+                    # Update payment_details with callback details
+                    current_payment_details = funding_transaction.payment_details or {}
+                    current_payment_details.update({
+                        'callback_data': callback_data,
                         'mpesa_receipt_number': metadata_dict.get('MpesaReceiptNumber'),
                         'phone_number': metadata_dict.get('PhoneNumber'),
-                        'amount_paid': str(metadata_dict.get('Amount', transport_record.amount)),
-                        'payment_date': timezone.now().isoformat(),
+                        'amount_paid': str(metadata_dict.get('Amount')),
                         'transaction_cost': str(metadata_dict.get('TransactionCost', 0)),
+                        'payment_date': timezone.now().isoformat(),
+                        'result_code': result_code,
+                        'result_desc': result_desc,
                         'payment_status': 'COMPLETED'
                     })
-                    transport_record.payment_details = payment_details
+                    funding_transaction.payment_details = current_payment_details
                     
                     # Check amount mismatch
                     callback_amount = metadata_dict.get('Amount')
-                    if callback_amount and Decimal(str(callback_amount)) != transport_record.amount:
-                        logger.warning(f"Amount mismatch - Expected: {transport_record.amount}, Received: {callback_amount}")
-                        # You might want to store the actual amount paid in payment_details
-                        payment_details['actual_amount_paid'] = str(callback_amount)
-                        payment_details['expected_amount'] = str(transport_record.amount)
-                        transport_record.payment_details = payment_details
-                    
-                    transport_record.save()
-                    logger.info(f"Transport record {transport_record.transaction_id} updated with payment completion")
+                    if callback_amount and Decimal(str(callback_amount)) != funding_transaction.amount:
+                        logger.warning(f"Amount mismatch - Expected: {funding_transaction.amount}, Received: {callback_amount}")
+                        funding_transaction.payment_details.update({
+                            'amount_mismatch': True,
+                            'actual_amount_paid': str(callback_amount),
+                            'expected_amount': str(funding_transaction.amount)
+                        })
 
-                    # Process wallet operations if applicable
-                    if transport_record.sender_wallet:
-                        wallet = transport_record.sender_wallet
+                    # Get the company from the transaction and update primary wallet
+                    company = funding_transaction.company
+                    try:
+                        primary_wallet = Wallet.objects.get(company=company, is_primary=True)
+                        old_balance = primary_wallet.balance
+                        # Use the actual amount paid from callback
+                        amount_to_credit = Decimal(str(callback_amount)) if callback_amount else funding_transaction.amount
+                        primary_wallet.balance += amount_to_credit
+                        primary_wallet.save()
                         
-                        if transport_record.transaction_type == "deposit":
-                            # Credit wallet for deposits
-                            wallet.balance += transport_record.amount
-                            wallet.save()
-                            logger.info(f"Wallet {wallet.id} credited with {transport_record.amount}")
-                            
-                        elif transport_record.transaction_type in ["withdraw", "payment"]:
-                            # For withdrawals/payments, debit might already be handled during initiation
-                            # Add any additional logic here if needed
-                            pass
-
-                    # Handle receiver wallet operations
-                    if transport_record.receiver_wallet and transport_record.transaction_type == "transfer":
-                        receiver_wallet = transport_record.receiver_wallet
-                        receiver_wallet.balance += transport_record.amount
-                        receiver_wallet.save()
-                        logger.info(f"Receiver wallet {receiver_wallet.id} credited with {transport_record.amount}")
+                        # Log the wallet update in transaction payment_details
+                        funding_transaction.payment_details.update({
+                            'wallet_update': {
+                                'primary_wallet_id': primary_wallet.id,
+                                'primary_wallet_number': primary_wallet.wallet_number,
+                                'old_balance': str(old_balance),
+                                'new_balance': str(primary_wallet.balance),
+                                'amount_credited': str(amount_to_credit),
+                                'updated_at': timezone.now().isoformat()
+                            }
+                        })
+                        
+                        logger.info(f"Primary wallet {primary_wallet.id} balance updated from {old_balance} to {primary_wallet.balance} for transaction {funding_transaction.transaction_id}")
+                        
+                    except Wallet.DoesNotExist:
+                        logger.error(f"No primary wallet found for company {company.id}. Transaction {funding_transaction.transaction_id} completed but balance not updated.")
+                        funding_transaction.payment_details.update({
+                            'wallet_error': 'No primary wallet found for company',
+                            'company_id': company.id
+                        })
+                        
+                    except Wallet.MultipleObjectsReturned:
+                        logger.error(f"Multiple primary wallets found for company {company.id}. Transaction {funding_transaction.transaction_id} completed but balance not updated.")
+                        funding_transaction.payment_details.update({
+                            'wallet_error': 'Multiple primary wallets found for company',
+                            'company_id': company.id
+                        })
+                    
+                    funding_transaction.save()
+                    logger.info(f"Wallet funding transaction {funding_transaction.transaction_id} updated with payment completion")
 
             else:  # Payment Failed
                 mpesa_transaction.status = 'FAILED'
@@ -1825,27 +1966,27 @@ def stk_push_callback(request):
                 mpesa_transaction.transaction_date = timezone.now()
                 mpesa_transaction.save()
                 
-                logger.warning(f"STK Push failed: {result_desc}")
+                logger.warning(f"Wallet funding STK Push failed: {result_desc}")
 
-                # Update Transport record if found
-                if transport_record:
-                    transport_record.status = "failed"
-                    transport_record.failure_reason = result_desc
-                    transport_record.completed_at = timezone.now()
-                    transport_record.payment_completed = False
+                # Update wallet funding Transaction record if found
+                if funding_transaction:
+                    funding_transaction.status = "FAILED"
+                    funding_transaction.failure_reason = result_desc
+                    funding_transaction.completed_at = timezone.now()
                     
-                    # Update payment details with failure info
-                    payment_details = transport_record.payment_details or {}
-                    payment_details.update({
+                    # Update payment_details with failure info
+                    current_payment_details = funding_transaction.payment_details or {}
+                    current_payment_details.update({
+                        'callback_data': callback_data,
                         'failure_reason': result_desc,
                         'failure_code': result_code,
                         'failure_date': timezone.now().isoformat(),
                         'payment_status': 'FAILED'
                     })
-                    transport_record.payment_details = payment_details
-                    transport_record.save()
+                    funding_transaction.payment_details = current_payment_details
+                    funding_transaction.save()
                     
-                    logger.warning(f"Transport record {transport_record.transaction_id} updated with payment failure")
+                    logger.warning(f"Wallet funding transaction {funding_transaction.transaction_id} updated with payment failure")
 
         # Log summary for monitoring
         status_summary = {
@@ -1853,16 +1994,20 @@ def stk_push_callback(request):
             'result_code': result_code,
             'status': 'SUCCESS' if result_code == 0 else 'FAILED',
             'mpesa_transaction_updated': True,
-            'transport_record_updated': transport_record is not None
+            'funding_transaction_updated': funding_transaction is not None,
+            'transaction_type': 'wallet_funding'
         }
         
         if result_code == 0:
             status_summary['mpesa_receipt'] = mpesa_transaction.mpesa_receipt_number
             status_summary['amount'] = str(mpesa_transaction.amount)
-            if transport_record:
-                status_summary['transport_id'] = transport_record.transaction_id
+            if funding_transaction:
+                status_summary['funding_transaction_id'] = funding_transaction.transaction_id
+                if funding_transaction.payment_details and 'wallet_update' in funding_transaction.payment_details:
+                    status_summary['primary_wallet_updated'] = True
+                    status_summary['primary_wallet_id'] = funding_transaction.payment_details['wallet_update']['primary_wallet_id']
         
-        logger.info(f"STK Push callback processing summary: {status_summary}")
+        logger.info(f"Wallet funding STK Push callback processing summary: {status_summary}")
 
         # Return success response to M-Pesa
         return JsonResponse({
@@ -1871,13 +2016,11 @@ def stk_push_callback(request):
         })
 
     except json.JSONDecodeError:
-        logger.error("Invalid JSON in STK Push callback")
+        logger.error("Invalid JSON in wallet funding STK Push callback")
         return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Invalid JSON'})
     except Exception as e:
-        logger.error(f"Error processing STK Push callback: {str(e)}", exc_info=True)
+        logger.error(f"Error processing wallet funding STK Push callback: {str(e)}", exc_info=True)
         return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Internal server error'})
-
-
 @csrf_exempt 
 @require_http_methods(["POST"])
 def stk_push_timeout_callback(request):
