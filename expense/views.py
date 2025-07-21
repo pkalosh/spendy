@@ -175,8 +175,7 @@ def submit_expense(request):
             messages.success(request, "Expense request submitted successfully.")
             return redirect('wallet:expense-requests')
         else:
-            print("Form errors:", expense_form.errors)  # Add this line
-            messages.error(request, "Please correct the errors below.")
+            messages.error(request, f"Please correct the errors below.{expense_form.errors}")
     else:
         
         expense_form = ExpenseRequestForm(company=company)
