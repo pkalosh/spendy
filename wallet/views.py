@@ -1920,7 +1920,7 @@ def stk_push_callback(request):
                     # Get the company from the transaction and update primary wallet
                     company = funding_transaction.company
                     try:
-                        primary_wallet = Wallet.objects.get(company=company, is_primary=True)
+                        primary_wallet = Wallet.objects.get(company=company, wallet_type="PRIMARY")
                         old_balance = primary_wallet.balance
                         # Use the actual amount paid from callback
                         amount_to_credit = Decimal(str(callback_amount)) if callback_amount else funding_transaction.amount
