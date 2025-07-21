@@ -1723,16 +1723,16 @@ def stk_push_callback(request):
         transport_record = None
         try:
             # First try to find by mpesa checkout request ID
-            transport_record = Transport.objects.get(
+            transport_record = Transaction.objects.get(
                 mpesa_checkout_request_id=checkout_request_id,
                 merchant_request_id=merchant_request_id
             )
-        except Transport.DoesNotExist:
+        except Transaction.DoesNotExist:
             # Try to find by transaction_code if it matches any identifier
             try:
                 # You might need to adjust this based on how you store the relationship
                 # between Transport and the payment request
-                transport_record = Transport.objects.filter(
+                transport_record = Transaction.objects.filter(
                     mpesa_checkout_request_id=checkout_request_id
                 ).first()
             except Exception:
@@ -2188,6 +2188,7 @@ def b2c_result_callback(request):
             transaction_record = Transaction.objects.get(
                 mpesa_checkout_request_id=mpesa_transaction.checkout_request_id
             )
+            print(transaction_record)
         except Transaction.DoesNotExist:
             logger.error(f"Transaction not found for checkout request: {mpesa_transaction.checkout_request_id}")
             transaction_record = None

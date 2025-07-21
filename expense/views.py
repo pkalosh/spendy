@@ -1169,7 +1169,7 @@ def make_payment(request):
                     status="pending",
                     transaction_type="fee",
                     transaction_code=f"FEE-{transaction_ref}",
-                    parent_transaction=transaction_record,
+                    # parent_transaction=transaction_record,
                     payment_method=payment_method
                 )
 
