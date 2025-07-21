@@ -146,42 +146,46 @@ def submit_expense(request):
 
     if request.method == 'POST':
         expense_form = ExpenseRequestForm(request.POST, company=company)
-        request_type = request.POST.get('request_type')  # Fetch from submitted data
-        print(request_type)
-
+        request_type_id = request.POST.get('request_type')  # Fetch from submitted data
         if expense_form.is_valid():
             expense = expense_form.save(commit=False)
             expense.created_by = request.user
             expense.company = company
 
             # Determine wallet based on request_type
-            if request_type == '1':
-                wallet = Wallet.objects.filter(company=company, wallet_type='EVENT').first()
-            elif request_type == '2':
-                wallet = Wallet.objects.filter(company=company, wallet_type='OPERATIONS').first()
-            else:
-                wallet = None
+            try:
+                request_type = ExpenseRequestType.objects.get(id=request_type_id, company=company, is_active=True)
+                if request_type.name.lower() == 'event':  # Adjust based on your ExpenseRequestType names
+                    wallet = Wallet.objects.filter(company=company, wallet_type='EVENT').first()
+                elif request_type.name.lower() == 'operation':
+                    wallet = Wallet.objects.filter(company=company, wallet_type='OPERATIONS').first()
+                else:
+                    wallet = None
+            except ExpenseRequestType.DoesNotExist:
+                messages.error(request, f"Invalid request type selected.")
+                return redirect('wallet:expense-requests')
 
             if not wallet:
-                messages.error(request, f"No wallet found for type '{request_type}'.")
+                messages.error(request, f"No wallet found for request type '{request_type.name}'.")
                 return redirect('wallet:expense-requests')
 
             expense.wallet = wallet
             expense.save()
-
             # Notify expense workflow
             notify_expense_workflow(expense=expense, action='created', send_sms=True)
-
             messages.success(request, "Expense request submitted successfully.")
             return redirect('wallet:expense-requests')
         else:
-            messages.error(request, f"Please correct the errors below.{expense_form.errors}")
+            messages.error(request, f"Please correct the errors below: {expense_form.errors}")
     else:
-        
         expense_form = ExpenseRequestForm(company=company)
+        # Fetch request types for the template
+        request_types = ExpenseRequestType.objects.filter(company=company, is_active=True)
 
-    return render(request, 'users/staff/staff.html', {'expense_form': expense_form})
-
+    return render(request, 'users/staff/staff.html', {
+        'expense_form': expense_form,
+        'request_types': request_types,  # Pass request_types to the template
+    })
 @login_required
 def event_operation(request):
     if request.method == "POST":

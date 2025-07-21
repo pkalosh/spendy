@@ -1637,7 +1637,7 @@ def expense_requests(request):
         context["approved_expenses"] = approved_expenses
         
         # Get request types and categories
-        context['request_type'] = ExpenseRequestType.objects.filter(Q(company=company.company))
+        context['request_types'] = ExpenseRequestType.objects.filter(Q(company=company.company))
         context['expense_categories'] = ExpenseCategory.objects.filter(Q(company=company.company))
         
         # Get events information

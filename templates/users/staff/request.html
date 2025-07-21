@@ -414,15 +414,16 @@
             <input type="hidden" id="form_type" name="form_type">
 
             <!-- Always visible request type dropdown -->
-            <div class="mb-3">
-                <label for="id_request_type" class="form-label fw-bold required">Request Type</label>
-                <select name="request_type" id="id_request_type" class="form-select" onchange="toggleExpenseFields()" required>
-                    <option value="">---------</option>
-                    <option value="1">Event</option>
-                    <option value="2">Operation</option>
-                </select>
-                <div class="invalid-feedback">Please select a request type.</div>
-            </div>
+         <div class="mb-3">
+            <label for="id_request_type" class="form-label fw-bold required">Request Type</label>
+            <select name="request_type" id="id_request_type" class="form-select" onchange="toggleExpenseFields()" required>
+                <option value="">---------</option>
+                {% for request_type in request_types %}
+                <option value="{{ request_type.id }}">{{ request_type.name }}</option>
+                {% endfor %}
+            </select>
+            <div class="invalid-feedback">Please select a request type.</div>
+        </div>
             
             <!-- Event field - hidden initially -->
             <div class="mb-3 expense-section hidden" id="event-field">
@@ -652,24 +653,25 @@
     
     // Toggle expense form fields based on selection
     window.toggleExpenseFields = function() {
-        const requestType = document.getElementById('id_request_type').value;
+        const requestTypeSelect = document.getElementById('id_request_type');
+        const requestTypeText = requestTypeSelect.options[requestTypeSelect.selectedIndex].text.toLowerCase();
         const eventField = document.getElementById('event-field');
         const operationField = document.getElementById('operation-field');
-        
+
         // Hide all sections first
         eventField.classList.add('hidden');
         operationField.classList.add('hidden');
-        
+
         // Clear required attributes
         document.querySelectorAll('.event-field, .operation-field').forEach(field => {
             field.removeAttribute('required');
         });
-        
+
         // Show relevant section based on selection
-        if (requestType === '1') { // Event
+        if (requestTypeText.includes('event')) { // Adjust based on your ExpenseRequestType names
             eventField.classList.remove('hidden');
             document.getElementById('id_event').setAttribute('required', 'required');
-        } else if (requestType === '2') { // Operation
+        } else if (requestTypeText.includes('operation')) {
             operationField.classList.remove('hidden');
             document.getElementById('id_operation').setAttribute('required', 'required');
         }
