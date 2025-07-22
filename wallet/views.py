@@ -925,7 +925,7 @@ def initiate_b2b_payment(mpesa, business_id, amount, wallet, transaction=None):
     remarks = f"Wallet funding for {wallet.company.company_name}"
     
     if transaction:
-        account_reference = f"TXN-{transaction.id}-{account_reference}"
+        account_reference = account_reference
         remarks = f"{remarks} (Ref: {transaction.id})"
     
     response = mpesa.b2b_payment(

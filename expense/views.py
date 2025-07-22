@@ -1238,13 +1238,8 @@ def initiate_mpesa_payment(payment_method, amount, payment_details, transaction_
                 mpesa=mpesa,
                 amount=amount,
                 business_id=receiver_shortcode,
-                account_reference=account_reference,
-                transaction_ref=transaction_ref,
-                callback_url=f"{settings.BASE_URL}{reverse('wallet:b2b_result')}",
-                timeout_url=f"{settings.BASE_URL}{reverse('wallet:b2b_timeout')}",
-                remarks=f"Payment for expense {expense.id} {expense.wallet.wallet_number}"
+                wallet=expense.wallet
             )
-        
         else:
             return {'success': False, 'message': 'Unsupported payment method'}
 
