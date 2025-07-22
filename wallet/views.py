@@ -662,7 +662,7 @@ def fund_wallet(request):
     if request.method == 'POST':
         # Get form data matching your template field names
         amount_str = request.POST.get('amount')
-        wallet_id = request.POST.get('wallet_id')
+        wallet_number = request.POST.get('wallet_number')
         payment_method = request.POST.get('payment_method')
         
         # Get payment method specific fields
@@ -673,7 +673,7 @@ def fund_wallet(request):
         till_reference = request.POST.get('till_reference')  # For till
         
         # Basic validation
-        if not all([amount_str, wallet_id, payment_method]):
+        if not all([amount_str, wallet_number, payment_method]):
             messages.error(request, "All fields are required.")
             return redirect('wallet:wallet')
         
@@ -688,7 +688,7 @@ def fund_wallet(request):
         
         # Get wallet
         try:
-            wallet = get_object_or_404(Wallet, id=int(wallet_id), company=request.user.companykyc)
+            wallet = get_object_or_404(Wallet, wallet_number=int(wallet_number), company=request.user.companykyc)
         except ValueError:
             messages.error(request, "Invalid wallet ID.")
             return redirect('wallet:wallet')
@@ -793,7 +793,7 @@ def fund_wallet(request):
                 transaction.save()
                 
                 messages.success(request, success_message)
-                logger.info(f"Payment initiated for wallet {wallet_id}, Transaction ID: {transaction.id}, Response: {response}")
+                logger.info(f"Payment initiated for wallet {wallet_number}, Transaction ID: {transaction.id}, Response: {response}")
                 
             else:
                 # Update transaction with failure details
@@ -808,7 +808,7 @@ def fund_wallet(request):
                 transaction.save()
                 
                 messages.error(request, f"Payment failed: {error_msg}")
-                logger.error(f"Payment failed for wallet {wallet_id}, Transaction ID: {transaction.id}, Response: {response}")
+                logger.error(f"Payment failed for wallet {wallet_number}, Transaction ID: {transaction.id}, Response: {response}")
                 
         except Exception as e:
             # Update transaction with exception details
