@@ -2647,8 +2647,11 @@ def b2b_result_callback(request):
                     value = param.get('Value')
                     
                     if key == 'Amount':
-                        amount_paid = Decimal(str(float(value)))
-                        mpesa_transaction.amount = amount_paid
+                        try:
+                            amount_paid = Decimal(str(float(value)))
+                            mpesa_transaction.amount = amount_paid
+                        except (ValueError, TypeError):
+                            logger.warning(f"Invalid amount value: {value}")
                     elif key == 'InitiatorAccountCurrentBalance':
                         # Store initiator balance if needed
                         pass
@@ -2690,29 +2693,47 @@ def b2b_result_callback(request):
                         pass
 
                     # Deduct amount and fee from wallet
-                    wallet = transaction_record.sender_wallet
-                    total_deduction = transaction_record.amount + (transaction_record.transfer_fee or 0)
-                    
-                    # Lock wallet for update
-                    wallet = Wallet.objects.select_for_update().get(pk=wallet.pk)
-                    
-                    if wallet.balance >= total_deduction:
-                        wallet.balance -= total_deduction
-                        wallet.save()
+                    try:
+                        wallet = transaction_record.sender_wallet
+                        total_deduction = transaction_record.amount + (transaction_record.transfer_fee or 0)
                         
-                        # Mark expense as paid
-                        try:
-                            # Extract expense ID from transaction code
-                            expense_id = transaction_record.transaction_code.split('-')[1]
-                            expense = Expense.objects.get(id=expense_id)
-                            expense.paid = True
-                            expense.paid_at = timezone.now()
-                            expense.payment_completed = True
-                            expense.save()
-                        except (Expense.DoesNotExist, IndexError, ValueError):
-                            logger.error(f"Could not find or update expense for transaction: {transaction_record.transaction_code}")
-                    else:
-                        logger.error(f"Insufficient wallet balance for completed transaction: {transaction_record.id}")
+                        # Lock wallet for update
+                        wallet = Wallet.objects.select_for_update().get(pk=wallet.pk)
+                        
+                        if wallet.balance >= total_deduction:
+                            wallet.balance -= total_deduction
+                            wallet.save()
+                            
+                            # Mark expense as paid - Using regex pattern matching
+                            try:
+                                # Extract expense UUID from transaction code using regex
+                                match = UUID_PATTERN.search(transaction_record.transaction_code)
+                                
+                                if match:
+                                    extracted_uuid_str = match.group(0)  # Get the matched string
+                                    logger.info(f"Extracted UUID from transaction code: {extracted_uuid_str}")
+                                    
+                                    expense_uuid = uuid.UUID(extracted_uuid_str)  # Validate the string as a UUID object
+                                    expense = Expense.objects.get(id=expense_uuid)
+                                    expense.paid = True
+                                    expense.paid_at = timezone.now()
+                                    expense.payment_completed = True
+                                    expense.save()
+                                    
+                                    logger.info(f"Successfully updated expense: {expense_uuid}")
+                                else:
+                                    logger.warning(f"No valid UUID found in transaction code: {transaction_record.transaction_code}")
+                                
+                            except (Expense.DoesNotExist, ValueError, ValidationError) as e:
+                                logger.error(f"Could not find or update expense for transaction: {transaction_record.transaction_code}. Error: {str(e)}")
+                                # Continue processing even if expense update fails
+                                pass
+                        else:
+                            logger.error(f"Insufficient wallet balance for completed transaction: {transaction_record.id}")
+                    
+                    except Exception as wallet_error:
+                        logger.error(f"Error processing wallet deduction: {str(wallet_error)}")
+                        # Continue processing even if wallet update fails
 
             else:
                 # Payment failed
@@ -2738,15 +2759,23 @@ def b2b_result_callback(request):
                     except Transaction.DoesNotExist:
                         pass
 
-                    # Reset expense payment status
+                    # Reset expense payment status - Using regex pattern matching
                     try:
-                        expense_id = transaction_record.transaction_code.split('-')[1]
-                        expense = Expense.objects.get(id=expense_id)
-                        expense.payment_initiated = False
-                        expense.payment_reference = None
-                        expense.save()
-                    except (Expense.DoesNotExist, IndexError, ValueError):
-                        logger.error(f"Could not find or reset expense for failed transaction: {transaction_record.transaction_code}")
+                        match = UUID_PATTERN.search(transaction_record.transaction_code)
+                        
+                        if match:
+                            extracted_uuid_str = match.group(0)
+                            expense_uuid = uuid.UUID(extracted_uuid_str)
+                            expense = Expense.objects.get(id=expense_uuid)
+                            expense.payment_initiated = False
+                            expense.payment_reference = None
+                            expense.save()
+                            logger.info(f"Reset expense payment status: {expense_uuid}")
+                        else:
+                            logger.warning(f"No valid UUID found in transaction code for reset: {transaction_record.transaction_code}")
+                            
+                    except (Expense.DoesNotExist, ValueError, ValidationError) as e:
+                        logger.error(f"Could not find or reset expense for failed transaction: {transaction_record.transaction_code}. Error: {str(e)}")
 
             # Update common fields for MpesaTransaction
             mpesa_transaction.result_code = result_code
@@ -2766,7 +2795,6 @@ def b2b_result_callback(request):
     except Exception as e:
         logger.error(f"Error processing B2B result: {str(e)}", exc_info=True)
         return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Internal server error'})
-
 @csrf_exempt
 @require_http_methods(["POST"])
 def b2b_timeout_callback(request):
