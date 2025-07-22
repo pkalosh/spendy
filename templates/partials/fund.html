@@ -39,272 +39,333 @@
     }
 </style>
 
-    <div class="modal fade" id="fundWalletModal" tabindex="-1" aria-labelledby="fundWalletModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <form method="POST" action="{% url 'wallet:fund-wallet' %}">
-            {% csrf_token %}
-                <div class="modal-content">
-                    <div class="modal-header text-white">
-                        <h5 class="modal-title" id="fundWalletModalLabel">
-                            <i class="bi bi-wallet2"></i> Fund Wallet
-                        </h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="row mb-4">
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Select Wallet</label>
-                                <select name="wallet_id" id="walletSelect" class="form-select" required>
-                                  {% for wallet in wallets %}
-                                <option value="{{ wallet.wallet_number }}" id="{{wallet.wallet_number}}" {% if request.POST.wallet_id == wallet.id|stringformat:"s" %}selected{% endif %}>
-                                    {{ wallet.wallet_name|title }} (KES {{ wallet.balance }})
-                                </option>
-                            {% endfor %}
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Amount (KES)</label>
-                                <input type="number" name="amount" id="amountInput" class="form-control" required min="1" placeholder="Enter amount">
-                            </div>
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">Choose Payment Method</label>
-                            <select id="paymentMethod" name="payment_method" class="form-select" onchange="togglePaymentFields()" required>
-                                <option value="">Select payment method</option>
-                                <option value="mpesa_number">M-Pesa Direct Payment</option>
-                                <option value="paybill_number">M-Pesa Paybill</option>
+<div class="modal fade" id="fundWalletModal" tabindex="-1" aria-labelledby="fundWalletModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <form method="POST" action="{% url 'wallet:fund-wallet' %}">
+        {% csrf_token %}
+            <div class="modal-content">
+                <div class="modal-header text-white">
+                    <h5 class="modal-title" id="fundWalletModalLabel">
+                        <i class="bi bi-wallet2"></i> Fund Wallet
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Select Wallet</label>
+                            <select name="wallet_id" id="walletSelect" class="form-select" required>
+                              {% for wallet in wallets %}
+                            <option value="{{ wallet.id }}" id="{{wallet.wallet_number}}" {% if request.POST.wallet_id == wallet.id|stringformat:"s" %}selected{% endif %}>
+                                {{ wallet.wallet_name|title }} (KES {{ wallet.balance }})
+                            </option>
+                        {% endfor %}
                             </select>
                         </div>
-
-                        <div id="paymentInstructions" class="mb-4" style="display: none;">
-                            <div class="alert alert-info">
-                                <strong>📱 Follow these steps to complete your payment:</strong>
-                            </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Amount (KES)</label>
+                            <input type="number" name="amount" id="amountInput" class="form-control" required min="1" placeholder="Enter amount">
                         </div>
-
-                        <div id="mpesaNumberSection" class="payment-section payment-method-card" style="display: none;">
-                            <h6 class="text-primary mb-3">💳 M-Pesa Direct Payment</h6>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <label class="form-label">Mobile Number</label>
-                                    <input type="text" name="mpesa_number" id="mpesa_number" class="form-control" 
-                                           placeholder="254XXXXXXXXX" pattern="254[0-9]{9}">
-                                    <small class="text-muted">Enter your M-Pesa registered number</small>
-                                </div>
-                            </div>
-                            <div class="mt-3 p-3 bg-light rounded">
-                                <strong>How it works:</strong>
-                                <div class="instruction-step">1. Enter your M-Pesa registered phone number above</div>
-                                <div class="instruction-step">2. Click "Fund" button below</div>
-                                <div class="instruction-step">3. You'll receive an M-Pesa prompt on your phone</div>
-                                <div class="instruction-step">4. Enter your M-Pesa PIN to complete payment</div>
-                            </div>
-                        </div>
-
-                        <div id="paybillSection" class="payment-section payment-method-card" style="display: none;">
-                            <h6 class="text-primary mb-3">🏦 M-Pesa Paybill Payment</h6>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="p-3 bg-light rounded">
-                                        <div class="instruction-step">
-                                            <strong>1.</strong> Go to M-Pesa → <span class="highlight-text">Pay Bill</span>
-                                        </div>
-                                        <div class="instruction-step">
-                                            <strong>2.</strong> Paybill Number: <span class="highlight-text">4283222</span>
-                                        </div>
-                                        <div class="instruction-step">
-                                            <strong>3.</strong> Account Number: <span class="highlight-text" id="paybillAccountNumber">Select wallet first</span>
-                                        </div>
-                                        <div class="instruction-step">
-                                            <strong>4.</strong> Amount: <span class="amount-display" id="paybillAmount">KES 0</span>
-                                        </div>
-                                        <div class="instruction-step">
-                                            <strong>5.</strong> Enter M-Pesa PIN and confirm
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="alert alert-warning">
-                                        <strong>⚠️ Important:</strong>
-                                        <ul class="mb-0 mt-2">
-                                            <li>Use the exact account number shown</li>
-                                            <li>Double-check the amount</li>
-                                            <li>Keep your M-Pesa message as receipt</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                            <input type="hidden" name="paybill_number" value="174379">
-                            <input type="hidden" name="account_reference" id="account_reference">
-                        </div>
-
-                        
-
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-success" id="fundButton" disabled>
-                            <i class="bi bi-credit-card"></i> Fund Wallet
-                        </button>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Choose Payment Method</label>
+                        <select id="paymentMethod" name="payment_method" class="form-select" onchange="togglePaymentFields()" required>
+                            <option value="">Select payment method</option>
+                            <option value="mpesa_number">M-Pesa Direct Payment</option>
+                            <option value="paybill_number">M-Pesa Paybill</option>
+                            <option value="till_number">M-Pesa Till Number</option>
+                        </select>
+                    </div>
+
+                    <div id="paymentInstructions" class="mb-4" style="display: none;">
+                        <div class="alert alert-info">
+                            <strong>📱 Follow these steps to complete your payment:</strong>
+                        </div>
+                    </div>
+
+                    <!-- M-Pesa Direct Payment Section -->
+                    <div id="mpesaNumberSection" class="payment-section payment-method-card" style="display: none;">
+                        <h6 class="text-primary mb-3">💳 M-Pesa Direct Payment</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label">Mobile Number</label>
+                                <input type="text" name="mpesa_number" id="mpesa_number" class="form-control" 
+                                       placeholder="254XXXXXXXXX" pattern="254[0-9]{9}">
+                                <small class="text-muted">Enter your M-Pesa registered number</small>
+                            </div>
+                        </div>
+                        <div class="mt-3 p-3 bg-light rounded">
+                            <strong>How it works:</strong>
+                            <div class="instruction-step">1. Enter your M-Pesa registered phone number above</div>
+                            <div class="instruction-step">2. Click "Fund Wallet" button below</div>
+                            <div class="instruction-step">3. You'll receive an M-Pesa prompt on your phone</div>
+                            <div class="instruction-step">4. Enter your M-Pesa PIN to complete payment</div>
+                        </div>
+                    </div>
+
+                    <!-- M-Pesa Paybill Section -->
+                    <div id="paybillSection" class="payment-section payment-method-card" style="display: none;">
+                        <h6 class="text-primary mb-3">🏦 M-Pesa Paybill Payment</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="p-3 bg-light rounded">
+                                    <div class="instruction-step">
+                                        <strong>1.</strong> Go to M-Pesa → <span class="highlight-text">Pay Bill</span>
+                                    </div>
+                                    <div class="instruction-step">
+                                        <strong>2.</strong> Paybill Number: <span class="highlight-text">174379</span>
+                                    </div>
+                                    <div class="instruction-step">
+                                        <strong>3.</strong> Account Number: <span class="highlight-text" id="paybillAccountNumber">Select wallet first</span>
+                                    </div>
+                                    <div class="instruction-step">
+                                        <strong>4.</strong> Amount: <span class="amount-display" id="paybillAmount">KES 0</span>
+                                    </div>
+                                    <div class="instruction-step">
+                                        <strong>5.</strong> Enter M-Pesa PIN and confirm
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="alert alert-warning">
+                                    <strong>⚠️ Important:</strong>
+                                    <ul class="mb-0 mt-2">
+                                        <li>Use the exact account number shown</li>
+                                        <li>Double-check the amount</li>
+                                        <li>Keep your M-Pesa message as receipt</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="paybill_number" value="174379">
+                        <input type="hidden" name="account_reference" id="account_reference">
+                    </div>
+
+                    <!-- M-Pesa Till Number Section -->
+                    <div id="tillSection" class="payment-section payment-method-card" style="display: none;">
+                        <h6 class="text-primary mb-3">🏪 M-Pesa Till Number Payment</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="p-3 bg-light rounded">
+                                    <div class="instruction-step">
+                                        <strong>1.</strong> Go to M-Pesa → <span class="highlight-text">Buy Goods and Services</span>
+                                    </div>
+                                    <div class="instruction-step">
+                                        <strong>2.</strong> Till Number: <span class="highlight-text">5448834</span>
+                                    </div>
+                                    <div class="instruction-step">
+                                        <strong>3.</strong> Reference: <span class="highlight-text" id="tillReferenceNumber">Select wallet first</span>
+                                    </div>
+                                    <div class="instruction-step">
+                                        <strong>4.</strong> Amount: <span class="amount-display" id="tillAmount">KES 0</span>
+                                    </div>
+                                    <div class="instruction-step">
+                                        <strong>5.</strong> Enter M-Pesa PIN and confirm
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="alert alert-info">
+                                    <strong>💡 Till Payment:</strong>
+                                    <ul class="mb-0 mt-2">
+                                        <li>Use the exact reference shown</li>
+                                        <li>Amount will be verified automatically</li>
+                                        <li>Save your M-Pesa confirmation</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="till_number" value="5448834">
+                        <input type="hidden" name="till_reference" id="till_reference">
                     </div>
                 </div>
-            </form>
-        </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success" id="fundButton" disabled>
+                        <i class="bi bi-credit-card"></i> Fund Wallet
+                    </button>
+                </div>
+            </div>
+        </form>
     </div>
-    <script>
+</div>
 
-        function togglePaymentFields() {
-            const paymentMethod = document.getElementById('paymentMethod').value;
-            const paymentInstructions = document.getElementById('paymentInstructions');
-            
-            // Hide all payment sections
-            const paymentSections = document.querySelectorAll('.payment-section');
-            paymentSections.forEach(section => {
-                section.style.display = 'none';
-                section.classList.remove('active');
-            });
-
-            // Clear M-Pesa number field when switching payment methods
-            document.getElementById('mpesa_number').value = '';
-
-            // Show/hide instructions
-            if (paymentMethod) {
-                paymentInstructions.style.display = 'block';
-            } else {
-                paymentInstructions.style.display = 'none';
-            }
-
-            // Show selected section and update references
-            switch (paymentMethod) {
-                case 'mpesa_number':
-                    const mpesaSection = document.getElementById('mpesaNumberSection');
-                    mpesaSection.style.display = 'block';
-                    mpesaSection.classList.add('active');
-                    break;
-                case 'paybill_number':
-                    const paybillSection = document.getElementById('paybillSection');
-                    paybillSection.style.display = 'block';
-                    paybillSection.classList.add('active');
-                    updatePaybillReferences();
-                    break;
-               
-            }
-            
-            validateForm();
-        }
-
-        function updatePaybillReferences() {
-            const walletSelect = document.getElementById('walletSelect');
-            const amountInput = document.getElementById('amountInput');
-            const selectedWallet = walletSelect.options[walletSelect.selectedIndex];
-
-            if (selectedWallet && selectedWallet.value) {
-                const walletIdPadded = String(selectedWallet.value).padStart(3, '0');
-                const walletCode = walletIdPadded;
-                document.getElementById('paybillAccountNumber').textContent = walletCode;
-                document.getElementById('account_reference').value = walletCode;
-            } else {
-                document.getElementById('paybillAccountNumber').textContent = 'Select wallet first';
-                document.getElementById('account_reference').value = '';
-            }
-
-            if (amountInput && amountInput.value) {
-                document.getElementById('paybillAmount').textContent = `KES ${amountInput.value}`;
-            } else {
-                document.getElementById('paybillAmount').textContent = `KES 0`;
-            }
-        }
-
-
-
-        // Removed updateSummary() function as it's no longer needed
-
-        function validateForm() {
-            const walletSelect = document.getElementById('walletSelect');
-            const amountInput = document.getElementById('amountInput');
-            const paymentMethod = document.getElementById('paymentMethod');
-            const mpesaNumber = document.getElementById('mpesa_number');
-            const fundButton = document.getElementById('fundButton');
-            
-            let isValid = walletSelect.value && amountInput.value && paymentMethod.value;
-            
-            // Additional validation for M-Pesa direct payment
-            if (paymentMethod.value === 'mpesa_number') {
-                isValid = isValid && mpesaNumber.value && mpesaNumber.checkValidity(); // checkValidity for pattern
-            }
-            
-            fundButton.disabled = !isValid;
-        }
-
-        document.addEventListener('DOMContentLoaded', function () {
-            const walletSelect = document.getElementById('walletSelect');
-            const amountInput = document.getElementById('amountInput');
-            const paymentMethodSelect = document.getElementById('paymentMethod');
-            const mpesaNumber = document.getElementById('mpesa_number');
-            const fundWalletModal = document.getElementById('fundWalletModal');
-
-            // Event listeners for dynamic updates
-            // Using 'input' for real-time changes on text/number fields
-            // Using 'change' for select dropdowns
-            
-            if (walletSelect) {
-                walletSelect.addEventListener('change', function() {
-                    validateForm(); // Wallet change might affect validation
-                    if (paymentMethodSelect.value === 'paybill_number') {
-                        updatePaybillReferences();
-                    } 
-                });
-            }
-
-            if (amountInput) {
-                amountInput.addEventListener('input', function() {
-                    validateForm(); // Amount change affects validation
-                    if (paymentMethodSelect.value === 'paybill_number') {
-                        updatePaybillReferences();
-                    }
-                });
-            }
-            
-            // paymentMethodSelect has onchange directly in HTML, so no need for JS event listener here
-            
-            if (mpesaNumber) {
-                mpesaNumber.addEventListener('input', validateForm); // M-Pesa number input affects validation
-            }
-
-            // Modal event handlers
-            if (fundWalletModal) {
-                fundWalletModal.addEventListener('shown.bs.modal', function () {
-                    // This ensures the correct section is shown and validated when modal first opens
-                    togglePaymentFields(); 
-                });
-
-                fundWalletModal.addEventListener('hidden.bs.modal', function () {
-                    // Reset form
-                    document.querySelector('#fundWalletModal form').reset();
-                    
-                    // Hide all sections
-                    document.querySelectorAll('.payment-section').forEach(section => {
-                        section.style.display = 'none';
-                        section.classList.remove('active');
-                    });
-                    
-                    // Hide the general instructions
-                    document.getElementById('paymentInstructions').style.display = 'none';
-                    
-                    // Reset dynamic content for Paybill/Till (important for a clean slate on next open)
-                    document.getElementById('paybillAccountNumber').textContent = 'Select wallet first';
-                    document.getElementById('paybillAmount').textContent = 'KES 0';
-                    
-                    // Disable fund button
-                    document.getElementById('fundButton').disabled = true;
-                });
-            }
-            
-            // Initial validation call on page load in case the modal starts open
-            // due to server-side pre-filling (e.g., after a form submission error).
-            // This ensures the button state and initial fields are correct.
-            validateForm();
+<script>
+    function togglePaymentFields() {
+        const paymentMethod = document.getElementById('paymentMethod').value;
+        const paymentInstructions = document.getElementById('paymentInstructions');
+        
+        // Hide all payment sections
+        const paymentSections = document.querySelectorAll('.payment-section');
+        paymentSections.forEach(section => {
+            section.style.display = 'none';
+            section.classList.remove('active');
         });
 
-        </script>
+        // Clear input fields when switching payment methods
+        document.getElementById('mpesa_number').value = '';
+
+        // Show/hide instructions
+        if (paymentMethod) {
+            paymentInstructions.style.display = 'block';
+        } else {
+            paymentInstructions.style.display = 'none';
+        }
+
+        // Show selected section and update references
+        switch (paymentMethod) {
+            case 'mpesa_number':
+                const mpesaSection = document.getElementById('mpesaNumberSection');
+                mpesaSection.style.display = 'block';
+                mpesaSection.classList.add('active');
+                break;
+                
+            case 'paybill_number':
+                const paybillSection = document.getElementById('paybillSection');
+                paybillSection.style.display = 'block';
+                paybillSection.classList.add('active');
+                updatePaybillReferences();
+                break;
+                
+            case 'till_number':
+                const tillSection = document.getElementById('tillSection');
+                tillSection.style.display = 'block';
+                tillSection.classList.add('active');
+                updateTillReferences();
+                break;
+        }
+        
+        validateForm();
+    }
+
+    function updatePaybillReferences() {
+        const walletSelect = document.getElementById('walletSelect');
+        const amountInput = document.getElementById('amountInput');
+        const selectedWallet = walletSelect.options[walletSelect.selectedIndex];
+
+        if (selectedWallet && selectedWallet.value) {
+            const walletIdPadded = String(selectedWallet.value).padStart(3, '0');
+            const walletCode = `WALLET_${walletIdPadded}`;
+            document.getElementById('paybillAccountNumber').textContent = walletCode;
+            document.getElementById('account_reference').value = walletCode;
+        } else {
+            document.getElementById('paybillAccountNumber').textContent = 'Select wallet first';
+            document.getElementById('account_reference').value = '';
+        }
+
+        if (amountInput && amountInput.value) {
+            document.getElementById('paybillAmount').textContent = `KES ${amountInput.value}`;
+        } else {
+            document.getElementById('paybillAmount').textContent = `KES 0`;
+        }
+    }
+
+    function updateTillReferences() {
+        const walletSelect = document.getElementById('walletSelect');
+        const amountInput = document.getElementById('amountInput');
+        const selectedWallet = walletSelect.options[walletSelect.selectedIndex];
+
+        if (selectedWallet && selectedWallet.value) {
+            const walletIdPadded = String(selectedWallet.value).padStart(3, '0');
+            const tillRef = `TILL_${walletIdPadded}`;
+            document.getElementById('tillReferenceNumber').textContent = tillRef;
+            document.getElementById('till_reference').value = tillRef;
+        } else {
+            document.getElementById('tillReferenceNumber').textContent = 'Select wallet first';
+            document.getElementById('till_reference').value = '';
+        }
+
+        if (amountInput && amountInput.value) {
+            document.getElementById('tillAmount').textContent = `KES ${amountInput.value}`;
+        } else {
+            document.getElementById('tillAmount').textContent = `KES 0`;
+        }
+    }
+
+    function validateForm() {
+        const walletSelect = document.getElementById('walletSelect');
+        const amountInput = document.getElementById('amountInput');
+        const paymentMethod = document.getElementById('paymentMethod');
+        const mpesaNumber = document.getElementById('mpesa_number');
+        const fundButton = document.getElementById('fundButton');
+        
+        let isValid = walletSelect.value && amountInput.value && paymentMethod.value;
+        
+        // Additional validation for M-Pesa direct payment
+        if (paymentMethod.value === 'mpesa_number') {
+            isValid = isValid && mpesaNumber.value && mpesaNumber.checkValidity();
+        }
+        
+        fundButton.disabled = !isValid;
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const walletSelect = document.getElementById('walletSelect');
+        const amountInput = document.getElementById('amountInput');
+        const paymentMethodSelect = document.getElementById('paymentMethod');
+        const mpesaNumber = document.getElementById('mpesa_number');
+        const fundWalletModal = document.getElementById('fundWalletModal');
+
+        // Event listeners for dynamic updates
+        if (walletSelect) {
+            walletSelect.addEventListener('change', function() {
+                validateForm();
+                if (paymentMethodSelect.value === 'paybill_number') {
+                    updatePaybillReferences();
+                } else if (paymentMethodSelect.value === 'till_number') {
+                    updateTillReferences();
+                }
+            });
+        }
+
+        if (amountInput) {
+            amountInput.addEventListener('input', function() {
+                validateForm();
+                if (paymentMethodSelect.value === 'paybill_number') {
+                    updatePaybillReferences();
+                } else if (paymentMethodSelect.value === 'till_number') {
+                    updateTillReferences();
+                }
+            });
+        }
+
+        if (mpesaNumber) {
+            mpesaNumber.addEventListener('input', validateForm);
+        }
+
+        // Modal event handlers
+        if (fundWalletModal) {
+            fundWalletModal.addEventListener('shown.bs.modal', function () {
+                togglePaymentFields();
+            });
+
+            fundWalletModal.addEventListener('hidden.bs.modal', function () {
+                // Reset form
+                document.querySelector('#fundWalletModal form').reset();
+                
+                // Hide all sections
+                document.querySelectorAll('.payment-section').forEach(section => {
+                    section.style.display = 'none';
+                    section.classList.remove('active');
+                });
+                
+                // Hide the general instructions
+                document.getElementById('paymentInstructions').style.display = 'none';
+                
+                // Reset dynamic content
+                document.getElementById('paybillAccountNumber').textContent = 'Select wallet first';
+                document.getElementById('paybillAmount').textContent = 'KES 0';
+                document.getElementById('tillReferenceNumber').textContent = 'Select wallet first';
+                document.getElementById('tillAmount').textContent = 'KES 0';
+                
+                // Disable fund button
+                document.getElementById('fundButton').disabled = true;
+            });
+        }
+        
+        // Initial validation
+        validateForm();
+    });
+</script>
