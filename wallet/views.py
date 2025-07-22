@@ -2680,7 +2680,7 @@ def b2b_result_callback(request):
                     # Update fee transaction if exists
                     try:
                         fee_transaction = Transaction.objects.get(
-                            id=transaction_record.id,
+                            transaction_id=transaction_record.transaction_id,
                             transaction_type="fee"
                         )
                         fee_transaction.status = "completed"
@@ -2728,7 +2728,7 @@ def b2b_result_callback(request):
                     # Update fee transaction if exists
                     try:
                         fee_transaction = Transaction.objects.get(
-                            id=transaction_record.id,
+                            transaction_id=transaction_record.transaction_id,
                             transaction_type="fee"
                         )
                         fee_transaction.status = "failed"
