@@ -1039,11 +1039,11 @@ def make_payment(request):
             try:
                 primary_wallet = Wallet.objects.get(
                     company=company,
-                    wallet_type='primary'  # Adjust this field name as per your model
+                    wallet_type='PRIMARY'  # Adjust this field name as per your model
                 )
                 if primary_wallet.balance >= total_amount:
                     selected_wallet = primary_wallet
-                    wallet_type = 'primary'
+                    wallet_type = 'PRIMARY'
                 else:
                     return JsonResponse({
                         'success': False,
@@ -1237,7 +1237,7 @@ def initiate_mpesa_payment(payment_method, amount, payment_details, transaction_
             response = initiate_b2b_payment(
                 mpesa=mpesa,
                 amount=amount,
-                receiver_shortcode=receiver_shortcode,
+                business_id=receiver_shortcode,
                 account_reference=account_reference,
                 transaction_ref=transaction_ref,
                 callback_url=f"{settings.BASE_URL}{reverse('wallet:b2b_result')}",
