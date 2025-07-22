@@ -56,7 +56,7 @@
                                 <label class="form-label fw-bold">Select Wallet</label>
                                 <select name="wallet_id" id="walletSelect" class="form-select" required>
                                   {% for wallet in wallets %}
-                                <option value="{{ wallet.id }}" id="{{wallet.wallet_number}}" {% if request.POST.wallet_id == wallet.id|stringformat:"s" %}selected{% endif %}>
+                                <option value="{{ wallet.wallet_number }}" id="{{wallet.wallet_number}}" {% if request.POST.wallet_id == wallet.id|stringformat:"s" %}selected{% endif %}>
                                     {{ wallet.wallet_name|title }} (KES {{ wallet.balance }})
                                 </option>
                             {% endfor %}
@@ -201,7 +201,7 @@
 
             if (selectedWallet && selectedWallet.value) {
                 const walletIdPadded = String(selectedWallet.value).padStart(3, '0');
-                const walletCode = `WALLET_${walletIdPadded}`;
+                const walletCode = walletIdPadded;
                 document.getElementById('paybillAccountNumber').textContent = walletCode;
                 document.getElementById('account_reference').value = walletCode;
             } else {
