@@ -912,6 +912,8 @@ def initiate_b2c_payment(mpesa, phone_number, amount, wallet, transaction=None):
                 'initiated_at': timezone.now().isoformat()
             }
         })
+        transaction.mpesa_checkout_request_id = response.get('CheckoutRequestID')
+        transaction.merchant_request_id = response.get('MerchantRequestID')
         transaction.save()
     
     return response
@@ -946,6 +948,8 @@ def initiate_b2b_payment(mpesa, business_id, amount, wallet, transaction=None):
                 'initiated_at': timezone.now().isoformat()
             }
         })
+        transaction.mpesa_checkout_request_id = response.get('CheckoutRequestID')
+        transaction.merchant_request_id = response.get('MerchantRequestID')
         transaction.save()
     
     return response
