@@ -164,6 +164,8 @@ class Transaction(models.Model):
     transaction_type = models.CharField(choices=TRANSACTION_TYPE, max_length=100, default="none")
     mpesa_checkout_request_id=models.CharField(max_length=100, blank=True, null=True)
     merchant_request_id=models.CharField(max_length=100, blank=True, null=True)
+    conversation_id = models.CharField(max_length=100, blank=True, null=True, help_text="M-Pesa conversation ID")
+    originator_conversation_id = models.CharField(max_length=100, blank=True, null=True, help_text="Originator conversation ID")
     payment_method=models.CharField(max_length=100, default="none")
     payment_details=models.JSONField(default=dict, blank=True, null=True)
     transfer_fee = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, blank=True, null=True)

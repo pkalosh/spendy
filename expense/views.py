@@ -974,6 +974,7 @@ def make_payment(request):
     try:
         # Extract and validate form data
         expense_id = request.POST.get('expense')
+        print(f"Expense ID: {expense_id}")
         payment_method = request.POST.get('payment_method')
         amount = request.POST.get('amount')
 
@@ -986,6 +987,7 @@ def make_payment(request):
 
         # Get and validate expense
         expense = get_object_or_404(Expense, id=expense_id)
+        print(f"Expense: {expense}")
 
         if not expense.approved or expense.declined:
             return JsonResponse({
@@ -1156,6 +1158,8 @@ def make_payment(request):
                 transaction_code=transaction_ref,
                 mpesa_checkout_request_id=mpesa_response.get('CheckoutRequestID'),
                 merchant_request_id=mpesa_response.get('MerchantRequestID'),
+                conversation_id = mpesa_response.get('ConversationID'),
+                originator_conversation_id = mpesa_response.get('OriginatorConversationID'),
                 payment_method=payment_method,
                 payment_details=json.dumps(payment_details),
                 transfer_fee=transfer_fee

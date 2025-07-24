@@ -912,8 +912,9 @@ def initiate_b2c_payment(mpesa, phone_number, amount, wallet, transaction=None):
                 'initiated_at': timezone.now().isoformat()
             }
         })
-        transaction.mpesa_checkout_request_id = response.get('CheckoutRequestID')
-        transaction.merchant_request_id = response.get('MerchantRequestID')
+        transaction.conversation_id = response.get('ConversationID')
+        print(f"conversation_id: {transaction.conversation_id}")  # Print the value of transaction.mpesa_checkout_request_id)
+        transaction.originator_conversation_id = response.get('OriginatorConversationID')
         transaction.save()
     
     return response
@@ -948,8 +949,9 @@ def initiate_b2b_payment(mpesa, business_id, amount, wallet, transaction=None):
                 'initiated_at': timezone.now().isoformat()
             }
         })
-        transaction.mpesa_checkout_request_id = response.get('CheckoutRequestID')
-        transaction.merchant_request_id = response.get('MerchantRequestID')
+        transaction.conversation_id = response.get('ConversationID')
+        print(f"conversation_id: {transaction.conversation_id}")  # Print the value of transaction.mpesa_checkout_request_id)
+        transaction.originator_conversation_id = response.get('OriginatorConversationID')
         transaction.save()
     
     return response
@@ -2344,7 +2346,8 @@ def b2c_result_callback(request):
             # Note: mpesa_checkout_request_id should be on your Transaction model
             # This links the B2C result back to your internal Transaction record
             transaction_record = Transaction.objects.get(
-                mpesa_checkout_request_id=mpesa_transaction.checkout_request_id
+                originator_conversation_id=mpesa_transaction.originator_conversation_id,
+                conversation_id=mpesa_transaction.conversation_id
             )
             logger.debug(f"Transaction record found: {transaction_record}")
         except Transaction.DoesNotExist:
@@ -2384,7 +2387,7 @@ def b2c_result_callback(request):
                 # Update Transaction record if found
                 if transaction_record:
                     transaction_record.status = "completed"
-                    transaction_record.mpesa_transaction_id = transaction_id # Assign actual Mpesa Transaction ID
+                    transaction_record.transaction_code = transaction_id # Assign actual Mpesa Transaction ID
                     transaction_record.completed_at = timezone.now()
                     transaction_record.save()
                     logger.debug(f"Transaction record {transaction_record.pk} updated to completed.")
@@ -2394,7 +2397,7 @@ def b2c_result_callback(request):
                         # Assuming TransactionFee model exists and is linked by parent_transaction
                         # and transaction_type="fee"
                         fee_transaction = TransactionFee.objects.get(
-                            parent_transaction=transaction_record,
+                            transaction_id=transaction_record.transaction_id,
                             transaction_type="fee" # Ensure this matches your model's field
                         )
                         fee_transaction.status = "completed"
@@ -2629,7 +2632,8 @@ def b2b_result_callback(request):
         # Find the related Transaction record
         try:
             transaction_record = Transaction.objects.get(
-                mpesa_checkout_request_id=mpesa_transaction.checkout_request_id
+                originator_conversation_id=mpesa_transaction.originator_conversation_id,
+                conversation_id=mpesa_transaction.conversation_id
             )
         except Transaction.DoesNotExist:
             logger.error(f"Transaction not found for checkout request: {mpesa_transaction.checkout_request_id}")
