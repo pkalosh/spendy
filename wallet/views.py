@@ -2397,8 +2397,7 @@ def b2c_result_callback(request):
                         # Assuming TransactionFee model exists and is linked by parent_transaction
                         # and transaction_type="fee"
                         fee_transaction = TransactionFee.objects.get(
-                            transaction_id=transaction_record.transaction_id,
-                            transaction_type="fee" # Ensure this matches your model's field
+                            transaction_id=transaction_record.transaction_id
                         )
                         fee_transaction.status = "completed"
                         fee_transaction.completed_at = timezone.now()
@@ -2692,7 +2691,6 @@ def b2b_result_callback(request):
                     try:
                         fee_transaction = Transaction.objects.get(
                             transaction_id=transaction_record.transaction_id,
-                            transaction_type="fee"
                         )
                         fee_transaction.status = "completed"
                         fee_transaction.completed_at = timezone.now()
