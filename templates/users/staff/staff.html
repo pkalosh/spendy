@@ -637,15 +637,12 @@
 <script>
     // Enhanced payment form functionality with debugging
 function togglePaymentFields() {
-    console.log('togglePaymentFields called'); // Debug log
     
     // Hide all payment sections first
     const paymentSections = document.querySelectorAll('.payment-section');
-    console.log('Found payment sections:', paymentSections.length);
     
     paymentSections.forEach(section => {
         section.classList.add('d-none');
-        console.log('Hiding section:', section.id); // Debug log
     });
     
     // Get the selected payment method
@@ -656,7 +653,6 @@ function togglePaymentFields() {
     }
     
     const paymentType = paymentTypeElement.value;
-    console.log('Selected payment type:', paymentType); // Debug log
     
     // Reset all field requirements first
     document.querySelectorAll('.mpesa-field, .paybill-field, .till-field').forEach(field => {
@@ -742,7 +738,6 @@ function togglePaymentFields() {
 
 // Enhanced form validation with better error handling
 document.getElementById('paymentForm')?.addEventListener('submit', function(event) {
-    console.log('Form submission started'); // Debug log
     event.preventDefault();
     
     // Reset validations
@@ -754,7 +749,6 @@ document.getElementById('paymentForm')?.addEventListener('submit', function(even
     const expenseSelect = document.getElementById('expenseSelect')?.value;
     const amount = document.getElementById('amount')?.value;
     
-    console.log('Form values:', { paymentType, expenseSelect, amount }); // Debug log
     
     if (!paymentType) {
         isValid = false;
@@ -804,7 +798,6 @@ document.getElementById('paymentForm')?.addEventListener('submit', function(even
         }
     }
     
-    console.log('Form validation result:', isValid); // Debug log
     
     if (isValid) {
         processPayment();
@@ -816,7 +809,6 @@ document.getElementById('paymentForm')?.addEventListener('submit', function(even
 
 // Process payment with better error handling and debugging
 function processPayment() {
-    console.log('processPayment function called'); // Debug log
     
     const submitBtn = document.getElementById('paymentSubmitBtn');
     const submitText = document.getElementById('submitButtonText');
@@ -850,13 +842,11 @@ function processPayment() {
         return;
     }
     
-    console.log('Submitting to:', formAction); // Debug log
     
     // Submit the form
     const formData = new FormData(form);
     
     // Log form data for debugging
-    console.log('Form data:');
     for (let [key, value] of formData.entries()) {
         console.log(key, value);
     }
@@ -869,8 +859,6 @@ function processPayment() {
         }
     })
     .then(response => {
-        console.log('Response status:', response.status); // Debug log
-        console.log('Response headers:', response.headers); // Debug log
         
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -879,7 +867,6 @@ function processPayment() {
         return response.json();
     })
     .then(data => {
-        console.log('Response data:', data); // Debug log
         
         if (data.success) {
             showPaymentStatus('success', data.message || 'Payment initiated successfully!');
@@ -976,7 +963,6 @@ function showPaymentStatus(type, message, showSpinner = false) {
 
 // Initialize payment fields when modal opens
 document.getElementById('makePaymentModal')?.addEventListener('show.bs.modal', function() {
-    console.log('Modal opening'); // Debug log
     
     const form = document.getElementById('paymentForm');
     if (form) {

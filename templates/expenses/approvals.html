@@ -676,7 +676,6 @@
         if (csrfInput) {
             return csrfInput.value;
         }
-        console.warn("CSRF token not found. Ensure a meta tag 'csrf-token' or a hidden input 'csrfmiddlewaretoken' exists.");
         return null;
     }
 
@@ -983,7 +982,6 @@ if (approveModal) {
                 try {
                     data = await response.json();
                 } catch (e) {
-                    console.error('Error parsing JSON:', e);
                     if (response.ok) {
                         data = { message: 'Expense request approved successfully!', approved_by_name: 'You' };
                     } else {
@@ -1006,7 +1004,6 @@ if (approveModal) {
                     showMessageBox('Error', data.error || 'Failed to approve expense request.', 'danger');
                 }
             } catch (error) {
-                console.error('Error approving expense:', error);
                 showMessageBox('Error', 'An unexpected error occurred during approval. Please try again.', 'danger');
             }
         });
@@ -1074,7 +1071,6 @@ if (rejectModal) {
                 try {
                     data = await response.json();
                 } catch (e) {
-                    console.error('Error parsing JSON:', e);
                     if (response.ok) {
                         data = { message: 'Expense request rejected successfully!', approved_by_name: 'You' };
                     } else {
@@ -1097,7 +1093,6 @@ if (rejectModal) {
                     showMessageBox('Error', data.error || 'Failed to reject expense request.', 'danger');
                 }
             } catch (error) {
-                console.error('Error rejecting expense:', error);
                 showMessageBox('Error', 'An unexpected error occurred during rejection. Please try again.', 'danger');
             }
         });
