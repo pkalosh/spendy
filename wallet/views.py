@@ -2316,8 +2316,7 @@ UUID_PATTERN = re.compile(
 @require_http_methods(["POST"])
 def b2c_result_callback(request):
     """
-    Enhanced B2C Result callback handler
-    Similar to B2B but handles B2C payment responses
+    Enhanced B2C Result callback handler with improved transaction linking
     """
     try:
         result_data = json.loads(request.body)
@@ -2331,6 +2330,7 @@ def b2c_result_callback(request):
         transaction_id = result.get('TransactionID')
 
         # Find the MpesaTransaction
+        mpesa_transaction = None
         try:
             mpesa_transaction = MpesaTransaction.objects.get(
                 originator_conversation_id=originator_conversation_id,
@@ -2340,22 +2340,20 @@ def b2c_result_callback(request):
             logger.error(f"B2C MpesaTransaction not found for OriginatorConversationID: {originator_conversation_id} and ConversationID: {conversation_id}")
             return JsonResponse({'ResultCode': 1, 'ResultDesc': 'MpesaTransaction not found'})
 
-        # Find the related Transaction record
-        transaction_record = None # Initialize to None
+        # Find the related Transaction record using conversation IDs
+        transaction_record = None
         try:
-            # Note: mpesa_checkout_request_id should be on your Transaction model
-            # This links the B2C result back to your internal Transaction record
             transaction_record = Transaction.objects.get(
-                originator_conversation_id=mpesa_transaction.originator_conversation_id,
-                conversation_id=mpesa_transaction.conversation_id
+                originator_conversation_id=originator_conversation_id,
+                conversation_id=conversation_id
             )
             logger.debug(f"Transaction record found: {transaction_record}")
         except Transaction.DoesNotExist:
-            logger.error(f"Transaction not found for checkout request: {mpesa_transaction.checkout_request_id}")
-            # If transaction_record is None, subsequent logic will handle it gracefully or skip updates.
+            logger.error(f"Transaction not found for conversations: {originator_conversation_id}, {conversation_id}")
+            return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Transaction not found'})
         except Exception as e:
             logger.error(f"Error fetching transaction record: {e}", exc_info=True)
-
+            return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Error fetching transaction'})
 
         with transaction.atomic():
             # Update MpesaTransaction status
@@ -2372,178 +2370,118 @@ def b2c_result_callback(request):
                     value = param.get('Value')
                     
                     if key == 'TransactionAmount':
-                        # Convert to Decimal explicitly to avoid float precision issues
-                        amount_paid = Decimal(str(value)) 
+                        amount_paid = Decimal(str(value))
                         mpesa_transaction.amount = amount_paid
-                    # Add other parameter handling as needed, if you want to store them
-                    # elif key == 'TransactionReceipt':
-                    #     mpesa_transaction.receipt = value # Assuming a field for this
-                    # elif key == 'ReceiverPartyPublicName':
-                    #     mpesa_transaction.recipient_name = value # Assuming a field for this
-                    # etc.
 
                 logger.info(f"B2C payment completed successfully for transaction ID: {transaction_id}")
                 
-                # Update Transaction record if found
-                if transaction_record:
-                    transaction_record.status = "completed"
-                    transaction_record.transaction_code = transaction_id # Assign actual Mpesa Transaction ID
-                    transaction_record.completed_at = timezone.now()
-                    transaction_record.save()
-                    logger.debug(f"Transaction record {transaction_record.pk} updated to completed.")
+                # Update Transaction record
+                transaction_record.status = "completed"
+                transaction_record.completed_at = timezone.now()
+                transaction_record.payment_completed = True
+                transaction_record.paid_at = timezone.now()
+                transaction_record.save()
+                logger.debug(f"Transaction record {transaction_record.pk} updated to completed.")
 
-                    # Update fee transaction if exists and linked by parent_transaction
+                # Update fee transaction using parent_transaction relationship
+                try:
+                    fee_transaction = TransactionFee.objects.get(
+                        parent_transaction=transaction_record,
+                        transaction_type="fee"
+                    )
+                    fee_transaction.status = "completed"
+                    fee_transaction.completed_at = timezone.now()
+                    fee_transaction.save()
+                    logger.debug(f"Fee transaction {fee_transaction.pk} updated to completed.")
+                except TransactionFee.DoesNotExist:
+                    logger.info(f"No fee transaction found for parent transaction {transaction_record.pk}.")
+                except Exception as e:
+                    logger.error(f"Error updating fee transaction for {transaction_record.pk}: {e}", exc_info=True)
+
+                # Deduct amount and fee from wallet
+                if transaction_record.sender_wallet:
                     try:
-                        # Assuming TransactionFee model exists and is linked by parent_transaction
-                        # and transaction_type="fee"
-                        fee_transaction = TransactionFee.objects.get(
-                            transaction_id=transaction_record.transaction_id
-                        )
-                        fee_transaction.status = "completed"
-                        fee_transaction.completed_at = timezone.now()
-                        fee_transaction.save()
-                        logger.debug(f"Fee transaction {fee_transaction.pk} updated to completed.")
-                    except TransactionFee.DoesNotExist: # Changed from Transaction.DoesNotExist
-                        logger.warning(f"Fee transaction not found for parent transaction {transaction_record.pk}.")
-                    except Exception as e:
-                        logger.error(f"Error updating fee transaction for {transaction_record.pk}: {e}", exc_info=True)
-
-
-                    # Deduct amount and fee from wallet
-                    # It's safer to fetch the wallet inside the atomic block with select_for_update
-                    # even if fetched before, to ensure no race conditions if balance is critical.
-                    # Ensure transaction_record.sender_wallet is the correct wallet to deduct from.
-                    if transaction_record.sender_wallet:
-                        try:
-                            wallet = Wallet.objects.select_for_update().get(pk=transaction_record.sender_wallet.pk)
-                            total_deduction = transaction_record.amount + (transaction_record.transfer_fee or Decimal('0'))
-                            
-                            if wallet.balance >= total_deduction:
-                                wallet.balance -= total_deduction
-                                wallet.save()
-                                logger.info(f"Wallet {wallet.pk} balance updated. New balance: {wallet.balance}")
-                            else:
-                                logger.error(f"Insufficient funds in wallet {wallet.pk} for transaction {transaction_record.pk}. Wallet balance: {wallet.balance}, Deduction needed: {total_deduction}")
-                                # Consider raising an error or marking transaction for manual review
-                                transaction_record.status = "failed_insufficient_funds"
-                                transaction_record.failure_reason = "Insufficient funds in wallet"
-                                transaction_record.save()
-                                mpesa_transaction.status = 'FAILED_INSUFFICIENT_FUNDS' # Update MpesaTransaction as well
-                                mpesa_transaction.result_desc = "Insufficient funds in wallet"
-                                mpesa_transaction.save()
-                        except Wallet.DoesNotExist:
-                            logger.error(f"Sender wallet {transaction_record.sender_wallet.pk} not found for transaction {transaction_record.pk}.")
-                        except Exception as e:
-                            logger.error(f"Error updating wallet balance for transaction {transaction_record.pk}: {e}", exc_info=True)
-                    else:
-                        logger.warning(f"No sender wallet found for transaction record {transaction_record.pk}.")
-
-
-                    # Mark expense as paid - **UUID EXTRACTION HAPPENS HERE**
-                    try:
-                        # Using the robust regex UUID extraction
-                        match = UUID_PATTERN.search(transaction_record.transaction_code)
+                        wallet = Wallet.objects.select_for_update().get(pk=transaction_record.sender_wallet.pk)
+                        total_deduction = transaction_record.amount + (transaction_record.transfer_fee or Decimal('0'))
                         
-                        if match:
-                            extracted_uuid_str = match.group(0) # Get the matched string
-                            expense_uuid = uuid.UUID(extracted_uuid_str) # Validate the string as a UUID object
-
-                            expense = Expense.objects.get(id=expense_uuid)
-                            expense.paid = True
-                            expense.paid_at = timezone.now()
-                            expense.payment_completed = True
-                            expense.save()
-                            logger.info(f"Expense {expense.pk} marked as paid.")
+                        if wallet.balance >= total_deduction:
+                            wallet.balance -= total_deduction
+                            wallet.save()
+                            logger.info(f"Wallet {wallet.pk} balance updated. New balance: {wallet.balance}")
                         else:
-                            logger.error(f"No valid UUID found in transaction_code for expense update: {transaction_record.transaction_code}")
-                            # Decide how to handle this: potentially mark transaction_record with an error
-                            # or log it for manual intervention.
-                            if transaction_record:
-                                transaction_record.failure_reason = "Expense UUID not found in transaction code."
-                                transaction_record.status = "failed_expense_link"
-                                transaction_record.save()
-
-                    except (ValueError, ValidationError) as e:
-                        logger.error(f"Invalid UUID format or extraction error for expense in transaction {transaction_record.pk}: {e}. Code: {transaction_record.transaction_code}", exc_info=True)
-                        if transaction_record:
-                            transaction_record.failure_reason = f"Invalid expense UUID in transaction code: {e}"
-                            transaction_record.status = "failed_expense_link"
+                            logger.error(f"Insufficient funds in wallet {wallet.pk} for transaction {transaction_record.pk}. Wallet balance: {wallet.balance}, Deduction needed: {total_deduction}")
+                            transaction_record.status = "failed_insufficient_funds"
+                            transaction_record.failure_reason = "Insufficient funds in wallet"
                             transaction_record.save()
-                    except Expense.DoesNotExist:
-                        logger.error(f"Expense with UUID {expense_uuid} not found for transaction {transaction_record.pk}.")
-                        if transaction_record:
-                            transaction_record.failure_reason = f"Expense with UUID {expense_uuid} not found."
-                            transaction_record.status = "failed_expense_link"
-                            transaction_record.save()
+                            mpesa_transaction.status = 'FAILED_INSUFFICIENT_FUNDS'
+                            mpesa_transaction.result_desc = "Insufficient funds in wallet"
+                    except Wallet.DoesNotExist:
+                        logger.error(f"Sender wallet {transaction_record.sender_wallet.pk} not found for transaction {transaction_record.pk}.")
                     except Exception as e:
-                        logger.error(f"An unexpected error occurred while updating expense for transaction {transaction_record.pk}: {e}", exc_info=True)
-                        if transaction_record:
-                            transaction_record.failure_reason = f"Unexpected error updating expense: {e}"
-                            transaction_record.status = "failed_expense_link"
-                            transaction_record.save()
+                        logger.error(f"Error updating wallet balance for transaction {transaction_record.pk}: {e}", exc_info=True)
+
+                # Mark expense as paid using the direct foreign key relationship
+                try:
+                    if transaction_record.expense:
+                        expense = transaction_record.expense
+                        expense.paid = True
+                        expense.paid_at = timezone.now()
+                        expense.payment_completed = True
+                        expense.save()
+                        logger.info(f"Expense {expense.pk} marked as paid.")
+                    else:
+                        logger.warning(f"No expense linked to transaction {transaction_record.pk}")
+                        
+                except Exception as e:
+                    logger.error(f"Unexpected error updating expense for transaction {transaction_record.pk}: {e}", exc_info=True)
+                    transaction_record.failure_reason = f"Unexpected error updating expense: {e}"
+                    transaction_record.status = "failed_expense_link"
+                    transaction_record.save()
 
             else:
                 # Payment failed 
                 mpesa_transaction.status = 'FAILED'
                 logger.warning(f"B2C payment failed for OriginatorConversationID: {originator_conversation_id}. Reason: {result_desc}")
                 
-                if transaction_record:
-                    transaction_record.status = "failed"
-                    transaction_record.failure_reason = result_desc
-                    transaction_record.completed_at = timezone.now()
-                    transaction_record.save()
-                    logger.debug(f"Transaction record {transaction_record.pk} updated to failed.")
+                transaction_record.status = "failed"
+                transaction_record.failure_reason = result_desc
+                transaction_record.completed_at = timezone.now()
+                transaction_record.save()
+                logger.debug(f"Transaction record {transaction_record.pk} updated to failed.")
 
-                    # Update fee transaction and reset expense (similar to B2B)
-                    try:
-                        # Assuming TransactionFee model here, not Transaction
-                        fee_transaction = TransactionFee.objects.get(
-                            parent_transaction=transaction_record,
-                            transaction_type="fee"
-                        )
-                        fee_transaction.status = "failed"
-                        fee_transaction.failure_reason = result_desc
-                        fee_transaction.completed_at = timezone.now()
-                        fee_transaction.save()
-                        logger.debug(f"Fee transaction {fee_transaction.pk} updated to failed.")
-                    except TransactionFee.DoesNotExist: # Changed from Transaction.DoesNotExist
-                        logger.warning(f"Fee transaction not found for failed parent transaction {transaction_record.pk}.")
-                    except Exception as e:
-                        logger.error(f"Error updating fee transaction for failed transaction {transaction_record.pk}: {e}", exc_info=True)
+                # Update fee transaction
+                try:
+                    fee_transaction = TransactionFee.objects.get(
+                        parent_transaction=transaction_record,
+                        transaction_type="fee"
+                    )
+                    fee_transaction.status = "failed"
+                    fee_transaction.failure_reason = result_desc
+                    fee_transaction.completed_at = timezone.now()
+                    fee_transaction.save()
+                    logger.debug(f"Fee transaction {fee_transaction.pk} updated to failed.")
+                except TransactionFee.DoesNotExist:
+                    logger.info(f"No fee transaction found for failed parent transaction {transaction_record.pk}.")
+                except Exception as e:
+                    logger.error(f"Error updating fee transaction for failed transaction {transaction_record.pk}: {e}", exc_info=True)
 
-
-                    # Reset expense if payment failed - **UUID EXTRACTION HAPPENS HERE**
-                    try:
-                        # Using the robust regex UUID extraction
-                        match = UUID_PATTERN.search(transaction_record.transaction_code)
+                # Reset expense if payment failed using the direct foreign key relationship
+                try:
+                    if transaction_record.expense:
+                        expense = transaction_record.expense
+                        expense.payment_initiated = False
+                        expense.payment_reference = None
+                        expense.save()
+                        logger.info(f"Expense {expense.pk} reset due to failed payment.")
                         
-                        if match:
-                            extracted_uuid_str = match.group(0) # Get the matched string
-                            expense_uuid = uuid.UUID(extracted_uuid_str) # Validate the string as a UUID object
-
-                            expense = Expense.objects.get(id=expense_uuid)
-                            expense.payment_initiated = False
-                            expense.payment_reference = None # Clear any previous reference
-                            expense.save()
-                            logger.info(f"Expense {expense.pk} reset due to failed payment.")
-                        else:
-                            logger.error(f"No valid UUID found in transaction_code for failed expense reset: {transaction_record.transaction_code}")
-
-                    except (ValueError, ValidationError) as e:
-                        logger.error(f"Invalid UUID format or extraction error for failed expense in transaction {transaction_record.pk}: {e}. Code: {transaction_record.transaction_code}", exc_info=True)
-                    except Expense.DoesNotExist:
-                        logger.error(f"Expense with UUID {expense_uuid} not found for failed transaction {transaction_record.pk}.")
-                    except Exception as e:
-                        logger.error(f"An unexpected error occurred while resetting expense for failed transaction {transaction_record.pk}: {e}", exc_info=True)
+                except Exception as e:
+                    logger.error(f"Error resetting expense for failed transaction {transaction_record.pk}: {e}", exc_info=True)
 
             # Update common fields for MpesaTransaction
             mpesa_transaction.result_code = result_code
             mpesa_transaction.result_desc = result_desc
-            mpesa_transaction.callback_data = result_data # Store the full callback data for debugging
-            # Mpesa callbacks typically don't include transaction date in the main body,
-            # but rather in ResultParameters. If you need it, extract it there.
-            # Otherwise, timezone.now() is fine for when the callback was processed.
-            mpesa_transaction.transaction_date = timezone.now() 
+            mpesa_transaction.callback_data = result_data
+            mpesa_transaction.transaction_date = timezone.now()
             mpesa_transaction.save()
 
         return JsonResponse({
@@ -2604,7 +2542,7 @@ def b2c_timeout_callback(request):
 @require_http_methods(["POST"])
 def b2b_result_callback(request):
     """
-    Enhanced B2B Result callback handler
+    Enhanced B2B Result callback handler with improved transaction linking
     Handles responses from B2B payment requests and updates both MpesaTransaction and Transaction models
     """
     try:
@@ -2619,25 +2557,30 @@ def b2b_result_callback(request):
         transaction_id = result.get('TransactionID')
 
         # Find the MpesaTransaction
+        mpesa_transaction = None
         try:
             mpesa_transaction = MpesaTransaction.objects.get(
                 originator_conversation_id=originator_conversation_id,
                 conversation_id=conversation_id
             )
         except MpesaTransaction.DoesNotExist:
-            logger.error(f"B2B MpesaTransaction not found: {originator_conversation_id}")
+            logger.error(f"B2B MpesaTransaction not found for OriginatorConversationID: {originator_conversation_id} and ConversationID: {conversation_id}")
             return JsonResponse({'ResultCode': 1, 'ResultDesc': 'MpesaTransaction not found'})
 
-        # Find the related Transaction record
+        # Find the related Transaction record using conversation IDs
+        transaction_record = None
         try:
             transaction_record = Transaction.objects.get(
-                originator_conversation_id=mpesa_transaction.originator_conversation_id,
-                conversation_id=mpesa_transaction.conversation_id
+                originator_conversation_id=originator_conversation_id,
+                conversation_id=conversation_id
             )
+            logger.debug(f"Transaction record found: {transaction_record}")
         except Transaction.DoesNotExist:
-            logger.error(f"Transaction not found for checkout request: {mpesa_transaction.checkout_request_id}")
-            # Continue processing MpesaTransaction even if Transaction not found
-            transaction_record = None
+            logger.error(f"Transaction not found for conversations: {originator_conversation_id}, {conversation_id}")
+            return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Transaction not found'})
+        except Exception as e:
+            logger.error(f"Error fetching transaction record: {e}", exc_info=True)
+            return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Error fetching transaction'})
 
         with transaction.atomic():
             # Update MpesaTransaction status
@@ -2645,7 +2588,7 @@ def b2b_result_callback(request):
                 mpesa_transaction.status = 'COMPLETED'
                 mpesa_transaction.transaction_id = transaction_id
                 
-                # Extract result parameters
+                # Extract result parameters for B2B
                 result_parameters = result.get('ResultParameters', {}).get('ResultParameter', [])
                 amount_paid = None
                 
@@ -2678,110 +2621,109 @@ def b2b_result_callback(request):
                         # Store receiver name if needed
                         pass
 
-                logger.info(f"B2B payment completed: {transaction_id}")
+                logger.info(f"B2B payment completed successfully for transaction ID: {transaction_id}")
                 
-                # Update Transaction record if found
-                if transaction_record:
-                    transaction_record.status = "completed"
-                    transaction_record.mpesa_transaction_id = transaction_id
-                    transaction_record.completed_at = timezone.now()
-                    transaction_record.save()
+                # Update Transaction record
+                transaction_record.status = "completed"
+                transaction_record.completed_at = timezone.now()
+                transaction_record.payment_completed = True
+                transaction_record.paid_at = timezone.now()
+                transaction_record.save()
+                logger.debug(f"Transaction record {transaction_record.pk} updated to completed.")
 
-                    # Update fee transaction if exists
-                    try:
-                        fee_transaction = Transaction.objects.get(
-                            transaction_id=transaction_record.transaction_id,
-                        )
-                        fee_transaction.status = "completed"
-                        fee_transaction.completed_at = timezone.now()
-                        fee_transaction.save()
-                    except Transaction.DoesNotExist:
-                        pass
+                # Update fee transaction using parent_transaction relationship
+                try:
+                    fee_transaction = TransactionFee.objects.get(
+                        parent_transaction=transaction_record,
+                        transaction_type="fee"
+                    )
+                    fee_transaction.status = "completed"
+                    fee_transaction.completed_at = timezone.now()
+                    fee_transaction.save()
+                    logger.debug(f"Fee transaction {fee_transaction.pk} updated to completed.")
+                except TransactionFee.DoesNotExist:
+                    logger.info(f"No fee transaction found for parent transaction {transaction_record.pk}.")
+                except Exception as e:
+                    logger.error(f"Error updating fee transaction for {transaction_record.pk}: {e}", exc_info=True)
 
-                    # Deduct amount and fee from wallet
+                # Deduct amount and fee from wallet
+                if transaction_record.sender_wallet:
                     try:
-                        wallet = transaction_record.sender_wallet
-                        total_deduction = transaction_record.amount + (transaction_record.transfer_fee or 0)
-                        
-                        # Lock wallet for update
-                        wallet = Wallet.objects.select_for_update().get(pk=wallet.pk)
+                        wallet = Wallet.objects.select_for_update().get(pk=transaction_record.sender_wallet.pk)
+                        total_deduction = transaction_record.amount + (transaction_record.transfer_fee or Decimal('0'))
                         
                         if wallet.balance >= total_deduction:
                             wallet.balance -= total_deduction
                             wallet.save()
-                            
-                            # Mark expense as paid - Using regex pattern matching
-                            try:
-                                # Extract expense UUID from transaction code using regex
-                                match = UUID_PATTERN.search(transaction_record.transaction_code)
-                                
-                                if match:
-                                    extracted_uuid_str = match.group(0)  # Get the matched string
-                                    logger.info(f"Extracted UUID from transaction code: {extracted_uuid_str}")
-                                    
-                                    expense_uuid = uuid.UUID(extracted_uuid_str)  # Validate the string as a UUID object
-                                    expense = Expense.objects.get(id=expense_uuid)
-                                    expense.paid = True
-                                    expense.paid_at = timezone.now()
-                                    expense.payment_completed = True
-                                    expense.save()
-                                    
-                                    logger.info(f"Successfully updated expense: {expense_uuid}")
-                                else:
-                                    logger.warning(f"No valid UUID found in transaction code: {transaction_record.transaction_code}")
-                                
-                            except (Expense.DoesNotExist, ValueError, ValidationError) as e:
-                                logger.error(f"Could not find or update expense for transaction: {transaction_record.transaction_code}. Error: {str(e)}")
-                                # Continue processing even if expense update fails
-                                pass
+                            logger.info(f"Wallet {wallet.pk} balance updated. New balance: {wallet.balance}")
                         else:
-                            logger.error(f"Insufficient wallet balance for completed transaction: {transaction_record.id}")
-                    
-                    except Exception as wallet_error:
-                        logger.error(f"Error processing wallet deduction: {str(wallet_error)}")
-                        # Continue processing even if wallet update fails
+                            logger.error(f"Insufficient funds in wallet {wallet.pk} for transaction {transaction_record.pk}. Wallet balance: {wallet.balance}, Deduction needed: {total_deduction}")
+                            transaction_record.status = "failed_insufficient_funds"
+                            transaction_record.failure_reason = "Insufficient funds in wallet"
+                            transaction_record.save()
+                            mpesa_transaction.status = 'FAILED_INSUFFICIENT_FUNDS'
+                            mpesa_transaction.result_desc = "Insufficient funds in wallet"
+                    except Wallet.DoesNotExist:
+                        logger.error(f"Sender wallet {transaction_record.sender_wallet.pk} not found for transaction {transaction_record.pk}.")
+                    except Exception as e:
+                        logger.error(f"Error updating wallet balance for transaction {transaction_record.pk}: {e}", exc_info=True)
+
+                # Mark expense as paid using the direct foreign key relationship
+                try:
+                    if transaction_record.expense:
+                        expense = transaction_record.expense
+                        expense.paid = True
+                        expense.paid_at = timezone.now()
+                        expense.payment_completed = True
+                        expense.save()
+                        logger.info(f"Expense {expense.pk} marked as paid.")
+                    else:
+                        logger.warning(f"No expense linked to transaction {transaction_record.pk}")
+                        
+                except Exception as e:
+                    logger.error(f"Unexpected error updating expense for transaction {transaction_record.pk}: {e}", exc_info=True)
+                    transaction_record.failure_reason = f"Unexpected error updating expense: {e}"
+                    transaction_record.status = "failed_expense_link"
+                    transaction_record.save()
 
             else:
                 # Payment failed
                 mpesa_transaction.status = 'FAILED'
-                logger.warning(f"B2B payment failed: {result_desc}")
+                logger.warning(f"B2B payment failed for OriginatorConversationID: {originator_conversation_id}. Reason: {result_desc}")
                 
-                if transaction_record:
-                    transaction_record.status = "failed"
-                    transaction_record.failure_reason = result_desc
-                    transaction_record.completed_at = timezone.now()
-                    transaction_record.save()
+                transaction_record.status = "failed"
+                transaction_record.failure_reason = result_desc
+                transaction_record.completed_at = timezone.now()
+                transaction_record.save()
+                logger.debug(f"Transaction record {transaction_record.pk} updated to failed.")
 
-                    # Update fee transaction if exists
-                    try:
-                        fee_transaction = Transaction.objects.get(
-                            transaction_id=transaction_record.transaction_id,
-                            transaction_type="fee"
-                        )
-                        fee_transaction.status = "failed"
-                        fee_transaction.failure_reason = result_desc
-                        fee_transaction.completed_at = timezone.now()
-                        fee_transaction.save()
-                    except Transaction.DoesNotExist:
-                        pass
+                # Update fee transaction
+                try:
+                    fee_transaction = TransactionFee.objects.get(
+                        parent_transaction=transaction_record,
+                        transaction_type="fee"
+                    )
+                    fee_transaction.status = "failed"
+                    fee_transaction.failure_reason = result_desc
+                    fee_transaction.completed_at = timezone.now()
+                    fee_transaction.save()
+                    logger.debug(f"Fee transaction {fee_transaction.pk} updated to failed.")
+                except TransactionFee.DoesNotExist:
+                    logger.info(f"No fee transaction found for failed parent transaction {transaction_record.pk}.")
+                except Exception as e:
+                    logger.error(f"Error updating fee transaction for failed transaction {transaction_record.pk}: {e}", exc_info=True)
 
-                    # Reset expense payment status - Using regex pattern matching
-                    try:
-                        match = UUID_PATTERN.search(transaction_record.transaction_code)
+                # Reset expense if payment failed using the direct foreign key relationship
+                try:
+                    if transaction_record.expense:
+                        expense = transaction_record.expense
+                        expense.payment_initiated = False
+                        expense.payment_reference = None
+                        expense.save()
+                        logger.info(f"Expense {expense.pk} reset due to failed payment.")
                         
-                        if match:
-                            extracted_uuid_str = match.group(0)
-                            expense_uuid = uuid.UUID(extracted_uuid_str)
-                            expense = Expense.objects.get(id=expense_uuid)
-                            expense.payment_initiated = False
-                            expense.payment_reference = None
-                            expense.save()
-                            logger.info(f"Reset expense payment status: {expense_uuid}")
-                        else:
-                            logger.warning(f"No valid UUID found in transaction code for reset: {transaction_record.transaction_code}")
-                            
-                    except (Expense.DoesNotExist, ValueError, ValidationError) as e:
-                        logger.error(f"Could not find or reset expense for failed transaction: {transaction_record.transaction_code}. Error: {str(e)}")
+                except Exception as e:
+                    logger.error(f"Error resetting expense for failed transaction {transaction_record.pk}: {e}", exc_info=True)
 
             # Update common fields for MpesaTransaction
             mpesa_transaction.result_code = result_code
@@ -2796,11 +2738,11 @@ def b2b_result_callback(request):
         })
 
     except json.JSONDecodeError:
-        logger.error("Invalid JSON in B2B result callback")
-        return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Invalid JSON'})
+        logger.error("Invalid JSON in B2B result callback request body.", exc_info=True)
+        return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Invalid JSON in request body'}, status=400)
     except Exception as e:
-        logger.error(f"Error processing B2B result: {str(e)}", exc_info=True)
-        return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Internal server error'})
+        logger.error(f"Critical error processing B2B result callback: {str(e)}", exc_info=True)
+        return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Internal server error'}, status=500)
 @csrf_exempt
 @require_http_methods(["POST"])
 def b2b_timeout_callback(request):

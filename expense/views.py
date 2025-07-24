@@ -1026,7 +1026,7 @@ def make_payment(request):
                 'message': 'Expense must have a valid expense type.'
             })
 
-        expense_type_wallet = expense.wallet  # Assuming this is the expense type wallet
+        expense_type_wallet = expense.wallet
         
         # Calculate transfer fee
         transfer_fee = calculate_transfer_fee(payment_method, input_amount)
@@ -1035,13 +1035,13 @@ def make_payment(request):
         # Check expense type wallet balance first
         if expense_type_wallet.balance >= total_amount:
             selected_wallet = expense_type_wallet
-            wallet_type = expense_type_wallet.wallet_type  # Assuming this field exists
+            wallet_type = expense_type_wallet.wallet_type
         else:
             # Check primary wallet balance as fallback
             try:
                 primary_wallet = Wallet.objects.get(
                     company=company,
-                    wallet_type='PRIMARY'  # Adjust this field name as per your model
+                    wallet_type='PRIMARY'
                 )
                 if primary_wallet.balance >= total_amount:
                     selected_wallet = primary_wallet
@@ -1120,27 +1120,10 @@ def make_payment(request):
                 'message': 'Invalid payment method selected.'
             })
 
-        # Generate unique transaction reference
+        # Generate unique transaction reference with expense UUID
         transaction_ref = f"EXP-{expense.id}"
 
-        # Initiate M-Pesa payment
-        mpesa_response = initiate_mpesa_payment(
-            payment_method=payment_method,
-            amount=int(input_amount),
-            payment_details=payment_details,
-            transaction_ref=transaction_ref,
-            expense=expense
-        )
-
-        print(f"M-Pesa payment response: {mpesa_response}")
-
-        if mpesa_response.get('ResponseCode') != '0':
-            return JsonResponse({
-                'success': False,
-                'message': f'M-Pesa payment initiation failed: {mpesa_response.get("ResponseDescription", "Unknown error")}'
-            })
-
-        # Create transaction record in pending status
+        # Create transaction record in pending status BEFORE initiating payment
         with transaction.atomic():
             # Lock wallet for update
             selected_wallet = Wallet.objects.select_for_update().get(pk=selected_wallet.pk)
@@ -1155,19 +1138,17 @@ def make_payment(request):
                 description=f"Payment for expense #{expense.id}: {getattr(expense, 'title', 'Expense')} via {payment_method}",
                 status="pending",
                 transaction_type="withdraw",
-                transaction_code=transaction_ref,
-                mpesa_checkout_request_id=mpesa_response.get('CheckoutRequestID'),
-                merchant_request_id=mpesa_response.get('MerchantRequestID'),
-                conversation_id = mpesa_response.get('ConversationID'),
-                originator_conversation_id = mpesa_response.get('OriginatorConversationID'),
+                transaction_code=transaction_ref,  # Keep original reference with expense UUID
                 payment_method=payment_method,
-                payment_details=json.dumps(payment_details),
-                transfer_fee=transfer_fee
+                payment_details=payment_details,  # Store as dict, not JSON string
+                transfer_fee=transfer_fee,
+                expense=expense  # Direct foreign key reference
             )
 
             # Create fee transaction if fee > 0
+            fee_transaction = None
             if transfer_fee > 0:
-                TransactionFee.objects.create(
+                fee_transaction = TransactionFee.objects.create(
                     company=company,
                     user=user,
                     sender=user,
@@ -1180,6 +1161,36 @@ def make_payment(request):
                     parent_transaction=transaction_record,
                     payment_method=payment_method
                 )
+
+            # Initiate M-Pesa payment with transaction record
+            mpesa_response = initiate_mpesa_payment(
+                payment_method=payment_method,
+                amount=int(input_amount),
+                payment_details=payment_details,
+                transaction_ref=transaction_ref,
+                expense=expense,
+                transaction_record=transaction_record  # Pass the transaction record
+            )
+
+            print(f"M-Pesa payment response: {mpesa_response}")
+
+            if mpesa_response.get('ResponseCode') != '0':
+                # Delete the transaction record if payment initiation failed
+                if fee_transaction:
+                    fee_transaction.delete()
+                transaction_record.delete()
+                
+                return JsonResponse({
+                    'success': False,
+                    'message': f'M-Pesa payment initiation failed: {mpesa_response.get("ResponseDescription", "Unknown error")}'
+                })
+
+            # Update transaction record with M-Pesa response data
+            transaction_record.mpesa_checkout_request_id = mpesa_response.get('CheckoutRequestID')
+            transaction_record.merchant_request_id = mpesa_response.get('MerchantRequestID')
+            transaction_record.conversation_id = mpesa_response.get('ConversationID')
+            transaction_record.originator_conversation_id = mpesa_response.get('OriginatorConversationID')
+            transaction_record.save()
 
             # Mark expense as being processed
             expense.payment_initiated = True
@@ -1206,7 +1217,8 @@ def make_payment(request):
             'success': False,
             'message': 'An unexpected error occurred. Please try again.'
         })
-def initiate_mpesa_payment(payment_method, amount, payment_details, transaction_ref, expense):
+
+def initiate_mpesa_payment(payment_method, amount, payment_details, transaction_ref, expense, transaction_record):
     """Initiate M-Pesa payment based on method type"""
     
     try:
@@ -1214,19 +1226,20 @@ def initiate_mpesa_payment(payment_method, amount, payment_details, transaction_
         mpesa = MpesaDaraja()
         access_token = mpesa.get_access_token()
         if not access_token:
-            return {'success': False, 'message': 'Failed to authenticate with M-Pesa API'}
+            return {'ResponseCode': '1', 'ResponseDescription': 'Failed to authenticate with M-Pesa API'}
 
         # Common payment parameters
         callback_url = f"{settings.BASE_URL}{reverse('wallet:b2c_result')}"
         timeout_url = f"{settings.BASE_URL}{reverse('wallet:b2c_timeout')}"
         
         if payment_method == 'mpesa_number':
-            # B2C Payment
+            # B2C Payment - Pass the transaction_record
             response = initiate_b2c_payment(
                 mpesa=mpesa,
                 amount=amount,
                 phone_number=payment_details['phone_number'],
                 wallet=expense.wallet,
+                transaction=transaction_record  # Pass the transaction record
             )
             
         elif payment_method in ['paybill_number', 'till_number']:
@@ -1242,16 +1255,17 @@ def initiate_mpesa_payment(payment_method, amount, payment_details, transaction_
                 mpesa=mpesa,
                 amount=amount,
                 business_id=receiver_shortcode,
-                wallet=expense.wallet
+                wallet=expense.wallet,
+                transaction=transaction_record  # Pass the transaction record
             )
         else:
-            return {'success': False, 'message': 'Unsupported payment method'}
+            return {'ResponseCode': '1', 'ResponseDescription': 'Unsupported payment method'}
 
         return response
 
     except Exception as e:
         logger.error(f"M-Pesa payment initiation error: {str(e)}", exc_info=True)
-        return {'success': False, 'message': 'Payment service temporarily unavailable'}
+        return {'ResponseCode': '1', 'ResponseDescription': 'Payment service temporarily unavailable'}
 
 @login_required
 def get_expense_options(request):
