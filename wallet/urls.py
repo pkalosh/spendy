@@ -39,6 +39,14 @@ urlpatterns = [
     path('settings/category/edit/', views.edit_category, name='edit_category'),
     path('settings/category/delete/', views.delete_category, name='delete_category'),
 
+    # New URLs for Clients and Brands
+    path('add-client/', views.add_client, name='add_client'),
+    path('edit-client/', views.edit_client, name='edit_client'),
+    path('delete-client/', views.delete_client, name='delete_client'),
+    path('add-brand/', views.add_brand, name='add_brand'),
+    path('edit-brand/', views.edit_brand, name='edit_brand'),
+    path('delete-brand/', views.delete_brand, name='delete_brand'),
+
     # STK Push callbacks
     path('stk/callback/', views.stk_push_callback, name='stk_push_callback'),
     path('stk/timeout/', views.stk_push_timeout_callback, name='stk_push_timeout_callback'),

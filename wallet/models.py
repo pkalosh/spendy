@@ -614,3 +614,46 @@ class B2BTransaction(models.Model):
     def __str__(self):
         return self.transaction_id
     
+
+
+class Client(models.Model):
+    company = models.ForeignKey(CompanyKYC, on_delete=models.CASCADE, related_name='clients')
+    name = models.CharField(max_length=255)
+    contact_person = models.CharField(max_length=255, blank=True, null=True)
+    contact_email = models.EmailField(blank=True, null=True)
+    contact_phone = models.CharField(max_length=20, blank=True, null=True)
+    address = models.TextField(blank=True, null=True)
+    city = models.CharField(max_length=100, blank=True, null=True)
+    country = models.CharField(max_length=100, blank=True, null=True)
+    website = models.URLField(blank=True, null=True)
+    industry = models.CharField(max_length=100, blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Client"
+        verbose_name_plural = "Clients"
+        unique_together = ('company', 'name')
+
+    def __str__(self):
+        return self.name
+
+class Brand(models.Model):
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='brands')
+    name = models.CharField(max_length=255)
+    logo = models.ImageField(upload_to='brand_logos/', blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
+    website = models.URLField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Brand"
+        verbose_name_plural = "Brands"
+        unique_together = ('client', 'name')
+
+    def __str__(self):
+        return f"{self.name} ({self.client.name})"

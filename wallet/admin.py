@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Wallet,CompanyKYC,Notification,TransactionFee,Transaction,StaffProfile,Role,Module,SMSLog,MpesaCallbackLog,MpesaTransaction
+from .models import Wallet,CompanyKYC,Notification,TransactionFee,Transaction,StaffProfile,Role,Module,SMSLog,MpesaCallbackLog,MpesaTransaction,Client,Brand
 # Register your models here.
 # admin.site.register(Wallet)
 # admin.site.register(CompanyKYC)
@@ -11,6 +11,8 @@ admin.site.register(Module)
 admin.site.register(SMSLog)
 admin.site.register(MpesaCallbackLog)
 admin.site.register(TransactionFee)
+admin.site.register(Client)
+admin.site.register(Brand)
 @admin.register(MpesaTransaction)
 class MpesaTransactionAdmin(admin.ModelAdmin):
     list_display = (

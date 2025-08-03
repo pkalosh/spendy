@@ -29,7 +29,7 @@ from openpyxl import Workbook
 from reportlab.lib.pagesizes import letter, landscape
 from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
-from .models import Wallet, Transaction, TransactionFee
+from .models import Wallet, Transaction, TransactionFee,Client,Brand
 from .utility import NotificationService,  notify_expense_workflow
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
@@ -47,14 +47,118 @@ def is_admin(user):
 @login_required
 def settings_view(request):
     """View for system settings page"""
-    company = get_object_or_404(CompanyKYC,user=request.user)
- 
+    company = get_object_or_404(CompanyKYC, user=request.user)
+    
+    # Fetch clients and their related brands for the current company
+    clients = Client.objects.filter(company=company, is_active=True).prefetch_related('brands').order_by('name')
+
     context = {
-        'expense_categories': ExpenseCategory.objects.filter(company=company,is_active=True).order_by('name'),
-        'operation_categories': OperationCategory.objects.filter(company=company,is_active=True).order_by('name'),
-        'event_categories': EventCategory.objects.filter(company=company,is_active=True).order_by('name'),
+        'expense_categories': ExpenseCategory.objects.filter(company=company, is_active=True).order_by('name'),
+        'operation_categories': OperationCategory.objects.filter(company=company, is_active=True).order_by('name'),
+        'event_categories': EventCategory.objects.filter(company=company, is_active=True).order_by('name'),
+        'clients': clients, # Add clients to the context
     }
     return render(request, 'settings.html', context)
+
+
+# --- Client Views ---
+@login_required
+@require_POST
+def add_client(request):
+    company = get_object_or_404(CompanyKYC, user=request.user)
+    name = request.POST.get('name')
+    if name:
+        Client.objects.create(
+            company=company, 
+            name=name,
+            contact_person=request.POST.get('contact_person'),
+            contact_email=request.POST.get('contact_email'),
+            contact_phone=request.POST.get('contact_phone'),
+            address=request.POST.get('address'),
+            city=request.POST.get('city'),
+            country=request.POST.get('country'),
+            website=request.POST.get('website'),
+            industry=request.POST.get('industry'),
+            notes=request.POST.get('notes'),
+        )
+        # Consider adding a success message here
+    return redirect('wallet:settings_view') # Redirect back to the settings page
+
+@login_required
+@require_POST
+def edit_client(request):
+    client_id = request.POST.get('client_id')
+    client = get_object_or_404(Client, id=client_id, company__user=request.user)
+    
+    client.name = request.POST.get('name')
+    client.contact_person = request.POST.get('contact_person')
+    client.contact_email = request.POST.get('contact_email')
+    client.contact_phone = request.POST.get('contact_phone')
+    client.address = request.POST.get('address')
+    client.city = request.POST.get('city')
+    client.country = request.POST.get('country')
+    client.website = request.POST.get('website')
+    client.industry = request.POST.get('industry')
+    client.notes = request.POST.get('notes')
+    client.save()
+    # Consider adding a success message here
+    return redirect('wallet:settings_view')
+
+@login_required
+@require_POST
+def delete_client(request):
+    client_id = request.POST.get('client_id')
+    client = get_object_or_404(Client, id=client_id, company__user=request.user)
+    client.delete() # This will also delete all related brands due to CASCADE
+    # Consider adding a success message here
+    return redirect('wallet:settings_view')
+
+# --- Brand Views ---
+@login_required
+@require_POST
+def add_brand(request):
+    client_id = request.POST.get('client_id')
+    print(client_id)
+    client = get_object_or_404(Client, id=client_id, company__user=request.user)
+    name = request.POST.get('name')
+    logo = request.FILES.get('logo') # For file uploads
+    
+    if name:
+        Brand.objects.create(
+            client=client,
+            name=name,
+            logo=logo,
+            description=request.POST.get('description'),
+            website=request.POST.get('website'),
+        )
+        # Consider adding a success message here
+    return redirect('wallet:settings_view')
+
+@login_required
+@require_POST
+def edit_brand(request):
+    brand_id = request.POST.get('brand_id')
+    brand = get_object_or_404(Brand, id=brand_id, client__company__user=request.user)
+    
+    brand.name = request.POST.get('name')
+    brand.description = request.POST.get('description')
+    brand.website = request.POST.get('website')
+    if 'logo' in request.FILES: # Handle logo update
+        brand.logo = request.FILES['logo']
+    elif 'clear_logo' in request.POST: # Optional: add a checkbox in modal to clear logo
+        brand.logo = None
+    brand.save()
+    # Consider adding a success message here
+    return redirect('wallet:settings_view')
+
+@login_required
+@require_POST
+def delete_brand(request):
+    brand_id = request.POST.get('brand_id')
+    brand = get_object_or_404(Brand, id=brand_id, client__company__user=request.user)
+    brand.delete()
+    # Consider adding a success message here
+    return redirect('wallet:settings_view')
 
 @login_required
 def add_expense_category(request):
@@ -301,11 +405,12 @@ def create_staff_profile(request):
 
             # Generate and set random password
             
-            user.set_password(random_password)
+            user.set_password(user_form.cleaned_data['password'])
             # Assign appropriate user flags for staff
             user.is_staff = True
             user.company_name = company.company_name
             user.is_org_staff = True
+            user.is_verified = True
             user.save()
 
             staff = profile_form.save(commit=False)

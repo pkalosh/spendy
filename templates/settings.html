@@ -3,7 +3,23 @@
 {% load humanize %}
 
 {% block content %}
-<!-- Dashboard Section start -->
+<script>
+    // Define URLs as JavaScript variables at the top of your template
+    const URLS = {
+        addExpenseCategory: "{% url 'wallet:add_expense_category' %}",
+        addOperationCategory: "{% url 'wallet:add_operation_category' %}",
+        addEventCategory: "{% url 'wallet:add_event_category' %}",
+        addClient: "{% url 'wallet:add_client' %}",
+        editClient: "{% url 'wallet:edit_client' %}",
+        deleteClient: "{% url 'wallet:delete_client' %}",
+        addBrand: "{% url 'wallet:add_brand' %}",
+        editBrand: "{% url 'wallet:edit_brand' %}",
+        deleteBrand: "{% url 'wallet:delete_brand' %}",
+        editCategory: "{% url 'wallet:edit_category' %}",
+        deleteCategory: "{% url 'wallet:delete_category' %}"
+    };
+</script>
+
 <section class="dashboard-section body-collapse">
     <div class="overlay pt-120">
         <div class="container-fruid">
@@ -11,55 +27,78 @@
                 <div class="col-xl-12 col-lg-12">
                     <div class="section-content">
                         <div class="transactions-area">
-                            <div class="section-text d-flex justify-content-between align-items-center">
+                            <div class="section-text d-flex 
+justify-content-between align-items-center">
                                 <div>
                                     <h5>System Setup</h5>
-                                    <p>Manage event categories, expense categories, groups, and other settings.</p>
+                                    <p>Manage event categories,
+                                        expense categories, groups, and other settings.</p>
                                 </div>
                             </div>
-                            
+
                             <div class="settings-container mt-4">
-                                <!-- Table with Tabs -->
                                 <div class="card">
-                                    <div class="card-header d-flex justify-content-between align-items-center">
-                                        <!-- Tabs Navigation -->
-                                        <ul class="nav nav-tabs card-header-tabs" id="categoryTabs" role="tablist">
+                                    <div class="card-header d-flex 
+justify-content-between align-items-center">
+                                        <ul class="nav nav-tabs 
+card-header-tabs" id="categoryTabs" role="tablist">
                                             <li class="nav-item" role="presentation">
-                                                <button class="nav-link active" id="expense-tab" data-bs-toggle="tab" data-bs-target="#expense-pane" type="button" role="tab" aria-controls="expense-pane" aria-selected="true">
+                                                <button class="nav-link active" id="expense-tab" data-bs-toggle="tab"
+                                                    data-bs-target="#expense-pane" type="button" role="tab"
+                                                    aria-controls="expense-pane" aria-selected="true">
                                                     Expense Categories
                                                 </button>
                                             </li>
                                             <li class="nav-item" role="presentation">
-                                                <button class="nav-link" id="operation-tab" data-bs-toggle="tab" data-bs-target="#operation-pane" type="button" role="tab" aria-controls="operation-pane" aria-selected="false">
+                                                <button class="nav-link" id="operation-tab" data-bs-toggle="tab"
+                                                    data-bs-target="#operation-pane" type="button" role="tab"
+                                                    aria-controls="operation-pane" aria-selected="false">
                                                     Operation Categories
                                                 </button>
                                             </li>
                                             <li class="nav-item" role="presentation">
-                                                <button class="nav-link" id="event-tab" data-bs-toggle="tab" data-bs-target="#event-pane" type="button" role="tab" aria-controls="event-pane" aria-selected="false">
+                                                <button class="nav-link" id="event-tab" data-bs-toggle="tab"
+                                                    data-bs-target="#event-pane" type="button" role="tab"
+                                                    aria-controls="event-pane" aria-selected="false">
                                                     Event Categories
                                                 </button>
                                             </li>
+                                            <li class="nav-item" role="presentation">
+                                                <button class="nav-link" id="client-tab" data-bs-toggle="tab"
+                                                    data-bs-target="#client-pane" type="button" role="tab"
+                                                    aria-controls="client-pane" aria-selected="false">
+                                                    Clients
+                                                </button>
+                                            </li>
                                         </ul>
-                                        
-                                        <!-- Action Buttons -->
+
                                         <div class="d-flex gap-2">
-                                            <button class="btn btn-primary btn-sm" id="addExpenseBtn" data-bs-toggle="modal" data-bs-target="#expenseCategoryModal">
-                                                <i class="fas fa-plus"></i> Add Expense Category
+                                            <button class="btn 
+btn-primary btn-sm" id="addExpenseBtn" data-bs-toggle="modal" data-bs-target="#expenseCategoryModal">
+                                                <i class="fas 
+fa-plus"></i> Add Expense Category
                                             </button>
-                                            <button class="btn btn-primary btn-sm d-none" id="addOperationBtn" data-bs-toggle="modal" data-bs-target="#operationCategoryModal" >
-                                                <i class="fas fa-plus"></i> Add Operation Category
+                                            <button class="btn 
+btn-primary btn-sm d-none" id="addOperationBtn" data-bs-toggle="modal" data-bs-target="#operationCategoryModal">
+                                                <i class="fas 
+fa-plus"></i> Add Operation Category
                                             </button>
-                                            <button class="btn btn-primary btn-sm d-none" id="addEventBtn" data-bs-toggle="modal" data-bs-target="#eventCategoryModal">
-                                                <i class="fas fa-plus"></i> Add Event Category
+                                            <button class="btn 
+btn-primary btn-sm d-none" id="addEventBtn" data-bs-toggle="modal" data-bs-target="#eventCategoryModal">
+                                                <i class="fas 
+fa-plus"></i> Add Event Category
+                                            </button>
+                                            <button class="btn btn-primary btn-sm d-none" id="addClientBtn"
+                                                data-bs-toggle="modal" data-bs-target="#clientModal">
+                                                <i class="fas fa-plus"></i> Add Client
                                             </button>
                                         </div>
                                     </div>
-                                    
+
                                     <div class="card-body">
-                                        <!-- Tab Content -->
                                         <div class="tab-content" id="categoryTabContent">
-                                            <!-- Expense Categories Tab -->
-                                            <div class="tab-pane fade show active" id="expense-pane" role="tabpanel" aria-labelledby="expense-tab">
+                                            <div class="tab-pane fade
+ show active" id="expense-pane" role="tabpanel" aria-labelledby="expense-tab">
                                                 <div class="table-responsive">
                                                     <table class="table table-hover" id="expenseTable">
                                                         <thead class="table-light">
@@ -78,17 +117,18 @@
                                                                 <td>{{ category.created_at|date:"M d, Y" }}</td>
                                                                 <td class="text-center">
                                                                     <div class="btn-group btn-group-sm" role="group">
-                                                                        <button class="btn btn-outline-primary edit-category" 
-                                                                                data-type="expense" 
-                                                                                data-id="{{ category.id }}"
-                                                                                data-name="{{ category.name }}"
-                                                                                title="Edit">
+                                                                        <button
+                                                                            class="btn btn-outline-primary edit-category"
+                                                                            data-type="expense"
+                                                                            data-id="{{ category.id }}"
+                                                                            data-name="{{ category.name }}"
+                                                                            title="Edit">
                                                                             <i class="fas fa-edit"></i>
                                                                         </button>
-                                                                        <button class="btn btn-outline-danger delete-category"
-                                                                                data-type="expense"
-                                                                                data-id="{{ category.id }}"
-                                                                                title="Delete">
+                                                                        <button
+                                                                            class="btn btn-outline-danger delete-category"
+                                                                            data-type="expense"
+                                                                            data-id="{{ category.id }}" title="Delete">
                                                                             <i class="fas fa-trash"></i>
                                                                         </button>
                                                                     </div>
@@ -106,9 +146,9 @@
                                                     </table>
                                                 </div>
                                             </div>
-                                            
-                                            <!-- Operation Categories Tab -->
-                                            <div class="tab-pane fade" id="operation-pane" role="tabpanel" aria-labelledby="operation-tab">
+
+                                            <div class="tab-pane 
+fade" id="operation-pane" role="tabpanel" aria-labelledby="operation-tab">
                                                 <div class="table-responsive">
                                                     <table class="table table-hover" id="operationTable">
                                                         <thead class="table-light">
@@ -127,17 +167,18 @@
                                                                 <td>{{ category.created_at|date:"M d, Y" }}</td>
                                                                 <td class="text-center">
                                                                     <div class="btn-group btn-group-sm" role="group">
-                                                                        <button class="btn btn-outline-primary edit-category" 
-                                                                                data-type="operation" 
-                                                                                data-id="{{ category.id }}"
-                                                                                data-name="{{ category.name }}"
-                                                                                title="Edit">
+                                                                        <button
+                                                                            class="btn btn-outline-primary edit-category"
+                                                                            data-type="operation"
+                                                                            data-id="{{ category.id }}"
+                                                                            data-name="{{ category.name }}"
+                                                                            title="Edit">
                                                                             <i class="fas fa-edit"></i>
                                                                         </button>
-                                                                        <button class="btn btn-outline-danger delete-category"
-                                                                                data-type="operation"
-                                                                                data-id="{{ category.id }}"
-                                                                                title="Delete">
+                                                                        <button
+                                                                            class="btn btn-outline-danger delete-category"
+                                                                            data-type="operation"
+                                                                            data-id="{{ category.id }}" title="Delete">
                                                                             <i class="fas fa-trash"></i>
                                                                         </button>
                                                                     </div>
@@ -155,9 +196,9 @@
                                                     </table>
                                                 </div>
                                             </div>
-                                            
-                                            <!-- Event Categories Tab -->
-                                            <div class="tab-pane fade" id="event-pane" role="tabpanel" aria-labelledby="event-tab">
+
+                                            <div class="tab-pane 
+fade" id="event-pane" role="tabpanel" aria-labelledby="event-tab">
                                                 <div class="table-responsive">
                                                     <table class="table table-hover" id="eventTable">
                                                         <thead class="table-light">
@@ -176,17 +217,18 @@
                                                                 <td>{{ category.created_at|date:"M d, Y" }}</td>
                                                                 <td class="text-center">
                                                                     <div class="btn-group btn-group-sm" role="group">
-                                                                        <button class="btn btn-outline-primary edit-category" 
-                                                                                data-type="event" 
-                                                                                data-id="{{ category.id }}"
-                                                                                data-name="{{ category.name }}"
-                                                                                title="Edit">
+                                                                        <button
+                                                                            class="btn btn-outline-primary edit-category"
+                                                                            data-type="event"
+                                                                            data-id="{{ category.id }}"
+                                                                            data-name="{{ category.name }}"
+                                                                            title="Edit">
                                                                             <i class="fas fa-edit"></i>
                                                                         </button>
-                                                                        <button class="btn btn-outline-danger delete-category"
-                                                                                data-type="event"
-                                                                                data-id="{{ category.id }}"
-                                                                                title="Delete">
+                                                                        <button
+                                                                            class="btn btn-outline-danger delete-category"
+                                                                            data-type="event"
+                                                                            data-id="{{ category.id }}" title="Delete">
                                                                             <i class="fas fa-trash"></i>
                                                                         </button>
                                                                     </div>
@@ -197,6 +239,117 @@
                                                                 <td colspan="4" class="text-center text-muted py-4">
                                                                     <i class="fas fa-inbox fa-2x mb-2"></i><br>
                                                                     No event categories found
+                                                                </td>
+                                                            </tr>
+                                                            {% endfor %}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+
+                                            <div class="tab-pane fade" id="client-pane" role="tabpanel"
+                                                aria-labelledby="client-tab">
+                                                <div class="table-responsive">
+                                                    <table class="table table-hover" id="clientTable">
+                                                        <thead class="table-light">
+                                                            <tr>
+                                                                <th scope="col">#</th>
+                                                                <th scope="col">Client Name</th>
+                                                                <th scope="col">Contact</th>
+                                                                <th scope="col">Brands</th>
+                                                                <th scope="col">Created Date</th>
+                                                                <th scope="col" class="text-center">Actions</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {% for client in clients %}
+                                                            <tr>
+                                                                <td>{{ forloop.counter }}</td>
+                                                                <td class="client-name">{{ client.name }}</td>
+                                                                <td>
+                                                                    {% if client.contact_person %}
+                                                                    {{ client.contact_person }}<br>
+                                                                    {% endif %}
+                                                                    {% if client.contact_email %}
+                                                                    {{client.contact_email }}
+                                                                    {% endif %},
+                                                                    {% if client.contact_phone %}
+                                                                    {{ client.contact_phone }}
+                                                                    {% endif %}
+                                                                </td>
+                                                                <td>
+                                                                    {% for brand in client.brands.all %}
+                                                                    <div class="d-flex align-items-center mb-1">
+                                                                        {% if brand.logo %}
+                                                                        <img src="{{ brand.logo.url }}"
+                                                                            alt="{{ brand.name }} Logo" class="me-2"
+                                                                            style="width: 30px; height: 30px; object-fit: contain;">
+                                                                        {% endif %}
+                                                                        {{ brand.name }}
+                                                                        <div class="btn-group btn-group-sm ms-2"
+                                                                            role="group">
+                                                                            <button
+                                                                                class="btn btn-outline-primary edit-brand"
+                                                                                data-id="{{ brand.id }}"
+                                                                                data-name="{{ brand.name }}"
+                                                                                data-client-id="{{ client.id }}"
+                                                                                title="Edit Brand">
+                                                                                <i class="fas fa-edit"></i>
+                                                                            </button>
+                                                                            <button
+                                                                                class="btn btn-outline-danger delete-brand"
+                                                                                data-id="{{ brand.id }}"
+                                                                                data-client-id="{{ client.id }}"
+                                                                                title="Delete Brand">
+                                                                                <i class="fas fa-trash"></i>
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                    {% empty %}
+                                                                    <small class="text-muted">No brands</small>
+                                                                    {% endfor %}
+                                                                    <button
+                                                                        class="btn btn-sm btn-outline-success mt-2 add-brand-btn"
+                                                                        data-client-id="{{ client.id }}"
+                                                                        data-client-name="{{ client.name }}"
+                                                                        data-bs-toggle="modal"
+                                                                        data-bs-target="#brandModal">
+                                                                        <i class="fas fa-plus"></i> Add Brand
+                                                                    </button>
+                                                                </td>
+                                                                <td>{{ client.created_at|date:"M d, Y" }}</td>
+                                                                <td class="text-center">
+                                                                    <div class="btn-group btn-group-sm" role="group">
+                                                                        <button
+                                                                            class="btn btn-outline-primary edit-client"
+                                                                            data-id="{{ client.id }}"
+                                                                            data-name="{{ client.name }}"
+                                                                            data-contact-person="{{ client.contact_person|default_if_none:'' }}"
+                                                                            data-contact-email="{{ client.contact_email|default_if_none:'' }}"
+                                                                            data-contact-phone="{{ client.contact_phone|default_if_none:'' }}"
+                                                                            data-address="{{ client.address|default_if_none:'' }}"
+                                                                            data-city="{{ client.city|default_if_none:'' }}"
+                                                                            data-country="{{ client.country|default_if_none:'' }}"
+                                                                            data-website="{{ client.website|default_if_none:'' }}"
+                                                                            data-industry="{{ client.industry|default_if_none:'' }}"
+                                                                            data-notes="{{ client.notes|default_if_none:'' }}"
+                                                                            title="Edit Client">
+                                                                            <i class="fas fa-edit"></i>
+                                                                        </button>
+                                                                        <button
+                                                                            class="btn btn-outline-danger delete-client"
+                                                                            data-id="{{ client.id }}"
+                                                                            title="Delete Client">
+                                                                            <i class="fas fa-trash"></i>
+                                                                        </button>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                            {% empty %}
+                                                            <tr>
+                                                                <td colspan="6" class="text-center text-muted py-4">
+                                                                    <i class="fas fa-inbox fa-2x mb-2"></i><br>
+                                                                    No clients found
                                                                 </td>
                                                             </tr>
                                                             {% endfor %}
@@ -216,8 +369,8 @@
     </div>
 </section>
 
-<!-- Expense Category Modal -->
-<div class="modal fade" id="expenseCategoryModal" tabindex="-1" aria-labelledby="expenseCategoryModalLabel" aria-hidden="true">
+<div class="modal fade" id="expenseCategoryModal" tabindex="-1" aria-labelledby="expenseCategoryModalLabel"
+    aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -234,15 +387,16 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Save</button>
+                    <button type="submit" class="btn 
+btn-primary">Save</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<!-- Operation Category Modal -->
-<div class="modal fade" id="operationCategoryModal" tabindex="-1" aria-labelledby="operationCategoryModalLabel" aria-hidden="true">
+<div class="modal fade" id="operationCategoryModal" tabindex="-1" aria-labelledby="operationCategoryModalLabel"
+    aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -259,15 +413,16 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Save</button>
+                    <button type="submit" class="btn 
+btn-primary">Save</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<!-- Event Category Modal -->
-<div class="modal fade" id="eventCategoryModal" tabindex="-1" aria-labelledby="eventCategoryModalLabel" aria-hidden="true">
+<div class="modal fade" id="eventCategoryModal" tabindex="-1" aria-labelledby="eventCategoryModalLabel"
+    aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -284,22 +439,131 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Save</button>
+                    <button type="submit" class="btn 
+btn-primary">Save</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<!-- Edit Category Modal -->
-<div class="modal fade" id="editCategoryModal" tabindex="-1" aria-labelledby="editCategoryModalLabel" aria-hidden="true">
+<div class="modal fade" id="clientModal" tabindex="-1" aria-labelledby="clientModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="clientModalLabel">Add New Client</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="clientForm" method="post" action="{% url 'wallet:add_client' %}">
+                {% csrf_token %}
+                <input type="hidden" id="clientId" name="client_id">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="clientName" class="form-label">Client Name <span
+                                class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="clientName" name="name" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="clientContactPerson" class="form-label">Contact Person</label>
+                            <input type="text" class="form-control" id="clientContactPerson" name="contact_person">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="clientContactEmail" class="form-label">Contact Email</label>
+                            <input type="email" class="form-control" id="clientContactEmail" name="contact_email">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="clientContactPhone" class="form-label">Contact Phone</label>
+                            <input type="text" class="form-control" id="clientContactPhone" name="contact_phone">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="clientWebsite" class="form-label">Website</label>
+                            <input type="url" class="form-control" id="clientWebsite" name="website">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="clientAddress" class="form-label">Address</label>
+                        <textarea class="form-control" id="clientAddress" name="address" rows="2"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="clientCity" class="form-label">City</label>
+                            <input type="text" class="form-control" id="clientCity" name="city">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="clientCountry" class="form-label">Country</label>
+                            <input type="text" class="form-control" id="clientCountry" name="country">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="clientIndustry" class="form-label">Industry</label>
+                        <input type="text" class="form-control" id="clientIndustry" name="industry">
+                    </div>
+                    <div class="mb-3">
+                        <label for="clientNotes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="clientNotes" name="notes" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save Client</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="brandModal" tabindex="-1" aria-labelledby="brandModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="brandModalLabel">Add New Brand for <span id="brandClientName"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="brandForm" method="post" action="{% url 'wallet:add_brand' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" id="brandClientId" name="client_id">
+                <input type="hidden" id="brandId" name="brand_id">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="brandName" class="form-label">Brand Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="brandName" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="brandLogo" class="form-label">Brand Logo</label>
+                        <input type="file" class="form-control" id="brandLogo" name="logo" accept="image/*">
+                        <small class="text-muted" id="currentBrandLogo"></small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="brandDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="brandDescription" name="description" rows="2"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="brandWebsite" class="form-label">Website</label>
+                        <input type="url" class="form-control" id="brandWebsite" name="website">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save Brand</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editCategoryModal" tabindex="-1" aria-labelledby="editCategoryModalLabel"
+    aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="editCategoryModalLabel">Edit Category</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="editCategoryForm" method="post" action="{% url 'wallet:edit_category' %}">
+            <form id="editCategoryForm" method="post" action="{% url 
+'wallet:edit_category' %}">
                 {% csrf_token %}
                 <div class="modal-body">
                     <div class="mb-3">
@@ -311,15 +575,16 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <button type="submit" class="btn 
+btn-primary">Save Changes</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<!-- Confirm Delete Modal -->
-<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel"
+    aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -327,7 +592,8 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                Are you sure you want to delete this category? This action cannot be undone.
+                Are you sure you want to delete this category? This
+                action cannot be undone.
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -335,7 +601,55 @@
                     {% csrf_token %}
                     <input type="hidden" id="deleteCategoryId" name="category_id">
                     <input type="hidden" id="deleteCategoryType" name="category_type">
-                    <button type="submit" class="btn btn-danger">Delete</button>
+                    <button type="submit" class="btn 
+btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="confirmDeleteClientModal" tabindex="-1" aria-labelledby="confirmDeleteClientModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmDeleteClientModalLabel">Confirm Delete Client</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete this client and all their associated brands? This action cannot be
+                undone.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteClientForm" method="post" action="{% url 'wallet:delete_client' %}">
+                    {% csrf_token %}
+                    <input type="hidden" id="deleteClientId" name="client_id">
+                    <button type="submit" class="btn btn-danger">Delete Client</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="confirmDeleteBrandModal" tabindex="-1" aria-labelledby="confirmDeleteBrandModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmDeleteBrandModalLabel">Confirm Delete Brand</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete this brand? This action cannot be undone.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteBrandForm" method="post" action="{% url 'wallet:delete_brand' %}">
+                    {% csrf_token %}
+                    <input type="hidden" id="deleteBrandId" name="brand_id">
+                    <button type="submit" class="btn btn-danger">Delete Brand</button>
                 </form>
             </div>
         </div>
@@ -347,53 +661,55 @@
         border-bottom: 2px solid transparent;
         color: #6c757d;
     }
-    
+
     .nav-tabs .nav-link.active {
         border-bottom: 2px solid #0d6efd;
         color: #0d6efd;
         background-color: transparent;
     }
-    
+
     .table th {
         font-weight: 600;
         border-top: none;
     }
-    
-    .btn-group-sm > .btn {
+
+    .btn-group-sm>.btn {
         margin: 0 1px;
     }
-    
+
     .input-group-text {
         background-color: #f8f9fa;
         border-right: none;
     }
-    
+
     .form-control:focus {
         border-left: 1px solid #86b7fe;
     }
-    
+
     .card-header {
         background-color: #f8f9fa;
         border-bottom: 1px solid #dee2e6;
     }
-    
+
     .table-hover tbody tr:hover {
         background-color: rgba(0, 0, 0, 0.02);
     }
 </style>
 
+
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         // Tab switching functionality for action buttons
-        document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(function(tabButton) {
-            tabButton.addEventListener('shown.bs.tab', function(e) {
+        document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(function (tabButton) {
+            tabButton.addEventListener('shown.bs.tab', function (e) {
                 const target = e.target.getAttribute('data-bs-target');
-                
+
                 // Hide all add buttons
                 document.getElementById('addExpenseBtn').classList.add('d-none');
                 document.getElementById('addOperationBtn').classList.add('d-none');
                 document.getElementById('addEventBtn').classList.add('d-none');
-                
+                document.getElementById('addClientBtn').classList.add('d-none');
+
                 // Show appropriate button based on active tab
                 if (target === '#expense-pane') {
                     document.getElementById('addExpenseBtn').classList.remove('d-none');
@@ -401,59 +717,214 @@
                     document.getElementById('addOperationBtn').classList.remove('d-none');
                 } else if (target === '#event-pane') {
                     document.getElementById('addEventBtn').classList.remove('d-none');
+                } else if (target === '#client-pane') {
+                    document.getElementById('addClientBtn').classList.remove('d-none');
                 }
             });
         });
-        
-        // Edit category button click handler - using event delegation
-        document.addEventListener('click', function(e) {
+
+        // Category Edit/Delete Handlers
+        document.addEventListener('click', function (e) {
             if (e.target.closest('.edit-category')) {
                 const button = e.target.closest('.edit-category');
                 const categoryId = button.getAttribute('data-id');
                 const categoryName = button.getAttribute('data-name');
                 const categoryType = button.getAttribute('data-type');
-                
-                console.log('Edit button clicked:', { categoryId, categoryName, categoryType });
-                
+
+                console.log('Edit category button clicked:', {
+                    categoryId,
+                    categoryName, 
+                    categoryType
+                });
+
                 // Populate the form fields
                 document.getElementById('editCategoryId').value = categoryId;
                 document.getElementById('editCategoryName').value = categoryName;
                 document.getElementById('editCategoryType').value = categoryType;
-                
-                // Update the form action to include the type parameter
+
+                // Update the form action using the predefined URL
                 const form = document.getElementById('editCategoryForm');
-                const baseUrl = form.getAttribute('action').split('?')[0];
-                form.setAttribute('action', baseUrl + '?type=' + categoryType);
-                
+                form.setAttribute('action', URLS.editCategory + '?type=' + categoryType);
+
                 // Show the modal
                 const editModal = new bootstrap.Modal(document.getElementById('editCategoryModal'));
                 editModal.show();
             }
         });
-        
-        // Delete category button click handler - using event delegation
-        document.addEventListener('click', function(e) {
+
+        document.addEventListener('click', function (e) {
             if (e.target.closest('.delete-category')) {
                 const button = e.target.closest('.delete-category');
                 const categoryId = button.getAttribute('data-id');
                 const categoryType = button.getAttribute('data-type');
-                
-                console.log('Delete button clicked:', { categoryId, categoryType });
-                
+
+                console.log('Delete category button clicked:', {
+                    categoryId,
+                    categoryType
+                });
+
                 // Populate the form fields
                 document.getElementById('deleteCategoryId').value = categoryId;
                 document.getElementById('deleteCategoryType').value = categoryType;
-                
-                // Update the form action to include the type parameter
+
+                // Update the form action using the predefined URL
                 const form = document.getElementById('deleteCategoryForm');
-                const baseUrl = form.getAttribute('action').split('?')[0];
-                form.setAttribute('action', baseUrl + '?type=' + categoryType);
-                
+                form.setAttribute('action', URLS.deleteCategory + '?type=' + categoryType);
+
                 // Show the modal
                 const deleteModal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
                 deleteModal.show();
             }
         });
+
+        // Add Client button click handler
+        document.getElementById('addClientBtn').addEventListener('click', function () {
+            const modalTitle = document.getElementById('clientModalLabel');
+            modalTitle.textContent = 'Add New Client';
+            const clientForm = document.getElementById('clientForm');
+            clientForm.reset();
+            document.getElementById('clientId').value = '';
+            clientForm.action = URLS.addClient; // Use predefined URL
+            const clientModal = new bootstrap.Modal(document.getElementById('clientModal'));
+            clientModal.show();
+        });
+
+        // Edit Client button click handler
+        document.addEventListener('click', function (e) {
+            if (e.target.closest('.edit-client')) {
+                const button = e.target.closest('.edit-client');
+                const clientId = button.getAttribute('data-id');
+                const clientName = button.getAttribute('data-name');
+                const contactPerson = button.getAttribute('data-contact-person');
+                const contactEmail = button.getAttribute('data-contact-email');
+                const contactPhone = button.getAttribute('data-contact-phone');
+                const address = button.getAttribute('data-address');
+                const city = button.getAttribute('data-city');
+                const country = button.getAttribute('data-country');
+                const website = button.getAttribute('data-website');
+                const industry = button.getAttribute('data-industry');
+                const notes = button.getAttribute('data-notes');
+
+                const modalTitle = document.getElementById('clientModalLabel');
+                modalTitle.textContent = 'Edit Client: ' + clientName;
+
+                document.getElementById('clientId').value = clientId;
+                document.getElementById('clientName').value = clientName;
+                document.getElementById('clientContactPerson').value = contactPerson;
+                document.getElementById('clientContactEmail').value = contactEmail;
+                document.getElementById('clientContactPhone').value = contactPhone;
+                document.getElementById('clientAddress').value = address;
+                document.getElementById('clientCity').value = city;
+                document.getElementById('clientCountry').value = country;
+                document.getElementById('clientWebsite').value = website;
+                document.getElementById('clientIndustry').value = industry;
+                document.getElementById('clientNotes').value = notes;
+
+                const clientForm = document.getElementById('clientForm');
+                clientForm.action = URLS.editClient; // Use predefined URL
+
+                const clientModal = new bootstrap.Modal(document.getElementById('clientModal'));
+                clientModal.show();
+            }
+        });
+
+        // Delete Client button click handler
+        document.addEventListener('click', function (e) {
+            if (e.target.closest('.delete-client')) {
+                const button = e.target.closest('.delete-client');
+                const clientId = button.getAttribute('data-id');
+
+                document.getElementById('deleteClientId').value = clientId;
+
+                const deleteClientModal = new bootstrap.Modal(document.getElementById('confirmDeleteClientModal'));
+                deleteClientModal.show();
+            }
+        });
+
+        // Add Brand button click handler
+        document.addEventListener('click', function (e) {
+            if (e.target.closest('.add-brand-btn')) {
+                const button = e.target.closest('.add-brand-btn');
+                const clientId = button.getAttribute('data-client-id');
+                const clientName = button.getAttribute('data-client-name');
+
+                const modalTitle = document.getElementById('brandModalLabel');
+                const brandClientNameSpan = document.getElementById('brandClientName');
+                
+                if (modalTitle) {
+                    modalTitle.textContent = 'Add New Brand for ' + clientName;
+                }
+                if (brandClientNameSpan) {
+                    brandClientNameSpan.textContent = clientName;
+                }
+
+                const brandForm = document.getElementById('brandForm');
+                if (brandForm) {
+                    brandForm.reset();
+                    brandForm.action = URLS.addBrand; // Use predefined URL
+                }
+                
+                const brandClientIdInput = document.getElementById('brandClientId');
+                const brandIdInput = document.getElementById('brandId');
+                const currentBrandLogoElement = document.getElementById('currentBrandLogo');
+                
+                if (brandClientIdInput) brandClientIdInput.value = clientId;
+                if (brandIdInput) brandIdInput.value = '';
+                if (currentBrandLogoElement) currentBrandLogoElement.textContent = '';
+
+                const brandModal = new bootstrap.Modal(document.getElementById('brandModal'));
+                brandModal.show();
+            }
+        });
+
+        // Edit Brand button click handler
+        document.addEventListener('click', function (e) {
+            if (e.target.closest('.edit-brand')) {
+                const button = e.target.closest('.edit-brand');
+                const brandId = button.getAttribute('data-id');
+                const brandName = button.getAttribute('data-name');
+                const clientId = button.getAttribute('data-client-id');
+
+                const clientNameElement = button.closest('tr').querySelector('.client-name');
+                const clientName = clientNameElement ? clientNameElement.textContent : 'Unknown Client';
+
+                const modalTitle = document.getElementById('brandModalLabel');
+                const brandClientNameSpan = document.getElementById('brandClientName');
+                
+                if (modalTitle) {
+                    modalTitle.textContent = 'Edit Brand: ' + brandName;
+                }
+                if (brandClientNameSpan) {
+                    brandClientNameSpan.textContent = clientName;
+                }
+
+                document.getElementById('brandId').value = brandId;
+                document.getElementById('brandClientId').value = clientId;
+                document.getElementById('brandName').value = brandName;
+
+                const brandForm = document.getElementById('brandForm');
+                if (brandForm) {
+                    brandForm.action = URLS.editBrand; // Use predefined URL
+                }
+
+                const brandModal = new bootstrap.Modal(document.getElementById('brandModal'));
+                brandModal.show();
+            }
+        });
+
+        // Delete Brand button click handler
+        document.addEventListener('click', function (e) {
+            if (e.target.closest('.delete-brand')) {
+                const button = e.target.closest('.delete-brand');
+                const brandId = button.getAttribute('data-id');
+
+                document.getElementById('deleteBrandId').value = brandId;
+
+                const deleteBrandModal = new bootstrap.Modal(document.getElementById('confirmDeleteBrandModal'));
+                deleteBrandModal.show();
+            }
+        });
     });
 </script>
-{% endblock %}
+{% endblock content %}
+

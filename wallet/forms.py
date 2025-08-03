@@ -34,13 +34,14 @@ class KYCForm(forms.ModelForm):
 class UserForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ['email', 'first_name', 'last_name', 'phone_number', 'country']
+        fields = ['email', 'first_name', 'last_name', 'phone_number', 'country','password']
         labels = {
             'email': 'Email Address',
             'first_name': 'First Name',
             'last_name': 'Last Name',
             'phone_number': 'Phone Number',
             'country': 'Country',
+            'password': 'Password',
         }
 
 
