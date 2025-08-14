@@ -1,9 +1,7 @@
 from django.db import models
 from django.utils import timezone
-# from wallet.models import Wallet, CompanyKYC
 from django.conf import settings
 import uuid
-
 class ExpenseGroup(models.TextChoices):
     EVENT = 'event', 'Event'
     OPERATION = 'operation', 'Operation'
@@ -47,6 +45,7 @@ class Event(models.Model):
     id = models.UUIDField(primary_key=True, unique=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255)
     category = models.ForeignKey(EventCategory, on_delete=models.CASCADE, related_name='events')
+    client = models.ForeignKey('wallet.Client', on_delete=models.SET_NULL, null=True, blank=True)
     company = models.ForeignKey('wallet.CompanyKYC', on_delete=models.SET_NULL, null=True, blank=True)
     start_date = models.DateField()
     end_date = models.DateField()
@@ -69,6 +68,7 @@ class Operation(models.Model):
     id = models.UUIDField(primary_key=True, unique=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255)
     category = models.ForeignKey(OperationCategory, on_delete=models.CASCADE, related_name='operations')
+    client = models.ForeignKey('wallet.Client', on_delete=models.SET_NULL, null=True, blank=True)
     company = models.ForeignKey('wallet.CompanyKYC', on_delete=models.SET_NULL, null=True, blank=True)
     budget = models.DecimalField(max_digits=10, decimal_places=2,blank=True, null=True)
     description = models.TextField(blank=True, null=True)

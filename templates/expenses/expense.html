@@ -42,9 +42,9 @@
                 <tr>
                   <th>Event</th>
                   <th>Category</th>
+                  <th>Client</th>
                   <th>Budget</th>
                   <th>Created By</th>
-
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -54,16 +54,16 @@
                     <tr>
                       <td>{{ item.name }}</td>
                       <td>{{ item.category }}</td>
+                      <td>{{ item.client }}</td>
                       <td>{{ item.budget|intcomma }}</td>
                       <td><a href="#">{{ item.created_by.get_full_name }}</a></td>
-
                       <td>
                         <a href="{% url 'expense:event_expense_detail' item.id %}" class="btn btn-sm btn-primary">View Expenses</a>
                       </td>
                     </tr>
                   {% endif %}
                 {% empty %}
-                  <tr><td colspan="7" class="text-center">No event records found.</td></tr>
+                  <tr><td colspan="6" class="text-center">No event records found.</td></tr>
                 {% endfor %}
               </tbody>
             </table>
@@ -78,9 +78,9 @@
                 <tr>
                   <th>Operation</th>
                   <th>Category</th>
+                  <th>Client</th>
                   <th>Budget</th>
                   <th>Created By</th>
-
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -90,17 +90,16 @@
                     <tr>
                       <td>{{ item.name }}</td>
                       <td>{{ item.category }}</td>
+                      <td>{{ item.client }}</td>
                       <td>{{ item.budget|intcomma }}</td>
                       <td><a href="#">{{ item.created_by.get_full_name }}</a></td>
-
                       <td>
                         <a href="{% url 'expense:operation_expense_detail' item.id %}" class="btn btn-sm btn-primary">View Expenses</a>
-                        <!-- <a href="{% url 'expense:operation_expense_detail' item.id %}" class="btn btn-sm btn-primary">Edit Operation</a> -->
                       </td>
                     </tr>
                   {% endif %}
                 {% empty %}
-                  <tr><td colspan="7" class="text-center">No operation records found.</td></tr>
+                  <tr><td colspan="6" class="text-center">No operation records found.</td></tr>
                 {% endfor %}
               </tbody>
             </table>
@@ -126,7 +125,6 @@
           <form id="expenseForm" class="bg-white p-4 shadow rounded" method="post" action="{% url 'expense:event-operation' %}">
             {% csrf_token %}
             <input type="hidden" name="form_type" id="form_type" value="">
-            <input type="hidden" name="budget" id="hidden_budget" value="">
             
             <!-- Request Type -->
             <div class="mb-3">
@@ -145,14 +143,25 @@
                 <input type="text" id="event_name" name="event_name" class="form-control event-field" maxlength="255">
               </div>
               
-              <div class="mb-3">
-                <label for="event_category" class="form-label">Event Category</label>
-                <select id="event_category" name="event_category" class="form-select event-field">
-                  <option value="">Select Category</option>
-                  {% for category in event_categories %}
-                    <option value="{{ category.id }}">{{ category.name }}</option>
-                  {% endfor %}
-                </select>
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="event_category" class="form-label">Event Category</label>
+                  <select id="event_category" name="event_category" class="form-select event-field">
+                    <option value="">Select Category</option>
+                    {% for category in event_categories %}
+                      <option value="{{ category.id }}">{{ category.name }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="event_client" class="form-label">Client</label>
+                  <select id="event_client" name="event_client" class="form-select event-field">
+                    <option value="">Select Client</option>
+                    {% for client in clients %}
+                      <option value="{{ client.id }}">{{ client.name }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
               </div>
               
               <div class="row">
@@ -165,11 +174,11 @@
                   <input type="date" id="event_end_date" name="event_end_date" class="form-control event-field">
                 </div>
               </div>
+              
               <div class="mb-3">
                 <label for="event_budget" class="form-label">Budget</label>
-                <input type="number" id="event_budget" name="event_budget" class="form-control budget-field event-field" step="0.01">
+                <input type="number" id="event_budget" name="event_budget" class="form-control event-field" step="0.01">
               </div>
-              
               
               <div class="mb-3">
                 <label for="event_project_lead" class="form-label">Project Lead</label>
@@ -189,20 +198,31 @@
                 <input type="text" id="operation_name" name="operation_name" class="form-control operation-field" maxlength="255">
               </div>
               
-              <div class="mb-3">
-                <label for="operation_category" class="form-label">Operation Category</label>
-                <select id="operation_category" name="operation_category" class="form-select operation-field">
-                  <option value="">Select Category</option>
-                  {% for category in operation_categories %}
-                    <option value="{{ category.id }}">{{ category.name }}</option>
-                  {% endfor %}
-                </select>
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="operation_category" class="form-label">Operation Category</label>
+                  <select id="operation_category" name="operation_category" class="form-select operation-field">
+                    <option value="">Select Category</option>
+                    {% for category in operation_categories %}
+                      <option value="{{ category.id }}">{{ category.name }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="operation_client" class="form-label">Client</label>
+                  <select id="operation_client" name="operation_client" class="form-select operation-field">
+                    <option value="">Select Client</option>
+                    {% for client in clients %}
+                      <option value="{{ client.id }}">{{ client.name }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
               </div>
+              
               <div class="mb-3">
                 <label for="operation_budget" class="form-label">Budget</label>
-                <input type="number" id="operation_budget" name="operation_budget" class="form-control budget-field operation-field" step="0.01">
+                <input type="number" id="operation_budget" name="operation_budget" class="form-control operation-field" step="0.01">
               </div>
-             
               
               <div class="mb-3">
                 <label for="operation_project_lead" class="form-label">Project Lead</label>
@@ -218,7 +238,6 @@
   </div>
 </div>
 
-
 <script>
   function toggleRequestFields() {
     let requestType = document.getElementById('requestType').value;
@@ -228,35 +247,25 @@
     document.getElementById('eventRequestFields').classList.toggle('hidden', requestType !== 'event');
     document.getElementById('operationRequestFields').classList.toggle('hidden', requestType !== 'operation');
     
-    // First, remove required attribute from all fields to avoid validation issues when hidden
+    // Remove required attribute from all fields first
     const allFields = document.querySelectorAll('.event-field, .operation-field');
-    allFields.forEach(field => field.removeAttribute('required'));
+    allFields.forEach(field => {
+      field.removeAttribute('required');
+      // Also remove any existing validation styling
+      field.classList.remove('is-invalid');
+    });
     
-    // Handle field requirements based on request type
+    // Set required attributes based on request type
     if (requestType === 'event') {
-      // Make visible event fields required
       const eventFields = document.querySelectorAll('.event-field');
       eventFields.forEach(field => {
         field.setAttribute('required', '');
       });
-      
-      // Remove operation budget's required attribute since it's hidden
-      const operationBudget = document.getElementById('operation_budget');
-      if (operationBudget) {
-        operationBudget.removeAttribute('required');
-      }
     } else if (requestType === 'operation') {
-      // Make visible operation fields required
       const operationFields = document.querySelectorAll('.operation-field');
       operationFields.forEach(field => {
         field.setAttribute('required', '');
       });
-      
-      // Remove event budget's required attribute since it's hidden
-      const eventBudget = document.getElementById('event_budget');
-      if (eventBudget) {
-        eventBudget.removeAttribute('required');
-      }
     }
   }
   
@@ -264,81 +273,112 @@
   document.addEventListener('DOMContentLoaded', function() {
     const expenseForm = document.getElementById('expenseForm');
     
-    // Make sure the correct fields are required/not required when the page loads
-    toggleRequestFields();
-    
-    // Setup budget field listeners
-    const eventBudget = document.getElementById('event_budget');
-    const operationBudget = document.getElementById('operation_budget');
-    const hiddenBudget = document.getElementById('hidden_budget');
-    
-    eventBudget.addEventListener('input', function() {
-      hiddenBudget.value = this.value;
-    });
-    
-    operationBudget.addEventListener('input', function() {
-      hiddenBudget.value = this.value;
-    });
-    
     expenseForm.addEventListener('submit', function(e) {
       e.preventDefault();
       
       const requestType = document.getElementById('requestType').value;
       let isValid = true;
+      let errorMessage = '';
       
       // Basic validation
       if (!requestType) {
-        alert('Please select a request type');
+        errorMessage = 'Please select a request type';
         isValid = false;
-      }
-      
-      if (requestType === 'event') {
+      } else if (requestType === 'event') {
         // Validate event fields
-        const eventName = document.getElementById('event_name').value;
+        const eventName = document.getElementById('event_name').value.trim();
         const eventCategory = document.getElementById('event_category').value;
+        const eventClient = document.getElementById('event_client').value;
         const eventStartDate = document.getElementById('event_start_date').value;
-        const eventBudget = document.getElementById('event_budget').value;
         const eventEndDate = document.getElementById('event_end_date').value;
-        const eventProjectLead = document.getElementById('event_project_lead').value;
-        const eventLocation = document.getElementById('event_location').value;
+        const eventBudget = document.getElementById('event_budget').value;
+        const eventProjectLead = document.getElementById('event_project_lead').value.trim();
+        const eventLocation = document.getElementById('event_location').value.trim();
         
-        // Update hidden budget field
-        hiddenBudget.value = eventBudget;
-        
-        if (!eventName || !eventCategory || !eventStartDate || !eventEndDate || 
-            !eventProjectLead || !eventLocation || !eventBudget) {
-          alert('Please fill out all required event fields');
+        if (!eventName) {
+          errorMessage = 'Event name is required';
+          isValid = false;
+        } else if (!eventCategory) {
+          errorMessage = 'Event category is required';
+          isValid = false;
+        } else if (!eventClient) {
+          errorMessage = 'Event client is required';
+          isValid = false;
+        } else if (!eventStartDate) {
+          errorMessage = 'Event start date is required';
+          isValid = false;
+        } else if (!eventEndDate) {
+          errorMessage = 'Event end date is required';
+          isValid = false;
+        } else if (!eventBudget) {
+          errorMessage = 'Event budget is required';
+          isValid = false;
+        } else if (!eventProjectLead) {
+          errorMessage = 'Project lead is required';
+          isValid = false;
+        } else if (!eventLocation) {
+          errorMessage = 'Event location is required';
           isValid = false;
         }
         
         // Validate dates
-        if (eventStartDate && eventEndDate && new Date(eventStartDate) > new Date(eventEndDate)) {
-          alert('End date must be after start date');
+        if (isValid && eventStartDate && eventEndDate && new Date(eventStartDate) > new Date(eventEndDate)) {
+          errorMessage = 'End date must be after start date';
           isValid = false;
         }
+        
+        // Validate budget
+        if (isValid && eventBudget && parseFloat(eventBudget) < 0) {
+          errorMessage = 'Budget cannot be negative';
+          isValid = false;
+        }
+        
       } else if (requestType === 'operation') {
         // Validate operation fields
-        const operationName = document.getElementById('operation_name').value;
+        const operationName = document.getElementById('operation_name').value.trim();
         const operationCategory = document.getElementById('operation_category').value;
+        const operationClient = document.getElementById('operation_client').value;
         const operationBudget = document.getElementById('operation_budget').value;
-        const operationProjectLead = document.getElementById('operation_project_lead').value;
+        const operationProjectLead = document.getElementById('operation_project_lead').value.trim();
         
-        // Update hidden budget field
-        hiddenBudget.value = operationBudget;
+        if (!operationName) {
+          errorMessage = 'Operation name is required';
+          isValid = false;
+        } else if (!operationCategory) {
+          errorMessage = 'Operation category is required';
+          isValid = false;
+        } else if (!operationClient) {
+          errorMessage = 'Operation client is required';
+          isValid = false;
+        } else if (!operationBudget) {
+          errorMessage = 'Operation budget is required';
+          isValid = false;
+        } else if (!operationProjectLead) {
+          errorMessage = 'Project lead is required';
+          isValid = false;
+        }
         
-        if (!operationName || !operationCategory || !operationBudget) {
-          alert('Please fill out all required operation fields');
+        // Validate budget
+        if (isValid && operationBudget && parseFloat(operationBudget) < 0) {
+          errorMessage = 'Budget cannot be negative';
           isValid = false;
         }
       }
       
-      if (isValid) {
-        this.submit();
+      if (!isValid) {
+        alert(errorMessage);
+        return false;
       }
+      
+      // If validation passes, submit the form
+      this.submit();
     });
+    
+    // Initialize field visibility on page load
+    toggleRequestFields();
   });
-  </script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-  
-  
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
 {% endblock %}

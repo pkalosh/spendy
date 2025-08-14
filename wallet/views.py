@@ -438,6 +438,8 @@ def update_staff_profile(request, pk):
         user_form = UserForm(request.POST, instance=user)
         profile_form = StaffProfileForm(request.POST, request.FILES, instance=staff)
         if user_form.is_valid() and profile_form.is_valid():
+            user.set_password(user_form.cleaned_data['password'])
+
             user_form.save()
             profile_form.save()
             return redirect('wallet:staff-list')
@@ -1599,6 +1601,7 @@ def expenses(request):
         'operation_form': operation_form,
         'event_categories': EventCategory.objects.filter(company=company,is_active=True),
         'operation_categories': OperationCategory.objects.filter(company=company,is_active=True),
+        'clients': Client.objects.filter(company=company,is_active=True),
     }
     return render(request, "expenses/expense.html", context)
 

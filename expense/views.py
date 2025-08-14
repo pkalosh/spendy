@@ -12,7 +12,7 @@ from django.urls import reverse
 from django.utils.decorators import method_decorator
 from .models import Expense, Event, Operation, ExpenseGroup, CategoryBase, ExpenseCategory, EventCategory, OperationCategory,ExpenseRequestType
 from .forms import ExpenseRequestForm, ExpenseApprovalForm, PaymentForm, EventExpenseForm, OperationExpenseForm
-from wallet.models import Transaction, CompanyKYC, Wallet,TransactionFee
+from wallet.models import Transaction, CompanyKYC, Wallet,TransactionFee,Client
 from django.core.exceptions import ValidationError
 from decimal import Decimal, InvalidOperation
 from django.utils import timezone
@@ -186,23 +186,23 @@ def submit_expense(request):
         'expense_form': expense_form,
         'request_types': request_types,  # Pass request_types to the template
     })
-@login_required
-def event_operation(request):
-    if request.method == "POST":
-        form = EventExpenseForm(request.POST)
-        print(form)
-        if form.is_valid():
-            event = form.save(commit=False)
-            event.created_by = request.user
-            event.company = get_object_or_404(CompanyKYC, user=request.user)
-            event.save()
-            # Notify expense workflow
-            notify_expense_workflow(expense=event, action='created', send_sms=True)
-            messages.success(request, 'Event created successfully.')
-            return redirect('expenses:expense')
-        else:
-            messages.error(request, 'Error creating event.')
-    return redirect('expenses:expense')
+# @login_required
+# def event_operation(request):
+#     if request.method == "POST":
+#         form = EventExpenseForm(request.POST)
+#         print(form)
+#         if form.is_valid():
+#             event = form.save(commit=False)
+#             event.created_by = request.user
+#             event.company = get_object_or_404(CompanyKYC, user=request.user)
+#             event.save()
+#             # Notify expense workflow
+#             notify_expense_workflow(expense=event, action='created', send_sms=True)
+#             messages.success(request, 'Event created successfully.')
+#             return redirect('expenses:expense')
+#         else:
+#             messages.error(request, 'Error creating event.')
+#     return redirect('expenses:expense')
 
 
 @login_required
@@ -234,7 +234,7 @@ def event_operation(request):
             
             if request_type == 'event':
                 # Validate required fields
-                name = request.POST.get('event_name')
+                name = request.POST.get('event_name', '').strip()
                 if not name:
                     raise ValidationError("Event name is required")
                     
@@ -246,30 +246,50 @@ def event_operation(request):
                     category = EventCategory.objects.get(id=category_id)
                 except (EventCategory.DoesNotExist, ValueError):
                     raise ValidationError("Invalid event category")
-                
+
+                # Get and validate client - using event_client field
+                try:
+                    client_id = request.POST.get('event_client')
+                    if not client_id:
+                        raise ValidationError("Event client is required")
+                    client = Client.objects.get(id=client_id)
+                except (Client.DoesNotExist, ValueError):
+                    raise ValidationError("Invalid event client")
+
                 # Validate dates
                 start_date = request.POST.get('event_start_date')
                 end_date = request.POST.get('event_end_date')
                 if not start_date or not end_date:
                     raise ValidationError("Start and end dates are required")
                 
+                try:
+                    start_date_obj = datetime.strptime(start_date, '%Y-%m-%d').date()
+                    end_date_obj = datetime.strptime(end_date, '%Y-%m-%d').date()
+                    
+                    if start_date_obj > end_date_obj:
+                        raise ValidationError("End date must be after start date")
+                except ValueError:
+                    raise ValidationError("Invalid date format")
+                
                 # Validate budget
                 budget = None
                 budget_str = request.POST.get('event_budget')
-                if budget_str:
-                    try:
-                        budget = Decimal(budget_str)
-                        if budget < 0:
-                            raise ValidationError("Budget cannot be negative")
-                    except InvalidOperation:
-                        raise ValidationError("Invalid budget value")
+                if not budget_str:
+                    raise ValidationError("Event budget is required")
                 
-                # Get other fields
-                project_lead = request.POST.get('event_project_lead')
+                try:
+                    budget = Decimal(budget_str)
+                    if budget < 0:
+                        raise ValidationError("Budget cannot be negative")
+                except (InvalidOperation, ValueError):
+                    raise ValidationError("Invalid budget value")
+                
+                # Get other required fields
+                project_lead = request.POST.get('event_project_lead', '').strip()
                 if not project_lead:
                     raise ValidationError("Project lead is required")
                     
-                location = request.POST.get('event_location')
+                location = request.POST.get('event_location', '').strip()
                 if not location:
                     raise ValidationError("Location is required")
                 
@@ -277,6 +297,7 @@ def event_operation(request):
                 event = Event(
                     name=name,
                     category=category,
+                    client=client,
                     company=company,
                     start_date=start_date,
                     end_date=end_date,
@@ -290,13 +311,12 @@ def event_operation(request):
                 event.full_clean()
                 event.save()
                 
-                # Notify expense workflow
-                messages.success(request, 'Event request submitted successfully.')
+                messages.success(request, 'Event created successfully.')
                 return redirect('wallet:expenses')
-                # Validate required fields
+                
             elif request_type == 'operation':
                 # Validate required fields
-                name = request.POST.get('operation_name')
+                name = request.POST.get('operation_name', '').strip()
                 if not name:
                     raise ValidationError("Operation name is required")
                     
@@ -308,25 +328,39 @@ def event_operation(request):
                     category = OperationCategory.objects.get(id=category_id)
                 except (OperationCategory.DoesNotExist, ValueError):
                     raise ValidationError("Invalid operation category")
-                
+
+                # Get and validate client - using operation_client field
+                try:
+                    client_id = request.POST.get('operation_client')
+                    if not client_id:
+                        raise ValidationError("Operation client is required")
+                    client = Client.objects.get(id=client_id)
+                except (Client.DoesNotExist, ValueError):
+                    raise ValidationError("Invalid operation client")
+
                 # Validate budget
                 budget = None
                 budget_str = request.POST.get('operation_budget')
-                if budget_str:
-                    try:
-                        budget = Decimal(budget_str)
-                        if budget < 0:
-                            raise ValidationError("Budget cannot be negative")
-                    except InvalidOperation:
-                        raise ValidationError("Invalid budget value")
+                if not budget_str:
+                    raise ValidationError("Operation budget is required")
                 
-                # Get other fields
-                project_lead = request.POST.get('operation_project_lead')
+                try:
+                    budget = Decimal(budget_str)
+                    if budget < 0:
+                        raise ValidationError("Budget cannot be negative")
+                except (InvalidOperation, ValueError):
+                    raise ValidationError("Invalid budget value")
+                
+                # Get project lead (required for operations)
+                project_lead = request.POST.get('operation_project_lead', '').strip()
+                if not project_lead:
+                    raise ValidationError("Project lead is required")
                 
                 # Create and save operation
                 operation = Operation(
                     name=name,
                     category=category,
+                    client=client,
                     company=company,
                     budget=budget,
                     project_lead=project_lead,
@@ -337,24 +371,37 @@ def event_operation(request):
                 operation.full_clean()
                 operation.save()
                 
-                # Notify expense workflow
-                messages.success(request, 'Operation request submitted successfully.')
+                messages.success(request, 'Operation created successfully.')
                 return redirect('wallet:expenses')
+            
+            else:
+                raise ValidationError("Invalid request type")
                 
+        except ValidationError as e:
+            # Handle ValidationError properly
+            if hasattr(e, 'message_dict'):
+                # Field-specific errors
+                error_messages = []
+                for field, messages_list in e.message_dict.items():
+                    for msg in messages_list:
+                        error_messages.append(f"{field}: {msg}")
+                error_message = "; ".join(error_messages)
+            elif hasattr(e, 'messages'):
+                # Multiple error messages
+                error_message = "; ".join(e.messages)
+            else:
+                # Single error message
+                error_message = str(e)
+            
+            messages.error(request, f'Validation Error: {error_message}')
             return redirect('wallet:expenses')
             
-        except ValidationError as e:
-            error_message = str(e) if hasattr(e, 'message') else str(e.messages[0]) if e.messages else "Form validation error"
-            messages.error(request, f'Error: {error_message}')
-            return redirect('wallet:expenses')
         except Exception as e:
             messages.error(request, f'An unexpected error occurred: {str(e)}')
             return redirect('wallet:expenses')
     
-    # Handle GET request - since this is a popup/modal, we don't need to render a template here
-    # The form should already be in the page that opened the modal
+    # Handle GET request
     return redirect('wallet:expenses')
-
 
 def is_admin(user):
     # Replace with your logic to check if the user is an admin
