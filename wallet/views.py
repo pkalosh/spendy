@@ -769,7 +769,7 @@ def fund_wallet(request):
     if request.method == 'POST':
         # Get form data matching your template field names
         amount_str = request.POST.get('amount')
-        wallet_id = request.POST.get('wallet_id')
+        wallet_number = request.POST.get('wallet_number')  # Changed from wallet_id
         payment_method = request.POST.get('payment_method')
         
         # Get payment method specific fields
@@ -780,7 +780,7 @@ def fund_wallet(request):
         till_reference = request.POST.get('till_reference')  # For till
         
         # Basic validation
-        if not all([amount_str, wallet_id, payment_method]):
+        if not all([amount_str, wallet_number, payment_method]):
             messages.error(request, "All fields are required.")
             return redirect('wallet:wallet')
         
@@ -793,11 +793,11 @@ def fund_wallet(request):
             messages.error(request, "Amount must be a positive number.")
             return redirect('wallet:wallet')
         
-        # Get wallet
+        # Get wallet by wallet_number instead of id
         try:
-            wallet = get_object_or_404(Wallet, id=int(wallet_id), company=request.user.companykyc)
-        except ValueError:
-            messages.error(request, "Invalid wallet ID.")
+            wallet = get_object_or_404(Wallet, wallet_number=wallet_number, company=request.user.companykyc)
+        except Exception as e:
+            messages.error(request, f"Invalid wallet number: {wallet_number}")
             return redirect('wallet:wallet')
         
         # Validate payment method specific fields
@@ -827,7 +827,8 @@ def fund_wallet(request):
             actual_payment_method = 'b2b'  # B2B for paybill
             payment_details = {
                 'paybill_number': paybill_number,
-                'account_reference': account_reference
+                'account_reference': account_reference,  # This will be the wallet_number
+                'wallet_number': wallet_number  # Store wallet number for reference
             }
             
         elif payment_method == 'till_number':
@@ -839,7 +840,8 @@ def fund_wallet(request):
             actual_payment_method = 'b2b'  # B2B for till
             payment_details = {
                 'till_number': till_number,
-                'till_reference': till_reference
+                'till_reference': till_reference,  # This will be the wallet_number
+                'wallet_number': wallet_number  # Store wallet number for reference
             }
             
         else:
@@ -856,11 +858,12 @@ def fund_wallet(request):
             status='PENDING',
             payment_method=payment_method,
             sender=request.user,
-            description=f"Wallet funding via {payment_method}",
+            description=f"Wallet funding via {payment_method} for wallet {wallet_number}",
             payment_details={
                 'payment_details': payment_details,
                 'business_id': business_id,
                 'actual_payment_method': actual_payment_method,
+                'wallet_number': wallet_number,
                 'initiated_at': timezone.now().isoformat()
             }
         )
@@ -877,9 +880,9 @@ def fund_wallet(request):
             elif actual_payment_method == 'b2b':
                 # B2B - Business to business payment (Paybill/Till)
                 if payment_method == 'paybill_number':
-                    success_message = f"Payment instructions provided. Please use Paybill {paybill_number} with account number {account_reference} to complete your payment of KES {amount}."
+                    success_message = f"Payment instructions provided. Please use Paybill {paybill_number} with account number {wallet_number} to complete your payment of KES {amount}."
                 else:  # till_number
-                    success_message = f"Payment instructions provided. Please use Till {till_number} with reference {till_reference} to complete your payment of KES {amount}."
+                    success_message = f"Payment instructions provided. Please use Till {till_number} with reference {wallet_number} to complete your payment of KES {amount}."
                 
                 # For manual payments (paybill/till), you might want to create a pending transaction
                 # that gets confirmed via callback when the user actually pays
@@ -900,7 +903,7 @@ def fund_wallet(request):
                 transaction.save()
                 
                 messages.success(request, success_message)
-                logger.info(f"Payment initiated for wallet {wallet_id}, Transaction ID: {transaction.id}, Response: {response}")
+                logger.info(f"Payment initiated for wallet {wallet_number}, Transaction ID: {transaction.id}, Response: {response}")
                 
             else:
                 # Update transaction with failure details
@@ -915,7 +918,7 @@ def fund_wallet(request):
                 transaction.save()
                 
                 messages.error(request, f"Payment failed: {error_msg}")
-                logger.error(f"Payment failed for wallet {wallet_id}, Transaction ID: {transaction.id}, Response: {response}")
+                logger.error(f"Payment failed for wallet {wallet_number}, Transaction ID: {transaction.id}, Response: {response}")
                 
         except Exception as e:
             # Update transaction with exception details

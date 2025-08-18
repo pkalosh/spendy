@@ -10,16 +10,17 @@ def post_user_create(sender, instance, created, **kwargs):
             # Create CompanyKYC instance
             kyc = CompanyKYC.objects.create(
                 user=instance,
-                company_name=f"{instance.first_name} {instance.last_name} Company"
+                company_name=f"{instance.first_name} {instance.last_name}"
             )
 
             # Determine default currency
-            currency = 'KES' if getattr(instance, 'country', '').upper() == 'KENYA' else None
+            currency = 'KES' if getattr(instance, 'country', '').upper() == 'KENYA' else 'UGX'
 
             # Create Wallet instance
             Wallet.objects.create(
                 user=instance,
                 company=kyc,
+                wallet_name = 'Primary Wallet',
                 wallet_type='PRIMARY',
                 currency=currency
             )

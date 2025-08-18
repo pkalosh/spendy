@@ -88,8 +88,7 @@ btn-primary btn-sm d-none" id="addEventBtn" data-bs-toggle="modal" data-bs-targe
                                                 <i class="fas 
 fa-plus"></i> Add Event Category
                                             </button>
-                                            <button class="btn btn-primary btn-sm d-none" id="addClientBtn"
-                                                data-bs-toggle="modal" data-bs-target="#clientModal">
+                                            <button class="btn btn-primary btn-sm d-none" id="addClientBtn">
                                                 <i class="fas fa-plus"></i> Add Client
                                             </button>
                                         </div>
@@ -311,9 +310,7 @@ fade" id="event-pane" role="tabpanel" aria-labelledby="event-tab">
                                                                     <button
                                                                         class="btn btn-sm btn-outline-success mt-2 add-brand-btn"
                                                                         data-client-id="{{ client.id }}"
-                                                                        data-client-name="{{ client.name }}"
-                                                                        data-bs-toggle="modal"
-                                                                        data-bs-target="#brandModal">
+                                                                        data-client-name="{{ client.name }}">
                                                                         <i class="fas fa-plus"></i> Add Brand
                                                                     </button>
                                                                 </td>
@@ -369,6 +366,7 @@ fade" id="event-pane" role="tabpanel" aria-labelledby="event-tab">
     </div>
 </section>
 
+<!-- Expense Category Modal -->
 <div class="modal fade" id="expenseCategoryModal" tabindex="-1" aria-labelledby="expenseCategoryModalLabel"
     aria-hidden="true">
     <div class="modal-dialog">
@@ -387,14 +385,14 @@ fade" id="event-pane" role="tabpanel" aria-labelledby="event-tab">
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn 
-btn-primary">Save</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
+<!-- Operation Category Modal -->
 <div class="modal fade" id="operationCategoryModal" tabindex="-1" aria-labelledby="operationCategoryModalLabel"
     aria-hidden="true">
     <div class="modal-dialog">
@@ -413,14 +411,14 @@ btn-primary">Save</button>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn 
-btn-primary">Save</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
+<!-- Event Category Modal -->
 <div class="modal fade" id="eventCategoryModal" tabindex="-1" aria-labelledby="eventCategoryModalLabel"
     aria-hidden="true">
     <div class="modal-dialog">
@@ -439,14 +437,14 @@ btn-primary">Save</button>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn 
-btn-primary">Save</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
+<!-- Client Modal -->
 <div class="modal fade" id="clientModal" tabindex="-1" aria-labelledby="clientModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -515,6 +513,7 @@ btn-primary">Save</button>
     </div>
 </div>
 
+<!-- Brand Modal -->
 <div class="modal fade" id="brandModal" tabindex="-1" aria-labelledby="brandModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -554,6 +553,7 @@ btn-primary">Save</button>
     </div>
 </div>
 
+<!-- Edit Category Modal -->
 <div class="modal fade" id="editCategoryModal" tabindex="-1" aria-labelledby="editCategoryModalLabel"
     aria-hidden="true">
     <div class="modal-dialog">
@@ -562,8 +562,7 @@ btn-primary">Save</button>
                 <h5 class="modal-title" id="editCategoryModalLabel">Edit Category</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="editCategoryForm" method="post" action="{% url 
-'wallet:edit_category' %}">
+            <form id="editCategoryForm" method="post" action="{% url 'wallet:edit_category' %}">
                 {% csrf_token %}
                 <div class="modal-body">
                     <div class="mb-3">
@@ -575,14 +574,14 @@ btn-primary">Save</button>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn 
-btn-primary">Save Changes</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
+<!-- Delete Category Confirmation Modal -->
 <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel"
     aria-hidden="true">
     <div class="modal-dialog">
@@ -601,14 +600,14 @@ btn-primary">Save Changes</button>
                     {% csrf_token %}
                     <input type="hidden" id="deleteCategoryId" name="category_id">
                     <input type="hidden" id="deleteCategoryType" name="category_type">
-                    <button type="submit" class="btn 
-btn-danger">Delete</button>
+                    <button type="submit" class="btn btn-danger">Delete</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Delete Client Confirmation Modal -->
 <div class="modal fade" id="confirmDeleteClientModal" tabindex="-1" aria-labelledby="confirmDeleteClientModalLabel"
     aria-hidden="true">
     <div class="modal-dialog">
@@ -633,6 +632,7 @@ btn-danger">Delete</button>
     </div>
 </div>
 
+<!-- Delete Brand Confirmation Modal -->
 <div class="modal fade" id="confirmDeleteBrandModal" tabindex="-1" aria-labelledby="confirmDeleteBrandModalLabel"
     aria-hidden="true">
     <div class="modal-dialog">
@@ -695,7 +695,6 @@ btn-danger">Delete</button>
         background-color: rgba(0, 0, 0, 0.02);
     }
 </style>
-
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -777,21 +776,44 @@ btn-danger">Delete</button>
             }
         });
 
-        // Add Client button click handler
-        document.getElementById('addClientBtn').addEventListener('click', function () {
+        // Add Client button click handler - FIXED VERSION
+        document.getElementById('addClientBtn').addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            console.log('Add client button clicked - proper handler');
+            
             const modalTitle = document.getElementById('clientModalLabel');
             modalTitle.textContent = 'Add New Client';
+            
             const clientForm = document.getElementById('clientForm');
             clientForm.reset();
             document.getElementById('clientId').value = '';
-            clientForm.action = URLS.addClient; // Use predefined URL
-            const clientModal = new bootstrap.Modal(document.getElementById('clientModal'));
+            clientForm.action = URLS.addClient;
+            
+            // Ensure any existing modal instance is properly disposed
+            const modalElement = document.getElementById('clientModal');
+            const existingModal = bootstrap.Modal.getInstance(modalElement);
+            if (existingModal) {
+                existingModal.dispose();
+            }
+            
+            // Create new modal instance with proper options
+            const clientModal = new bootstrap.Modal(modalElement, {
+                backdrop: true,
+                keyboard: true,
+                focus: true
+            });
+            
             clientModal.show();
         });
 
         // Edit Client button click handler
         document.addEventListener('click', function (e) {
             if (e.target.closest('.edit-client')) {
+                e.preventDefault();
+                e.stopPropagation();
+                
                 const button = e.target.closest('.edit-client');
                 const clientId = button.getAttribute('data-id');
                 const clientName = button.getAttribute('data-name');
@@ -821,9 +843,20 @@ btn-danger">Delete</button>
                 document.getElementById('clientNotes').value = notes;
 
                 const clientForm = document.getElementById('clientForm');
-                clientForm.action = URLS.editClient; // Use predefined URL
+                clientForm.action = URLS.editClient;
 
-                const clientModal = new bootstrap.Modal(document.getElementById('clientModal'));
+                // Proper modal handling
+                const modalElement = document.getElementById('clientModal');
+                const existingModal = bootstrap.Modal.getInstance(modalElement);
+                if (existingModal) {
+                    existingModal.dispose();
+                }
+                
+                const clientModal = new bootstrap.Modal(modalElement, {
+                    backdrop: true,
+                    keyboard: true,
+                    focus: true
+                });
                 clientModal.show();
             }
         });
@@ -841,9 +874,12 @@ btn-danger">Delete</button>
             }
         });
 
-        // Add Brand button click handler
+        // Add Brand button click handler - FIXED VERSION
         document.addEventListener('click', function (e) {
             if (e.target.closest('.add-brand-btn')) {
+                e.preventDefault();
+                e.stopPropagation();
+                
                 const button = e.target.closest('.add-brand-btn');
                 const clientId = button.getAttribute('data-client-id');
                 const clientName = button.getAttribute('data-client-name');
@@ -861,7 +897,7 @@ btn-danger">Delete</button>
                 const brandForm = document.getElementById('brandForm');
                 if (brandForm) {
                     brandForm.reset();
-                    brandForm.action = URLS.addBrand; // Use predefined URL
+                    brandForm.action = URLS.addBrand;
                 }
                 
                 const brandClientIdInput = document.getElementById('brandClientId');
@@ -872,7 +908,18 @@ btn-danger">Delete</button>
                 if (brandIdInput) brandIdInput.value = '';
                 if (currentBrandLogoElement) currentBrandLogoElement.textContent = '';
 
-                const brandModal = new bootstrap.Modal(document.getElementById('brandModal'));
+                // Proper modal handling
+                const modalElement = document.getElementById('brandModal');
+                const existingModal = bootstrap.Modal.getInstance(modalElement);
+                if (existingModal) {
+                    existingModal.dispose();
+                }
+                
+                const brandModal = new bootstrap.Modal(modalElement, {
+                    backdrop: true,
+                    keyboard: true,
+                    focus: true
+                });
                 brandModal.show();
             }
         });
@@ -880,6 +927,9 @@ btn-danger">Delete</button>
         // Edit Brand button click handler
         document.addEventListener('click', function (e) {
             if (e.target.closest('.edit-brand')) {
+                e.preventDefault();
+                e.stopPropagation();
+                
                 const button = e.target.closest('.edit-brand');
                 const brandId = button.getAttribute('data-id');
                 const brandName = button.getAttribute('data-name');
@@ -904,10 +954,21 @@ btn-danger">Delete</button>
 
                 const brandForm = document.getElementById('brandForm');
                 if (brandForm) {
-                    brandForm.action = URLS.editBrand; // Use predefined URL
+                    brandForm.action = URLS.editBrand;
                 }
 
-                const brandModal = new bootstrap.Modal(document.getElementById('brandModal'));
+                // Proper modal handling
+                const modalElement = document.getElementById('brandModal');
+                const existingModal = bootstrap.Modal.getInstance(modalElement);
+                if (existingModal) {
+                    existingModal.dispose();
+                }
+                
+                const brandModal = new bootstrap.Modal(modalElement, {
+                    backdrop: true,
+                    keyboard: true,
+                    focus: true
+                });
                 brandModal.show();
             }
         });
@@ -924,7 +985,51 @@ btn-danger">Delete</button>
                 deleteBrandModal.show();
             }
         });
+
+        // Modal cleanup event listeners
+        const clientModalElement = document.getElementById('clientModal');
+        const brandModalElement = document.getElementById('brandModal');
+
+        // Client modal cleanup
+        clientModalElement.addEventListener('hidden.bs.modal', function () {
+            document.body.classList.remove('modal-open');
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            backdrops.forEach(backdrop => backdrop.remove());
+            
+            // Reset form
+            const clientForm = document.getElementById('clientForm');
+            if (clientForm) {
+                clientForm.reset();
+            }
+        });
+
+        // Brand modal cleanup  
+        brandModalElement.addEventListener('hidden.bs.modal', function () {
+            document.body.classList.remove('modal-open');
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            backdrops.forEach(backdrop => backdrop.remove());
+            
+            // Reset form
+            const brandForm = document.getElementById('brandForm');
+            if (brandForm) {
+                brandForm.reset();
+            }
+        });
+
+        // Focus management
+        clientModalElement.addEventListener('shown.bs.modal', function () {
+            const firstInput = this.querySelector('input[type="text"]');
+            if (firstInput) {
+                firstInput.focus();
+            }
+        });
+
+        brandModalElement.addEventListener('shown.bs.modal', function () {
+            const firstInput = this.querySelector('input[type="text"]');
+            if (firstInput) {
+                firstInput.focus();
+            }
+        });
     });
 </script>
 {% endblock content %}
-

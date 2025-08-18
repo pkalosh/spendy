@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout,update_session_auth_hash
 from django.contrib import messages
-
+from wallet.models import CompanyKYC, StaffProfile, Role
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordChangeForm
 
@@ -12,28 +12,62 @@ def RegisterView(request):
     if request.method == "POST":
         form = UserRegisterForm(request.POST)
         if form.is_valid():
-            # form.save()
-            new_user = form.save() # new_user.email
+            # Save the user
+            new_user = form.save()
             username = form.cleaned_data.get("email")
-            # username = request.POST.get("username")
+            
+            # Create StaffProfile with admin role
+            try:
+                # Get the admin role (adjust the filter based on your Role model)
+                admin_role = Role.objects.get(is_admin=True)  # or Role.objects.get(name='Admin')
+                
+                # Get the user's company if it exists
+                try:
+                    user_company = CompanyKYC.objects.get(user=new_user)
+                except CompanyKYC.DoesNotExist:
+                    user_company = None
+                
+                # Create StaffProfile
+                staff_profile = StaffProfile.objects.create(
+                    user=new_user,
+                    role=admin_role,
+                    company=user_company,
+                    is_active=True
+                    # assigned_modules will be empty as intended
+                )
+                
+            except Role.DoesNotExist:
+                # Handle case where admin role doesn't exist
+                messages.error(request, "Admin role not found. Please contact administrator.")
+                # Optionally delete the created user if staff profile creation fails
+                new_user.delete()
+                return render(request, "users/sign-up.html", {"form": form})
+            
+            except Exception as e:
+                # Handle any other errors during staff profile creation
+                messages.error(request, f"Error creating staff profile: {str(e)}")
+                new_user.delete()
+                return render(request, "users/sign-up.html", {"form": form})
+            
             messages.success(request, f"Hey {username}, your account was created successfully.")
-            # new_user = authenticate(username=form.cleaned_data.get('email'))
-            new_user = authenticate(email=form.cleaned_data['email'],
-                                    password=form.cleaned_data['password1'])
+            
+            # Authenticate and login the user
+            new_user = authenticate(
+                email=form.cleaned_data['email'],
+                password=form.cleaned_data['password1']
+            )
             login(request, new_user)
             return redirect("wallet:wallet")
     
     if request.user.is_authenticated:
         messages.warning(request, f"You are already logged in.")
         return redirect("wallet:wallet")
-
-
     else:
         form = UserRegisterForm()
-    context = {
-        "form": form
-    }
-    return render(request, "users/sign-up.html", context)
+        context = {
+            "form": form
+        }
+        return render(request, "users/sign-up.html", context)
 
 
 

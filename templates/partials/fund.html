@@ -54,12 +54,14 @@
                     <div class="row mb-4">
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Select Wallet</label>
-                            <select name="wallet_id" id="walletSelect" class="form-select" required>
-                              {% for wallet in wallets %}
-                            <option value="{{ wallet.id }}" id="{{wallet.wallet_number}}" {% if request.POST.wallet_id == wallet.id|stringformat:"s" %}selected{% endif %}>
-                                {{ wallet.wallet_name|title }} (KES {{ wallet.balance }})
-                            </option>
-                        {% endfor %}
+                            <select name="wallet_number" id="walletSelect" class="form-select" required>
+                                {% for wallet in wallets %}
+                                    <option value="{{ wallet.wallet_number }}" 
+                                            data-wallet-id="{{ wallet.id }}" 
+                                            {% if request.POST.wallet_number == wallet.wallet_number %}selected{% endif %}>
+                                        {{ wallet.wallet_name|title }} (KES {{ wallet.balance }})
+                                    </option>
+                                {% endfor %}
                             </select>
                         </div>
                         <div class="col-md-6">
@@ -114,7 +116,7 @@
                                         <strong>1.</strong> Go to M-Pesa → <span class="highlight-text">Pay Bill</span>
                                     </div>
                                     <div class="instruction-step">
-                                        <strong>2.</strong> Paybill Number: <span class="highlight-text">174379</span>
+                                        <strong>2.</strong> Paybill Number: <span class="highlight-text">4283222</span>
                                     </div>
                                     <div class="instruction-step">
                                         <strong>3.</strong> Account Number: <span class="highlight-text" id="paybillAccountNumber">Select wallet first</span>
@@ -152,7 +154,7 @@
                                         <strong>1.</strong> Go to M-Pesa → <span class="highlight-text">Buy Goods and Services</span>
                                     </div>
                                     <div class="instruction-step">
-                                        <strong>2.</strong> Till Number: <span class="highlight-text">5448834</span>
+                                        <strong>2.</strong> Till Number: <span class="highlight-text">4283222</span>
                                     </div>
                                     <div class="instruction-step">
                                         <strong>3.</strong> Reference: <span class="highlight-text" id="tillReferenceNumber">Select wallet first</span>
@@ -246,10 +248,10 @@
         const selectedWallet = walletSelect.options[walletSelect.selectedIndex];
 
         if (selectedWallet && selectedWallet.value) {
-            const walletIdPadded = String(selectedWallet.value).padStart(3, '0');
-            const walletCode = `WALLET_${walletIdPadded}`;
-            document.getElementById('paybillAccountNumber').textContent = walletCode;
-            document.getElementById('account_reference').value = walletCode;
+            // Use the wallet_number directly
+            const walletNumber = selectedWallet.value;
+            document.getElementById('paybillAccountNumber').textContent = walletNumber;
+            document.getElementById('account_reference').value = walletNumber;
         } else {
             document.getElementById('paybillAccountNumber').textContent = 'Select wallet first';
             document.getElementById('account_reference').value = '';
@@ -268,10 +270,10 @@
         const selectedWallet = walletSelect.options[walletSelect.selectedIndex];
 
         if (selectedWallet && selectedWallet.value) {
-            const walletIdPadded = String(selectedWallet.value).padStart(3, '0');
-            const tillRef = `TILL_${walletIdPadded}`;
-            document.getElementById('tillReferenceNumber').textContent = tillRef;
-            document.getElementById('till_reference').value = tillRef;
+            // Use the wallet_number directly
+            const walletNumber = selectedWallet.value;
+            document.getElementById('tillReferenceNumber').textContent = walletNumber;
+            document.getElementById('till_reference').value = walletNumber;
         } else {
             document.getElementById('tillReferenceNumber').textContent = 'Select wallet first';
             document.getElementById('till_reference').value = '';
