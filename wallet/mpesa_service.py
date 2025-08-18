@@ -210,8 +210,8 @@ class MpesaDaraja:
             payload = {
                 "ShortCode": self.shortcode,
                 "ResponseType": response_type,
-                "ConfirmationURL": confirmation_url or f"{settings.BASE_URL}/c2b/confirmation/",
-                "ValidationURL": validation_url or f"{settings.BASE_URL}/c2b/validation/"
+                "ConfirmationURL": confirmation_url or f"{settings.BASE_URL}/wallet/c2b/confirmation/",
+                "ValidationURL": validation_url or f"{settings.BASE_URL}/wallet/c2b/validation/"
             }
             print(payload)
             headers = {
