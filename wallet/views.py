@@ -2312,7 +2312,7 @@ def c2b_confirmation(request):
             try:
                 # Attempt to get the wallet using the account number directly as the wallet ID
                 wallet_id = int(bill_ref_number)
-                target_wallet = Wallet.objects.get(id=wallet_id)
+                target_wallet = Wallet.objects.get(wallet_number=wallet_id)
                 logger.info(f"Found wallet by direct numeric ID: {wallet_id}")
             except (ValueError, Wallet.DoesNotExist):
                 # If that fails, check for the WALLET_ prefix
@@ -2320,7 +2320,7 @@ def c2b_confirmation(request):
                     try:
                         wallet_id_str = bill_ref_number.split('_')[1]
                         wallet_id = int(wallet_id_str)
-                        target_wallet = Wallet.objects.get(id=wallet_id)
+                        target_wallet = Wallet.objects.get(wallet_number=wallet_id)
                         logger.info(f"Found wallet by 'WALLET_' prefix: {wallet_id}")
                     except (ValueError, IndexError, Wallet.DoesNotExist):
                         logger.warning(f"Invalid wallet reference format or Wallet not found: {bill_ref_number}. Cannot link to wallet for {mpesa_trans_id}.")
