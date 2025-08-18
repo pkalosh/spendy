@@ -2289,12 +2289,11 @@ def c2b_confirmation(request):
         logger.info(f"C2B Confirmation received: {confirmation_data}")
         
         # Extract confirmation data
-        trans_type = confirmation_data.get('TransType')
-        mpesa_trans_id = confirmation_data.get('TransID') # M-Pesa Transaction ID (e.g., receipt number)
-        trans_time_str = confirmation_data.get('TransTime') # YYYYMMDDHHMMSS format
-        trans_amount = Decimal(confirmation_data.get('TransAmount', '0.00')) # Ensure Decimal
-        business_short_code = confirmation_data.get('BusinessShortCode') # Your Paybill/Till
-        bill_ref_number = confirmation_data.get('BillRefNumber') # WALLET_XXX
+        mpesa_trans_id = confirmation_data.get('TransID') # M-Pesa Transaction ID
+        trans_time_str = confirmation_data.get('TransTime')
+        trans_amount = Decimal(confirmation_data.get('TransAmount', '0.00'))
+        business_short_code = confirmation_data.get('BusinessShortCode')
+        bill_ref_number = confirmation_data.get('BillRefNumber')
         msisdn = confirmation_data.get('MSISDN')
         first_name = confirmation_data.get('FirstName', '')
         middle_name = confirmation_data.get('MiddleName', '')
@@ -2309,99 +2308,85 @@ def c2b_confirmation(request):
 
         # --- 1. Find the target Wallet ---
         target_wallet = None
-        if bill_ref_number and bill_ref_number.startswith('WALLET_'):
+        if bill_ref_number:
             try:
-                wallet_id_str = bill_ref_number.split('_')[1]
-                wallet_id = int(wallet_id_str)
+                # Attempt to get the wallet using the account number directly as the wallet ID
+                wallet_id = int(bill_ref_number)
                 target_wallet = Wallet.objects.get(id=wallet_id)
-            except (ValueError, IndexError):
-                logger.warning(f"C2B Confirmation: Invalid wallet reference format: {bill_ref_number}. Transaction {mpesa_trans_id}.")
-            except Wallet.DoesNotExist:
-                logger.warning(f"C2B Confirmation: Wallet with ID {wallet_id_str} not found for BillRefNumber: {bill_ref_number}. Transaction {mpesa_trans_id}.")
+                logger.info(f"Found wallet by direct numeric ID: {wallet_id}")
+            except (ValueError, Wallet.DoesNotExist):
+                # If that fails, check for the WALLET_ prefix
+                if bill_ref_number.startswith('WALLET_'):
+                    try:
+                        wallet_id_str = bill_ref_number.split('_')[1]
+                        wallet_id = int(wallet_id_str)
+                        target_wallet = Wallet.objects.get(id=wallet_id)
+                        logger.info(f"Found wallet by 'WALLET_' prefix: {wallet_id}")
+                    except (ValueError, IndexError, Wallet.DoesNotExist):
+                        logger.warning(f"Invalid wallet reference format or Wallet not found: {bill_ref_number}. Cannot link to wallet for {mpesa_trans_id}.")
+                else:
+                     logger.warning(f"Unrecognized BillRefNumber format: {bill_ref_number}. Cannot link to wallet for {mpesa_trans_id}.")
         else:
-            logger.warning(f"C2B Confirmation: BillRefNumber is not in WALLET_XXX format or missing: {bill_ref_number}. Cannot link to wallet for {mpesa_trans_id}.")
+            logger.warning(f"BillRefNumber is missing. Cannot link to wallet for {mpesa_trans_id}.")
 
         # --- 2. Create or Update MpesaTransaction Record (Detailed M-Pesa Log) ---
-        # Use mpesa_receipt_number (which is TransID from callback) for idempotency
         mpesa_txn_record, mpesa_txn_created = MpesaTransaction.objects.get_or_create(
             mpesa_receipt_number=mpesa_trans_id, 
             defaults={
                 'transaction_type': 'C2B',
-                'status': 'COMPLETED', 
-                'transaction_id': mpesa_trans_id, # Store in general transaction_id field as well
+                'status': 'COMPLETED',
                 'amount': trans_amount,
                 'party_a': msisdn,
                 'party_b': business_short_code,
                 'phone_number': msisdn,
                 'account_reference': bill_ref_number,
-                'transaction_desc': f"M-Pesa C2B Payment from {first_name} {last_name} to {bill_ref_number}",
+                'transaction_desc': f"M-Pesa C2B Payment from {first_name} {last_name}",
                 'transaction_date': transaction_datetime, 
-                'created_at': transaction_datetime, 
                 'completed_at': timezone.now(), 
                 'callback_data': confirmation_data,
                 'first_name': first_name, 
                 'middle_name': middle_name,
                 'last_name': last_name,
-                # Link to CompanyKYC if wallet has one
-                'company': target_wallet.company if target_wallet and hasattr(target_wallet, 'company') else None,
-                # Link to User if wallet has one
                 'user': target_wallet.user if target_wallet and hasattr(target_wallet, 'user') else None,
             }
         )
         
         if not mpesa_txn_created:
-            # If transaction already exists, ensure its status is COMPLETED and update callback data
             if mpesa_txn_record.status != 'COMPLETED':
                 mpesa_txn_record.status = 'COMPLETED'
                 mpesa_txn_record.completed_at = timezone.now()
-            mpesa_txn_record.callback_data = confirmation_data
-            mpesa_txn_record.save()
+                mpesa_txn_record.callback_data = confirmation_data
+                mpesa_txn_record.save()
             logger.info(f"C2B MpesaTransaction {mpesa_trans_id} already exists, status ensured to COMPLETED.")
         else:
             logger.info(f"New C2B MpesaTransaction {mpesa_trans_id} recorded.")
-
-            # --- 3. Create a core Transaction Record (if not already created) ---
-            # We want to create a Transaction record ONLY if this M-Pesa transaction is new to our system.
-            # Use mpesa_trans_id as transaction_code for uniqueness if possible
-            try:
-                core_transaction = Transaction.objects.get(transaction_code=mpesa_trans_id)
-                logger.info(f"Core Transaction with code {mpesa_trans_id} already exists. Skipping creation.")
-            except Transaction.DoesNotExist:
-                logger.info(f"Creating new core Transaction for {mpesa_trans_id}.")
+            
+            # --- 3. Create a core Transaction Record and Fund the Wallet ---
+            if target_wallet:
                 try:
+                    # Check if a core Transaction record already exists to prevent duplicates on retries
+                    core_transaction = Transaction.objects.get(transaction_code=mpesa_trans_id)
+                    logger.info(f"Core Transaction {core_transaction.transaction_id} already exists. Skipping.")
+                except Transaction.DoesNotExist:
+                    logger.info(f"Creating new core Transaction for {mpesa_trans_id}.")
                     core_transaction = Transaction.objects.create(
-                        company=target_wallet.company if target_wallet else None,
-                        user=target_wallet.user if target_wallet else None,
+                        user=target_wallet.user if target_wallet and hasattr(target_wallet, 'user') else None,
                         amount=trans_amount,
                         description=f"M-Pesa Deposit to Wallet {bill_ref_number}",
                         receiver_wallet=target_wallet,
-                        sender_wallet=None, # External M-Pesa, no internal sender wallet
-                        status='completed', # Directly completed
-                        transaction_type='deposit', # Or 'received' as per your choices
-                        transaction_code=mpesa_trans_id, # Link to M-Pesa ID
-                        date=transaction_datetime, # Use the M-Pesa transaction time
+                        status='completed',
+                        transaction_type='deposit',
+                        transaction_code=mpesa_trans_id,
+                        date=transaction_datetime,
                     )
-                    logger.info(f"Core Transaction {core_transaction.transaction_id} created for M-Pesa {mpesa_trans_id}.")
-                except Exception as e:
-                    logger.error(f"Failed to create core Transaction record for {mpesa_trans_id}: {e}", exc_info=True)
-
-
-            # --- 4. Fund the Wallet (if successfully created and linked) ---
-            # This should happen only if the M-Pesa transaction record was new AND a wallet was found
-            if target_wallet and mpesa_txn_created: # Only fund if this is a new, processed callback
-                target_wallet.balance += trans_amount
-                target_wallet.save()
-                logger.info(f"Wallet {target_wallet.id} funded with KES {trans_amount} from transaction {mpesa_trans_id}.")
-            elif not target_wallet:
+                    logger.info(f"Core Transaction {core_transaction.id} created successfully.")
+                    
+                    # Update wallet balance
+                    target_wallet.balance += trans_amount
+                    target_wallet.save()
+                    logger.info(f"Wallet {target_wallet.id} funded with KES {trans_amount} from transaction {mpesa_trans_id}.")
+            else:
                 logger.warning(f"Wallet not found for {mpesa_trans_id}. Payment received but wallet balance not updated.")
-            elif not mpesa_txn_created:
-                 logger.info(f"Wallet for {mpesa_trans_id} not funded as MpesaTransaction already existed (handled by previous logic).")
-
-            # --- Business Logic: Send Notifications (Example) ---
-            # if target_wallet:
-            #     # Consider sending notifications here or after the save
-            #     # (e.g., via Celery task for async processing)
-            #     pass
         
         return JsonResponse({
             'ResultCode': '0',
@@ -2413,9 +2398,7 @@ def c2b_confirmation(request):
         return JsonResponse({'ResultCode': '1', 'ResultDesc': 'Invalid JSON'}, status=400)
     except Exception as e:
         logger.error(f"Error processing C2B confirmation: {str(e)}", exc_info=True)
-        # Always return a failure code if your system had an internal error, Safaricom may retry
         return JsonResponse({'ResultCode': '1', 'ResultDesc': f"Internal server error: {str(e)}"}, status=500)
-
 
 UUID_PATTERN = re.compile(
     r'[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}',
