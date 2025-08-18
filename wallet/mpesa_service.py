@@ -1,6 +1,7 @@
 import requests
 import base64
 import json
+from requests.exceptions import RequestException
 from datetime import datetime
 from cryptography import x509
 from cryptography.hazmat.primitives import padding, hashes
@@ -201,31 +202,29 @@ class MpesaDaraja:
     def c2b_register_urls(self, validation_url=None, confirmation_url=None, response_type="Completed"):
         """
         Register C2B URLs for payment notifications
-        
-        Args:
-            validation_url (str): URL for payment validation (optional)
-            confirmation_url (str): URL for payment confirmation
-            response_type (str): Response type - "Completed" or "Cancelled"
-        
-        Returns:
-            dict: API response
         """
         try:
             if not self.access_token:
                 self.get_access_token()
-            
+
             payload = {
                 "ShortCode": self.shortcode,
                 "ResponseType": response_type,
                 "ConfirmationURL": confirmation_url or f"{settings.BASE_URL}/c2b/confirmation/",
                 "ValidationURL": validation_url or f"{settings.BASE_URL}/c2b/validation/"
             }
-            
+            print(payload)
             headers = {
                 'Authorization': f'Bearer {self.access_token}',
                 'Content-Type': 'application/json'
             }
             
+            # --- ADDED DEBUGGING LINES ---
+            logger.debug(f"Payload for C2B registration: {json.dumps(payload, indent=2)}")
+            logger.debug(f"Authorization Header being used: {headers.get('Authorization')[:30]}...") 
+            # You can print the whole token, but be cautious with logging sensitive data
+            # --- END DEBUGGING ---
+
             response = requests.post(
                 f"{self.base_url}/mpesa/c2b/v1/registerurl",
                 json=payload,
@@ -235,11 +234,10 @@ class MpesaDaraja:
             response_data = response.json()
             logger.info(f"C2B URLs registered: {response_data}")
             return response_data
-            
+                
         except Exception as e:
-            logger.error(f"Error registering C2B URLs: {str(e)}")
+            logger.error(f"Error registering C2B URLs: {str(e)}", exc_info=True)
             raise
-    
     def b2c_payment(self, amount, phone_number, remarks, command_id='BusinessPayment', occasion=''):
         """
         Initiate B2C payment
