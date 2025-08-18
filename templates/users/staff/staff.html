@@ -3,694 +3,482 @@
 {% load humanize %}
 {% block content %}
 <!-- Pay Page - Wallet and Payment Transactions -->
-<!-- Enhanced Mobile Responsive CSS -->
-<style>
-    /* Responsive table styles */
-    .responsive-table {
-        font-size: 14px;
-    }
-    
-    @media (max-width: 768px) {
+<!-- Add this CSS to your main stylesheet or in a <style> block -->
+    <style>
+        /* Responsive table styles */
         .responsive-table {
-            font-size: 12px;
+            font-size: 14px;
         }
         
-        .responsive-table th,
-        .responsive-table td {
-            padding: 8px 4px !important;
-            vertical-align: middle;
+        @media (max-width: 768px) {
+            .responsive-table {
+                font-size: 12px;
+            }
+            
+            .responsive-table th,
+            .responsive-table td {
+                padding: 8px 4px !important;
+                vertical-align: middle;
+            }
+            
+            /* Stack table headers and data vertically on mobile */
+            .responsive-table thead {
+                display: none;
+            }
+            
+            .responsive-table,
+            .responsive-table tbody,
+            .responsive-table tr,
+            .responsive-table td {
+                display: block;
+                width: 100%;
+            }
+            
+            .responsive-table tr {
+                border: 1px solid #dee2e6;
+                margin-bottom: 15px;
+                border-radius: 8px;
+                background: white;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                padding: 10px;
+            }
+            
+            .responsive-table td {
+                border: none !important;
+                position: relative;
+                padding-left: 35% !important;
+                text-align: left !important;
+                padding-top: 12px !important;
+                padding-bottom: 12px !important;
+                border-bottom: 1px solid #f8f9fa !important;
+            }
+            
+            .responsive-table td:last-child {
+                border-bottom: none !important;
+            }
+            
+            .responsive-table td:before {
+                content: attr(data-label) ": ";
+                position: absolute;
+                left: 8px;
+                width: 30%;
+                text-align: left;
+                font-weight: bold;
+                color: #495057;
+                font-size: 12px;
+            }
+            
+            .responsive-table td:first-child {
+                border-top-left-radius: 8px;
+                border-top-right-radius: 8px;
+            }
+            
+            .responsive-table td:last-child {
+                border-bottom-left-radius: 8px;
+                border-bottom-right-radius: 8px;
+            }
         }
         
-        /* Stack table headers and data vertically on mobile */
-        .responsive-table thead {
-            display: none;
+        @media (max-width: 576px) {
+            .responsive-table {
+                font-size: 11px;
+            }
+            
+            .responsive-table td:before {
+                font-size: 11px;
+            }
+            
+            .btn-sm {
+                font-size: 10px;
+                padding: 4px 8px;
+            }
+            
+            .badge {
+                font-size: 10px;
+                padding: 4px 6px;
+            }
+            
+            .modal-dialog {
+                margin: 10px !important;
+            }
         }
         
-        .responsive-table,
-        .responsive-table tbody,
-        .responsive-table tr,
-        .responsive-table td {
-            display: block;
-            width: 100%;
+        /* Additional mobile optimizations */
+        @media (max-width: 992px) {
+            .table-responsive {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
         }
         
-        .responsive-table tr {
-            border: 1px solid #dee2e6;
-            margin-bottom: 15px;
-            border-radius: 8px;
-            background: white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            padding: 10px;
-        }
-        
-        .responsive-table td {
-            border: none !important;
-            position: relative;
-            padding-left: 35% !important;
-            text-align: left !important;
-            padding-top: 12px !important;
-            padding-bottom: 12px !important;
-            border-bottom: 1px solid #f8f9fa !important;
-        }
-        
-        .responsive-table td:last-child {
-            border-bottom: none !important;
-        }
-        
-        .responsive-table td:before {
-            content: attr(data-label) ": ";
-            position: absolute;
-            left: 8px;
-            width: 30%;
-            text-align: left;
-            font-weight: bold;
-            color: #495057;
-            font-size: 12px;
-        }
-        
-        .responsive-table td:first-child {
-            border-top-left-radius: 8px;
-            border-top-right-radius: 8px;
-        }
-        
-        .responsive-table td:last-child {
-            border-bottom-left-radius: 8px;
-            border-bottom-right-radius: 8px;
-        }
-    }
-    
-    @media (max-width: 576px) {
-        .responsive-table {
-            font-size: 11px;
-        }
-        
-        .responsive-table td:before {
-            font-size: 11px;
-        }
-        
-        .btn-sm {
-            font-size: 10px;
-            padding: 4px 8px;
-        }
-        
-        .badge {
-            font-size: 10px;
-            padding: 4px 6px;
-        }
-        
-        .modal-dialog {
-            margin: 10px !important;
-            max-width: calc(100vw - 20px) !important;
-        }
-        
-        /* Mobile Modal Improvements */
-        .modal-content {
-            border-radius: 15px !important;
-        }
-        
-        .modal-header {
-            padding: 15px !important;
-        }
-        
-        .modal-body {
-            padding: 15px !important;
-        }
-        
-        .modal-footer {
-            padding: 15px !important;
-        }
-        
-        /* Mobile form improvements */
-        .form-label {
-            font-size: 14px !important;
-            margin-bottom: 8px !important;
-        }
-        
-        .form-select,
-        .form-control {
-            font-size: 16px !important; /* Prevents zoom on iOS */
-            padding: 12px !important;
-            border-radius: 8px !important;
-        }
-        
-        .input-group-text {
-            font-size: 14px !important;
-            padding: 12px !important;
-        }
-        
-        /* Card improvements for mobile */
-        .card {
-            border-radius: 12px !important;
-            margin-bottom: 15px !important;
-        }
-        
-        .card-header {
-            padding: 12px 15px !important;
-            font-size: 14px !important;
-            border-radius: 12px 12px 0 0 !important;
-        }
-        
-        .card-body {
-            padding: 15px !important;
-        }
-        
-        /* Button improvements */
-        .btn-lg {
-            padding: 15px 20px !important;
-            font-size: 16px !important;
-            border-radius: 10px !important;
-        }
-        
-        /* Wallet card mobile */
+        /* Wallet balance card improvements */
         .wallet-card {
-            margin-bottom: 20px !important;
+            transition: transform 0.2s ease-in-out;
         }
         
-        .wallet-card .text-xl {
-            font-size: 1.5rem !important;
+        .wallet-card:hover {
+            transform: translateY(-2px);
         }
         
-        /* Alert improvements */
-        .alert {
-            border-radius: 10px !important;
-            margin-bottom: 15px !important;
+        /* Status badge improvements */
+        .status-completed {
+            background-color: #28a745 !important;
         }
         
-        /* Input group improvements */
-        .input-group {
-            flex-wrap: nowrap !important;
+        .status-pending {
+            background-color: #ffc107 !important;
+            color: #212529 !important;
         }
         
-        /* Small text improvements */
-        small.text-muted {
-            font-size: 12px !important;
-            line-height: 1.4 !important;
+        .status-failed, .status-cancelled {
+            background-color: #dc3545 !important;
         }
-    }
+    </style>
     
-    /* Additional mobile optimizations */
-    @media (max-width: 992px) {
-        .table-responsive {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-        
-        /* Modal improvements for tablets */
-        .modal-lg {
-            max-width: 90vw !important;
-        }
-    }
-    
-    /* Wallet balance card improvements */
-    .wallet-card {
-        transition: transform 0.2s ease-in-out;
-    }
-    
-    .wallet-card:hover {
-        transform: translateY(-2px);
-    }
-    
-    /* Status badge improvements */
-    .status-completed {
-        background-color: #28a745 !important;
-    }
-    
-    .status-pending {
-        background-color: #ffc107 !important;
-        color: #212529 !important;
-    }
-    
-    .status-failed, .status-cancelled {
-        background-color: #dc3545 !important;
-    }
-    
-    /* Payment section mobile responsiveness */
-    .payment-section {
-        width: 100%;
-    }
-    
-    @media (max-width: 768px) {
-        .payment-section .card {
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        
-        .payment-section .input-group-text {
-            min-width: 60px;
-            justify-content: center;
-        }
-        
-        /* Better spacing for payment forms */
-        .payment-section .mb-3 {
-            margin-bottom: 1rem !important;
-        }
-        
-        /* Improve form validation display */
-        .invalid-feedback {
-            display: block;
-            font-size: 12px;
-            margin-top: 5px;
-        }
-        
-        .is-invalid {
-            border-color: #dc3545 !important;
-            box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
-        }
-    }
-    
-    /* Touch-friendly improvements */
-    @media (max-width: 768px) {
-        /* Larger touch targets */
-        .btn {
-            min-height: 44px;
-            min-width: 44px;
-        }
-        
-        .dropdown-toggle {
-            padding: 10px 15px !important;
-        }
-        
-        /* Better dropdown menu positioning */
-        .dropdown-menu {
-            border-radius: 10px !important;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
-        }
-        
-        .dropdown-item {
-            padding: 12px 20px !important;
-            font-size: 14px !important;
-        }
-        
-        /* Improved pagination for mobile */
-        .pagination {
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        
-        .page-link {
-            padding: 10px 15px !important;
-            margin: 2px !important;
-            border-radius: 8px !important;
-        }
-    }
-    
-    /* Loading and interaction states */
-    .spinner-border-sm {
-        width: 1rem;
-        height: 1rem;
-    }
-    
-    /* Modal backdrop improvements */
-    .modal-backdrop {
-        background-color: rgba(0, 0, 0, 0.6);
-    }
-    
-    /* Better focus states for mobile */
-    @media (max-width: 768px) {
-        .form-control:focus,
-        .form-select:focus {
-            border-color: #0d6efd;
-            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-            outline: none;
-        }
-        
-        /* Better spacing for form groups */
-        .mb-4 {
-            margin-bottom: 1.5rem !important;
-        }
-        
-        /* Info item spacing */
-        .info-item {
-            margin-bottom: 15px;
-            padding: 10px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-        }
-        
-        /* Better badge display */
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            white-space: nowrap;
-        }
-    }
-    
-    /* Landscape phone optimizations */
-    @media (max-width: 896px) and (orientation: landscape) {
-        .modal-dialog {
-            max-height: 90vh;
-            margin: 20px auto;
-        }
-        
-        .modal-content {
-            max-height: 85vh;
-            overflow-y: auto;
-        }
-    }
-</style>
-
-<section class="dashboard-section body-collapse">
-    <div class="overlay pt-120">
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-12">
-                    <!-- Wallets Section -->
-                    <div id="wallets" class="content-section mb-4">
-                        <h4 class="text-2xl font-bold mb-3 pt-5">
-                            <i class="fas fa-wallet me-2"></i>Wallet
-                        </h4>
-                        <div class="row">
-                            <div class="col-md-12 mb-4 col-sm-12">
-                                <div class="bg-white p-4 shadow rounded-md wallet-card">
-                                    <div class="d-flex justify-content-between align-items-start flex-wrap">
-                                        <div class="flex-grow-1">
-                                            <p class="text-muted mb-2">Current wallet balance and transactions.</p>
-                                            <p class="text-xl font-bold mt-2 mb-0" style="font-size: 2rem; color: #28a745;">
-                                                KES {{ wallet|intcomma }}
-                                            </p>
-                                            <small class="text-muted">Available Balance</small>
-                                        </div>
-                                        <div class="text-end d-none d-md-block">
-                                            <i class="fas fa-money-bill-wave text-success" style="font-size: 2.5rem; opacity: 0.3;"></i>
-                                        </div>
-                                    </div>
-                                    <div class="mt-4">
-                                        {% if not is_admin %}
-                                        <button class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#makePaymentModal">
-                                            <i class="fas fa-paper-plane me-1"></i>Make Payment
-                                        </button>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Payment Transactions Section -->
-                    <div class="content-section mb-4">
-                        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
-                            <h4 class="text-2xl font-bold mb-2 mb-md-0">
-                                <i class="fas fa-exchange-alt me-2"></i>Payment Transactions
+    <section class="dashboard-section body-collapse">
+        <div class="overlay pt-120">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-12">
+                        <!-- Wallets Section -->
+                        <div id="wallets" class="content-section mb-4">
+                            <h4 class="text-2xl font-bold mb-3 pt-5">
+                                <i class="fas fa-wallet me-2"></i>Wallet
                             </h4>
-                            <div class="d-flex gap-2 flex-wrap">
-                                <button class="btn btn-outline-secondary btn-sm" onclick="refreshTransactions()">
-                                    <i class="fas fa-sync-alt me-1"></i>Refresh
-                                </button>
-                                <div class="dropdown">
-                                    <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                        <i class="fas fa-filter me-1"></i>Filter
-                                    </button>
-                                    <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href="?status=all">All Transactions</a></li>
-                                        <li><a class="dropdown-item" href="?status=completed">Completed</a></li>
-                                        <li><a class="dropdown-item" href="?status=pending">Pending</a></li>
-                                        <li><a class="dropdown-item" href="?status=failed">Failed</a></li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        {% if transactions %}
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-hover responsive-table">
-                                <thead class="bg-light">
-                                    <tr>
-                                        <th><i class="fas fa-hashtag me-1"></i>Transaction Code</th>
-                                        <th><i class="fas fa-user me-1"></i>Initiated By</th>
-                                        <th><i class="fas fa-user-check me-1"></i>Recipient</th>
-                                        <th><i class="fas fa-money-bill me-1"></i>Amount</th>
-                                        <th><i class="fas fa-tag me-1"></i>Type</th>
-                                        <th><i class="fas fa-info-circle me-1"></i>Status</th>
-                                        <th><i class="fas fa-calendar me-1"></i>Date</th>
-                                        <th><i class="fas fa-cog me-1"></i>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for txn in transactions %}
-                                        <tr>
-                                            <td data-label="Transaction Code">
-                                                <span class="">{{ txn.transaction_id }}</span>
-                                            </td>
-                                            <td data-label="Initiated By">
-                                                <div class="d-flex align-items-center">
-                                                    <i class="fas fa-user-circle text-muted me-2"></i>
-                                                    {{ txn.user.get_full_name|default:"-" }}
-                                                </div>
-                                            </td>
-                                            <td data-label="Recipient">
-                                                <div class="d-flex align-items-center">
-                                                    <i class="fas fa-user-check text-success me-2"></i>
-                                                    {{ txn.reciever.get_full_name|default:"-" }}
-                                                </div>
-                                            </td>
-                                            <td data-label="Amount">
-                                                <span class="">
-                                                    {{ txn.sender_wallet.currency|default:"KES" }} {{ txn.amount|floatformat:2|intcomma }}
-                                                </span>
-                                            </td>
-                                            <td data-label="Type">
-                                                <span class="badge bg-info text-dark">
-                                                    {{ txn.transaction_type|title }}
-                                                </span>
-                                            </td>
-                                            <td data-label="Status">
-                                                {% if txn.status == 'completed' %}
-                                                    <span class="badge status-completed">
-                                                        <i class="fas fa-check-circle me-1"></i>{{ txn.status|title }}
-                                                    </span>
-                                                {% elif txn.status == 'failed' or txn.status == 'cancelled' %}
-                                                    <span class="badge status-failed">
-                                                        <i class="fas fa-times-circle me-1"></i>{{ txn.status|title }}
-                                                    </span>
-                                                {% else %}
-                                                    <span class="badge status-pending">
-                                                        <i class="fas fa-clock me-1"></i>{{ txn.status|title }}
-                                                    </span>
-                                                {% endif %}
-                                            </td>
-                                            <td data-label="Date">
-                                                <div>
-                                                    <div class="fw-bold">{{ txn.date|date:"M d, Y" }}</div>
-                                                    <small class="text-muted">{{ txn.date|date:"H:i" }}</small>
-                                                </div>
-                                            </td>
-                                            <td data-label="Action">
-                                                <button class="btn btn-sm btn-primary" 
-                                                        data-bs-toggle="modal" 
-                                                        data-bs-target="#viewTransactionModal{{ txn.transaction_id }}"
-                                                        title="View Details">
-                                                    <i class="fas fa-eye me-1"></i>View
-                                                </button>
-                                            </td>
-                                        </tr>
-
-                                        <!-- View Transaction Modal -->
-                                        <div class="modal fade" id="viewTransactionModal{{ txn.transaction_id }}" tabindex="-1" 
-                                             aria-labelledby="viewTransactionModalLabel{{ txn.transaction_id }}" aria-hidden="true">
-                                            <div class="modal-dialog modal-lg">
-                                              <div class="modal-content">
-                                                <div class="modal-header bg-primary text-white">
-                                                  <h5 class="modal-title" id="viewTransactionModalLabel{{ txn.transaction_id }}">
-                                                      <i class="fas fa-receipt me-2"></i>Transaction Details
-                                                  </h5>
-                                                  <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                  <div class="row mb-4">
-                                                    <div class="col-12 text-center">
-                                                        <div class="transaction-status-badge mb-3">
-                                                            {% if txn.status == 'completed' %}
-                                                                <span class="badge bg-success fs-6 px-3 py-2">
-                                                                    <i class="fas fa-check-circle me-2"></i>Transaction {{ txn.status|title }}
-                                                                </span>
-                                                            {% elif txn.status == 'failed' or txn.status == 'cancelled' %}
-                                                                <span class="badge bg-danger fs-6 px-3 py-2">
-                                                                    <i class="fas fa-times-circle me-2"></i>Transaction {{ txn.status|title }}
-                                                                </span>
-                                                            {% else %}
-                                                                <span class="badge bg-warning fs-6 px-3 py-2">
-                                                                    <i class="fas fa-clock me-2"></i>Transaction {{ txn.status|title }}
-                                                                </span>
-                                                            {% endif %}
-                                                        </div>
-                                                    </div>
-                                                  </div>
-                                                  
-                                                  <div class="row mb-3">
-                                                    <div class="col-md-6 mb-3 mb-md-0">
-                                                        <div class="info-item">
-                                                            <i class="fas fa-hashtag text-primary me-2"></i>
-                                                            <strong>Transaction ID:</strong> 
-                                                            <span class="text-primary">{{ txn.transaction_id }}</span>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <div class="info-item">
-                                                            <i class="fas fa-money-bill text-success me-2"></i>
-                                                            <strong>Amount:</strong> 
-                                                            <span class="text-success fw-bold">{{ txn.sender_wallet.currency|default:"KES" }} {{ txn.amount|floatformat:2|intcomma }}</span>
-                                                        </div>
-                                                    </div>
-                                                  </div>
-                                                  
-                                                  <div class="row mb-3">
-                                                    <div class="col-md-6 mb-3 mb-md-0">
-                                                        <div class="info-item">
-                                                            <i class="fas fa-user text-info me-2"></i>
-                                                            <strong>Sender:</strong> {{ txn.sender.get_full_name }}
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <div class="info-item">
-                                                            <i class="fas fa-user-check text-success me-2"></i>
-                                                            <strong>Receiver:</strong> {{ txn.reciever.get_full_name }}
-                                                        </div>
-                                                    </div>
-                                                  </div>
-                                                  
-                                                  <div class="row mb-3">
-                                                    <div class="col-md-6 mb-3 mb-md-0">
-                                                        <div class="info-item">
-                                                            <i class="fas fa-wallet text-primary me-2"></i>
-                                                            <strong>Sender Wallet:</strong> {{ txn.sender_wallet.wallet_id }}
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <div class="info-item">
-                                                            <i class="fas fa-wallet text-success me-2"></i>
-                                                            <strong>Receiver Wallet:</strong> {{ txn.reciever_wallet.wallet_id }}
-                                                        </div>
-                                                    </div>
-                                                  </div>
-                                                  
-                                                  <div class="row mb-3">
-                                                    <div class="col-md-6 mb-3 mb-md-0">
-                                                        <div class="info-item">
-                                                            <i class="fas fa-tag text-info me-2"></i>
-                                                            <strong>Transaction Type:</strong> 
-                                                            <span class="badge bg-info text-dark">{{ txn.transaction_type|title }}</span>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <div class="info-item">
-                                                            <i class="fas fa-info-circle text-warning me-2"></i>
-                                                            <strong>Status:</strong> 
-                                                            {% if txn.status == 'completed' %}
-                                                                <span class="badge bg-success">{{ txn.status|title }}</span>
-                                                            {% elif txn.status == 'failed' or txn.status == 'cancelled' %}
-                                                                <span class="badge bg-danger">{{ txn.status|title }}</span>
-                                                            {% else %}
-                                                                <span class="badge bg-warning">{{ txn.status|title }}</span>
-                                                            {% endif %}
-                                                        </div>
-                                                    </div>
-                                                  </div>
-                                                  
-                                                  {% if txn.description %}
-                                                  <div class="row mb-3">
-                                                    <div class="col-md-12">
-                                                        <div class="info-item">
-                                                            <i class="fas fa-comment-alt text-secondary me-2"></i>
-                                                            <strong>Description:</strong><br>
-                                                            <div class="bg-light p-3 rounded mt-2">
-                                                                {{ txn.description }}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                  </div>
-                                                  {% endif %}
-                                                  
-                                                  <div class="row">
-                                                    <div class="col-md-6 mb-3 mb-md-0">
-                                                        <div class="info-item">
-                                                            <i class="fas fa-calendar-plus text-primary me-2"></i>
-                                                            <strong>Date Created:</strong> {{ txn.date|date:"Y-m-d H:i" }}
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <div class="info-item">
-                                                            <i class="fas fa-calendar-check text-secondary me-2"></i>
-                                                            <strong>Last Updated:</strong> {{ txn.updated|date:"Y-m-d H:i" }}
-                                                        </div>
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                                <div class="modal-footer bg-light">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                                        <i class="fas fa-times me-1"></i>Close
-                                                    </button>
-                                                    {% if txn.status == 'completed' %}
-                                                    <button type="button" class="btn btn-primary" onclick="printReceipt('{{ txn.transaction_id }}')">
-                                                        <i class="fas fa-print me-1"></i>Print Receipt
-                                                    </button>
-                                                    {% endif %}
-                                                </div>
-                                              </div>
+                            <div class="row">
+                                <div class="col-md-12 mb-4 col-sm-12">
+                                    <div class="bg-white p-4 shadow rounded-md wallet-card">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <p class="text-muted mb-2">Current wallet balance and transactions.</p>
+                                                <p class="text-xl font-bold mt-2 mb-0" style="font-size: 2rem; color: #28a745;">
+                                                    KES {{ wallet|intcomma }}
+                                                </p>
+                                                <small class="text-muted">Available Balance</small>
+                                            </div>
+                                            <div class="text-end">
+                                                <i class="fas fa-money-bill-wave text-success" style="font-size: 2.5rem; opacity: 0.3;"></i>
                                             </div>
                                         </div>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                        
-                        <!-- Pagination if needed -->
-                        {% if transactions.has_other_pages %}
-                        <nav aria-label="Transaction pagination" class="mt-4">
-                            <ul class="pagination justify-content-center">
-                                {% if transactions.has_previous %}
-                                    <li class="page-item">
-                                        <a class="page-link" href="?page=1">&laquo; First</a>
-                                    </li>
-                                    <li class="page-item">
-                                        <a class="page-link" href="?page={{ transactions.previous_page_number }}">Previous</a>
-                                    </li>
-                                {% endif %}
-                                
-                                <li class="page-item active">
-                                    <span class="page-link">
-                                        Page {{ transactions.number }} of {{ transactions.paginator.num_pages }}
-                                    </span>
-                                </li>
-                                
-                                {% if transactions.has_next %}
-                                    <li class="page-item">
-                                        <a class="page-link" href="?page={{ transactions.next_page_number }}">Next</a>
-                                    </li>
-                                    <li class="page-item">
-                                        <a class="page-link" href="?page={{ transactions.paginator.num_pages }}">Last &raquo;</a>
-                                    </li>
-                                {% endif %}
-                            </ul>
-                        </nav>
-                        {% endif %}
-                        
-                        {% else %}
-                        <!-- Empty State -->
-                        <div class="text-center py-5">
-                            <div class="mb-4">
-                                <i class="fas fa-receipt text-muted" style="font-size: 4rem; opacity: 0.3;"></i>
+                                        <div class="mt-4">
+                                            {% if not is_admin %}
+                                            <button class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#makePaymentModal">
+                                                <i class="fas fa-paper-plane me-1"></i>Make Payment
+                                            </button>
+                                           
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <h5 class="text-muted">No Transactions Found</h5>
-                            <p class="text-muted">You haven't made any transactions yet.</p>
-                            {% if not is_admin %}
-                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#makePaymentModal">
-                                <i class="fas fa-paper-plane me-1"></i>Make Your First Payment
-                            </button>
+                        </div>
+    
+                        <!-- Payment Transactions Section -->
+                        <div class="content-section mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+                                <h4 class="text-2xl font-bold mb-2 mb-md-0">
+                                    <i class="fas fa-exchange-alt me-2"></i>Payment Transactions
+                                </h4>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="refreshTransactions()">
+                                        <i class="fas fa-sync-alt me-1"></i>Refresh
+                                    </button>
+                                    <div class="dropdown">
+                                        <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                            <i class="fas fa-filter me-1"></i>Filter
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item" href="?status=all">All Transactions</a></li>
+                                            <li><a class="dropdown-item" href="?status=completed">Completed</a></li>
+                                            <li><a class="dropdown-item" href="?status=pending">Pending</a></li>
+                                            <li><a class="dropdown-item" href="?status=failed">Failed</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {% if transactions %}
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover responsive-table">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th><i class="fas fa-hashtag me-1"></i>Transaction Code</th>
+                                            <th><i class="fas fa-user me-1"></i>Initiated By</th>
+                                            <th><i class="fas fa-user-check me-1"></i>Recipient</th>
+                                            <th><i class="fas fa-money-bill me-1"></i>Amount</th>
+                                            <th><i class="fas fa-tag me-1"></i>Type</th>
+                                            <th><i class="fas fa-info-circle me-1"></i>Status</th>
+                                            <th><i class="fas fa-calendar me-1"></i>Date</th>
+                                            <th><i class="fas fa-cog me-1"></i>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for txn in transactions %}
+                                            <tr>
+                                                <td data-label="Transaction Code">
+                                                    <span class="">{{ txn.transaction_id }}</span>
+                                                </td>
+                                                <td data-label="Initiated By">
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="fas fa-user-circle text-muted me-2"></i>
+                                                        {{ txn.user.get_full_name|default:"-" }}
+                                                    </div>
+                                                </td>
+                                                <td data-label="Recipient">
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="fas fa-user-check text-success me-2"></i>
+                                                        {{ txn.reciever.get_full_name|default:"-" }}
+                                                    </div>
+                                                </td>
+                                                <td data-label="Amount">
+                                                    <span class="">
+                                                        {{ txn.sender_wallet.currency|default:"KES" }} {{ txn.amount|floatformat:2|intcomma }}
+                                                    </span>
+                                                </td>
+                                                <td data-label="Type">
+                                                    <span class="badge bg-info text-dark">
+                                                        {{ txn.transaction_type|title }}
+                                                    </span>
+                                                </td>
+                                                <td data-label="Status">
+                                                    {% if txn.status == 'completed' %}
+                                                        <span class="badge status-completed">
+                                                            <i class="fas fa-check-circle me-1"></i>{{ txn.status|title }}
+                                                        </span>
+                                                    {% elif txn.status == 'failed' or txn.status == 'cancelled' %}
+                                                        <span class="badge status-failed">
+                                                            <i class="fas fa-times-circle me-1"></i>{{ txn.status|title }}
+                                                        </span>
+                                                    {% else %}
+                                                        <span class="badge status-pending">
+                                                            <i class="fas fa-clock me-1"></i>{{ txn.status|title }}
+                                                        </span>
+                                                    {% endif %}
+                                                </td>
+                                                <td data-label="Date">
+                                                    <div>
+                                                        <div class="fw-bold">{{ txn.date|date:"M d, Y" }}</div>
+                                                        <small class="text-muted">{{ txn.date|date:"H:i" }}</small>
+                                                    </div>
+                                                </td>
+                                                <td data-label="Action">
+                                                    <button class="btn btn-sm btn-primary" 
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#viewTransactionModal{{ txn.transaction_id }}"
+                                                            title="View Details">
+                                                        <i class="fas fa-eye me-1"></i>View
+                                                    </button>
+                                                </td>
+                                            </tr>
+    
+                                            <!-- View Transaction Modal -->
+                                            <div class="modal fade" id="viewTransactionModal{{ txn.transaction_id }}" tabindex="-1" 
+                                                 aria-labelledby="viewTransactionModalLabel{{ txn.transaction_id }}" aria-hidden="true">
+                                                <div class="modal-dialog modal-lg">
+                                                  <div class="modal-content">
+                                                    <div class="modal-header text-white">
+                                                      <h5 class="modal-title" id="viewTransactionModalLabel{{ txn.transaction_id }}">
+                                                          <i class="fas fa-receipt me-2"></i>Transaction Details
+                                                      </h5>
+                                                      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                      <div class="row mb-4">
+                                                        <div class="col-12 text-center">
+                                                            <div class="transaction-status-badge mb-3">
+                                                                {% if txn.status == 'completed' %}
+                                                                    <span class="badge bg-success fs-6 px-3 py-2">
+                                                                        <i class="fas fa-check-circle me-2"></i>Transaction {{ txn.status|title }}
+                                                                    </span>
+                                                                {% elif txn.status == 'failed' or txn.status == 'cancelled' %}
+                                                                    <span class="badge bg-danger fs-6 px-3 py-2">
+                                                                        <i class="fas fa-times-circle me-2"></i>Transaction {{ txn.status|title }}
+                                                                    </span>
+                                                                {% else %}
+                                                                    <span class="badge bg-warning fs-6 px-3 py-2">
+                                                                        <i class="fas fa-clock me-2"></i>Transaction {{ txn.status|title }}
+                                                                    </span>
+                                                                {% endif %}
+                                                            </div>
+                                                        </div>
+                                                      </div>
+                                                      
+                                                      <div class="row mb-3">
+                                                        <div class="col-md-6">
+                                                            <div class="info-item">
+                                                                <i class="fas fa-hashtag text-primary me-2"></i>
+                                                                <strong>Transaction ID:</strong> 
+                                                                <span class="text-primary">{{ txn.transaction_id }}</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="info-item">
+                                                                <i class="fas fa-money-bill text-success me-2"></i>
+                                                                <strong>Amount:</strong> 
+                                                                <span class="text-success fw-bold">{{ txn.sender_wallet.currency|default:"KES" }} {{ txn.amount|floatformat:2|intcomma }}</span>
+                                                            </div>
+                                                        </div>
+                                                      </div>
+                                                      
+                                                      <div class="row mb-3">
+                                                        <div class="col-md-6">
+                                                            <div class="info-item">
+                                                                <i class="fas fa-user text-info me-2"></i>
+                                                                <strong>Sender:</strong> {{ txn.sender.get_full_name }}
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="info-item">
+                                                                <i class="fas fa-user-check text-success me-2"></i>
+                                                                <strong>Receiver:</strong> {{ txn.reciever.get_full_name }}
+                                                            </div>
+                                                        </div>
+                                                      </div>
+                                                      
+                                                      <div class="row mb-3">
+                                                        <div class="col-md-6">
+                                                            <div class="info-item">
+                                                                <i class="fas fa-wallet text-primary me-2"></i>
+                                                                <strong>Sender Wallet:</strong> {{ txn.sender_wallet.wallet_id }}
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="info-item">
+                                                                <i class="fas fa-wallet text-success me-2"></i>
+                                                                <strong>Receiver Wallet:</strong> {{ txn.reciever_wallet.wallet_id }}
+                                                            </div>
+                                                        </div>
+                                                      </div>
+                                                      
+                                                      <div class="row mb-3">
+                                                        <div class="col-md-6">
+                                                            <div class="info-item">
+                                                                <i class="fas fa-tag text-info me-2"></i>
+                                                                <strong>Transaction Type:</strong> 
+                                                                <span class="badge bg-info text-dark">{{ txn.transaction_type|title }}</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="info-item">
+                                                                <i class="fas fa-info-circle text-warning me-2"></i>
+                                                                <strong>Status:</strong> 
+                                                                {% if txn.status == 'completed' %}
+                                                                    <span class="badge bg-success">{{ txn.status|title }}</span>
+                                                                {% elif txn.status == 'failed' or txn.status == 'cancelled' %}
+                                                                    <span class="badge bg-danger">{{ txn.status|title }}</span>
+                                                                {% else %}
+                                                                    <span class="badge bg-warning">{{ txn.status|title }}</span>
+                                                                {% endif %}
+                                                            </div>
+                                                        </div>
+                                                      </div>
+                                                      
+                                                      {% if txn.description %}
+                                                      <div class="row mb-3">
+                                                        <div class="col-md-12">
+                                                            <div class="info-item">
+                                                                <i class="fas fa-comment-alt text-secondary me-2"></i>
+                                                                <strong>Description:</strong><br>
+                                                                <div class="bg-light p-3 rounded mt-2">
+                                                                    {{ txn.description }}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                      </div>
+                                                      {% endif %}
+                                                      
+                                                      <div class="row">
+                                                        <div class="col-md-6">
+                                                            <div class="info-item">
+                                                                <i class="fas fa-calendar-plus text-primary me-2"></i>
+                                                                <strong>Date Created:</strong> {{ txn.date|date:"Y-m-d H:i" }}
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="info-item">
+                                                                <i class="fas fa-calendar-check text-secondary me-2"></i>
+                                                                <strong>Last Updated:</strong> {{ txn.updated|date:"Y-m-d H:i" }}
+                                                            </div>
+                                                        </div>
+                                                      </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                            <i class="fas fa-times me-1"></i>Close
+                                                        </button>
+                                                        {% if txn.status == 'completed' %}
+                                                        <button type="button" class="btn btn-primary" onclick="printReceipt('{{ txn.transaction_id }}')">
+                                                            <i class="fas fa-print me-1"></i>Print Receipt
+                                                        </button>
+                                                        {% endif %}
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <!-- Pagination if needed -->
+                            {% if transactions.has_other_pages %}
+                            <nav aria-label="Transaction pagination" class="mt-4">
+                                <ul class="pagination justify-content-center">
+                                    {% if transactions.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=1">&laquo; First</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ transactions.previous_page_number }}">Previous</a>
+                                        </li>
+                                    {% endif %}
+                                    
+                                    <li class="page-item active">
+                                        <span class="page-link">
+                                            Page {{ transactions.number }} of {{ transactions.paginator.num_pages }}
+                                        </span>
+                                    </li>
+                                    
+                                    {% if transactions.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ transactions.next_page_number }}">Next</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ transactions.paginator.num_pages }}">Last &raquo;</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                            {% endif %}
+                            
+                            {% else %}
+                            <!-- Empty State -->
+                            <div class="text-center py-5">
+                                <div class="mb-4">
+                                    <i class="fas fa-receipt text-muted" style="font-size: 4rem; opacity: 0.3;"></i>
+                                </div>
+                                <h5 class="text-muted">No Transactions Found</h5>
+                                <p class="text-muted">You haven't made any transactions yet.</p>
+                                {% if not is_admin %}
+                                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#makePaymentModal">
+                                    <i class="fas fa-paper-plane me-1"></i>Make Your First Payment
+                                </button>
+                                {% endif %}
+                            </div>
                             {% endif %}
                         </div>
-                        {% endif %}
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
-<!-- Enhanced Mobile Responsive Payment Modal -->
+<!-- Make Payment Modal -->
+<!-- Enhanced Payment Modal -->
 <div class="modal fade" id="makePaymentModal" tabindex="-1" aria-labelledby="makePaymentModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header bg-success text-white">
+            <div class="modal-header  text-white">
                 <h5 id="makePaymentModalLabel" class="modal-title">
                     <i class="fas fa-mobile-alt me-2"></i>Make M-Pesa Payment
                 </h5>
@@ -707,18 +495,18 @@
                     </div>
                 </div>
 
-                <form class="bg-white p-2 p-md-4 shadow-sm rounded" method="post" action="{% url 'expense:make_payment' %}" id="paymentForm">
+                <form class="bg-white p-4 shadow-sm rounded" method="post" action="{% url 'expense:make_payment' %}" id="paymentForm">
                     {% csrf_token %}
                     <input type="hidden" name="csrf_token" value="token_value_here">
                     <input type="hidden" id="form_type" name="form_type">
 
                     <!-- Expense Selection -->
-                    <div class="mb-3 mb-md-4">
+                    <div class="mb-4">
                         <label for="expenseSelect" class="form-label fw-bold text-dark">
                             <i class="fas fa-file-invoice-dollar me-1"></i>Select Expense to Pay
                             <span class="text-danger">*</span>
                         </label>
-                        <select id="expenseSelect" class="form-select form-select-lg" name="expense" required>
+                        <select id="expenseSelect" class="form-select" name="expense" required>
                             <option value="">Choose a request</option>
                             {% for expense in approved_expenses %}
                             <option value="{{ expense.id }}" data-amount="{{ expense.amount }}">
@@ -727,52 +515,53 @@
                             {% endfor %}
                         </select>
                         <div class="invalid-feedback">Please select an expense.</div>
+                        
                     </div>
 
                     <!-- Amount Display (Auto-filled) -->
-                    <div class="mb-3 mb-md-4">
+                    <div class="mb-4">
                         <label class="form-label fw-bold text-dark">
                             <i class="fas fa-money-bill-wave me-1"></i>Amount
                         </label>
-                        <div class="input-group input-group-lg">
+                        <div class="input-group">
                             <span class="input-group-text bg-success text-white">KES</span>
                             <input type="number" class="form-control bg-light" name="amount" id="amount" 
-                                   placeholder="Select expense first" required min="1" readonly>
+                                   placeholder="Select expense first"  required min="1">
                             <div class="invalid-feedback">Amount is required.</div>
                         </div>
                         <small class="text-muted">Amount will be auto-filled based on selected expense</small>
                     </div>
                     
                     <!-- Payment Method -->
-                    <div class="mb-3 mb-md-4">
+                    <div class="mb-4">
                         <label class="form-label fw-bold text-dark">
                             <i class="fas fa-credit-card me-1"></i>Payment Method
                             <span class="text-danger">*</span>
                         </label>
-                        <select id="paymentType" name="payment_method" class="form-select form-select-lg" onchange="togglePaymentFields()" required>
+                        <select id="paymentType" name="payment_method" class="form-select" onchange="togglePaymentFields()" required>
                             <option value="">Select method</option>
                             <option value="mpesa_number">
-                                📱 M-Pesa Number (B2C)
+                                <i class="fas fa-mobile-alt"></i> M-Pesa Number (B2C)
                             </option>
                             <option value="paybill_number">
-                                🏢 Paybill (B2B)
+                                <i class="fas fa-building"></i> Paybill (B2B)
                             </option>
                             <option value="till_number">
-                                🏪 Till Number (B2B)
+                                <i class="fas fa-store"></i> Till Number (B2B)
                             </option>
                         </select>
                         <div class="invalid-feedback">Please select a payment method.</div>
                     </div>
 
                     <!-- M-Pesa Number Section -->
-                    <div id="mpesaNumberSection" class="mb-3 mb-md-4 payment-section d-none">
-                        <div class="card border-success shadow-sm">
+                    <div id="mpesaNumberSection" class="mb-4 payment-section d-none">
+                        <div class="card border-success">
                             <div class="card-header bg-success text-white">
                                 <i class="fas fa-mobile-alt me-2"></i>M-Pesa Number Details
                             </div>
                             <div class="card-body">
                                 <label class="form-label fw-bold required">M-Pesa Number</label>
-                                <div class="input-group input-group-lg">
+                                <div class="input-group">
                                     <span class="input-group-text bg-success text-white">+254</span>
                                     <input type="text" class="form-control mpesa-field" name="mpesa_number" 
                                            id="mpesa_number" placeholder="7XXXXXXXX" pattern="\d{9}" maxlength="9">
@@ -787,15 +576,15 @@
                     </div>
 
                     <!-- Paybill Section -->
-                    <div id="paybillSection" class="mb-3 mb-md-4 payment-section d-none">
-                        <div class="card border-primary shadow-sm">
-                            <div class="card-header bg-primary text-white">
+                    <div id="paybillSection" class="mb-4 payment-section d-none">
+                        <div class="card border-primary">
+                            <div class="card-header text-white">
                                 <i class="fas fa-building me-2"></i>Paybill Details
                             </div>
                             <div class="card-body">
                                 <div class="mb-3">
                                     <label class="form-label fw-bold required">Paybill Number</label>
-                                    <input type="text" class="form-control form-control-lg paybill-field" name="paybill_number" 
+                                    <input type="text" class="form-control paybill-field" name="paybill_number" 
                                            id="paybill_number" placeholder="Enter Paybill number" pattern="\d{5,6}" maxlength="6">
                                     <div class="invalid-feedback">Please enter a valid 5-6 digit paybill number.</div>
                                     <small class="text-muted">Enter a valid 5-6 digit paybill number</small>
@@ -803,7 +592,7 @@
 
                                 <div class="mb-3">
                                     <label class="form-label fw-bold required">Account Number</label>
-                                    <input type="text" class="form-control form-control-lg paybill-field" name="account_number" 
+                                    <input type="text" class="form-control paybill-field" name="account_number" 
                                            id="account_number" placeholder="Enter account number">
                                     <div class="invalid-feedback">Please enter an account number.</div>
                                 </div>
@@ -812,14 +601,14 @@
                     </div>
 
                     <!-- Till Number Section -->
-                    <div id="tillNumberSection" class="mb-3 mb-md-4 payment-section d-none">
-                        <div class="card border-warning shadow-sm">
-                            <div class="card-header bg-warning text-dark">
+                    <div id="tillNumberSection" class="mb-4 payment-section d-none">
+                        <div class="card border-warning">
+                            <div class="card-header  text-dark">
                                 <i class="fas fa-store me-2"></i>Till Number Details
                             </div>
                             <div class="card-body">
                                 <label class="form-label fw-bold required">Till Number</label>
-                                <input type="text" class="form-control form-control-lg till-field" name="till_number" 
+                                <input type="text" class="form-control till-field" name="till_number" 
                                        id="till_number" placeholder="Enter Till number" pattern="\d{5,6}" maxlength="6">
                                 <div class="invalid-feedback">Please enter a valid 5-6 digit till number.</div>
                                 <small class="text-muted">Enter a valid 5-6 digit till number</small>
@@ -845,15 +634,13 @@
         </div>
     </div>
 </div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 <script>
-// Enhanced payment form functionality with mobile debugging
+    // Enhanced payment form functionality with debugging
 function togglePaymentFields() {
-    console.log('togglePaymentFields called');
     
     // Hide all payment sections first
     const paymentSections = document.querySelectorAll('.payment-section');
+    
     paymentSections.forEach(section => {
         section.classList.add('d-none');
     });
@@ -866,7 +653,6 @@ function togglePaymentFields() {
     }
     
     const paymentType = paymentTypeElement.value;
-    console.log('Selected payment type:', paymentType);
     
     // Reset all field requirements first
     document.querySelectorAll('.mpesa-field, .paybill-field, .till-field').forEach(field => {
@@ -882,12 +668,6 @@ function togglePaymentFields() {
         if (mpesaSection) {
             mpesaSection.classList.remove('d-none');
             console.log('Showing M-Pesa section');
-            
-            // Force reflow to ensure proper display
-            mpesaSection.style.display = 'block';
-            setTimeout(() => {
-                mpesaSection.style.display = '';
-            }, 10);
         } else {
             console.error('mpesaNumberSection not found');
         }
@@ -909,12 +689,6 @@ function togglePaymentFields() {
         if (paybillSection) {
             paybillSection.classList.remove('d-none');
             console.log('Showing Paybill section');
-            
-            // Force reflow to ensure proper display
-            paybillSection.style.display = 'block';
-            setTimeout(() => {
-                paybillSection.style.display = '';
-            }, 10);
         } else {
             console.error('paybillSection not found');
         }
@@ -936,12 +710,6 @@ function togglePaymentFields() {
         if (tillSection) {
             tillSection.classList.remove('d-none');
             console.log('Showing Till section');
-            
-            // Force reflow to ensure proper display
-            tillSection.style.display = 'block';
-            setTimeout(() => {
-                tillSection.style.display = '';
-            }, 10);
         } else {
             console.error('tillNumberSection not found');
         }
@@ -966,6 +734,8 @@ function togglePaymentFields() {
     }
 }
 
+// Auto-fill amount when expense is selected (moved to DOMContentLoaded)
+
 // Enhanced form validation with better error handling
 document.getElementById('paymentForm')?.addEventListener('submit', function(event) {
     event.preventDefault();
@@ -978,6 +748,7 @@ document.getElementById('paymentForm')?.addEventListener('submit', function(even
     const paymentType = document.getElementById('paymentType')?.value;
     const expenseSelect = document.getElementById('expenseSelect')?.value;
     const amount = document.getElementById('amount')?.value;
+    
     
     if (!paymentType) {
         isValid = false;
@@ -1027,6 +798,7 @@ document.getElementById('paymentForm')?.addEventListener('submit', function(even
         }
     }
     
+    
     if (isValid) {
         processPayment();
     } else {
@@ -1037,6 +809,7 @@ document.getElementById('paymentForm')?.addEventListener('submit', function(even
 
 // Process payment with better error handling and debugging
 function processPayment() {
+    
     const submitBtn = document.getElementById('paymentSubmitBtn');
     const submitText = document.getElementById('submitButtonText');
     const form = document.getElementById('paymentForm');
@@ -1069,6 +842,7 @@ function processPayment() {
         return;
     }
     
+    
     // Submit the form
     const formData = new FormData(form);
     
@@ -1085,12 +859,15 @@ function processPayment() {
         }
     })
     .then(response => {
+        
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
+        
         return response.json();
     })
     .then(data => {
+        
         if (data.success) {
             showPaymentStatus('success', data.message || 'Payment initiated successfully!');
             // Optionally close modal or redirect
@@ -1184,19 +961,8 @@ function showPaymentStatus(type, message, showSpinner = false) {
     }
 }
 
-// Refresh transactions function
-function refreshTransactions() {
-    location.reload();
-}
-
-// Print receipt function
-function printReceipt(transactionId) {
-    window.print();
-}
-
 // Initialize payment fields when modal opens
 document.getElementById('makePaymentModal')?.addEventListener('show.bs.modal', function() {
-    console.log('Payment modal opening');
     
     const form = document.getElementById('paymentForm');
     if (form) {
@@ -1230,7 +996,7 @@ function checkPendingTransactions() {
         console.log('Found pending transactions, will refresh in 30 seconds');
         setTimeout(() => {
             location.reload();
-        }, 30000);
+        }, 3000000);
     }
 }
 
@@ -1259,7 +1025,9 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('All required elements found');
         }
         
-        // Add expense select listener
+        // Since you're using onchange="togglePaymentFields()" in HTML, 
+        // we don't need to add another event listener
+        // But let's add the expense select listener
         const expenseSelect = document.getElementById('expenseSelect');
         if (expenseSelect) {
             console.log('Adding change event listener to expenseSelect');
@@ -1280,63 +1048,9 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             console.error('expenseSelect element not found');
         }
-        
-        // Add input event listeners for better mobile UX
-        const inputs = document.querySelectorAll('input[type="text"], input[type="number"]');
-        inputs.forEach(input => {
-            input.addEventListener('input', function() {
-                if (this.classList.contains('is-invalid')) {
-                    this.classList.remove('is-invalid');
-                }
-            });
-        });
-        
-        // Add select event listeners
-        const selects = document.querySelectorAll('select');
-        selects.forEach(select => {
-            select.addEventListener('change', function() {
-                if (this.classList.contains('is-invalid')) {
-                    this.classList.remove('is-invalid');
-                }
-            });
-        });
-        
     }, 100); // Small delay to ensure DOM is fully ready
 });
-
-// Touch event improvements for mobile
-if ('ontouchstart' in window) {
-    console.log('Touch device detected, adding touch optimizations');
-    
-    // Add touch feedback for buttons
-    document.addEventListener('touchstart', function(e) {
-        if (e.target.classList.contains('btn')) {
-            e.target.style.transform = 'scale(0.98)';
-        }
-    });
-    
-    document.addEventListener('touchend', function(e) {
-        if (e.target.classList.contains('btn')) {
-            setTimeout(() => {
-                e.target.style.transform = '';
-            }, 100);
-        }
-    });
-}
-
-// Prevent form submission on Enter key in text inputs (mobile keyboard issue)
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type === 'text') {
-        e.preventDefault();
-        // Move to next input field
-        const inputs = Array.from(document.querySelectorAll('input, select'));
-        const currentIndex = inputs.indexOf(e.target);
-        if (currentIndex < inputs.length - 1) {
-            inputs[currentIndex + 1].focus();
-        }
-    }
-});
-</script>
+</script>>
 
 <style>
   .hidden {
@@ -1346,117 +1060,7 @@ document.addEventListener('keydown', function(e) {
     content: " *";
     color: red;
   }
-  
-  /* Additional mobile-specific improvements */
-  @media (max-width: 768px) {
-    /* Ensure modals don't get cut off on small screens */
-    .modal {
-        padding: 10px !important;
-    }
-    
-    .modal-dialog {
-        margin: 10px !important;
-        max-width: calc(100vw - 20px) !important;
-        width: calc(100vw - 20px) !important;
-    }
-    
-    /* Better form spacing on mobile */
-    .form-group {
-        margin-bottom: 1rem;
-    }
-    
-    /* Improve button spacing */
-    .d-flex.gap-2 {
-        gap: 0.5rem !important;
-    }
-    
-    .d-flex.gap-2 > * {
-        flex: 1;
-        min-width: 0;
-    }
-    
-    /* Better alert display */
-    .alert {
-        font-size: 14px;
-        padding: 12px;
-    }
-    
-    /* Improve wallet display */
-    .wallet-card .d-flex {
-        flex-direction: column;
-        align-items: flex-start !important;
-    }
-    
-    .wallet-card .text-end {
-        display: none !important;
-    }
-    
-    /* Better transaction status display */
-    .transaction-status-badge .badge {
-        font-size: 12px !important;
-        padding: 8px 12px !important;
-    }
-    
-    /* Input group improvements for mobile */
-    .input-group-text {
-        border-top-right-radius: 0 !important;
-        border-bottom-right-radius: 0 !important;
-    }
-    
-    .input-group .form-control {
-        border-top-left-radius: 0 !important;
-        border-bottom-left-radius: 0 !important;
-    }
-    
-    /* Better select styling */
-    .form-select {
-        background-position: right 0.75rem center;
-        background-size: 16px 12px;
-    }
-  }
-  
-  /* Landscape mobile optimizations */
-  @media (max-width: 896px) and (orientation: landscape) {
-    .modal-dialog {
-        max-height: 90vh;
-        margin: 20px auto;
-    }
-    
-    .modal-content {
-        max-height: 85vh;
-        overflow-y: auto;
-    }
-    
-    .modal-body {
-        max-height: 60vh;
-        overflow-y: auto;
-    }
-  }
-  
-  /* Very small screens (iPhone SE, etc.) */
-  @media (max-width: 375px) {
-    .modal-header .modal-title {
-        font-size: 16px !important;
-    }
-    
-    .card-header {
-        font-size: 14px !important;
-    }
-    
-    .btn-lg {
-        font-size: 14px !important;
-        padding: 12px 16px !important;
-    }
-    
-    .form-label {
-        font-size: 13px !important;
-    }
-    
-    .input-group-text {
-        font-size: 13px !important;
-        padding: 10px 8px !important;
-    }
-  }
 </style>
+
 
 {% endblock %}
