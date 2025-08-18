@@ -220,8 +220,8 @@ class MpesaDaraja:
             }
             
             # --- ADDED DEBUGGING LINES ---
-            logger.debug(f"Payload for C2B registration: {json.dumps(payload, indent=2)}")
-            logger.debug(f"Authorization Header being used: {headers.get('Authorization')[:30]}...") 
+            print(f"Payload for C2B registration: {json.dumps(payload, indent=2)}")
+            print(f"Authorization Header being used: {headers.get('Authorization')}") 
             # You can print the whole token, but be cautious with logging sensitive data
             # --- END DEBUGGING ---
 
