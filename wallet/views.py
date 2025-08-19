@@ -2286,7 +2286,7 @@ def c2b_confirmation(request):
     """
     try:
         confirmation_data = json.loads(request.body)
-        logger.info(f"C2B Confirmation received: {confirmation_data}")
+        print(f"C2B Confirmation received: {confirmation_data}")
         
         # Extract confirmation data
         mpesa_trans_id = confirmation_data.get('TransID') # M-Pesa Transaction ID
