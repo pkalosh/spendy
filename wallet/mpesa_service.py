@@ -226,7 +226,7 @@ class MpesaDaraja:
             # --- END DEBUGGING ---
 
             response = requests.post(
-                f"{self.base_url}/mpesa/c2b/v1/registerurl",
+                f"{self.base_url}/mpesa/c2b/v2/registerurl",
                 json=payload,
                 headers=headers
             )
