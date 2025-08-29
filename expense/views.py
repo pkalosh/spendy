@@ -21,6 +21,7 @@ from django.db.models.functions import TruncMonth, TruncYear
 from datetime import datetime, timedelta
 import csv
 import io
+from io import StringIO
 from django.core.paginator import Paginator
 from collections import defaultdict
 from datetime import datetime, timedelta
@@ -35,7 +36,7 @@ from wallet.views import (
     initiate_b2b_payment    
 )
 from wallet.mpesa_service import MpesaDaraja
-
+from django.utils.crypto import get_random_string
 
 logger = logging.getLogger(__name__)
 
@@ -1227,9 +1228,11 @@ def undo_expense_action(request, expense_id):
         }, status=200)
     except Exception as e:
         return JsonResponse({'error': f'Failed to undo expense action: {str(e)}'}, status=500)
+
+
 @login_required
 def make_payment(request):
-    """Handle payments for approved expenses via M-Pesa API with fee calculation"""
+    """Handle payments for approved expenses via M-Pesa API with fee calculation, including batch payments"""
     
     if request.method != 'POST':
         return JsonResponse({'success': False, 'message': 'Invalid request method'})
@@ -1249,21 +1252,268 @@ def make_payment(request):
     try:
         # Extract and validate form data
         expense_id = request.POST.get('expense')
-        print(f"Expense ID: {expense_id}")
         payment_method = request.POST.get('payment_method')
         amount = request.POST.get('amount')
+        batch_disbursement = request.POST.get('batch_disbursement', 'false').lower() == 'true'
 
-        # Validate essential fields
+        # Handle batch payment
+        if batch_disbursement:
+            if not expense_id:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Expense ID is required for batch payments.'
+                })
+
+            expense = get_object_or_404(Expense, id=expense_id)
+            if not expense.batch_disbursement_type:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'This expense is not configured for batch disbursement.'
+                })
+
+            if not expense.approved or expense.declined:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Payment can only be made for approved expenses.'
+                })
+
+            if expense.paid:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'This expense has already been paid.'
+                })
+
+            # Get batch payment file
+            batch_payment = BatchPayments.objects.filter(expense=expense, company=company).first()
+            if not batch_payment or not batch_payment.file:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'No batch payment file found for this expense.'
+                })
+
+            # Read and process CSV file
+            results = []
+            total_amount = Decimal('0.00')
+            total_fees = Decimal('0.00')
+            selected_wallet = expense.wallet
+            valid_transactions = 0
+
+            # Validate payment method for batch (only mpesa_number)
+            if batch_payment:
+                payment_method = 'mpesa_number'
+                
+
+            # Read CSV file
+            with batch_payment.file.open('r') as file:
+                # Read the file content
+                csv_content = file.read()
+                # Check if content is bytes and needs decoding
+                if isinstance(csv_content, bytes):
+                    csv_content = csv_content.decode('utf-8')
+                # Ensure content is a string
+                if not isinstance(csv_content, str):
+                    return JsonResponse({
+                        'success': False,
+                        'message': 'Invalid CSV file content.'
+                    })
+
+                csv_reader = csv.DictReader(StringIO(csv_content))
+                
+                # Expected CSV headers: name, amount, mobile_number
+                required_headers = {'name', 'amount', 'mobile_number'}
+                if not all(header in csv_reader.fieldnames for header in required_headers):
+                    return JsonResponse({
+                        'success': False,
+                        'message': 'Invalid CSV format. Required headers: name, amount, mobile_number.'
+                    })
+
+                # Check if CSV has at least one row
+                rows = list(csv_reader)
+                if not rows:
+                    logger.error(f"Empty CSV file for expense #{expense.id}")
+                    return JsonResponse({
+                        'success': False,
+                        'message': 'CSV file is empty. Please upload a valid file with at least one payment.'
+                    })
+
+                with transaction.atomic():
+                    # Lock wallet for update
+                    selected_wallet = Wallet.objects.select_for_update().get(pk=selected_wallet.pk)
+
+                    for row in rows:
+                        recipient_name = row['name'].strip()
+                        mobile_number = row['mobile_number'].strip()
+                        try:
+                            row_amount = Decimal(row['amount'])
+                            if row_amount <= 0:
+                                raise ValueError("Amount must be positive")
+                        except (InvalidOperation, ValueError) as e:
+                            logger.warning(f"Invalid amount in CSV row: {row}, error: {str(e)}")
+                            results.append({
+                                'mobile_number': mobile_number,
+                                'name': recipient_name,
+                                'success': False,
+                                'message': f'Invalid amount in CSV: {row.get("amount", "missing")}'
+                            })
+                            continue
+
+                        # Normalize and validate phone number
+                        normalized_number = mobile_number.replace('+', '').strip()
+                        if normalized_number.startswith('254'):
+                            normalized_number = normalized_number[3:]  # Remove 254 prefix
+                        elif normalized_number.startswith('0'):
+                            normalized_number = normalized_number[1:]  # Remove leading 0
+                        formatted_phone = format_phone_number(normalized_number)
+                        if not normalized_number.isdigit() or len(normalized_number) != 9:
+                            logger.warning(f"Invalid mobile number in CSV row: {row}, normalized: {normalized_number}")
+                            results.append({
+                                'mobile_number': mobile_number,
+                                'name': recipient_name,
+                                'success': False,
+                                'message': f'Invalid M-Pesa number: {mobile_number}. Must be a 9-digit number (e.g., 712345678) or start with 254.'
+                            })
+                            continue
+
+                        # Calculate fee
+                        transfer_fee = calculate_transfer_fee(payment_method, row_amount)
+                        row_total = row_amount + transfer_fee
+
+                        # Check wallet balance
+                        if selected_wallet.balance < row_total:
+                            logger.warning(f"Insufficient balance for CSV row: {row}, required: {row_total}, available: {selected_wallet.balance}")
+                            results.append({
+                                'mobile_number': mobile_number,
+                                'name': recipient_name,
+                                'success': False,
+                                'message': f'Insufficient wallet balance for {recipient_name}.'
+                            })
+                            continue
+
+                        # Generate unique transaction reference
+                        random_code = get_random_string(6).upper()
+                        transaction_ref = f"EXP-{random_code}"
+
+                        # Create transaction record
+                        payment_details = {
+                            'phone_number': formatted_phone,
+                            'method_type': 'B2C',
+                            'recipient_name': recipient_name
+                        }
+
+                        transaction_record = Transaction.objects.create(
+                            company=company,
+                            user=user,
+                            sender=user,
+                            sender_wallet=selected_wallet,
+                            amount=row_amount,
+                            description=f"Batch payment for expense #{expense.id} to {recipient_name} ({mobile_number})",
+                            status="pending",
+                            transaction_type="withdraw",
+                            transaction_code=transaction_ref,
+                            payment_method=payment_method,
+                            payment_details=payment_details,
+                            transfer_fee=transfer_fee,
+                            expense=expense
+                        )
+
+                        # Create fee transaction if applicable
+                        fee_transaction = None
+                        if transfer_fee > 0:
+                            fee_transaction = TransactionFee.objects.create(
+                                company=company,
+                                user=user,
+                                sender=user,
+                                sender_wallet=selected_wallet,
+                                amount=transfer_fee,
+                                description=f"Transfer fee for batch payment to {recipient_name} ({mobile_number})",
+                                status="pending",
+                                transaction_type="fee",
+                                transaction_code=f"FEE-{transaction_ref}",
+                                parent_transaction=transaction_record,
+                                payment_method=payment_method
+                            )
+
+                        # Initiate M-Pesa payment
+                        mpesa_response = initiate_mpesa_payment(
+                            payment_method=payment_method,
+                            amount=int(row_amount),
+                            payment_details=payment_details,
+                            transaction_ref=transaction_ref,
+                            expense=expense,
+                            transaction_record=transaction_record
+                        )
+
+                        if mpesa_response.get('ResponseCode') != '0':
+                            if fee_transaction:
+                                fee_transaction.delete()
+                            transaction_record.delete()
+                            logger.error(f"M-Pesa payment failed for CSV row: {row}, error: {mpesa_response.get('ResponseDescription')}")
+                            results.append({
+                                'mobile_number': mobile_number,
+                                'name': recipient_name,
+                                'success': False,
+                                'message': f'Payment failed: {mpesa_response.get("ResponseDescription", "Unknown error")}'
+                            })
+                            continue
+
+                        # Update transaction record
+                        transaction_record.mpesa_checkout_request_id = mpesa_response.get('CheckoutRequestID')
+                        transaction_record.merchant_request_id = mpesa_response.get('MerchantRequestID')
+                        transaction_record.conversation_id = mpesa_response.get('ConversationID')
+                        transaction_record.originator_conversation_id = mpesa_response.get('OriginatorConversationID')
+                        transaction_record.save()
+
+                        total_amount += row_amount
+                        total_fees += transfer_fee
+                        valid_transactions += 1
+                        results.append({
+                            'mobile_number': mobile_number,
+                            'name': recipient_name,
+                            'success': True,
+                            'message': 'Payment initiated successfully.',
+                            'amount': str(row_amount),
+                            'fee': str(transfer_fee),
+                            'transaction_ref': transaction_ref
+                        })
+
+                    # Check if any valid transactions were processed
+                    if valid_transactions == 0:
+                        logger.error(f"No valid transactions processed for expense #{expense.id}, results: {results}")
+                        return JsonResponse({
+                            'success': False,
+                            'message': 'No valid payments were processed. Check CSV data for errors.',
+                            'results': results
+                        })
+
+                    # Validate total amount against expense
+                    if total_amount != expense.amount:
+                        logger.error(f"Total batch payment amount KES {total_amount} does not match expense amount KES {expense.amount}")
+                        return JsonResponse({
+                            'success': False,
+                            'message': f'Total batch payment amount KES {total_amount} does not match expense amount KES {expense.amount}',
+                            'results': results
+                        })
+
+                    # Update expense
+                    expense.payment_initiated = True
+                    expense.payment_reference = f"BATCH-EXP-{expense.id}"
+                    expense.payment_wallet = selected_wallet
+                    expense.save()
+
+            return JsonResponse({
+                'success': True,
+                'message': f'Batch payment initiated. Total: KES {total_amount + total_fees} (Payments: KES {total_amount}, Fees: KES {total_fees})',
+                'results': results
+            })
+
+        # Single payment logic
         if not all([expense_id, payment_method, amount]):
             return JsonResponse({
                 'success': False,
                 'message': 'All required fields must be filled.'
             })
 
-        # Get and validate expense
         expense = get_object_or_404(Expense, id=expense_id)
-        print(f"Expense: {expense}")
-
         if not expense.approved or expense.declined:
             return JsonResponse({
                 'success': False,
@@ -1287,42 +1537,28 @@ def make_payment(request):
                 'message': 'Invalid amount provided.'
             })
 
-        # Check exact amount match
         if input_amount != expense.amount:
             return JsonResponse({
                 'success': False,
                 'message': f'Amount must match the approved expense amount of KES {expense.amount}.'
             })
 
-        # Validate expense type and get associated wallet
-        if not hasattr(expense, 'request_type') or not expense.request_type:
-            return JsonResponse({
-                'success': False,
-                'message': 'Expense must have a valid expense type.'
-            })
-
         expense_type_wallet = expense.wallet
-        
-        # Calculate transfer fee
         transfer_fee = calculate_transfer_fee(payment_method, input_amount)
         total_amount = input_amount + transfer_fee
 
-        # Check expense type wallet balance first
         if expense_type_wallet.balance >= total_amount:
             selected_wallet = expense_type_wallet
             wallet_type = expense_type_wallet.wallet_type
         else:
-            # Check primary wallet balance as fallback
-
             return JsonResponse({
                 'success': False,
                 'message': f'Insufficient funds. Total required: KES {total_amount} (Amount: KES {input_amount} + Fee: KES {transfer_fee}). '
-                            f'Expense wallet balance: KES {expense_type_wallet.balance}, '
+                           f'Expense wallet balance: KES {expense_type_wallet.balance}.'
             })
 
         # Validate payment method and extract details
         payment_details = {}
-        
         if payment_method == 'mpesa_number':
             mpesa_number = request.POST.get('mpesa_number', '').strip()
             if not mpesa_number or not mpesa_number.isdigit() or len(mpesa_number) != 9:
@@ -1330,65 +1566,52 @@ def make_payment(request):
                     'success': False,
                     'message': 'Invalid M-Pesa number. Please enter a valid 9-digit number.'
                 })
-            
-            # Format phone number
             formatted_phone = format_phone_number(mpesa_number)
             payment_details = {
                 'phone_number': formatted_phone,
                 'method_type': 'B2C'
             }
-
         elif payment_method == 'paybill_number':
             paybill_number = request.POST.get('paybill_number', '').strip()
             account_number = request.POST.get('account_number', '').strip()
-            
             if not paybill_number or not paybill_number.isdigit() or len(paybill_number) not in [5, 6]:
                 return JsonResponse({
                     'success': False,
                     'message': 'Invalid paybill number. Please enter a valid 5-6 digit number.'
                 })
-            
             if not account_number:
                 return JsonResponse({
                     'success': False,
                     'message': 'Account number is required for paybill payments.'
                 })
-            
             payment_details = {
                 'paybill_number': paybill_number,
                 'account_number': account_number,
                 'method_type': 'B2B'
             }
-
         elif payment_method == 'till_number':
             till_number = request.POST.get('till_number', '').strip()
-            
             if not till_number or not till_number.isdigit() or len(till_number) not in [5, 6]:
                 return JsonResponse({
                     'success': False,
                     'message': 'Invalid till number. Please enter a valid 5-6 digit number.'
                 })
-            
             payment_details = {
                 'till_number': till_number,
                 'method_type': 'B2B'
             }
-
         else:
             return JsonResponse({
                 'success': False,
                 'message': 'Invalid payment method selected.'
             })
 
-        # Generate unique transaction reference with expense UUID
-        transaction_ref = f"EXP-{expense.id}"
+        # Generate unique transaction reference
+        random_code = get_random_string(6).upper()
+        transaction_ref = f"EXP-{expense.id}-{random_code}"
 
-        # Create transaction record in pending status BEFORE initiating payment
         with transaction.atomic():
-            # Lock wallet for update
             selected_wallet = Wallet.objects.select_for_update().get(pk=selected_wallet.pk)
-            
-            # Create pending transaction for the expense amount
             transaction_record = Transaction.objects.create(
                 company=company,
                 user=user,
@@ -1398,14 +1621,13 @@ def make_payment(request):
                 description=f"Payment for expense #{expense.id}: {getattr(expense, 'title', 'Expense')} via {payment_method}",
                 status="pending",
                 transaction_type="withdraw",
-                transaction_code=transaction_ref,  # Keep original reference with expense UUID
+                transaction_code=transaction_ref,
                 payment_method=payment_method,
-                payment_details=payment_details,  # Store as dict, not JSON string
+                payment_details=payment_details,
                 transfer_fee=transfer_fee,
-                expense=expense  # Direct foreign key reference
+                expense=expense
             )
 
-            # Create fee transaction if fee > 0
             fee_transaction = None
             if transfer_fee > 0:
                 fee_transaction = TransactionFee.objects.create(
@@ -1422,37 +1644,30 @@ def make_payment(request):
                     payment_method=payment_method
                 )
 
-            # Initiate M-Pesa payment with transaction record
             mpesa_response = initiate_mpesa_payment(
                 payment_method=payment_method,
                 amount=int(input_amount),
                 payment_details=payment_details,
                 transaction_ref=transaction_ref,
                 expense=expense,
-                transaction_record=transaction_record  # Pass the transaction record
+                transaction_record=transaction_record
             )
 
-            print(f"M-Pesa payment response: {mpesa_response}")
-
             if mpesa_response.get('ResponseCode') != '0':
-                # Delete the transaction record if payment initiation failed
                 if fee_transaction:
                     fee_transaction.delete()
                 transaction_record.delete()
-                
                 return JsonResponse({
                     'success': False,
                     'message': f'M-Pesa payment initiation failed: {mpesa_response.get("ResponseDescription", "Unknown error")}'
                 })
 
-            # Update transaction record with M-Pesa response data
             transaction_record.mpesa_checkout_request_id = mpesa_response.get('CheckoutRequestID')
             transaction_record.merchant_request_id = mpesa_response.get('MerchantRequestID')
             transaction_record.conversation_id = mpesa_response.get('ConversationID')
             transaction_record.originator_conversation_id = mpesa_response.get('OriginatorConversationID')
             transaction_record.save()
 
-            # Mark expense as being processed
             expense.payment_initiated = True
             expense.payment_reference = transaction_ref
             expense.payment_wallet = selected_wallet

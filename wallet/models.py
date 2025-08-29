@@ -147,7 +147,7 @@ NOTIFICATION_TYPE = (
 
 class Transaction(models.Model):
     transaction_id = ShortUUIDField(unique=True, length=15, max_length=20, prefix="SPNDY")
-    transaction_code = models.CharField(unique=True, max_length=50, null=True, blank=True)
+    transaction_code = models.CharField(unique=True, max_length=100, null=True, blank=True)
     # Core fields
     company = models.ForeignKey('CompanyKYC', on_delete=models.SET_NULL, blank=True, null=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="user_transactions")

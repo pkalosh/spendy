@@ -168,7 +168,7 @@ LOGIN_REDIRECT_URL = "userauths:sign-in"
 LOGOUT_REDIRECT_URL = "userauths:sign-in"
 
 # Session settings
-SESSION_COOKIE_AGE = 60
+SESSION_COOKIE_AGE = 600
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True 
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Use database-backed sessions
 SESSION_SAVE_EVERY_REQUEST = True
