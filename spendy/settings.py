@@ -28,7 +28,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-(l9rl!48izpso!ltoi4c_^9*&ddu9iii$r!9gvo6#^bt=yp$jx'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*','127.0.0.1', 'localhost','spendy.africa']
 
@@ -167,7 +167,11 @@ LOGIN_URL = "userauths:sign-in"
 LOGIN_REDIRECT_URL = "userauths:sign-in"
 LOGOUT_REDIRECT_URL = "userauths:sign-in"
 
-
+# Session settings
+SESSION_COOKIE_AGE = 60
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True 
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Use database-backed sessions
+SESSION_SAVE_EVERY_REQUEST = True
 
 AUTH_USER_MODEL = 'userauths.User'
 JAZZMIN_SETTINGS = {
