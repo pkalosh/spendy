@@ -10,16 +10,26 @@
       <div class="row mt-4">
         <div class="col-12">
           <h4 class="mb-3 mt-4">Expense Approvals</h4>
-          <p class="mb-3">Review and approve Event/Operational expense requests.</p>
+          <p class="mb-3">Review and approve Activation/Event/Operational expense requests.</p>
         </div>
 
         <!-- Tabs Navigation -->
         <ul class="nav nav-tabs mb-4" id="approvalTabs" role="tablist">
           <li class="nav-item" role="presentation">
-            <button class="nav-link {% if active_tab == 'event' or not active_tab %}active{% endif %}"
+            <button class="nav-link {% if active_tab == 'activation' or not active_tab %}active{% endif %}"
+                    id="activation-tab" data-bs-toggle="tab" data-bs-target="#activation"
+                    type="button" role="tab" aria-controls="activation"
+                    aria-selected="{% if active_tab == 'activation' or not active_tab %}true{% else %}false{% endif %}"
+                    data-tab="activation">
+              Activation Requests
+              <span class="badge bg-secondary ms-1" id="activation-count">{{ activation_summary.total }}</span>
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link {% if active_tab == 'event' %}active{% endif %}"
                     id="event-tab" data-bs-toggle="tab" data-bs-target="#event"
                     type="button" role="tab" aria-controls="event"
-                    aria-selected="{% if active_tab == 'event' or not active_tab %}true{% else %}false{% endif %}"
+                    aria-selected="{% if active_tab == 'event' %}true{% else %}false{% endif %}"
                     data-tab="event">
               Event Requests
               <span class="badge bg-secondary ms-1" id="event-count">{{ event_summary.total }}</span>
@@ -56,27 +66,33 @@
                   <div class="btn-group" role="group" aria-label="Request filter">
                     <button type="button" class="btn btn-outline-primary {% if status == 'all' or not status %}active{% endif %}" data-filter="all">
                       All
-                      <span class="badge bg-primary ms-1 filter-count" data-count-type="all">{{ event_summary.all|default:0 }}</span>
+                      <span class="badge bg-primary ms-1">
+                        {% if active_tab == 'activation' or not active_tab %}{{ activation_summary.all|default:0 }}{% elif active_tab == 'event' %}{{ event_summary.all|default:0 }}{% elif active_tab == 'operation' %}{{ operation_summary.all|default:0 }}{% else %}{{ history_summary.all|default:0 }}{% endif %}
+                      </span>
                     </button>
                     <button type="button" class="btn btn-outline-warning {% if status == 'pending' %}active{% endif %}" data-filter="pending">
                       Pending
-                      <span class="badge bg-warning ms-1 filter-count" data-count-type="pending">{{ event_summary.pending|default:0 }}</span>
+                      <span class="badge bg-warning ms-1">
+                        {% if active_tab == 'activation' or not active_tab %}{{ activation_summary.pending|default:0 }}{% elif active_tab == 'event' %}{{ event_summary.pending|default:0 }}{% elif active_tab == 'operation' %}{{ operation_summary.pending|default:0 }}{% else %}{{ history_summary.pending|default:0 }}{% endif %}
+                      </span>
                     </button>
                     <button type="button" class="btn btn-outline-success {% if status == 'approved' %}active{% endif %}" data-filter="approved">
                       Approved
-                      <span class="badge bg-success ms-1 filter-count" data-count-type="approved">{{ event_summary.approved|default:0 }}</span>
+                      <span class="badge bg-success ms-1">
+                        {% if active_tab == 'activation' or not active_tab %}{{ activation_summary.approved|default:0 }}{% elif active_tab == 'event' %}{{ event_summary.approved|default:0 }}{% elif active_tab == 'operation' %}{{ operation_summary.approved|default:0 }}{% else %}{{ history_summary.approved|default:0 }}{% endif %}
+                      </span>
                     </button>
                     <button type="button" class="btn btn-outline-danger {% if status == 'rejected' %}active{% endif %}" data-filter="rejected">
                       Rejected
-                      <span class="badge bg-danger ms-1 filter-count" data-count-type="rejected">{{ event_summary.rejected|default:0 }}</span>
+                      <span class="badge bg-danger ms-1">
+                        {% if active_tab == 'activation' or not active_tab %}{{ activation_summary.rejected|default:0 }}{% elif active_tab == 'event' %}{{ event_summary.rejected|default:0 }}{% elif active_tab == 'operation' %}{{ operation_summary.rejected|default:0 }}{% else %}{{ history_summary.rejected|default:0 }}{% endif %}
+                      </span>
                     </button>
                   </div>
                 </div>
-
                 <div class="col-md-4 mb-3 mb-md-0">
-                    <input type="text" class="form-control" id="searchInput" placeholder="Search requests..." value="{{ query }}">
+                  <input type="text" class="form-control" id="searchInput" name="q" placeholder="Search requests..." value="{{ query }}">
                 </div>
-
                 <div class="col-md-2">
                   <div class="dropdown">
                     <button class="btn btn-outline-info dropdown-toggle w-100" type="button"
@@ -98,16 +114,147 @@
                 </div>
               </div>
               <input type="hidden" name="status" id="statusFilter" value="{{ status|default:'all' }}">
-              <input type="hidden" name="tab" id="tabFilter" value="{{ active_tab|default:'event' }}">
-              <input type="hidden" name="q" id="queryFilter" value="{{ query|default:'' }}">
+              <input type="hidden" name="tab" id="tabFilter" value="{{ active_tab|default:'activation' }}">
             </form>
           </div>
         </div>
 
         <!-- Tabs Content -->
         <div class="tab-content" id="approvalTabsContent">
+          <!-- Activation Requests Tab -->
+          <div class="tab-pane fade {% if active_tab == 'activation' or not active_tab %}show active{% endif %}"
+               id="activation" role="tabpanel" aria-labelledby="activation-tab">
+            <div class="table-responsive">
+              <table class="table table-bordered table-striped" id="activationTable">
+                <thead class="table-dark">
+                  <tr>
+                    <th>Requested By</th>
+                    <th>Type</th>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Amount</th>
+                    <th>Description</th>
+                    <th>Date Requested</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for expense in activation_requests %}
+                  <tr data-status="pending"
+                      data-expense-id="{{ expense.id }}"
+                      data-search="{{ expense.created_by.get_full_name|lower }} {{ expense.activation.name|lower }} {{ expense.expense_category.name|lower }} {{ expense.description|lower }}">
+                    <td>
+                      <div class="d-flex align-items-center">
+                        <div>
+                          <strong>{{ expense.created_by.get_full_name }}</strong>
+                          <br>
+                          <small class="text-muted">{{ expense.created_by.email }}</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="badge bg-primary">Activation</span>
+                    </td>
+                    <td>
+                      <strong>{{ expense.activation.name }}</strong>
+                      <br>
+                      <small class="text-muted">{{ expense.activation.category.name }}</small>
+                    </td>
+                    <td>
+                      <span class="badge bg-info">{{ expense.expense_category.name }}</span>
+                    </td>
+                    <td>
+                      <strong>KSH {{ expense.amount|floatformat:2|intcomma }}</strong>
+                    </td>
+                    <td>
+                      <div class="description-cell">
+                        {{ expense.description|truncatewords:10 }}
+                        {% if expense.description|length > 50 %}
+                        <br>
+                        <small>
+                          <a href="#" class="text-primary view-full-description"
+                             data-full-description="{{ expense.description }}">View full description</a>
+                        </small>
+                        {% endif %}
+                      </div>
+                    </td>
+                    <td>
+                      <small>{{ expense.created_at|date:"M d, Y" }}<br>{{ expense.created_at|time:"g:i A" }}</small>
+                    </td>
+                    <td>
+                      <div class="btn-group-vertical" role="group">
+                        <button class="btn btn-success btn-sm approve-btn"
+                                data-bs-toggle="modal" data-bs-target="#approveModal"
+                                data-expense-id="{{ expense.id }}"
+                                data-expense-type="activation"
+                                data-requester="{{ expense.created_by.get_full_name }}"
+                                data-amount="KSH {{ expense.amount|floatformat:2|intcomma }}"
+                                data-description="{{ expense.description }}"
+                                data-item-name="{{ expense.activation.name }}">
+                            Approve
+                        </button>
+                        <button class="btn btn-danger btn-sm reject-btn"
+                                data-bs-toggle="modal" data-bs-target="#rejectModal"
+                                data-expense-id="{{ expense.id }}"
+                                data-expense-type="activation"
+                                data-requester="{{ expense.created_by.get_full_name }}"
+                                data-amount="KSH {{ expense.amount|floatformat:2|intcomma }}"
+                                data-description="{{ expense.description }}"
+                                data-item-name="{{ expense.activation.name }}">
+                            Reject
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  {% empty %}
+                  <tr class="no-results">
+                    <td colspan="8" class="text-center py-4">
+                      <div class="empty-state">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <h5>No pending activation requests found</h5>
+                        <p class="text-muted">
+                          {% if query %}
+                          No pending activation requests match your search criteria.
+                          {% else %}
+                          There are no pending activation expense requests at the moment.
+                          {% endif %}
+                        </p>
+                      </div>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Activation Pagination -->
+            {% if activation_requests.has_other_pages %}
+            <nav aria-label="Activation requests pagination">
+              <ul class="pagination justify-content-center">
+                {% if activation_requests.has_previous %}
+                <li class="page-item">
+                  <a class="page-link" href="?activation_page={{ activation_requests.previous_page_number }}&q={{ query }}&status={{ status }}&tab=activation">Previous</a>
+                </li>
+                {% endif %}
+                {% for num in activation_requests.paginator.page_range %}
+                  {% if activation_requests.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                  {% elif num > activation_requests.number|add:'-3' and num < activation_requests.number|add:'3' %}
+                    <li class="page-item"><a class="page-link" href="?activation_page={{ num }}&q={{ query }}&status={{ status }}&tab=activation">{{ num }}</a></li>
+                  {% endif %}
+                {% endfor %}
+                {% if activation_requests.has_next %}
+                <li class="page-item">
+                  <a class="page-link" href="?activation_page={{ activation_requests.next_page_number }}&q={{ query }}&status={{ status }}&tab=activation">Next</a>
+                </li>
+                {% endif %}
+              </ul>
+            </nav>
+            {% endif %}
+          </div>
+
           <!-- Event Requests Tab -->
-          <div class="tab-pane fade {% if active_tab == 'event' or not active_tab %}show active{% endif %}"
+          <div class="tab-pane fade {% if active_tab == 'event' %}show active{% endif %}"
                id="event" role="tabpanel" aria-labelledby="event-tab">
             <div class="table-responsive">
               <table class="table table-bordered table-striped" id="eventTable">
@@ -127,10 +274,10 @@
                 <tbody>
                   {% for expense in event_requests %}
                   <tr data-status="{% if expense.approved %}approved{% elif expense.declined %}rejected{% else %}pending{% endif %}"
+                      data-expense-id="{{ expense.id }}"
                       data-search="{{ expense.created_by.get_full_name|lower }} {{ expense.event.name|lower }} {{ expense.expense_category.name|lower }} {{ expense.description|lower }}">
                     <td>
                       <div class="d-flex align-items-center">
-                        
                         <div>
                           <strong>{{ expense.created_by.get_full_name }}</strong>
                           <br>
@@ -173,8 +320,11 @@
                         {% endif %}
                       {% elif expense.declined %}
                         <span class="badge bg-danger">Rejected</span>
-                        {% if expense.approved_by %}
-                        <br><small class="text-muted">by {{ expense.approved_by.get_full_name }}</small>
+                        {% if expense.decline_reason %}
+                        <br><small class="text-muted view-decline-reason"
+                                   data-full-reason="{{ expense.decline_reason }}">
+                          Reason: {{ expense.decline_reason|truncatewords:3 }}
+                        </small>
                         {% endif %}
                       {% else %}
                         <span class="badge bg-warning text-dark">Pending</span>
@@ -205,7 +355,17 @@
                         </button>
                       </div>
                       {% else %}
-                      <span class="text-muted">—</span>
+                      <button class="btn btn-warning btn-sm undo-btn"
+                              data-bs-toggle="modal" data-bs-target="#undoModal"
+                              data-expense-id="{{ expense.id }}"
+                              data-expense-type="event"
+                              data-requester="{{ expense.created_by.get_full_name }}"
+                              data-amount="KSH {{ expense.amount|floatformat:2|intcomma }}"
+                              data-description="{{ expense.description }}"
+                              data-item-name="{{ expense.event.name }}"
+                              data-status="{% if expense.approved %}approved{% else %}rejected{% endif %}">
+                        Undo
+                      </button>
                       {% endif %}
                     </td>
                   </tr>
@@ -239,7 +399,6 @@
                   <a class="page-link" href="?event_page={{ event_requests.previous_page_number }}&q={{ query }}&status={{ status }}&tab=event">Previous</a>
                 </li>
                 {% endif %}
-
                 {% for num in event_requests.paginator.page_range %}
                   {% if event_requests.number == num %}
                     <li class="page-item active"><span class="page-link">{{ num }}</span></li>
@@ -247,7 +406,6 @@
                     <li class="page-item"><a class="page-link" href="?event_page={{ num }}&q={{ query }}&status={{ status }}&tab=event">{{ num }}</a></li>
                   {% endif %}
                 {% endfor %}
-
                 {% if event_requests.has_next %}
                 <li class="page-item">
                   <a class="page-link" href="?event_page={{ event_requests.next_page_number }}&q={{ query }}&status={{ status }}&tab=event">Next</a>
@@ -278,10 +436,10 @@
                 <tbody>
                   {% for expense in operation_requests %}
                   <tr data-status="{% if expense.approved %}approved{% elif expense.declined %}rejected{% else %}pending{% endif %}"
-                      data-search="{{ expense.created_by.get_full_name|lower }} {{ expense.operation.name|default:''|lower }} {{ expense.expense_category.name|lower }} {{ expense.description|lower }}">
+                      data-expense-id="{{ expense.id }}"
+                      data-search="{{ expense.created_by.get_full_name|lower }} {{ expense.operation.name|default:'general operation'|lower }} {{ expense.expense_category.name|lower }} {{ expense.description|lower }}">
                     <td>
                       <div class="d-flex align-items-center">
-                        
                         <div>
                           <strong>{{ expense.created_by.get_full_name }}</strong>
                           <br>
@@ -325,8 +483,11 @@
                         {% endif %}
                       {% elif expense.declined %}
                         <span class="badge bg-danger">Rejected</span>
-                        {% if expense.approved_by %}
-                        <br><small class="text-muted">by {{ expense.approved_by.get_full_name }}</small>
+                        {% if expense.decline_reason %}
+                        <br><small class="text-muted view-decline-reason"
+                                   data-full-reason="{{ expense.decline_reason }}">
+                          Reason: {{ expense.decline_reason|truncatewords:3 }}
+                        </small>
                         {% endif %}
                       {% else %}
                         <span class="badge bg-warning text-dark">Pending</span>
@@ -343,7 +504,7 @@
                                 data-amount="KSH {{ expense.amount|floatformat:2|intcomma }}"
                                 data-description="{{ expense.description }}"
                                 data-item-name="{% if expense.operation %}{{ expense.operation.name }}{% else %}General Operation{% endif %}">
-                            <i class="fas fa-check"></i> Approve
+                            Approve
                         </button>
                         <button class="btn btn-danger btn-sm reject-btn"
                                 data-bs-toggle="modal" data-bs-target="#rejectModal"
@@ -353,11 +514,21 @@
                                 data-amount="KSH {{ expense.amount|floatformat:2|intcomma }}"
                                 data-description="{{ expense.description }}"
                                 data-item-name="{% if expense.operation %}{{ expense.operation.name }}{% else %}General Operation{% endif %}">
-                            <i class="fas fa-times"></i> Reject
+                            Reject
                         </button>
                       </div>
                       {% else %}
-                      <span class="text-muted">—</span>
+                      <button class="btn btn-warning btn-sm undo-btn"
+                              data-bs-toggle="modal" data-bs-target="#undoModal"
+                              data-expense-id="{{ expense.id }}"
+                              data-expense-type="operation"
+                              data-requester="{{ expense.created_by.get_full_name }}"
+                              data-amount="KSH {{ expense.amount|floatformat:2|intcomma }}"
+                              data-description="{{ expense.description }}"
+                              data-item-name="{% if expense.operation %}{{ expense.operation.name }}{% else %}General Operation{% endif %}"
+                              data-status="{% if expense.approved %}approved{% else %}rejected{% endif %}">
+                        Undo
+                      </button>
                       {% endif %}
                     </td>
                   </tr>
@@ -391,7 +562,6 @@
                   <a class="page-link" href="?op_page={{ operation_requests.previous_page_number }}&q={{ query }}&status={{ status }}&tab=operation">Previous</a>
                 </li>
                 {% endif %}
-
                 {% for num in operation_requests.paginator.page_range %}
                   {% if operation_requests.number == num %}
                     <li class="page-item active"><span class="page-link">{{ num }}</span></li>
@@ -399,7 +569,6 @@
                     <li class="page-item"><a class="page-link" href="?op_page={{ num }}&q={{ query }}&status={{ status }}&tab=operation">{{ num }}</a></li>
                   {% endif %}
                 {% endfor %}
-
                 {% if operation_requests.has_next %}
                 <li class="page-item">
                   <a class="page-link" href="?op_page={{ operation_requests.next_page_number }}&q={{ query }}&status={{ status }}&tab=operation">Next</a>
@@ -419,21 +588,23 @@
                   <tr>
                     <th>Requested By</th>
                     <th>Type</th>
+                    <th>Name</th>
                     <th>Category</th>
                     <th>Amount</th>
                     <th>Description</th>
                     <th>Status</th>
                     <th>Processed By</th>
                     <th>Date Processed</th>
+                    <th>Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {% for expense in past_requests %}
                   <tr data-status="{% if expense.approved %}approved{% elif expense.declined %}rejected{% else %}pending{% endif %}"
-                      data-search="{{ expense.created_by.get_full_name|lower }} {% if expense.event %}{{ expense.event.name|default:''|lower }}{% else %}{{ expense.operation.name|default:''|lower }}{% endif %} {{ expense.expense_category.name|lower }} {{ expense.description|lower }}">
+                      data-expense-id="{{ expense.id }}"
+                      data-search="{{ expense.created_by.get_full_name|lower }} {% if expense.event %}{{ expense.event.name|lower }}{% elif expense.activation %}{{ expense.activation.name|lower }}{% else %}{{ expense.operation.name|default:'general operation'|lower }}{% endif %} {{ expense.expense_category.name|lower }} {{ expense.description|lower }}">
                     <td>
                       <div class="d-flex align-items-center">
-                        
                         <div>
                           <strong>{{ expense.created_by.get_full_name }}</strong>
                           <br>
@@ -444,14 +615,21 @@
                     <td>
                       {% if expense.event %}
                         <span class="badge bg-info">Event</span>
-                        <br>
-                        <small>{{ expense.event.name }}</small>
+                      {% elif expense.activation %}
+                        <span class="badge bg-primary">Activation</span>
                       {% else %}
                         <span class="badge bg-secondary">Operation</span>
-                        {% if expense.operation %}
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if expense.event %}
+                        <strong>{{ expense.event.name }}</strong>
+                      {% elif expense.activation %}
+                        <strong>{{ expense.activation.name }}</strong>
                         <br>
-                        <small>{{ expense.operation.name }}</small>
-                        {% endif %}
+                        <small class="text-muted">{{ expense.activation.category.name }}</small>
+                      {% else %}
+                        <strong>{{ expense.operation.name|default:"General Operation" }}</strong>
                       {% endif %}
                     </td>
                     <td>{{ expense.expense_category.name }}</td>
@@ -478,6 +656,8 @@
                           Reason: {{ expense.decline_reason|truncatewords:3 }}
                         </small>
                         {% endif %}
+                      {% else %}
+                        <span class="badge bg-warning text-dark">Pending</span>
                       {% endif %}
                     </td>
                     <td>
@@ -490,10 +670,23 @@
                     <td>
                       <small>{{ expense.updated_at|date:"M d, Y" }}<br>{{ expense.updated_at|time:"g:i A" }}</small>
                     </td>
+                    <td>
+                      <button class="btn btn-warning btn-sm undo-btn"
+                              data-bs-toggle="modal" data-bs-target="#undoModal"
+                              data-expense-id="{{ expense.id }}"
+                              data-expense-type="{% if expense.event %}event{% elif expense.activation %}activation{% else %}operation{% endif %}"
+                              data-requester="{{ expense.created_by.get_full_name }}"
+                              data-amount="KSH {{ expense.amount|floatformat:2|intcomma }}"
+                              data-description="{{ expense.description }}"
+                              data-item-name="{% if expense.event %}{{ expense.event.name }}{% elif expense.activation %}{{ expense.activation.name }}{% else %}{{ expense.operation.name|default:'General Operation' }}{% endif %}"
+                              data-status="{% if expense.approved %}approved{% else %}rejected{% endif %}">
+                        Undo
+                      </button>
+                    </td>
                   </tr>
                   {% empty %}
                   <tr class="no-results">
-                    <td colspan="8" class="text-center py-4">
+                    <td colspan="10" class="text-center py-4">
                       <div class="empty-state">
                         <i class="fas fa-history fa-3x text-muted mb-3"></i>
                         <h5>No request history found</h5>
@@ -521,7 +714,6 @@
                   <a class="page-link" href="?history_page={{ past_requests.previous_page_number }}&q={{ query }}&status={{ status }}&tab=history">Previous</a>
                 </li>
                 {% endif %}
-
                 {% for num in past_requests.paginator.page_range %}
                   {% if past_requests.number == num %}
                     <li class="page-item active"><span class="page-link">{{ num }}</span></li>
@@ -529,7 +721,6 @@
                     <li class="page-item"><a class="page-link" href="?history_page={{ num }}&q={{ query }}&status={{ status }}&tab=history">{{ num }}</a></li>
                   {% endif %}
                 {% endfor %}
-
                 {% if past_requests.has_next %}
                 <li class="page-item">
                   <a class="page-link" href="?history_page={{ past_requests.next_page_number }}&q={{ query }}&status={{ status }}&tab=history">Next</a>
@@ -651,6 +842,61 @@
     </div>
   </div>
 </div>
+
+<!-- Undo Confirmation Modal -->
+<div class="modal fade" id="undoModal" tabindex="-1" aria-labelledby="undoModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="undoModalLabel">
+          <i class="fas fa-undo text-warning"></i> Confirm Undo Action
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="undoForm" method="POST">
+        <div class="modal-body">
+          {% csrf_token %}
+          <div class="alert alert-warning">
+            <strong>Request Details:</strong>
+          </div>
+          <div class="row">
+            <div class="col-sm-4"><strong>Requester:</strong></div>
+            <div class="col-sm-8" id="undo-requester">—</div>
+          </div>
+          <div class="row mt-2">
+            <div class="col-sm-4"><strong>Expense For:</strong></div>
+            <div class="col-sm-8" id="undo-item-name">—</div>
+          </div>
+          <div class="row mt-2">
+            <div class="col-sm-4"><strong>Type:</strong></div>
+            <div class="col-sm-8" id="undo-type">—</div>
+          </div>
+          <div class="row mt-2">
+            <div class="col-sm-4"><strong>Amount:</strong></div>
+            <div class="col-sm-8" id="undo-amount">—</div>
+          </div>
+          <div class="row mt-2">
+            <div class="col-sm-4"><strong>Description:</strong></div>
+            <div class="col-sm-8" id="undo-description">—</div>
+          </div>
+          <div class="row mt-2">
+            <div class="col-sm-4"><strong>Current Status:</strong></div>
+            <div class="col-sm-8" id="undo-status">—</div>
+          </div>
+          <hr>
+          <p class="text-center mb-0">Are you sure you want to <strong class="text-warning">undo</strong> this expense action and revert it to pending?</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-warning" id="confirmUndo">
+            <i class="fas fa-undo"></i> Undo Action
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     // Initialize Bootstrap Tooltips
@@ -661,17 +907,12 @@
 
     /**
      * Retrieves the CSRF token from a meta tag or a hidden input.
-     * Assumes a meta tag <meta name="csrf-token" content="YOUR_CSRF_TOKEN"> or
-     * a hidden input <input type="hidden" name="csrfmiddlewaretoken" value="YOUR_CSRF_TOKEN"> exists.
-     * @returns {string|null} The CSRF token if found, otherwise null.
      */
     function getCsrfToken() {
-        // Try to get from a meta tag
         const metaTag = document.querySelector('meta[name="csrf-token"]');
         if (metaTag) {
             return metaTag.getAttribute('content');
         }
-        // Try to get from a hidden input (e.g., if it's in the form)
         const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
         if (csrfInput) {
             return csrfInput.value;
@@ -681,16 +922,12 @@
 
     /**
      * Displays a custom message box instead of alert/confirm.
-     * @param {string} title The title of the message.
-     * @param {string} message The content of the message.
-     * @param {string} type The type of message (e.g., 'info', 'success', 'danger').
      */
     function showMessageBox(title, message, type = 'info') {
         const modalId = 'messageBoxModal';
         let modalElement = document.getElementById(modalId);
 
         if (!modalElement) {
-            // Create the modal HTML if it doesn't exist
             modalElement = document.createElement('div');
             modalElement.id = modalId;
             modalElement.classList.add('modal', 'fade');
@@ -718,7 +955,7 @@
         const modalBody = modalElement.querySelector('.modal-body');
 
         modalTitle.textContent = title;
-        modalTitle.className = `modal-title text-${type}`; // Set text color based on type
+        modalTitle.className = `modal-title text-${type}`;
         modalBody.innerHTML = message;
 
         const bsModal = new bootstrap.Modal(modalElement);
@@ -726,440 +963,354 @@
     }
 
     // Get references to relevant DOM elements
-    const approvalTabsContainer = document.getElementById('approvalTabs');
+    const filterForm = document.getElementById('filterForm');
     const statusFilterButtons = document.querySelectorAll('.btn-group button[data-filter]');
     const searchInput = document.getElementById('searchInput');
 
-    // Helper to get URL parameters
-    function getUrlParams() {
-        const params = new URLSearchParams(window.location.search);
-        return {
-            tab: params.get('tab') || 'event', // Default to 'event'
-            status: params.get('status') || 'all', // Default to 'all'
-            query: params.get('q') || '' // Default to empty string
-        };
-    }
-
-    // Helper to update URL parameters without reloading
-    function updateUrlParams(newParams) {
-        const params = new URLSearchParams(window.location.search);
-        for (const key in newParams) {
-            if (newParams[key] !== null && newParams[key] !== undefined) {
-                params.set(key, newParams[key]);
-            } else {
-                params.delete(key);
-            }
-        }
-        const newUrl = `${window.location.pathname}?${params.toString()}${window.location.hash}`;
-        history.pushState({ path: newUrl }, '', newUrl);
-    }
-
-    // --- Initial State Setup ---
-    function initializeDashboardState() {
-        const params = getUrlParams();
-
-        // Activate the correct tab
-        const targetTabButton = document.getElementById(`${params.tab}-tab`);
-        if (targetTabButton) {
-            const tabInstance = bootstrap.Tab.getInstance(targetTabButton);
-            if (!tabInstance) { // If not initialized, create one
-                new bootstrap.Tab(targetTabButton).show();
-            } else {
-                tabInstance.show();
-            }
-        }
-
-        // Set the active status filter button
-        statusFilterButtons.forEach(button => {
-            if (button.dataset.filter === params.status) {
-                button.classList.add('active');
-            } else {
-                button.classList.remove('active');
-            }
-        });
-
-        // Set the search input value
-        searchInput.value = params.query;
-
-        // Apply filters to the initially active table
-        filterTableRows(params.query, params.status);
-    }
-
-
-    /**
-     * Filters table rows based on the search query and active status filter.
-     * This performs client-side filtering on the currently active table.
-     * @param {string} query The search string.
-     * @param {string} currentStatusFilter The current status filter ('all', 'pending', 'approved', 'rejected').
-     */
-    function filterTableRows(query, currentStatusFilter) {
-        const activePane = document.querySelector('.tab-pane.show.active');
-        if (!activePane) return;
-
-        const table = activePane.querySelector('table');
-        if (!table) return;
-
-        const rows = table.querySelectorAll('tbody tr:not(.no-results)'); // Exclude empty state row
-        let visibleRowCount = 0;
-
-        rows.forEach(row => {
-            const rowSearchData = row.dataset.search || '';
-            const rowStatus = row.dataset.status || '';
-
-            const matchesSearch = rowSearchData.includes(query.toLowerCase().trim());
-            const matchesStatus = currentStatusFilter === 'all' || rowStatus === currentStatusFilter;
-
-            if (matchesSearch && matchesStatus) {
-                row.style.display = ''; // Show row
-                visibleRowCount++;
-            } else {
-                row.style.display = 'none'; // Hide row
-            }
-        });
-
-        // Toggle empty state message
-        const noResultsRow = table.querySelector('.no-results');
-        if (noResultsRow) {
-            noResultsRow.style.display = visibleRowCount === 0 ? '' : 'none';
-            // Update the text of the empty state message based on search/filters
-            const emptyStateMessage = noResultsRow.querySelector('.empty-state p');
-            if (emptyStateMessage) {
-                if (query || currentStatusFilter !== 'all') {
-                    emptyStateMessage.textContent = 'No requests match your current criteria.';
-                } else {
-                    emptyStateMessage.textContent = 'There are no requests at the moment.';
-                }
-            }
-        }
-        updateFilterCounts(activePane.id, query); // Update filter counts after client-side filtering
-    }
-
-    /**
-     * Updates the status filter counts for the currently active tab.
-     * This re-scans the visible rows to get accurate counts after client-side filtering.
-     * @param {string} activeTabId The ID of the currently active tab (e.g., 'event', 'operation', 'history').
-     * @param {string} currentQuery The current search query.
-     */
-    function updateFilterCounts(activeTabId, currentQuery) {
-        const activeTable = document.getElementById(activeTabId + 'Table');
-        if (!activeTable) return;
-
-        const allRows = activeTable.querySelectorAll('tbody tr:not(.no-results)');
-        const counts = {
-            all: 0,
-            pending: 0,
-            approved: 0,
-            rejected: 0
-        };
-
-        // Populate counts based on all rows and current search query
-        allRows.forEach(row => {
-            const rowSearchData = row.dataset.search || '';
-            const rowStatus = row.dataset.status || '';
-
-            if (rowSearchData.includes(currentQuery.toLowerCase().trim())) {
-                counts.all++;
-                if (rowStatus === 'pending') {
-                    counts.pending++;
-                } else if (rowStatus === 'approved') {
-                    counts.approved++;
-                } else if (rowStatus === 'rejected') {
-                    counts.rejected++;
-                }
-            }
-        });
-
-        // Update the badge counts in the filter group
-        document.querySelectorAll('.filter-count').forEach(badge => {
-            const type = badge.dataset.countType;
-            if (counts[type] !== undefined) {
-                badge.textContent = counts[type];
-            }
-        });
-    }
-
     // --- Event Listeners ---
 
-    // Tab switching listener
-    approvalTabsContainer.addEventListener('click', function(event) {
-        const clickedTabButton = event.target.closest('.nav-link');
-        if (clickedTabButton) {
-            const newTab = clickedTabButton.dataset.tab;
-            const currentParams = getUrlParams();
-            if (currentParams.tab !== newTab) {
-                updateUrlParams({ tab: newTab, status: 'all', q: '' }); // Reset status and query when changing tabs
-                // Bootstrap's JS handles the tab content visibility
-                // We just need to re-apply filtering for the new tab
-                filterTableRows('', 'all');
-            }
-        }
+    // Tab switching listener (intercept Bootstrap tab show and submit form)
+    document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tabElement => {
+        tabElement.addEventListener('show.bs.tab', function(event) {
+            event.preventDefault(); // Prevent client-side tab switch
+            const newTab = this.dataset.tab;
+            const defaultStatus = (newTab === 'activation') ? 'pending' : 'all';
+            document.getElementById('tabFilter').value = newTab;
+            document.getElementById('statusFilter').value = defaultStatus;
+            document.getElementById('searchInput').value = ''; // Reset search on tab change
+            filterForm.submit();
+        });
     });
 
-    // Status filter button listener
+    // Status filter button listener (submit form on click)
     statusFilterButtons.forEach(button => {
         button.addEventListener('click', function() {
             const newStatus = this.dataset.filter;
-            const currentParams = getUrlParams();
-            if (currentParams.status !== newStatus) {
-                updateUrlParams({ status: newStatus });
-                // Update active class immediately for visual feedback
-                statusFilterButtons.forEach(btn => btn.classList.remove('active'));
-                this.classList.add('active');
-                filterTableRows(currentParams.query, newStatus);
-            }
+            document.getElementById('statusFilter').value = newStatus;
+            filterForm.submit();
         });
     });
 
-    // Search input listener
+    // Search input listener (submit form after typing timeout)
     let searchTimeout;
     searchInput.addEventListener('keyup', function() {
         clearTimeout(searchTimeout);
-        const currentQuery = this.value.toLowerCase().trim();
-        const currentParams = getUrlParams();
-
         searchTimeout = setTimeout(() => {
-            if (currentParams.query !== currentQuery) {
-                updateUrlParams({ q: currentQuery });
-                filterTableRows(currentQuery, currentParams.status);
-            }
-        }, 300); // Debounce search for 300ms
+            filterForm.submit();
+        }, 500);
     });
 
     // --- Modal Functionality ---
 
-// Helper function to reload page with current URL parameters
-function reloadWithCurrentParams() {
-    const currentParams = new URLSearchParams(window.location.search);
-    const newUrl = `${window.location.pathname}?${currentParams.toString()}${window.location.hash}`;
-    window.location.href = newUrl; // Reload with current query parameters
-}
-
-// Approve Modal
-const approveModal = document.getElementById('approveModal');
-if (approveModal) {
-    approveModal.addEventListener('show.bs.modal', function (event) {
-        const button = event.relatedTarget;
-        const expenseId = button.dataset.expenseId;
-        const expenseType = button.dataset.expenseType;
-        const requester = button.dataset.requester;
-        const amount = button.dataset.amount;
-        const description = button.dataset.description;
-        const itemName = button.dataset.itemName;
-
-        approveModal.querySelector('#approve-requester').textContent = requester;
-        approveModal.querySelector('#approve-item-name').textContent = itemName;
-        approveModal.querySelector('#approve-type').textContent = expenseType.charAt(0).toUpperCase() + expenseType.slice(1) + ' Expense';
-        approveModal.querySelector('#approve-amount').textContent = amount;
-        approveModal.querySelector('#approve-description').textContent = description;
-
-        const approveForm = approveModal.querySelector('#approveForm');
-        approveForm.action = `/expense/${expenseId}/approve/`;
-    });
-
-    const approveForm = document.getElementById('approveForm');
-    if (approveForm) {
-        approveForm.addEventListener('submit', async function(event) {
-            event.preventDefault();
-
-            const form = event.target;
-            const expenseId = form.action.match(/expense\/([0-9a-f-]+)\/approve\//)[1];
-            const csrfToken = form.querySelector('input[name="csrfmiddlewaretoken"]').value;
-            const expenseType = form.querySelector('#approve-type').textContent.toLowerCase().includes('event') ? 'event' : 'operation';
-
-            const modalInstance = bootstrap.Modal.getInstance(approveModal);
-            modalInstance.hide();
-
-            try {
-                const response = await fetch(form.action, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': csrfToken
-                    },
-                    body: new FormData(form)
-                });
-
-                let data;
-                try {
-                    data = await response.json();
-                } catch (e) {
-                    if (response.ok) {
-                        data = { message: 'Expense request approved successfully!', approved_by_name: 'You' };
-                    } else {
-                        throw new Error('Invalid response format from server');
-                    }
-                }
-
-                if (response.ok) {
-                    showMessageBox('Success', data.message || 'Expense request approved successfully!', 'success');
-                    updateTableRowStatus(expenseId, expenseType, 'approved', data.approved_by_name || 'You');
-                    const currentParams = getUrlParams();
-                    updateFilterCounts(currentParams.tab, currentParams.query);
-                    // Optional: Prompt user to reload or auto-reload
-                    setTimeout(() => {
-                        if (confirm('Expense approved. Would you like to refresh the page to see the latest updates?')) {
-                            reloadWithCurrentParams();
-                        }
-                    }, 1000);
-                } else {
-                    showMessageBox('Error', data.error || 'Failed to approve expense request.', 'danger');
-                }
-            } catch (error) {
-                showMessageBox('Error', 'An unexpected error occurred during approval. Please try again.', 'danger');
-            }
-        });
+    // Helper function to reload page with current URL parameters
+    function reloadWithCurrentParams() {
+        window.location.reload();
     }
-}
 
-// Reject Modal
-const rejectModal = document.getElementById('rejectModal');
-if (rejectModal) {
-    rejectModal.addEventListener('show.bs.modal', function (event) {
-        const button = event.relatedTarget;
-        const expenseId = button.dataset.expenseId;
-        const expenseType = button.dataset.expenseType;
-        const requester = button.dataset.requester;
-        const amount = button.dataset.amount;
-        const description = button.dataset.description;
-        const itemName = button.dataset.itemName;
+    // Approve Modal
+    const approveModal = document.getElementById('approveModal');
+    if (approveModal) {
+        approveModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const expenseId = button.dataset.expenseId;
+            const expenseType = button.dataset.expenseType;
+            const requester = button.dataset.requester;
+            const amount = button.dataset.amount;
+            const description = button.dataset.description;
+            const itemName = button.dataset.itemName;
 
-        rejectModal.querySelector('#reject-requester').textContent = requester;
-        rejectModal.querySelector('#reject-item-name').textContent = itemName;
-        rejectModal.querySelector('#reject-type').textContent = expenseType.charAt(0).toUpperCase() + expenseType.slice(1) + ' Expense';
-        rejectModal.querySelector('#reject-amount').textContent = amount;
-        rejectModal.querySelector('#reject-description').textContent = description;
+            approveModal.querySelector('#approve-requester').textContent = requester;
+            approveModal.querySelector('#approve-item-name').textContent = itemName;
+            approveModal.querySelector('#approve-type').textContent = expenseType.charAt(0).toUpperCase() + expenseType.slice(1) + ' Expense';
+            approveModal.querySelector('#approve-amount').textContent = amount;
+            approveModal.querySelector('#approve-description').textContent = description;
 
-        const rejectForm = rejectModal.querySelector('#rejectForm');
-        rejectForm.action = `/expense/${expenseId}/decline/`;
-
-        const declineReasonInput = rejectModal.querySelector('#declineReason');
-        declineReasonInput.value = '';
-        declineReasonInput.classList.remove('is-invalid');
-    });
-
-    const rejectForm = document.getElementById('rejectForm');
-    if (rejectForm) {
-        rejectForm.addEventListener('submit', async function(event) {
-            event.preventDefault();
-
-            const form = event.target;
-            const expenseId = form.action.match(/expense\/([0-9a-f-]+)\/decline\//)[1];
-            const declineReasonInput = form.querySelector('#declineReason');
-            const declineReason = declineReasonInput.value.trim();
-            const csrfToken = form.querySelector('input[name="csrfmiddlewaretoken"]').value;
-            const expenseType = form.querySelector('#reject-type').textContent.toLowerCase().includes('event') ? 'event' : 'operation';
-
-            if (!declineReason) {
-                declineReasonInput.classList.add('is-invalid');
-                return;
-            } else {
-                declineReasonInput.classList.remove('is-invalid');
-            }
-
-            const modalInstance = bootstrap.Modal.getInstance(rejectModal);
-            modalInstance.hide();
-
-            try {
-                const response = await fetch(form.action, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': csrfToken
-                    },
-                    body: new FormData(form)
-                });
-
-                let data;
-                try {
-                    data = await response.json();
-                } catch (e) {
-                    if (response.ok) {
-                        data = { message: 'Expense request rejected successfully!', approved_by_name: 'You' };
-                    } else {
-                        throw new Error('Invalid response format from server');
-                    }
-                }
-
-                if (response.ok) {
-                    showMessageBox('Success', data.message || 'Expense request rejected successfully!', 'success');
-                    updateTableRowStatus(expenseId, expenseType, 'rejected', data.approved_by_name || 'You', declineReason);
-                    const currentParams = getUrlParams();
-                    updateFilterCounts(currentParams.tab, currentParams.query);
-                    // Optional: Prompt user to reload or auto-reload
-                    setTimeout(() => {
-                        if (confirm('Expense rejected. Would you like to refresh the page to see the latest updates?')) {
-                            reloadWithCurrentParams();
-                        }
-                    }, 1000);
-                } else {
-                    showMessageBox('Error', data.error || 'Failed to reject expense request.', 'danger');
-                }
-            } catch (error) {
-                showMessageBox('Error', 'An unexpected error occurred during rejection. Please try again.', 'danger');
-            }
+            const approveForm = approveModal.querySelector('#approveForm');
+            approveForm.action = `/expense/${expenseId}/approve/`;
         });
+
+        const approveForm = document.getElementById('approveForm');
+        if (approveForm) {
+            approveForm.addEventListener('submit', async function(event) {
+                event.preventDefault();
+
+                const form = event.target;
+                const expenseId = form.action.match(/expense\/([0-9a-f-]+)\/approve\//)[1];
+                const csrfToken = form.querySelector('input[name="csrfmiddlewaretoken"]').value;
+                const expenseType = form.querySelector('#approve-type').textContent.toLowerCase().replace(' expense', '');
+
+                const modalInstance = bootstrap.Modal.getInstance(approveModal);
+                modalInstance.hide();
+
+                try {
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrfToken
+                        },
+                        body: new FormData(form)
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        showMessageBox('Success', data.message, 'success');
+                        updateTableRowStatus(expenseId, expenseType, 'approved', data.approved_by_name);
+                        setTimeout(() => {
+                            if (confirm('Expense approved. Would you like to refresh the page to see the latest updates?')) {
+                                reloadWithCurrentParams();
+                            }
+                        }, 1000);
+                    } else {
+                        showMessageBox('Error', data.error || 'Failed to approve expense request.', 'danger');
+                    }
+                } catch (error) {
+                    showMessageBox('Error', 'An unexpected error occurred during approval. Please try again.', 'danger');
+                }
+            });
+        }
     }
-}
+
+    // Reject Modal
+    const rejectModal = document.getElementById('rejectModal');
+    if (rejectModal) {
+        rejectModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const expenseId = button.dataset.expenseId;
+            const expenseType = button.dataset.expenseType;
+            const requester = button.dataset.requester;
+            const amount = button.dataset.amount;
+            const description = button.dataset.description;
+            const itemName = button.dataset.itemName;
+
+            rejectModal.querySelector('#reject-requester').textContent = requester;
+            rejectModal.querySelector('#reject-item-name').textContent = itemName;
+            rejectModal.querySelector('#reject-type').textContent = expenseType.charAt(0).toUpperCase() + expenseType.slice(1) + ' Expense';
+            rejectModal.querySelector('#reject-amount').textContent = amount;
+            rejectModal.querySelector('#reject-description').textContent = description;
+
+            const rejectForm = rejectModal.querySelector('#rejectForm');
+            rejectForm.action = `/expense/${expenseId}/decline/`;
+
+            const declineReasonInput = rejectModal.querySelector('#declineReason');
+            declineReasonInput.value = '';
+            declineReasonInput.classList.remove('is-invalid');
+        });
+
+        const rejectForm = document.getElementById('rejectForm');
+        if (rejectForm) {
+            rejectForm.addEventListener('submit', async function(event) {
+                event.preventDefault();
+
+                const form = event.target;
+                const expenseId = form.action.match(/expense\/([0-9a-f-]+)\/decline\//)[1];
+                const declineReasonInput = form.querySelector('#declineReason');
+                const declineReason = declineReasonInput.value.trim();
+                const csrfToken = form.querySelector('input[name="csrfmiddlewaretoken"]').value;
+                const expenseType = form.querySelector('#reject-type').textContent.toLowerCase().replace(' expense', '');
+
+                if (!declineReason) {
+                    declineReasonInput.classList.add('is-invalid');
+                    return;
+                } else {
+                    declineReasonInput.classList.remove('is-invalid');
+                }
+
+                const modalInstance = bootstrap.Modal.getInstance(rejectModal);
+                modalInstance.hide();
+
+                try {
+                    const formData = new FormData(form);
+                    formData.set('reason', declineReason);
+
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrfToken
+                        },
+                        body: formData
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        showMessageBox('Success', data.message, 'success');
+                        updateTableRowStatus(expenseId, expenseType, 'rejected', data.approved_by_name, declineReason);
+                        setTimeout(() => {
+                            if (confirm('Expense rejected. Would you like to refresh the page to see the latest updates?')) {
+                                reloadWithCurrentParams();
+                            }
+                        }, 1000);
+                    } else {
+                        showMessageBox('Error', data.error || 'Failed to reject expense request.', 'danger');
+                    }
+                } catch (error) {
+                    showMessageBox('Error', 'An unexpected error occurred during rejection. Please try again.', 'danger');
+                }
+            });
+        }
+    }
+
+    // Undo Modal
+    const undoModal = document.getElementById('undoModal');
+    if (undoModal) {
+        undoModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const expenseId = button.dataset.expenseId;
+            const expenseType = button.dataset.expenseType;
+            const requester = button.dataset.requester;
+            const amount = button.dataset.amount;
+            const description = button.dataset.description;
+            const itemName = button.dataset.itemName;
+            const status = button.dataset.status;
+
+            undoModal.querySelector('#undo-requester').textContent = requester;
+            undoModal.querySelector('#undo-item-name').textContent = itemName;
+            undoModal.querySelector('#undo-type').textContent = expenseType.charAt(0).toUpperCase() + expenseType.slice(1) + ' Expense';
+            undoModal.querySelector('#undo-amount').textContent = amount;
+            undoModal.querySelector('#undo-description').textContent = description;
+            undoModal.querySelector('#undo-status').textContent = status.charAt(0).toUpperCase() + status.slice(1);
+
+            const undoForm = undoModal.querySelector('#undoForm');
+            undoForm.action = `/expense/${expenseId}/undo/`;
+        });
+
+        const undoForm = document.getElementById('undoForm');
+        if (undoForm) {
+            undoForm.addEventListener('submit', async function(event) {
+                event.preventDefault();
+
+                const form = event.target;
+                const expenseId = form.action.match(/expense\/([0-9a-f-]+)\/undo\//)[1];
+                const csrfToken = form.querySelector('input[name="csrfmiddlewaretoken"]').value;
+                const expenseType = form.querySelector('#undo-type').textContent.toLowerCase().replace(' expense', '');
+
+                const modalInstance = bootstrap.Modal.getInstance(undoModal);
+                modalInstance.hide();
+
+                try {
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrfToken
+                        },
+                        body: new FormData(form)
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        showMessageBox('Success', data.message, 'success');
+                        updateTableRowStatus(expenseId, expenseType, 'pending', '');
+                        setTimeout(() => {
+                            if (confirm('Expense action undone. Would you like to refresh the page to see the latest updates?')) {
+                                reloadWithCurrentParams();
+                            }
+                        }, 1000);
+                    } else {
+                        showMessageBox('Error', data.error || 'Failed to undo expense action.', 'danger');
+                    }
+                } catch (error) {
+                    showMessageBox('Error', 'An unexpected error occurred during undo. Please try again.', 'danger');
+                }
+            });
+        }
+    }
 
     /**
-     * Updates the status of a specific table row after approval/rejection.
-     * @param {string} expenseId The ID of the expense.
-     * @param {string} expenseType 'event' or 'operation'.
-     * @param {string} newStatus 'approved' or 'rejected'.
-     * @param {string} processedByName Name of the user who processed the request.
-     * @param {string} [declineReason=''] The reason for decline (only for rejected status).
+     * Updates the status of a specific table row after approval/rejection/undo.
      */
     function updateTableRowStatus(expenseId, expenseType, newStatus, processedByName, declineReason = '') {
-        const tableId = (expenseType === 'event' ? 'eventTable' : 'operationTable');
+        const tableId = (expenseType === 'event' ? 'eventTable' : expenseType === 'operation' ? 'operationTable' : 'activationTable');
         const table = document.getElementById(tableId);
         if (!table) return;
 
         const row = table.querySelector(`tr[data-expense-id="${expenseId}"]`);
-        if (row) {
-            // Update data-status attribute for client-side filtering
-            row.dataset.status = newStatus;
+        if (!row) return;
 
-            // Update status badge and text
-            // Assuming status is in the 8th column (index 7) for eventTable, and 7th (index 6) for operationTable
-            // This is a bit fragile if table structure changes; consider a more robust selector if possible.
-            let statusCellIndex = -1;
-            if (table.id === 'eventTable') statusCellIndex = 7; // 8th column (index 7)
-            else if (table.id === 'operationTable') statusCellIndex = 6; // 7th column (index 6)
+        row.dataset.status = newStatus;
 
-            const statusCell = row.cells[statusCellIndex]; // Get cell by index
+        let statusCellIndex = table.id === 'eventTable' ? 7 : table.id === 'operationTable' ? 6 : table.id === 'activationTable' ? -1 : 6;
+        let actionCellIndex = table.id === 'historyTable' ? 8 : table.id === 'eventTable' ? 8 : table.id === 'operationTable' ? 7 : table.id === 'activationTable' ? 7 : 7;
+
+        if (statusCellIndex !== -1) {
+            const statusCell = row.cells[statusCellIndex];
             if (statusCell) {
                 let statusHtml = '';
                 if (newStatus === 'approved') {
-                    statusHtml = `<span class="badge bg-success">Approved</span>`;
+                    statusHtml = `<span class="badge bg-success">Approved</span><br><small class="text-muted">by ${processedByName}</small>`;
                 } else if (newStatus === 'rejected') {
                     statusHtml = `<span class="badge bg-danger">Rejected</span>`;
                     if (declineReason) {
-                        // Truncate decline reason for display in table
                         const displayedReason = declineReason.length > 20 ? declineReason.substring(0, 17) + '...' : declineReason;
                         statusHtml += `<br><small class="text-muted view-decline-reason" data-full-reason="${declineReason}">Reason: ${displayedReason}</small>`;
                     }
+                } else {
+                    statusHtml = `<span class="badge bg-warning text-dark">Pending</span>`;
                 }
-                statusHtml += `<br><small class="text-muted">by ${processedByName}</small>`;
                 statusCell.innerHTML = statusHtml;
             }
+        }
 
-            // Hide action buttons
-            const actionCell = row.querySelector('td:last-child');
-            if (actionCell) {
-                actionCell.innerHTML = '<span class="text-muted">—</span>';
+        const actionCell = row.cells[actionCellIndex];
+        if (actionCell) {
+            let actionHtml = '';
+            if (newStatus === 'pending') {
+                actionHtml = `
+                    <div class="btn-group-vertical" role="group">
+                        <button class="btn btn-success btn-sm approve-btn"
+                                data-bs-toggle="modal" data-bs-target="#approveModal"
+                                data-expense-id="${expenseId}"
+                                data-expense-type="${expenseType}"
+                                data-requester="${row.querySelector('td:first-child strong').textContent}"
+                                data-amount="${row.cells[table.id === 'eventTable' ? 3 : table.id === 'operationTable' ? 3 : 4].textContent.trim()}"
+                                data-description="${row.querySelector('.description-cell').textContent.trim()}"
+                                data-item-name="${row.cells[table.id === 'eventTable' ? 1 : table.id === 'operationTable' ? 1 : 2].querySelector('strong')?.textContent || 'General Operation'}">
+                            Approve
+                        </button>
+                        <button class="btn btn-danger btn-sm reject-btn"
+                                data-bs-toggle="modal" data-bs-target="#rejectModal"
+                                data-expense-id="${expenseId}"
+                                data-expense-type="${expenseType}"
+                                data-requester="${row.querySelector('td:first-child strong').textContent}"
+                                data-amount="${row.cells[table.id === 'eventTable' ? 3 : table.id === 'operationTable' ? 3 : 4].textContent.trim()}"
+                                data-description="${row.querySelector('.description-cell').textContent.trim()}"
+                                data-item-name="${row.cells[table.id === 'eventTable' ? 1 : table.id === 'operationTable' ? 1 : 2].querySelector('strong')?.textContent || 'General Operation'}">
+                            Reject
+                        </button>
+                    </div>`;
+            } else {
+                actionHtml = `
+                    <button class="btn btn-warning btn-sm undo-btn"
+                            data-bs-toggle="modal" data-bs-target="#undoModal"
+                            data-expense-id="${expenseId}"
+                            data-expense-type="${expenseType}"
+                            data-requester="${row.querySelector('td:first-child strong').textContent}"
+                            data-amount="${row.cells[table.id === 'eventTable' ? 3 : table.id === 'operationTable' ? 3 : 4].textContent.trim()}"
+                            data-description="${row.querySelector('.description-cell').textContent.trim()}"
+                            data-item-name="${row.cells[table.id === 'eventTable' ? 1 : table.id === 'operationTable' ? 1 : 2].querySelector('strong')?.textContent || 'General Operation'}"
+                            data-status="${newStatus}">
+                        Undo
+                    </button>`;
             }
+            actionCell.innerHTML = actionHtml;
+        }
+
+        // Hide row if new status doesn't match current filter (to maintain consistency until reload)
+        const currentStatus = new URLSearchParams(window.location.search).get('status') || 'all';
+        if (currentStatus !== 'all' && newStatus !== currentStatus) {
+            row.style.display = 'none';
         }
     }
 
     // --- Export Functionality ---
     document.querySelectorAll('#exportDropdown .dropdown-item').forEach(item => {
         item.addEventListener('click', function(event) {
-            event.preventDefault(); // Prevent default link behavior
+            event.preventDefault();
             const exportType = this.dataset.exportType;
-            // Get current filter parameters from the URL
-            const currentParams = getUrlParams();
-
-            // Construct URL for export (this will be handled by Django backend)
-            const exportUrl = `/export_expenses/?tab=${currentParams.tab}&status=${currentParams.status}&q=${currentParams.query}&format=${exportType}`;
-            window.location.href = exportUrl; // Trigger download
+            const currentSearch = window.location.search;
+            const exportUrl = `/export_expenses/${currentSearch}&format=${exportType}`;
+            window.location.href = exportUrl;
         });
     });
 
@@ -1175,22 +1326,6 @@ if (rejectModal) {
             showMessageBox('Rejection Reason', fullReason, 'warning');
         }
     });
-
-    // Initialize dashboard state based on URL parameters on page load
-    initializeDashboardState();
-
-    // Attach event listener for Bootstrap tab 'shown.bs.tab' event
-    // This ensures that when a tab becomes active, client-side filters are re-applied to its content
-    document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tabElement => {
-        tabElement.addEventListener('shown.bs.tab', event => {
-            const newTabId = event.target.dataset.tab;
-            const currentParams = getUrlParams();
-            // Re-apply filters to the newly shown tab's content
-            // Note: status and query parameters are preserved across tabs
-            filterTableRows(currentParams.query, currentParams.status);
-        });
-    });
 });
-
 </script>
 {% endblock %}

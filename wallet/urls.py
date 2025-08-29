@@ -36,6 +36,7 @@ urlpatterns = [
     path('settings/expense-category/add/', views.add_expense_category, name='add_expense_category'),
     path('settings/operation-category/add/', views.add_operation_category, name='add_operation_category'),
     path('settings/event-category/add/', views.add_event_category, name='add_event_category'),
+    path('settings/activation-category/add/', views.add_activation_category, name='add_activation_category'),  # New
     path('settings/category/edit/', views.edit_category, name='edit_category'),
     path('settings/category/delete/', views.delete_category, name='delete_category'),
 

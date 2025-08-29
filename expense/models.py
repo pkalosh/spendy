@@ -29,6 +29,10 @@ class OperationCategory(CategoryBase):
     class Meta:
         verbose_name_plural = "Operation Categories"
         ordering = ['name']
+class ActivationCategory(CategoryBase):
+    class Meta:
+        verbose_name_plural = "Activation Categories"
+        ordering = ['name']
 
 class ExpenseCategory(CategoryBase):
     class Meta:
@@ -50,6 +54,7 @@ class Event(models.Model):
     start_date = models.DateField()
     end_date = models.DateField()
     budget = models.DecimalField(max_digits=10, decimal_places=2,blank=True, null=True)
+    budget_file = models.FileField(upload_to='budget', blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     project_lead = models.CharField(max_length=255)
     location = models.CharField(max_length=255)
@@ -71,6 +76,7 @@ class Operation(models.Model):
     client = models.ForeignKey('wallet.Client', on_delete=models.SET_NULL, null=True, blank=True)
     company = models.ForeignKey('wallet.CompanyKYC', on_delete=models.SET_NULL, null=True, blank=True)
     budget = models.DecimalField(max_digits=10, decimal_places=2,blank=True, null=True)
+    budget_file = models.FileField(upload_to='budget', blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='operations',blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -84,6 +90,30 @@ class Operation(models.Model):
     def __str__(self):
         return f"{self.name} ({self.category.name})"
 
+class Activation(models.Model):
+    id = models.UUIDField(primary_key=True, unique=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=255)
+    category = models.ForeignKey(ActivationCategory, on_delete=models.CASCADE, related_name='activations')
+    client = models.ForeignKey('wallet.Client', on_delete=models.SET_NULL, null=True, blank=True)
+    company = models.ForeignKey('wallet.CompanyKYC', on_delete=models.SET_NULL, null=True, blank=True)
+    budget = models.DecimalField(max_digits=10, decimal_places=2,blank=True, null=True)
+    budget_file = models.FileField(upload_to='budget', blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='activation',blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    project_lead = models.CharField(max_length=255, blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    approved = models.BooleanField(default=False)
+    paid = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='updated_activations',blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.category.name})"
+
+
+
+
 class Expense(models.Model):
     id = models.UUIDField(primary_key=True, unique=True, default=uuid.uuid4, editable=False)
     wallet = models.ForeignKey('wallet.Wallet', on_delete=models.CASCADE, related_name='expenses',null=True, blank=True)
@@ -92,6 +122,7 @@ class Expense(models.Model):
     expense_category = models.ForeignKey(ExpenseCategory, on_delete=models.CASCADE, related_name='expenses', null=True, blank=True)
     event = models.ForeignKey(Event, on_delete=models.CASCADE, null=True, blank=True, related_name='expenses')
     operation = models.ForeignKey(Operation, on_delete=models.CASCADE, null=True, blank=True, related_name='expenses')
+    activation = models.ForeignKey(Activation, on_delete=models.CASCADE, null=True, blank=True, related_name='expenses')
     company = models.ForeignKey('wallet.CompanyKYC', on_delete=models.SET_NULL, null=True, blank=True)
     description = models.TextField(blank=True, null=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='expenses')
@@ -104,7 +135,7 @@ class Expense(models.Model):
     decline_reason = models.TextField( null=True, blank=True)
     declined_at = models.DateTimeField(null=True, blank=True)
     approved_at = models.DateTimeField(null=True, blank=True)  # optional
-
+    batch_disbursement_type = models.BooleanField(default=False)  
     @property
     def related_item(self):
         if not self.request_type:
@@ -122,3 +153,18 @@ class Expense(models.Model):
     def save(self, *args, **kwargs):
         self.clean()
         super().save(*args, **kwargs)
+
+class BatchPayments(models.Model):
+    expense = models.ForeignKey(Expense, on_delete=models.CASCADE)
+    file = models.FileField(upload_to='batch_payments/')
+    company = models.ForeignKey('wallet.CompanyKYC', on_delete=models.CASCADE)  
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='updated_batch_payments', null=True, blank=True)
+
+    def __str__(self):
+        return f"Batch Payment for {self.expense}"
+
+    class Meta:
+        verbose_name_plural = "Batch Payments"

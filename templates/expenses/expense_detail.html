@@ -17,7 +17,7 @@
                     <div class="card shadow-sm">
                         <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
                             <span>Item Details</span>
-                            {% if item_type == 'event' or item_type == 'operation' %}
+                            {% if item_type == 'event' or item_type == 'operation' or item_type == 'activation' %}
                                 <div class="dropdown">
                                     <button class="btn btn-sm btn-outline-light" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                         <i class="fas fa-ellipsis-v"></i>
@@ -25,7 +25,7 @@
                                     <ul class="dropdown-menu dropdown-menu-end">
                                         <li>
                                             <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editItemModal">
-                                                <i class="fas fa-edit me-2"></i>Edit {% if item_type == 'event' %}Event{% else %}Operation{% endif %}
+                                                <i class="fas fa-edit me-2"></i>Edit {% if item_type == 'event' %}Event{% elif item_type == 'operation' %}Operation{% else %}Activation{% endif %}
                                             </a>
                                         </li>
                                     </ul>
@@ -48,7 +48,7 @@
                                     </div>
                                     <div class="col-12 border-bottom">
                                         <small class="text-muted d-block">Budget</small>
-                                        <div>{{ item.budget|intcomma }}</div>
+                                        <div>{{ item.budget|intcomma }} {% if item.budget_file %}<a href="{{ item.budget_file.url }}" target="_blank" class="btn btn-sm btn-primary">Download Budget File</a>{% endif %}</div>
                                     </div>
                                     <div class="col-12 border-bottom">
                                         <small class="text-muted d-block">Start Date</small>
@@ -76,7 +76,32 @@
                                     </div>
                                     <div class="col-12 border-bottom">
                                         <small class="text-muted d-block">Budget</small>
-                                        <div>{{ item.budget|intcomma }}</div>
+                                        <div>{{ item.budget|intcomma }} {% if item.budget_file %}<a href="{{ item.budget_file.url }}" target="_blank" class="btn btn-sm btn-primary">Download Budget File</a>{% endif %}</div>
+                                    </div>
+                                    <div class="col-12">
+                                        <small class="text-muted d-block">Created On</small>
+                                        <div>{{ item.created_at }}</div>
+                                    </div>
+                                {% elif item_type == 'activation' %}
+                                    <div class="col-12 border-bottom">
+                                        <h5>{{ item.name }}</h5>
+                                    </div>
+                                    <div class="col-12 border-bottom">
+                                        <small class="text-muted d-block">Category</small>
+                                        <div>{{ item.category }}</div>
+                                    </div>
+                                    <div class="col-12 border-bottom">
+                                        <small class="text-muted d-block">Client</small>
+                                        <div>{{ item.client }}</div>
+                                    </div>
+                                    <div class="col-12 border-bottom">
+                                        <small class="text-muted d-block">Budget</small>
+                                        <div>{{ item.budget|intcomma }}{% if item.budget_file %}<a href="{{ item.budget_file.url }}" target="_blank" class="btn btn-sm btn-primary">Download Budget File</a>{% endif %}
+</div>
+                                    </div>
+                                    <div class="col-12 border-bottom">
+                                        <small class="text-muted d-block">Project Lead</small>
+                                        <div>{{ item.project_lead }}</div>
                                     </div>
                                     <div class="col-12">
                                         <small class="text-muted d-block">Created On</small>
@@ -88,6 +113,7 @@
                                         <div>
                                             {% if expense.event %}{{ expense.event.name }}
                                             {% elif expense.operation %}{{ expense.operation.name }}
+                                            {% elif expense.activation %}{{ expense.activation.name }}
                                             {% endif %}
                                         </div>
                                     </div>
@@ -131,7 +157,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {% if item_type == 'event' or item_type == 'operation' %}
+                                        {% if item_type == 'event' or item_type == 'operation' or item_type == 'activation' %}
                                             <tr>
                                                 <td>Pending</td>
                                                 <td>{{ expense_summary.pending|intcomma }}</td>
@@ -167,7 +193,7 @@
                 <div class="col-md-4">
                     <div class="card shadow-sm">
                         <div class="card-header bg-secondary text-white">
-                            {% if item_type == 'event' or item_type == 'operation' %}
+                            {% if item_type == 'event' or item_type == 'operation' or item_type == 'activation' %}
                                 Total Approved Expenses
                             {% else %}
                                 Expense Requests
@@ -183,7 +209,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {% if item_type == 'event' or item_type == 'operation' %}
+                                        {% if item_type == 'event' or item_type == 'operation' or item_type == 'activation' %}
                                             {% if expense_categories %}
                                                 {% for category in expense_categories %}
                                                     <tr>
@@ -212,7 +238,7 @@
                                         {% endif %}
                                     </tbody>
                                     <tfoot class="table-dark">
-                                        {% if item_type == 'event' or item_type == 'operation' %}
+                                        {% if item_type == 'event' or item_type == 'operation' or item_type == 'activation' %}
                                             {% if expense_categories %}
                                                 <tr>
                                                     <th>GRAND TOTAL</th>
@@ -240,7 +266,7 @@
                 <div class="col-12">
                     <div class="accordion" id="expenseAccordion">
                         <!-- Expense List Accordion Item -->
-                        {% if item_type == 'event' or item_type == 'operation' %}
+                        {% if item_type == 'event' or item_type == 'operation' or item_type == 'activation' %}
                             <div class="accordion-item">
                                 <h2 class="accordion-header">
                                     <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#expenseList" aria-expanded="true" aria-controls="expenseList">
@@ -251,7 +277,7 @@
                                     <div class="accordion-body">
                                         <div class="card shadow-sm">
                                             <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
-                                                <span>{% if item_type == 'event' %}Event{% else %}Operation{% endif %} Requests</span>
+                                                <span>{% if item_type == 'event' %}Event{% elif item_type == 'operation' %}Operation{% else %}Activation{% endif %} Requests</span>
                                                 <button class="btn btn-outline-light" type="button" data-bs-toggle="collapse" data-bs-target="#expenseFilterSection" aria-expanded="false" aria-controls="expenseFilterSection">
                                                     <i class="fas fa-filter"></i> Filters
                                                 </button>
@@ -422,7 +448,7 @@
                                     <div class="accordion-body">
                                         <div class="card shadow-sm">
                                             <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
-                                                <span>{% if item_type == 'event' %}Event{% elif item_type == 'operation' %}Operation{% endif %} Payments</span>
+                                                <span>{% if item_type == 'event' %}Event{% elif item_type == 'operation' %}Operation{% else %}Activation{% endif %} Payments</span>
                                                 <button class="btn btn-outline-light" type="button" data-bs-toggle="collapse" data-bs-target="#transactionFilterSection" aria-expanded="false" aria-controls="transactionFilterSection">
                                                     <i class="fas fa-filter"></i> Filters
                                                 </button>
@@ -459,7 +485,6 @@
                                                                     <input type="date" name="txn_date_from" id="txn_date_from" class="form-control" value="{{ request.GET.txn_date_from }}">
                                                                 </div>
                                                                 <div class="col-md-2">
-burgo
                                                                     <label for="txn_date_to" class="form-label">To Date</label>
                                                                     <input type="date" name="txn_date_to" id="txn_date_to" class="form-control" value="{{ request.GET.txn_date_to }}">
                                                                 </div>
@@ -719,13 +744,13 @@ burgo
 {% endfor %}
 
 <!-- Edit Item Modal -->
-{% if item_type == 'event' or item_type == 'operation' %}
+{% if item_type == 'event' or item_type == 'operation' or item_type == 'activation' %}
     <div class="modal fade" id="editItemModal" tabindex="-1" aria-labelledby="editItemModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="editItemModalLabel">
-                        Edit {% if item_type == 'event' %}Event{% else %}Operation{% endif %} Details
+                        Edit {% if item_type == 'event' %}Event{% elif item_type == 'operation' %}Operation{% else %}Activation{% endif %} Details
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -737,9 +762,13 @@ burgo
                                 <div class="col-md-12 mb-3">
                                     {{ event_form.as_p }}
                                 </div>
-                            {% else %}
+                            {% elif item_type == 'operation' %}
                                 <div class="col-md-12 mb-3">
                                     {{ operation_form.as_p }}
+                                </div>
+                            {% elif item_type == 'activation' %}
+                                <div class="col-md-12 mb-3">
+                                    {{ activation_form.as_p }}
                                 </div>
                             {% endif %}
                         </div>
@@ -754,9 +783,6 @@ burgo
     </div>
 {% endif %}
 
-{% endblock %}
-
-{% block extra_js %}
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script>
     $(document).ready(function() {
@@ -767,9 +793,7 @@ burgo
         });
     });
 </script>
-{% endblock %}
 
-{% block extra_css %}
 <style>
     .table-borderless td {
         border-bottom: 1px solid #e9ecef;
@@ -813,4 +837,5 @@ burgo
         color: white;
     }
 </style>
+
 {% endblock %}

@@ -8,7 +8,6 @@
             <div class="row">
                 <div class="col-12">
                     <!-- Request Management Section -->
-                     
                     <div class="requests-area">
                         <div class="d-flex justify-content-between align-items-center mb-4 pt-3 flex-wrap mt-3">
                             <h4 class="text-2xl font-bold">Expense Requests</h4>
@@ -16,7 +15,6 @@
                                 New Request
                             </button>
                         </div>
-
 
                         <!-- Type Selection Tabs -->
                         <ul class="nav nav-tabs mb-4" id="expenseTypeTabs" role="tablist">
@@ -28,6 +26,9 @@
                             </li>
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link" id="operations-tab" data-bs-toggle="tab" data-bs-target="#operations-expenses" type="button" role="tab" aria-controls="operations-expenses" aria-selected="false">Operations</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="activations-tab" data-bs-toggle="tab" data-bs-target="#activations-expenses" type="button" role="tab" aria-controls="activations-expenses" aria-selected="false">Activations</button>
                             </li>
                         </ul>
 
@@ -54,14 +55,14 @@
                         <div class="tab-content" id="expenseTabContent">
                             <!-- All Expenses Tab -->
                             <div class="tab-pane fade show active" id="all-expenses" role="tabpanel" aria-labelledby="all-tab">
-                                <!-- All Requests Table -->
                                 <div class="table-responsive">
                                     <table class="table table-bordered table-hover" id="allRequestsTable">
                                         <thead class="bg-light">
                                             <tr>
                                                 <th>Status</th>
                                                 <th>Expense Type</th>
-                                                <th>Expense category</th>
+                                                <th>Expense Category</th>
+                                                <th>Batch</th>
                                                 <th>Description</th>
                                                 <th>Amount</th>
                                                 <th>Date</th>
@@ -70,51 +71,45 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <!-- Pending Expenses -->
                                             {% for expense in pending_expenses %}
                                             <tr class="request-row pending-request">
                                                 <td><span class="badge bg-warning">Pending</span></td>
                                                 <td>{{ expense.request_type }}</td>
-                                                <td>{{expense.expense_category}}</td>
+                                                <td>{{ expense.expense_category }}</td>
+                                                <td>{{ expense.batch_disbursement_type|yesno:"Yes,No" }}</td>
                                                 <td>{{ expense.description }}</td>
                                                 <td>{{ expense.amount|intcomma }}</td>
                                                 <td>{{ expense.created_at|date:"M d, Y" }}</td>
                                                 <td>{{ expense.created_by.get_full_name }}</td>
                                                 <td>-</td>
-                                               
                                             </tr>
                                             {% endfor %}
-
-                                            <!-- Approved Expenses -->
                                             {% for expense in approved_expenses %}
                                             <tr class="request-row approved-request">
                                                 <td><span class="badge bg-success">Approved</span></td>
                                                 <td>{{ expense.request_type }}</td>
-                                                <td>{{expense.expense_category}}</td>
+                                                <td>{{ expense.expense_category }}</td>
+                                                <td>{{ expense.batch_disbursement_type|yesno:"Yes,No" }}</td>
                                                 <td>{{ expense.description }}</td>
                                                 <td>{{ expense.amount|intcomma }}</td>
                                                 <td>{{ expense.updated_at|date:"M d, Y" }}</td>
                                                 <td>{{ expense.created_by.get_full_name }}</td>
-                                                <td>{{ expense.approved_by.get_full_name }}</td>
-                                               
+                                                <td>{{ expense.approved_by.get_full_name|default:"-" }}</td>
                                             </tr>
                                             {% endfor %}
-
-                                            <!-- Declined Expenses -->
                                             {% for expense in declined_expenses %}
                                             <tr class="request-row declined-request">
                                                 <td><span class="badge bg-danger">Declined</span></td>
                                                 <td>{{ expense.request_type }}</td>
-                                                <td>{{expense.expense_category}}</td>
+                                                <td>{{ expense.expense_category }}</td>
+                                                <td>{{ expense.batch_disbursement_type|yesno:"Yes,No" }}</td>
                                                 <td>{{ expense.description }}</td>
                                                 <td>{{ expense.amount|intcomma }}</td>
                                                 <td>{{ expense.updated_at|date:"M d, Y" }}</td>
                                                 <td>{{ expense.created_by.get_full_name }}</td>
-                                                <td>{{ expense.approved_by.get_full_name }}</td>
-                                                
+                                                <td>{{ expense.approved_by.get_full_name|default:"-" }}</td>
                                             </tr>
                                             {% endfor %}
-
                                             {% if not pending_expenses and not approved_expenses and not declined_expenses %}
                                             <tr>
                                                 <td colspan="9" class="text-center">No requests found.</td>
@@ -127,7 +122,6 @@
 
                             <!-- Events Tab -->
                             <div class="tab-pane fade" id="events-expenses" role="tabpanel" aria-labelledby="events-tab">
-                                <!-- Events Requests Table -->
                                 <div class="table-responsive">
                                     <table class="table table-bordered table-hover" id="eventsRequestsTable">
                                         <thead class="bg-light">
@@ -135,6 +129,7 @@
                                                 <th>Status</th>
                                                 <th>Event Name</th>
                                                 <th>Expense Category</th>
+                                                <th>Batch</th>
                                                 <th>Description</th>
                                                 <th>Amount</th>
                                                 <th>Date</th>
@@ -143,62 +138,54 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <!-- Pending Event Expenses -->
                                             {% for expense in pending_expenses %}
                                             {% if expense.event %}
                                             <tr class="request-row pending-request">
                                                 <td><span class="badge bg-warning">Pending</span></td>
                                                 <td>{{ expense.event.name }}</td>
                                                 <td>{{ expense.expense_category }}</td>
+                                                <td>{{ expense.batch_disbursement_type|yesno:"Yes,No" }}</td>
                                                 <td>{{ expense.description }}</td>
                                                 <td>{{ expense.amount|intcomma }}</td>
                                                 <td>{{ expense.created_at|date:"M d, Y" }}</td>
                                                 <td>{{ expense.created_by.get_full_name }}</td>
                                                 <td>-</td>
-                                               
                                             </tr>
                                             {% endif %}
                                             {% endfor %}
-
-                                            <!-- Approved Event Expenses -->
                                             {% for expense in approved_expenses %}
                                             {% if expense.event %}
                                             <tr class="request-row approved-request">
                                                 <td><span class="badge bg-success">Approved</span></td>
                                                 <td>{{ expense.event.name }}</td>
                                                 <td>{{ expense.expense_category }}</td>
-
+                                                <td>{{ expense.batch_disbursement_type|yesno:"Yes,No" }}</td>
                                                 <td>{{ expense.description }}</td>
                                                 <td>{{ expense.amount|intcomma }}</td>
                                                 <td>{{ expense.updated_at|date:"M d, Y" }}</td>
                                                 <td>{{ expense.created_by.get_full_name }}</td>
-                                                <td>{{ expense.approved_by.get_full_name }}</td>
-                                                
+                                                <td>{{ expense.approved_by.get_full_name|default:"-" }}</td>
                                             </tr>
                                             {% endif %}
                                             {% endfor %}
-
-                                            <!-- Declined Event Expenses -->
                                             {% for expense in declined_expenses %}
                                             {% if expense.event %}
                                             <tr class="request-row declined-request">
                                                 <td><span class="badge bg-danger">Declined</span></td>
                                                 <td>{{ expense.event.name }}</td>
                                                 <td>{{ expense.expense_category }}</td>
-
+                                                <td>{{ expense.batch_disbursement_type|yesno:"Yes,No" }}</td>
                                                 <td>{{ expense.description }}</td>
                                                 <td>{{ expense.amount|intcomma }}</td>
                                                 <td>{{ expense.updated_at|date:"M d, Y" }}</td>
                                                 <td>{{ expense.created_by.get_full_name }}</td>
-                                                <td>{{ expense.approved_by.get_full_name }}</td>
-                                                
+                                                <td>{{ expense.approved_by.get_full_name|default:"-" }}</td>
                                             </tr>
                                             {% endif %}
                                             {% endfor %}
-
                                             {% if not has_event_expenses %}
                                             <tr>
-                                                <td colspan="8" class="text-center">No event requests found.</td>
+                                                <td colspan="9" class="text-center">No event requests found.</td>
                                             </tr>
                                             {% endif %}
                                         </tbody>
@@ -208,7 +195,6 @@
 
                             <!-- Operations Tab -->
                             <div class="tab-pane fade" id="operations-expenses" role="tabpanel" aria-labelledby="operations-tab">
-                                <!-- Operations Requests Table -->
                                 <div class="table-responsive">
                                     <table class="table table-bordered table-hover" id="operationsRequestsTable">
                                         <thead class="bg-light">
@@ -216,6 +202,7 @@
                                                 <th>Status</th>
                                                 <th>Operation</th>
                                                 <th>Expense Category</th>
+                                                <th>Batch</th>
                                                 <th>Description</th>
                                                 <th>Amount</th>
                                                 <th>Date</th>
@@ -224,62 +211,127 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <!-- Pending Operation Expenses -->
                                             {% for expense in pending_expenses %}
                                             {% if expense.operation %}
                                             <tr class="request-row pending-request">
                                                 <td><span class="badge bg-warning">Pending</span></td>
                                                 <td>{{ expense.operation.name }}</td>
                                                 <td>{{ expense.expense_category }}</td>
+                                                <td>{{ expense.batch_disbursement_type|yesno:"Yes,No" }}</td>
                                                 <td>{{ expense.description }}</td>
                                                 <td>{{ expense.amount|intcomma }}</td>
                                                 <td>{{ expense.created_at|date:"M d, Y" }}</td>
                                                 <td>{{ expense.created_by.get_full_name }}</td>
                                                 <td>-</td>
-                                               
                                             </tr>
                                             {% endif %}
                                             {% endfor %}
-
-                                            <!-- Approved Operation Expenses -->
                                             {% for expense in approved_expenses %}
                                             {% if expense.operation %}
                                             <tr class="request-row approved-request">
                                                 <td><span class="badge bg-success">Approved</span></td>
                                                 <td>{{ expense.operation.name }}</td>
                                                 <td>{{ expense.expense_category }}</td>
-
+                                                <td>{{ expense.batch_disbursement_type|yesno:"Yes,No" }}</td>
                                                 <td>{{ expense.description }}</td>
                                                 <td>{{ expense.amount|intcomma }}</td>
                                                 <td>{{ expense.updated_at|date:"M d, Y" }}</td>
                                                 <td>{{ expense.created_by.get_full_name }}</td>
-                                                <td>{{ expense.approved_by.get_full_name }}</td>
-                                               
+                                                <td>{{ expense.approved_by.get_full_name|default:"-" }}</td>
                                             </tr>
                                             {% endif %}
                                             {% endfor %}
-
-                                            <!-- Declined Operation Expenses -->
                                             {% for expense in declined_expenses %}
                                             {% if expense.operation %}
                                             <tr class="request-row declined-request">
                                                 <td><span class="badge bg-danger">Declined</span></td>
                                                 <td>{{ expense.operation.name }}</td>
                                                 <td>{{ expense.expense_category }}</td>
-
+                                                <td>{{ expense.batch_disbursement_type|yesno:"Yes,No" }}</td>
                                                 <td>{{ expense.description }}</td>
                                                 <td>{{ expense.amount|intcomma }}</td>
                                                 <td>{{ expense.updated_at|date:"M d, Y" }}</td>
                                                 <td>{{ expense.created_by.get_full_name }}</td>
-                                                <td>{{ expense.approved_by.get_full_name }}</td>
-                                               
+                                                <td>{{ expense.approved_by.get_full_name|default:"-" }}</td>
                                             </tr>
                                             {% endif %}
                                             {% endfor %}
-
                                             {% if not has_operation_expenses %}
                                             <tr>
-                                                <td colspan="8" class="text-center">No operation requests found.</td>
+                                                <td colspan="9" class="text-center">No operation requests found.</td>
+                                            </tr>
+                                            {% endif %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Activations Tab -->
+                            <div class="tab-pane fade" id="activations-expenses" role="tabpanel" aria-labelledby="activations-tab">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-hover" id="activationsRequestsTable">
+                                        <thead class="bg-light">
+                                            <tr>
+                                                <th>Status</th>
+                                                <th>Activation</th>
+                                                <th>Expense Category</th>
+                                                <th>Batch</th>
+                                                <th>Description</th>
+                                                <th>Amount</th>
+                                                <th>Date</th>
+                                                <th>Requested By</th>
+                                                <th>Reviewed By</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for expense in pending_expenses %}
+                                            {% if expense.activation %}
+                                            <tr class="request-row pending-request">
+                                                <td><span class="badge bg-warning">Pending</span></td>
+                                                <td>{{ expense.activation.name }}</td>
+                                                <td>{{ expense.expense_category }}</td>
+                                                <td>{{ expense.batch_disbursement_type|yesno:"Yes,No" }}</td>
+                                                <td>{{ expense.description }}</td>
+                                                <td>{{ expense.amount|intcomma }}</td>
+                                                <td>{{ expense.created_at|date:"M d, Y" }}</td>
+                                                <td>{{ expense.created_by.get_full_name }}</td>
+                                                <td>-</td>
+                                            </tr>
+                                            {% endif %}
+                                            {% endfor %}
+                                            {% for expense in approved_expenses %}
+                                            {% if expense.activation %}
+                                            <tr class="request-row approved-request">
+                                                <td><span class="badge bg-success">Approved</span></td>
+                                                <td>{{ expense.activation.name }}</td>
+                                                <td>{{ expense.expense_category }}</td>
+                                                <td>{{ expense.batch_disbursement_type|yesno:"Yes,No" }}</td>
+                                                <td>{{ expense.description }}</td>
+                                                <td>{{ expense.amount|intcomma }}</td>
+                                                <td>{{ expense.updated_at|date:"M d, Y" }}</td>
+                                                <td>{{ expense.created_by.get_full_name }}</td>
+                                                <td>{{ expense.approved_by.get_full_name|default:"-" }}</td>
+                                            </tr>
+                                            {% endif %}
+                                            {% endfor %}
+                                            {% for expense in declined_expenses %}
+                                            {% if expense.activation %}
+                                            <tr class="request-row declined-request">
+                                                <td><span class="badge bg-danger">Declined</span></td>
+                                                <td>{{ expense.activation.name }}</td>
+                                                <td>{{ expense.expense_category }}</td>
+                                                <td>{{ expense.batch_disbursement_type|yesno:"Yes,No" }}</td>
+                                                <td>{{ expense.description }}</td>
+                                                <td>{{ expense.amount|intcomma }}</td>
+                                                <td>{{ expense.updated_at|date:"M d, Y" }}</td>
+                                                <td>{{ expense.created_by.get_full_name }}</td>
+                                                <td>{{ expense.approved_by.get_full_name|default:"-" }}</td>
+                                            </tr>
+                                            {% endif %}
+                                            {% endfor %}
+                                            {% if not has_activation_expenses %}
+                                            <tr>
+                                                <td colspan="9" class="text-center">No activation requests found.</td>
                                             </tr>
                                             {% endif %}
                                         </tbody>
@@ -294,7 +346,6 @@
                                 <!-- All Expenses Mobile Tab -->
                                 <div class="tab-pane fade show active" id="all-expenses-mobile" role="tabpanel" aria-labelledby="all-tab">
                                     <div class="request-cards">
-                                        <!-- Pending Expenses -->
                                         {% for expense in pending_expenses %}
                                         <div class="card mb-3 request-card pending-request">
                                             <div class="card-header d-flex justify-content-between align-items-center">
@@ -304,7 +355,8 @@
                                             <div class="card-body">
                                                 <h6 class="card-subtitle mb-2">{{ expense.request_type }}</h6>
                                                 <p class="card-text">
-                                                    <strong>For:</strong> {% if expense.event %}{{expense.event.name}}{% else %}{{expense.operation.name}}{% endif %}<br>
+                                                    <strong>For:</strong> {% if expense.event %}{{ expense.event.name }}{% elif expense.operation %}{{ expense.operation.name }}{% elif expense.activation %}{{ expense.activation.name }}{% else %}General{% endif %}<br>
+                                                    <strong>Batch:</strong> {{ expense.batch_disbursement_type|yesno:"Yes,No" }}<br>
                                                     <strong>Amount:</strong> {{ expense.amount|intcomma }}<br>
                                                     <strong>Description:</strong> {{ expense.description|truncatechars:80 }}<br>
                                                     <strong>By:</strong> {{ expense.created_by.get_full_name }}
@@ -319,16 +371,13 @@
                                             </div>
                                         </div>
                                         {% endfor %}
-
-                                        <!-- Other expense cards for all requests -->
-                                        <!-- ... (similar pattern for approved and declined) ... -->
+                                        <!-- Approved and Declined expenses follow similar pattern -->
                                     </div>
                                 </div>
 
                                 <!-- Events Mobile Tab -->
                                 <div class="tab-pane fade" id="events-expenses-mobile" role="tabpanel" aria-labelledby="events-tab">
                                     <div class="request-cards">
-                                        <!-- Event expenses only -->
                                         {% for expense in pending_expenses %}
                                         {% if expense.event %}
                                         <div class="card mb-3 request-card pending-request">
@@ -339,6 +388,7 @@
                                             <div class="card-body">
                                                 <h6 class="card-subtitle mb-2">Event: {{ expense.event.name }}</h6>
                                                 <p class="card-text">
+                                                    <strong>Batch:</strong> {{ expense.batch_disbursement_type|yesno:"Yes,No" }}<br>
                                                     <strong>Amount:</strong> {{ expense.amount|intcomma }}<br>
                                                     <strong>Description:</strong> {{ expense.description|truncatechars:80 }}<br>
                                                     <strong>By:</strong> {{ expense.created_by.get_full_name }}
@@ -354,15 +404,13 @@
                                         </div>
                                         {% endif %}
                                         {% endfor %}
-
-                                        <!-- Similar pattern for approved and declined event expenses -->
+                                        <!-- Approved and Declined event expenses follow similar pattern -->
                                     </div>
                                 </div>
 
                                 <!-- Operations Mobile Tab -->
                                 <div class="tab-pane fade" id="operations-expenses-mobile" role="tabpanel" aria-labelledby="operations-tab">
                                     <div class="request-cards">
-                                        <!-- Operation expenses only -->
                                         {% for expense in pending_expenses %}
                                         {% if expense.operation %}
                                         <div class="card mb-3 request-card pending-request">
@@ -373,6 +421,7 @@
                                             <div class="card-body">
                                                 <h6 class="card-subtitle mb-2">Operation: {{ expense.operation.name }}</h6>
                                                 <p class="card-text">
+                                                    <strong>Batch:</strong> {{ expense.batch_disbursement_type|yesno:"Yes,No" }}<br>
                                                     <strong>Amount:</strong> {{ expense.amount|intcomma }}<br>
                                                     <strong>Description:</strong> {{ expense.description|truncatechars:80 }}<br>
                                                     <strong>By:</strong> {{ expense.created_by.get_full_name }}
@@ -388,140 +437,183 @@
                                         </div>
                                         {% endif %}
                                         {% endfor %}
+                                        <!-- Approved and Declined operation expenses follow similar pattern -->
+                                    </div>
+                                </div>
 
-                                        <!-- Similar pattern for approved and declined operation expenses -->
+                                <!-- Activations Mobile Tab -->
+                                <div class="tab-pane fade" id="activations-expenses-mobile" role="tabpanel" aria-labelledby="activations-tab">
+                                    <div class="request-cards">
+                                        {% for expense in pending_expenses %}
+                                        {% if expense.activation %}
+                                        <div class="card mb-3 request-card pending-request">
+                                            <div class="card-header d-flex justify-content-between align-items-center">
+                                                <span class="badge bg-warning">Pending</span>
+                                                <small>{{ expense.created_at|date:"M d, Y" }}</small>
+                                            </div>
+                                            <div class="card-body">
+                                                <h6 class="card-subtitle mb-2">Activation: {{ expense.activation.name }}</h6>
+                                                <p class="card-text">
+                                                    <strong>Batch:</strong> {{ expense.batch_disbursement_type|yesno:"Yes,No" }}<br>
+                                                    <strong>Amount:</strong> {{ expense.amount|intcomma }}<br>
+                                                    <strong>Description:</strong> {{ expense.description|truncatechars:80 }}<br>
+                                                    <strong>By:</strong> {{ expense.created_by.get_full_name }}
+                                                </p>
+                                                <div class="d-flex gap-2">
+                                                    <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#viewRequestModal{{ expense.id }}">View</button>
+                                                    {% if is_admin %}
+                                                    <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#approveModal{{ expense.id }}">Approve</button>
+                                                    <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#declineModal{{ expense.id }}">Decline</button>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                        {% endfor %}
+                                        <!-- Approved and Declined activation expenses follow similar pattern -->
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div> <!-- End col-12 -->
-            </div> <!-- End row -->
-        </div> <!-- End container-fluid -->
-    </div> <!-- End overlay -->
+                </div>
+            </div>
+        </div>
+    </div>
 </section>
-<!-- Submit Expense Modal (New Request) -->
+
+<!-- Submit Expense Modal -->
 <div class="modal fade" id="submitExpenseModal" tabindex="-1" aria-labelledby="submitExpenseModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header bg-light">
-          <h5 class="modal-title" id="submitExpenseModalLabel">New Expense Request</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <form id="expense-form" method="post" action="{% url 'expense:submit_expense' %}" class="bg-white p-4 shadow rounded">
-            {% csrf_token %}
-            <input type="hidden" id="form_type" name="form_type">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title" id="submitExpenseModalLabel">New Expense Request</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="expense-form" method="post" action="{% url 'expense:submit_expense' %}" enctype="multipart/form-data" class="bg-white p-4 shadow rounded">
+                    {% csrf_token %}
+                    <input type="hidden" id="form_type" name="form_type">
 
-            <!-- Always visible request type dropdown -->
-         <div class="mb-3">
-            <label for="id_request_type" class="form-label fw-bold required">Request Type</label>
-            <select name="request_type" id="id_request_type" class="form-select" onchange="toggleExpenseFields()" required>
-                <option value="">---------</option>
-                {% for request_type in request_types %}
-                <option value="{{ request_type.id }}">{{ request_type.name }}</option>
-                {% endfor %}
-            </select>
-            <div class="invalid-feedback">Please select a request type.</div>
+                    <!-- Request Type Dropdown -->
+                    <div class="mb-3">
+                        <label for="id_request_type" class="form-label fw-bold required">Request Type</label>
+                        {{ expense_form.request_type }}
+                        <div class="invalid-feedback">Please select a request type.</div>
+                    </div>
+
+                    <!-- Event Field -->
+                    <div class="mb-3 expense-section hidden" id="event-field">
+                        <label for="id_event" class="form-label fw-bold required">Event</label>
+                        {{ expense_form.event }}
+                        <div class="invalid-feedback">Please select an event.</div>
+                    </div>
+
+                    <!-- Operation Field -->
+                    <div class="mb-3 expense-section hidden" id="operation-field">
+                        <label for="id_operation" class="form-label fw-bold required">Operation</label>
+                        {{ expense_form.operation }}
+                        <div class="invalid-feedback">Please select an operation.</div>
+                    </div>
+
+                    <!-- Activation Field -->
+                    <div class="mb-3 expense-section hidden" id="activation-field">
+                        <label for="id_activation" class="form-label fw-bold required">Activation</label>
+                        {{ expense_form.activation }}
+                        <div class="invalid-feedback">Please select an activation.</div>
+                    </div>
+
+                    <!-- Batch Disbursement Type Checkbox -->
+                    <div class="mb-3">
+                        <label for="id_batch_disbursement_type" class="form-label fw-bold">Batch Disbursement</label>
+                        <div class="form-check">
+                            {{ expense_form.batch_disbursement_type }}
+                            <label class="form-check-label" for="id_batch_disbursement_type">Check if payment involves multiple recipients</label>
+                            <div class="invalid-feedback">Please check the box if this is a batch disbursement.</div>
+                        </div>
+                    </div>
+
+                    <!-- Batch Disbursement Fields (hidden by default) -->
+                    <div class="mb-3 batch-section hidden" id="batch-fields">
+                        <label class="form-label fw-bold">Batch Disbursement Details</label>
+                        <div class="mb-2">
+                            <a href="{% url 'expense:download_batch_template' %}" class="btn btn-outline-primary btn-sm">Download CSV Template</a>
+                            <small class="form-text text-muted">Download the template to fill in recipient details (name, amount, mobile number).</small>
+                        </div>
+                        <div class="mb-2">
+                            <label for="batch_file" class="form-label fw-bold">Upload Batch File</label>
+                            {{ expense_form.batch_file }}
+                            <div class="invalid-feedback">Please upload a valid CSV file.</div>
+                        </div>
+                    </div>
+
+                    <!-- Expense Category Field -->
+                    <div class="mb-3">
+                        <label for="id_expense_category" class="form-label fw-bold required">Expense Category</label>
+                        {{ expense_form.expense_category }}
+                        <div class="invalid-feedback">Please select an expense category.</div>
+                    </div>
+
+                    <!-- Wallet Field -->
+                    <div class="mb-3 hidden">
+                        {{ expense_form.wallet }}
+                    </div>
+
+                    <!-- Common Fields -->
+                    <div id="common-fields">
+                        <div class="mb-3">
+                            <label for="id_amount" class="form-label fw-bold required">Amount</label>
+                            <div class="input-group">
+                                <span class="input-group-text">KES</span>
+                                {{ expense_form.amount }}
+                                <div class="invalid-feedback">Please enter a valid amount greater than 0.</div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_description" class="form-label fw-bold required">Description</label>
+                            {{ expense_form.description }}
+                            <div class="invalid-feedback">Please provide a description.</div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn btn-primary w-100 mt-3" id="expenseSubmitBtn">Submit Request</button>
+                </form>
+            </div>
         </div>
-            
-            <!-- Event field - hidden initially -->
-            <div class="mb-3 expense-section hidden" id="event-field">
-                <label for="id_event" class="form-label fw-bold required">Event</label>
-                <select name="event" id="id_event" class="form-select event-field">
-                    <option value="">---------</option>
-                    {% for event in events %}
-                    <option value="{{ event.id }}">{{ event }}</option>
-                    {% endfor %}
-                </select>
-                <div class="invalid-feedback">Please select an event.</div>
-            </div>
-            
-            <!-- Operation field - hidden initially -->
-            <div class="mb-3 expense-section hidden" id="operation-field">
-                <label for="id_operation" class="form-label fw-bold required">Operation</label>
-                <select name="operation" id="id_operation" class="form-select operation-field">
-                    <option value="">---------</option>
-                    {% for op in operations %}
-                    <option value="{{ op.id }}">{{ op }}</option>
-                    {% endfor %}
-                </select>
-                <div class="invalid-feedback">Please select an operation.</div>
-            </div>
-            
-          
-            
-            <!-- Expense category field -->
-            <div class="mb-3">
-                <label for="id_expense_category" class="form-label fw-bold required">Expense Category</label>
-                <select name="expense_category" id="id_expense_category" class="form-select" required>
-                    <option value="">---------</option>
-                    {% for category in expense_categories %}
-                    <option value="{{ category.id }}">{{ category }}</option>
-                    {% endfor %}
-                </select>
-                <div class="invalid-feedback">Please select an expense category.</div>
-            </div>
-            
-            <!-- Common fields -->
-            <div id="common-fields">
-              <!-- Amount field -->
-              <div class="mb-3">
-                <label for="id_amount" class="form-label fw-bold required">Amount</label>
-                <div class="input-group">
-                  <span class="input-group-text">KES</span>
-                  <input type="number" name="amount" id="id_amount" class="form-control" step="0.01" min="0" placeholder="Enter amount" required>
-                  <div class="invalid-feedback">
-                    Please enter a valid amount greater than 0.
-                  </div>
-                </div>
-              </div>
-              
-              <!-- Description field -->
-              <div class="mb-3">
-                <label for="id_description" class="form-label fw-bold required">Description</label>
-                <textarea name="description" id="id_description" class="form-control" rows="3" placeholder="Enter description" required></textarea>
-                <div class="invalid-feedback">
-                  Please provide a description.
-                </div>
-              </div>
-            </div>
-            
-            <!-- Submit button -->
-            <button type="submit" class="btn btn-primary w-100 mt-3" id="expenseSubmitBtn">Submit Request</button>
-          </form>
-        </div>
-      </div>
     </div>
 </div>
 
-<!-- View Request Modal Template -->
-<!-- Note: In a real implementation, this would be dynamically generated for each expense -->
-<div class="modal fade" id="viewRequestModal" tabindex="-1" aria-labelledby="viewRequestModalLabel" aria-hidden="true">
+<!-- View Request Modal -->
+{% for expense in pending_expenses %}
+<div class="modal fade" id="viewRequestModal{{ expense.id }}" tabindex="-1" aria-labelledby="viewRequestModalLabel{{ expense.id }}" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="viewRequestModalLabel">Request Details</h5>
+                <h5 class="modal-title" id="viewRequestModalLabel{{ expense.id }}">Request Details</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="card">
                     <div class="card-body">
-                        <h6 class="card-subtitle mb-3 text-muted">Request ID: <span id="requestId">123456</span></h6>
-                        <p><strong>Status:</strong> <span id="requestStatus" class="badge bg-warning">Pending</span></p>
-                        <p><strong>Request Type:</strong> <span id="requestType">Event</span></p>
-                        <p><strong>For:</strong> <span id="requestFor">Annual Conference 2025</span></p>
-                        <p><strong>Category:</strong> <span id="requestCategory">Travel</span></p>
-                        <p><strong>Amount:</strong> <span id="requestAmount">KES 25,000</span></p>
-                        <p><strong>Description:</strong> <span id="requestDescription">Travel expenses for speakers</span></p>
-                        <p><strong>Submitted By:</strong> <span id="requestSubmitter">John Doe</span></p>
-                        <p><strong>Submitted On:</strong> <span id="requestDate">May 15, 2025</span></p>
+                        <h6 class="card-subtitle mb-3 text-muted">Request ID: {{ expense.id }}</h6>
+                        <p><strong>Status:</strong> <span class="badge {% if expense.approved %}bg-success{% elif expense.declined %}bg-danger{% else %}bg-warning{% endif %}">{{ expense.status }}</span></p>
+                        <p><strong>Request Type:</strong> {{ expense.request_type }}</p>
+                        <p><strong>For:</strong> {% if expense.event %}{{ expense.event.name }}{% elif expense.operation %}{{ expense.operation.name }}{% elif expense.activation %}{{ expense.activation.name }}{% else %}General{% endif %}</p>
+                        <p><strong>Batch:</strong> {{ expense.batch_disbursement_type|yesno:"Yes,No" }}</p>
+                        <p><strong>Category:</strong> {{ expense.expense_category }}</p>
+                        <p><strong>Amount:</strong> KES {{ expense.amount|intcomma }}</p>
+                        <p><strong>Description:</strong> {{ expense.description }}</p>
+                        <p><strong>Submitted By:</strong> {{ expense.created_by.get_full_name }}</p>
+                        <p><strong>Submitted On:</strong> {{ expense.created_at|date:"M d, Y" }}</p>
+                        {% if expense.approved_by %}
                         <div id="reviewSection">
                             <hr>
-                            <p><strong>Reviewed By:</strong> <span id="reviewedBy">Jane Smith</span></p>
-                            <p><strong>Reviewed On:</strong> <span id="reviewDate">May 16, 2025</span></p>
-                            <p><strong>Comments:</strong> <span id="reviewComments">Approved as per budget allocation</span></p>
+                            <p><strong>Reviewed By:</strong> {{ expense.approved_by.get_full_name|default:"-" }}</p>
+                            <p><strong>Reviewed On:</strong> {{ expense.updated_at|date:"M d, Y" }}</p>
+                            <p><strong>Comments:</strong> {{ expense.review_comments|default:"None" }}</p>
                         </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -531,156 +623,323 @@
         </div>
     </div>
 </div>
-<!-- JavaScript for all functionality -->
+{% endfor %}
+
+<!-- JavaScript -->
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Add a variable to track if we have expenses of each type
-        let hasEventExpenses = false;
-        let hasOperationExpenses = false;
-        
-        // Check for event expenses
-        document.querySelectorAll('#eventsRequestsTable tbody tr').forEach(function(row) {
-            if (!row.querySelector('td[colspan]')) {
-                hasEventExpenses = true;
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, initializing expense modal');
+    
+    // Check for expenses (your existing code)
+    let hasEventExpenses = false;
+    let hasOperationExpenses = false;
+    let hasActivationExpenses = false;
+    
+    document.querySelectorAll('#eventsRequestsTable tbody tr').forEach(function(row) {
+        if (!row.querySelector('td[colspan]')) {
+            hasEventExpenses = true;
+        }
+    });
+    document.querySelectorAll('#operationsRequestsTable tbody tr').forEach(function(row) {
+        if (!row.querySelector('td[colspan]')) {
+            hasOperationExpenses = true;
+        }
+    });
+    document.querySelectorAll('#activationsRequestsTable tbody tr').forEach(function(row) {
+        if (!row.querySelector('td[colspan]')) {
+            hasActivationExpenses = true;
+        }
+    });
+    
+    if (!hasEventExpenses) {
+        document.querySelector('#eventsRequestsTable tbody').innerHTML = '<tr><td colspan="9" class="text-center">No event requests found.</td></tr>';
+    }
+    if (!hasOperationExpenses) {
+        document.querySelector('#operationsRequestsTable tbody').innerHTML = '<tr><td colspan="9" class="text-center">No operation requests found.</td></tr>';
+    }
+    if (!hasActivationExpenses) {
+        document.querySelector('#activationsRequestsTable tbody').innerHTML = '<tr><td colspan="9" class="text-center">No activation requests found.</td></tr>';
+    }
+    
+    // Sync desktop and mobile tabs
+    document.querySelectorAll('#expenseTypeTabs .nav-link').forEach(function(tab) {
+        tab.addEventListener('click', function() {
+            const target = this.getAttribute('data-bs-target');
+            const mobileTarget = target + '-mobile';
+            const mobileTab = document.querySelector(mobileTarget);
+            if (mobileTab) {
+                document.querySelectorAll('#expenseMobileTabContent .tab-pane').forEach(function(pane) {
+                    pane.classList.remove('show', 'active');
+                });
+                mobileTab.classList.add('show', 'active');
             }
         });
-        
-        // Check for operation expenses
-        document.querySelectorAll('#operationsRequestsTable tbody tr').forEach(function(row) {
-            if (!row.querySelector('td[colspan]')) {
-                hasOperationExpenses = true;
-            }
-        });
-        
-        // Set variables for template to use
-        if (!hasEventExpenses) {
-            document.querySelector('#eventsRequestsTable tbody').innerHTML = '<tr><td colspan="8" class="text-center">No event requests found.</td></tr>';
-        }
-        
-        if (!hasOperationExpenses) {
-            document.querySelector('#operationsRequestsTable tbody').innerHTML = '<tr><td colspan="8" class="text-center">No operation requests found.</td></tr>';
-        }
-        
-        // Sync desktop and mobile tabs
-        document.querySelectorAll('#expenseTypeTabs .nav-link').forEach(function(tab) {
-            tab.addEventListener('click', function() {
-                const target = this.getAttribute('data-bs-target');
-                const mobileTarget = target + '-mobile';
-                
-                // Show the corresponding mobile tab
-                const mobileTab = document.querySelector(mobileTarget);
-                if (mobileTab) {
-                    const mobileTabPanes = document.querySelectorAll('#expenseMobileTabContent .tab-pane');
-                    mobileTabPanes.forEach(function(pane) {
-                        pane.classList.remove('show', 'active');
-                    });
-                    mobileTab.classList.add('show', 'active');
-                }
-            });
-        });
-        
-        // Filter functionality
-        const filterButtons = document.querySelectorAll('[data-filter]');
-        const searchInput = document.getElementById('requestSearch');
-        const requestRows = document.querySelectorAll('.request-row');
-        const requestCards = document.querySelectorAll('.request-card');
-        
-        // Filter click handler
-        filterButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                // Update active button
-                filterButtons.forEach(btn => btn.classList.remove('active'));
-                this.classList.add('active');
-                const filter = this.getAttribute('data-filter');
-                
-                // Filter table rows
-                requestRows.forEach(row => {
-                    if (filter === 'all' || row.classList.contains(filter + '-request')) {
-                        row.style.display = '';
-                    } else {
-                        row.style.display = 'none';
-                    }
-                });
-                
-                // Filter mobile cards
-                requestCards.forEach(card => {
-                    if (filter === 'all' || card.classList.contains(filter + '-request')) {
-                        card.style.display = '';
-                    } else {
-                        card.style.display = 'none';
-                    }
-                });
-            });
-        });
-        
-        // Search functionality
-        searchInput.addEventListener('input', function() {
-            const searchTerm = this.value.toLowerCase();
-            
-            // Search in table rows
+    });
+    
+    // Filter functionality
+    const filterButtons = document.querySelectorAll('[data-filter]');
+    const searchInput = document.getElementById('requestSearch');
+    const requestRows = document.querySelectorAll('.request-row');
+    const requestCards = document.querySelectorAll('.request-card');
+    
+    filterButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            const filter = this.getAttribute('data-filter');
             requestRows.forEach(row => {
-                const rowText = row.textContent.toLowerCase();
-                if (rowText.includes(searchTerm)) {
+                if (filter === 'all' || row.classList.contains(filter + '-request')) {
                     row.style.display = '';
                 } else {
                     row.style.display = 'none';
                 }
             });
-            
-            // Search in mobile cards
             requestCards.forEach(card => {
-                const cardText = card.textContent.toLowerCase();
-                if (cardText.includes(searchTerm)) {
+                if (filter === 'all' || card.classList.contains(filter + '-request')) {
                     card.style.display = '';
                 } else {
                     card.style.display = 'none';
                 }
             });
         });
-        
-        // Form validation
-        const expenseForm = document.getElementById('expense-form');
-        if (expenseForm) {
-            expenseForm.addEventListener('submit', function(event) {
-                if (!this.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-                this.classList.add('was-validated');
-            });
-        }
     });
     
-    // Toggle expense form fields based on selection
-    window.toggleExpenseFields = function() {
-        const requestTypeSelect = document.getElementById('id_request_type');
-        const requestTypeText = requestTypeSelect.options[requestTypeSelect.selectedIndex].text.toLowerCase();
-        const eventField = document.getElementById('event-field');
-        const operationField = document.getElementById('operation-field');
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        requestRows.forEach(row => {
+            const rowText = row.textContent.toLowerCase();
+            row.style.display = rowText.includes(searchTerm) ? '' : 'none';
+        });
+        requestCards.forEach(card => {
+            const cardText = card.textContent.toLowerCase();
+            card.style.display = cardText.includes(searchTerm) ? '' : 'none';
+        });
+    });
 
-        // Hide all sections first
+    // Modal initialization - MOVED HERE for better timing
+    const submitExpenseModal = document.getElementById('submitExpenseModal');
+    if (submitExpenseModal) {
+        // Initialize when modal is shown
+        submitExpenseModal.addEventListener('shown.bs.modal', function() {
+            console.log('Modal shown, initializing fields');
+            
+            // Wait a bit for Nice Select to initialize if present
+            setTimeout(() => {
+                initializeExpenseFields();
+                attachExpenseFieldListeners();
+                toggleBatchFields();
+            }, 100);
+        });
+        
+        // Reset form when modal is hidden
+        submitExpenseModal.addEventListener('hidden.bs.modal', function() {
+            const form = document.getElementById('expense-form');
+            if (form) {
+                form.reset();
+                form.classList.remove('was-validated');
+                initializeExpenseFields();
+            }
+        });
+    }
+    
+    // Form validation
+    const expenseForm = document.getElementById('expense-form');
+    const batchCheckbox = document.getElementById('id_batch_disbursement_type');
+    const batchFile = document.getElementById('batch_file');
+    
+    if (expenseForm && batchCheckbox && batchFile) {
+        expenseForm.addEventListener('submit', function(event) {
+            if (batchCheckbox.checked && !batchFile.value) {
+                batchFile.classList.add('is-invalid');
+                event.preventDefault();
+                event.stopPropagation();
+            } else {
+                batchFile.classList.remove('is-invalid');
+                batchFile.removeAttribute('required');
+            }
+
+            if (!this.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            this.classList.add('was-validated');
+        });
+    }
+});
+
+// Initialize expense fields to hidden state
+function initializeExpenseFields() {
+    const eventField = document.getElementById('event-field');
+    const operationField = document.getElementById('operation-field');
+    const activationField = document.getElementById('activation-field');
+
+    if (eventField && operationField && activationField) {
         eventField.classList.add('hidden');
         operationField.classList.add('hidden');
+        activationField.classList.add('hidden');
+        
+        // Remove required attributes
+        document.querySelectorAll('#id_event, #id_operation, #id_activation').forEach(field => {
+            if (field) field.removeAttribute('required');
+        });
+        console.log('All expense fields initialized to hidden');
+    } else {
+        console.warn('Expense fields not found during initialization');
+    }
+}
 
-        // Clear required attributes
-        document.querySelectorAll('.event-field, .operation-field').forEach(field => {
-            field.removeAttribute('required');
+// Attach event listeners for expense fields - SEPARATE FUNCTION
+function attachExpenseFieldListeners() {
+    const requestTypeSelect = document.getElementById('id_request_type');
+    const batchCheckbox = document.getElementById('id_batch_disbursement_type');
+    
+    console.log('Attaching listeners to:', {
+        requestTypeSelect: !!requestTypeSelect,
+        batchCheckbox: !!batchCheckbox
+    });
+
+    if (requestTypeSelect) {
+        // Remove any existing listeners first
+        const newSelect = requestTypeSelect.cloneNode(true);
+        requestTypeSelect.parentNode.replaceChild(newSelect, requestTypeSelect);
+        
+        // Add fresh event listener
+        newSelect.addEventListener('change', function() {
+            console.log('Request type changed to:', this.value, 'Text:', this.options[this.selectedIndex]?.text);
+            toggleExpenseFields();
         });
 
-        // Show relevant section based on selection
-        if (requestTypeText.includes('event')) { // Adjust based on your ExpenseRequestType names
-            eventField.classList.remove('hidden');
-            document.getElementById('id_event').setAttribute('required', 'required');
-        } else if (requestTypeText.includes('operation')) {
-            operationField.classList.remove('hidden');
-            document.getElementById('id_operation').setAttribute('required', 'required');
+        // Handle Nice Select if present
+        const modalElement = document.getElementById('submitExpenseModal');
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'childList') {
+                    const niceSelect = modalElement.querySelector('.nice-select');
+                    if (niceSelect && !niceSelect.hasAttribute('data-listener-attached')) {
+                        niceSelect.setAttribute('data-listener-attached', 'true');
+                        console.log('Nice Select detected, attaching click listener');
+                        
+                        niceSelect.addEventListener('click', function(e) {
+                            const option = e.target.closest('.option');
+                            if (option) {
+                                console.log('Nice Select option clicked:', option.textContent);
+                                // Wait for Nice Select to update the hidden select
+                                setTimeout(() => {
+                                    const hiddenSelect = modalElement.querySelector('select[name="request_type"]');
+                                    if (hiddenSelect) {
+                                        console.log('Hidden select value after Nice Select update:', hiddenSelect.value);
+                                        toggleExpenseFields();
+                                    }
+                                }, 50);
+                            }
+                        });
+                    }
+                }
+            });
+        });
+        
+        observer.observe(modalElement, { childList: true, subtree: true });
+    }
+
+    if (batchCheckbox) {
+        batchCheckbox.addEventListener('change', function() {
+            console.log('Batch checkbox changed to:', this.checked);
+            toggleBatchFields();
+        });
+    }
+}
+
+// Toggle expense form fields - IMPROVED VERSION
+function toggleExpenseFields() {
+    const requestTypeSelect = document.getElementById('id_request_type') || 
+                              document.querySelector('select[name="request_type"]'); // Fallback selector
+    const eventField = document.getElementById('event-field');
+    const operationField = document.getElementById('operation-field');
+    const activationField = document.getElementById('activation-field');
+
+    if (!requestTypeSelect) {
+        console.error('Request type select not found');
+        return;
+    }
+
+    if (!eventField || !operationField || !activationField) {
+        console.warn('Form fields not found during toggle:', {
+            eventField: !!eventField,
+            operationField: !!operationField,
+            activationField: !!activationField
+        });
+        return;
+    }
+
+    const selectedValue = requestTypeSelect.value;
+    const selectedText = requestTypeSelect.options[requestTypeSelect.selectedIndex]?.text?.toLowerCase().trim() || '';
+    
+    console.log('Toggling fields - Value:', selectedValue, 'Text:', selectedText);
+
+    // Hide all fields and remove required attributes first
+    [eventField, operationField, activationField].forEach(field => {
+        field.classList.add('hidden');
+    });
+    
+    document.querySelectorAll('#id_event, #id_operation, #id_activation').forEach(field => {
+        if (field) field.removeAttribute('required');
+    });
+
+    // Show relevant field based on request type
+    if (selectedText.includes('event') || selectedValue.includes('event')) {
+        eventField.classList.remove('hidden');
+        const eventSelect = document.getElementById('id_event');
+        if (eventSelect) eventSelect.setAttribute('required', 'required');
+        console.log('✓ Event field shown');
+    } else if (selectedText.includes('operation') || selectedValue.includes('operation')) {
+        operationField.classList.remove('hidden');
+        const operationSelect = document.getElementById('id_operation');
+        if (operationSelect) operationSelect.setAttribute('required', 'required');
+        console.log('✓ Operation field shown');
+    } else if (selectedText.includes('activation') || selectedValue.includes('activation')) {
+        activationField.classList.remove('hidden');
+        const activationSelect = document.getElementById('id_activation');
+        if (activationSelect) activationSelect.setAttribute('required', 'required');
+        console.log('✓ Activation field shown');
+    } else {
+        console.log('ℹ No specific field shown for:', selectedText);
+    }
+}
+
+// Toggle batch disbursement fields
+function toggleBatchFields() {
+    const batchCheckbox = document.getElementById('id_batch_disbursement_type');
+    const batchFields = document.getElementById('batch-fields');
+    const batchFile = document.getElementById('batch_file') || document.getElementById('id_batch_file');
+
+    if (!batchCheckbox || !batchFields) {
+        console.warn('Batch elements not found:', {
+            batchCheckbox: !!batchCheckbox,
+            batchFields: !!batchFields,
+            batchFile: !!batchFile
+        });
+        return;
+    }
+
+    if (batchCheckbox.checked) {
+        batchFields.classList.remove('hidden');
+        if (batchFile) batchFile.setAttribute('required', 'required');
+        console.log('✓ Batch fields shown');
+    } else {
+        batchFields.classList.add('hidden');
+        if (batchFile) {
+            batchFile.removeAttribute('required');
+            batchFile.value = '';
+            batchFile.classList.remove('is-invalid');
         }
-    };
+        console.log('✓ Batch fields hidden');
+    }
+}
 </script>
 
-
 <style>
-
+    .hidden {
+        display: none !important;
+    }
 </style>
-
 {% endblock %}

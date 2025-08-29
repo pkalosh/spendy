@@ -7,10 +7,10 @@ from django.views.decorators.http import require_POST
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from wallet.forms import KYCForm, StaffProfileForm, UserForm,RoleForm,WalletForm
-from expense.forms import ExpenseRequestForm ,ExpenseApprovalForm,EventExpenseForm,OperationExpenseForm
+from expense.forms import ExpenseRequestForm ,ExpenseApprovalForm,EventExpenseForm,OperationExpenseForm,ActivationExpenseForm
 from django.contrib import messages
 from wallet.models import Wallet, Notification, Transaction,CompanyKYC, StaffProfile,Role,MpesaTransaction,MpesaCallbackLog
-from expense.models import ExpenseCategory, OperationCategory, EventCategory,Expense,ExpenseRequestType
+from expense.models import ExpenseCategory, OperationCategory, EventCategory,Expense,ExpenseRequestType, Activation, ActivationCategory
 from userauths.models import User
 from django.core.paginator import Paginator
 from django.contrib.auth.hashers import make_password
@@ -49,17 +49,34 @@ def settings_view(request):
     """View for system settings page"""
     company = get_object_or_404(CompanyKYC, user=request.user)
     
-    # Fetch clients and their related brands for the current company
+    # Fetch clients and their related brands, plus all categories for the current company
     clients = Client.objects.filter(company=company, is_active=True).prefetch_related('brands').order_by('name')
 
     context = {
         'expense_categories': ExpenseCategory.objects.filter(company=company, is_active=True).order_by('name'),
         'operation_categories': OperationCategory.objects.filter(company=company, is_active=True).order_by('name'),
         'event_categories': EventCategory.objects.filter(company=company, is_active=True).order_by('name'),
-        'clients': clients, # Add clients to the context
+        'activation_categories': ActivationCategory.objects.filter(company=company, is_active=True).order_by('name'),  # New
+        'clients': clients,
     }
     return render(request, 'settings.html', context)
 
+@login_required
+def add_activation_category(request):
+    """Add a new activation category"""
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        if name:
+            company = get_object_or_404(CompanyKYC, user=request.user)
+            ActivationCategory.objects.create(
+                name=name,
+                company=company,
+                created_by=request.user
+            )
+            messages.success(request, 'Activation category added successfully')
+        else:
+            messages.error(request, 'Category name is required')
+    return redirect('wallet:settings_view')
 
 # --- Client Views ---
 @login_required
@@ -213,17 +230,11 @@ def add_event_category(request):
 
 @login_required
 def edit_category(request):
-    """Edit a category (expense, operation, or event)"""
+    """Edit a category (expense, operation, event, or activation)"""
     if request.method == 'POST':
         category_id = request.POST.get('category_id')
-        # Get category_type from POST data first, then fall back to GET
         category_type = request.POST.get('category_type') or request.GET.get('type')
         name = request.POST.get('name')
-        
-        # Debug logging (remove in production)
-        print(f"Edit Category - ID: {category_id}, Type: {category_type}, Name: {name}")
-        print(f"POST data: {request.POST}")
-        print(f"GET data: {request.GET}")
         
         if not all([category_id, category_type, name]):
             messages.error(request, 'Missing required information')
@@ -236,17 +247,18 @@ def edit_category(request):
                 category = OperationCategory.objects.get(id=category_id)
             elif category_type == 'event':
                 category = EventCategory.objects.get(id=category_id)
+            elif category_type == 'activation':
+                category = ActivationCategory.objects.get(id=category_id)
             else:
                 messages.error(request, 'Invalid category type')
                 return redirect('wallet:settings_view')
             
-            # Update the category name
             category.name = name.strip()
             category.save()
             
             messages.success(request, f'{category_type.title()} category updated successfully')
             
-        except (ExpenseCategory.DoesNotExist, OperationCategory.DoesNotExist, EventCategory.DoesNotExist):
+        except (ExpenseCategory.DoesNotExist, OperationCategory.DoesNotExist, EventCategory.DoesNotExist, ActivationCategory.DoesNotExist):
             messages.error(request, 'Category not found')
         except Exception as e:
             messages.error(request, f'Error updating category: {str(e)}')
@@ -255,10 +267,9 @@ def edit_category(request):
 
 @login_required
 def delete_category(request):
-    """Delete a category (expense, operation, or event)"""
+    """Delete a category (expense, operation, event, or activation)"""
     if request.method == 'POST':
         category_id = request.POST.get('category_id')
-        # Get category_type from POST data first, then fall back to GET
         category_type = request.POST.get('category_type') or request.GET.get('type')
         
         if not all([category_id, category_type]):
@@ -268,92 +279,102 @@ def delete_category(request):
         try:
             if category_type == 'expense':
                 category = ExpenseCategory.objects.get(id=category_id)
-                
-                # Check for related Expense records
                 related_expenses = Expense.objects.filter(expense_category=category)
                 paid_expenses_count = related_expenses.filter(paid=True).count()
                 unpaid_expenses_count = related_expenses.filter(paid=False).count()
                 
                 if related_expenses.exists():
                     if paid_expenses_count > 0:
-                        # If there are paid expenses, deactivate the category instead of deleting
                         category.is_active = False
                         category.save()
                         messages.warning(request, 
                             f'Expense category "{category.name}" has {paid_expenses_count} paid expense(s). '
                             f'Category has been deactivated instead of deleted.')
                     else:
-                        # If all expenses are unpaid, we can delete the category and related expenses
                         related_expenses.delete()
                         category.delete()
                         messages.success(request, 
                             f'Expense category "{category.name}" and {unpaid_expenses_count} '
                             f'unpaid expense(s) deleted successfully')
                 else:
-                    # No related expenses, safe to delete
                     category.delete()
                     messages.success(request, f'Expense category "{category.name}" deleted successfully')
                     
             elif category_type == 'operation':
                 category = OperationCategory.objects.get(id=category_id)
-                
-                # Check for related Operation records
                 related_operations = Operation.objects.filter(category=category)
                 paid_operations_count = related_operations.filter(paid=True).count()
                 unpaid_operations_count = related_operations.filter(paid=False).count()
                 
                 if related_operations.exists():
                     if paid_operations_count > 0:
-                        # If there are paid operations, deactivate the category instead of deleting
                         category.is_active = False
                         category.save()
                         messages.warning(request, 
                             f'Operation category "{category.name}" has {paid_operations_count} paid operation(s). '
                             f'Category has been deactivated instead of deleted.')
                     else:
-                        # If all operations are unpaid, we can delete the category and related operations
                         related_operations.delete()
                         category.delete()
                         messages.success(request, 
                             f'Operation category "{category.name}" and {unpaid_operations_count} '
                             f'unpaid operation(s) deleted successfully')
                 else:
-                    # No related operations, safe to delete
                     category.delete()
                     messages.success(request, f'Operation category "{category.name}" deleted successfully')
                     
             elif category_type == 'event':
                 category = EventCategory.objects.get(id=category_id)
-                
-                # Check for related Event records
                 related_events = Event.objects.filter(category=category)
                 paid_events_count = related_events.filter(paid=True).count()
                 unpaid_events_count = related_events.filter(paid=False).count()
                 
                 if related_events.exists():
                     if paid_events_count > 0:
-                        # If there are paid events, deactivate the category instead of deleting
                         category.is_active = False
                         category.save()
                         messages.warning(request, 
                             f'Event category "{category.name}" has {paid_events_count} paid event(s). '
                             f'Category has been deactivated instead of deleted.')
                     else:
-                        # If all events are unpaid, we can delete the category and related events
                         related_events.delete()
                         category.delete()
                         messages.success(request, 
                             f'Event category "{category.name}" and {unpaid_events_count} '
                             f'unpaid event(s) deleted successfully')
                 else:
-                    # No related events, safe to delete
                     category.delete()
                     messages.success(request, f'Event category "{category.name}" deleted successfully')
+                    
+            elif category_type == 'activation':
+                category = ActivationCategory.objects.get(id=category_id)
+                # Assuming Activation model exists and has a similar structure
+                related_activations = Activation.objects.filter(category=category)
+                paid_activations_count = related_activations.filter(paid=True).count()
+                unpaid_activations_count = related_activations.filter(paid=False).count()
+                
+                if related_activations.exists():
+                    if paid_activations_count > 0:
+                        category.is_active = False
+                        category.save()
+                        messages.warning(request, 
+                            f'Activation category "{category.name}" has {paid_activations_count} paid activation(s). '
+                            f'Category has been deactivated instead of deleted.')
+                    else:
+                        related_activations.delete()
+                        category.delete()
+                        messages.success(request, 
+                            f'Activation category "{category.name}" and {unpaid_activations_count} '
+                            f'unpaid activation(s) deleted successfully')
+                else:
+                    category.delete()
+                    messages.success(request, f'Activation category "{category.name}" deleted successfully')
+                    
             else:
                 messages.error(request, 'Invalid category type')
                 return redirect('wallet:settings_view')
                 
-        except (ExpenseCategory.DoesNotExist, OperationCategory.DoesNotExist, EventCategory.DoesNotExist):
+        except (ExpenseCategory.DoesNotExist, OperationCategory.DoesNotExist, EventCategory.DoesNotExist, ActivationCategory.DoesNotExist):
             messages.error(request, 'Category not found')
         except Exception as e:
             messages.error(request, f'Error deleting category: {str(e)}')
@@ -682,6 +703,7 @@ def create_wallet(request):
             balance=balance,
             user=request.user,
             wallet_type=wallet_type,
+            currency='KES',
             company=request.user.companykyc
         )
         wallet.save()
@@ -1594,15 +1616,20 @@ def expenses(request):
     user = request.user
     company = get_object_or_404(CompanyKYC, user=user)
     events = Event.objects.filter(company=company, is_active=True)
+    activations = Activation.objects.filter(company=company, is_active=True)
     operations = Operation.objects.filter(company=company, is_active=True)
     event_form = EventExpenseForm()
+    activation_form = ActivationExpenseForm()
+
     operation_form = OperationExpenseForm()
-    all_items =  list(events) + list(operations)
+    all_items =  list(events) + list(operations) + list(activations)
     context = {
         'all_items': all_items ,
         'event_form': event_form,
         'operation_form': operation_form,
+        'activation_form': activation_form,
         'event_categories': EventCategory.objects.filter(company=company,is_active=True),
+        'activation_categories': ActivationCategory.objects.filter(company=company,is_active=True),
         'operation_categories': OperationCategory.objects.filter(company=company,is_active=True),
         'clients': Client.objects.filter(company=company,is_active=True),
     }
@@ -1853,62 +1880,62 @@ def staff_dashboard(request):
 @login_required
 def expense_requests(request):
     """
-    Staff requests view showing pending and declined expenses, events, and operations.
-    Focuses on request-related features.
-    Requires authentication and proper staff profile.
+    Staff requests view showing pending, declined, and approved expenses, events, operations, and activations.
     """
     context = {}
     user = request.user
     try:
-        # Get staff profile
-        company = StaffProfile.objects.get(user=request.user)
+        company = StaffProfile.objects.get(user=request.user).company
         
-        # Get expense information
-        expenses = Expense.objects.filter(company=company.company, created_by=request.user).order_by('-created_at')
+        expenses = Expense.objects.filter(company=company, created_by=request.user).order_by('-created_at')
         pending_expenses = expenses.filter(approved=False, declined=False)
         declined_expenses = expenses.filter(declined=True)
         approved_expenses = expenses.filter(approved=True, paid=False)
         
-        # Set up expense request form
-        expense_form = ExpenseRequestForm(company=company.company)
+        # Always use a fresh form for GET requests
+        expense_form = ExpenseRequestForm(company=company)
         
-        # Add to context
+        # Debug querysets
+        print("Event queryset:", list(expense_form.fields['event'].queryset.values('name')))
+        print("Operation queryset:", list(expense_form.fields['operation'].queryset.values('name')))
+        print("Activation queryset:", list(expense_form.fields['activation'].queryset.values('name')))
+        print("Request type queryset:", list(expense_form.fields['request_type'].queryset.values('name')))
+        
         context["pending_expenses"] = pending_expenses
         context["declined_expenses"] = declined_expenses
         context["expense_form"] = expense_form
         context["approved_expenses"] = approved_expenses
+        context['request_types'] = ExpenseRequestType.objects.filter(company=company, is_active=True)
+        context['expense_categories'] = ExpenseCategory.objects.filter(company=company)
         
-        # Get request types and categories
-        context['request_types'] = ExpenseRequestType.objects.filter(Q(company=company.company))
-        context['expense_categories'] = ExpenseCategory.objects.filter(Q(company=company.company))
-        
-        # Get events information
         context["events"] = Event.objects.filter(
-            company=company.company,
+            company=company,
             approved=False,
             paid=False
         ).order_by("-created_at")
-        context['event_categories'] = EventCategory.objects.filter(Q(company=company.company))
+        context['event_categories'] = EventCategory.objects.filter(company=company)
         
-        # Get operations information
         context["operations"] = Operation.objects.filter(
-            company=company.company,
+            company=company,
             approved=False,
             paid=False
         )
-        context['operation_categories'] = OperationCategory.objects.filter(Q(company=company.company))
+        context['operation_categories'] = OperationCategory.objects.filter(company=company)
+        
+        context["activations"] = Activation.objects.filter(
+            company=company,
+            approved=False,
+            paid=False
+        ).order_by("-created_at")
+        context['activation_categories'] = ActivationCategory.objects.filter(company=company)
         
         return render(request, "users/staff/request.html", context)
     
     except StaffProfile.DoesNotExist as e:
-        # Log the error
         print(f"Staff profile error: {e}")
-        # Add error message to be displayed on the page
         messages.error(request, "Staff profile not found. Please contact administrator.")
-        # Return to a simple error template or the login page
         return render(request, "error_template.html", {"error": "Staff profile not found"}, status=404)
-
-
+    
 def get_pending_approved_expense_sum(user):
     """
     Returns the sum of all approved but unpaid expenses created by the user

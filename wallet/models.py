@@ -72,6 +72,7 @@ class Wallet(models.Model):
         ('PRIMARY', 'PRIMARY'),
         ('EVENT', 'EVENT'),
         ('OPERATIONS', 'OPERATIONS'),
+        ('ACTIVATION', 'ACTIVATION'),
         ('EMERGENCY', 'EMERGENCY'),
 
     ]

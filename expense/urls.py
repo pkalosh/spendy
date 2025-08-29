@@ -14,12 +14,13 @@ urlpatterns = [
     path('edit-item/<str:id>/<str:item_type>/', views.edit_item, name='edit_item'),
     # For events
     path('expense/<str:id>/event/', views.expense_detail, {'item_type': 'event'}, name='event_expense_detail'),
-    
+    path('expense/<str:id>/activation/', views.expense_detail, {'item_type': 'activation'}, name='activation_expense_detail'),  
     # For operations
     path('expense/<str:id>/operation/', views.expense_detail, {'item_type': 'operation'}, name='operation_expense_detail'),
     path('approvals/', views.expense_approvals, name='expense_approvals'),
     path('expense/<uuid:expense_id>/approve/', views.approve_expenses, name='approve_expense'),
     path('expense/<uuid:expense_id>/decline/', views.decline_expense, name='decline_expense'),
+    path('expense/<uuid:expense_id>/undo/', views.undo_expense_action, name='undo_expense'),
     
     path('expense/<str:expense_id>/approve/', views.approve_expense, name='approve_expense'),
     path('payment/make/', views.make_payment, name='make_payment'),
@@ -30,4 +31,5 @@ urlpatterns = [
 
     path('reports/', views.reports, name='reports'),
     path('analytics/data/', views.analytics_data, name='analytics_data'),
+    path('download-batch-template/', views.download_batch_template, name='download_batch_template'),
 ]

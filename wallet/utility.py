@@ -100,12 +100,12 @@ class NotificationService:
     def expense_created(user, expense_amount, expense_description="", send_sms=False):
         """Notify when a new expense is created"""
         title = "New Expense Created"
-        message = f"You have created a new expense of ${expense_amount:.2f}"
+        message = f"You have created a new expense of KES {expense_amount:.2f}"
         if expense_description:
             message += f" for {expense_description}"
         
         # SMS version (shorter)
-        sms_message = f"Expense created: ${expense_amount:.2f}"
+        sms_message = f"Expense created: KES {expense_amount:.2f}"
         if expense_description:
             sms_message += f" - {expense_description[:30]}..."
         
@@ -118,11 +118,11 @@ class NotificationService:
     def expense_approved(user, expense_amount, approver_name="", send_sms=True):
         """Notify when expense is approved - SMS enabled by default"""
         title = "Expense Approved"
-        message = f"Your expense of ${expense_amount:.2f} has been approved"
+        message = f"Your expense of KES {expense_amount:.2f} has been approved"
         if approver_name:
             message += f" by {approver_name}"
         
-        sms_message = f"✅ Expense approved: ${expense_amount:.2f}"
+        sms_message = f"✅ Expense approved: KES {expense_amount:.2f}"
         if approver_name:
             sms_message += f" by {approver_name}"
         
@@ -135,13 +135,13 @@ class NotificationService:
     def expense_declined(user, expense_amount, reason="", declined_by="", send_sms=True):
         """Notify when expense is declined - SMS enabled by default"""
         title = "Expense Declined"
-        message = f"Your expense of ${expense_amount:.2f} has been declined"
+        message = f"Your expense of KES {expense_amount:.2f} has been declined"
         if declined_by:
             message += f" by {declined_by}"
         if reason:
             message += f". Reason: {reason}"
         
-        sms_message = f"❌ Expense declined: ${expense_amount:.2f}"
+        sms_message = f"❌ Expense declined: KES {expense_amount:.2f}"
         if reason:
             sms_message += f" - {reason[:40]}..."
         
@@ -154,11 +154,11 @@ class NotificationService:
     def expense_paid(user, expense_amount, payment_method="", send_sms=True):
         """Notify when expense is paid - SMS enabled by default"""
         title = "Expense Paid"
-        message = f"Your expense of ${expense_amount:.2f} has been paid"
+        message = f"Your expense of kes {expense_amount:.2f} has been paid"
         if payment_method:
             message += f" via {payment_method}"
         
-        sms_message = f"💰 Payment received: ${expense_amount:.2f}"
+        sms_message = f" Payment received: KES {expense_amount:.2f}"
         if payment_method:
             sms_message += f" via {payment_method}"
         
@@ -173,7 +173,7 @@ class NotificationService:
         """Notify when payment request is sent"""
         # Notify sender
         sender_title = "Payment Request Sent"
-        sender_message = f"You sent a payment request of ${amount:.2f} to {recipient.get_full_name() or recipient.username}"
+        sender_message = f"You sent a payment request of KES {amount:.2f} to {recipient.get_full_name() or recipient.username}"
         if description:
             sender_message += f" for {description}"
         
@@ -184,11 +184,11 @@ class NotificationService:
         
         # Notify recipient with SMS
         recipient_title = "Payment Request Received"
-        recipient_message = f"You received a payment request of ${amount:.2f} from {sender.get_full_name() or sender.username}"
+        recipient_message = f"You received a payment request of KES {amount:.2f} from {sender.get_full_name() or sender.username}"
         if description:
             recipient_message += f" for {description}"
         
-        sms_message = f"💸 Payment request: ${amount:.2f} from {sender.get_full_name() or sender.username}"
+        sms_message = f"💸 Payment request: KES {amount:.2f} from {sender.get_full_name() or sender.username}"
         if description:
             sms_message += f" - {description[:30]}..."
         
@@ -201,9 +201,9 @@ class NotificationService:
     def payment_request_approved(requester, payer, amount, send_sms=True):
         """Notify when payment request is approved"""
         title = "Payment Request Approved"
-        message = f"Your payment request of ${amount:.2f} has been approved by {payer.get_full_name() or payer.username}"
+        message = f"Your payment request of KES {amount:.2f} has been approved by {payer.get_full_name() or payer.username}"
         
-        sms_message = f"✅ Payment approved: ${amount:.2f} by {payer.get_full_name() or payer.username}"
+        sms_message = f"✅ Payment approved: KES {amount:.2f} by {payer.get_full_name() or payer.username}"
         
         return NotificationService.create_notification(
             requester, "success", title, message,
@@ -216,7 +216,7 @@ class NotificationService:
         """Notify when transfer is sent"""
         # Notify sender
         sender_title = "Transfer Sent"
-        sender_message = f"You sent ${amount:.2f} to {recipient.get_full_name() or recipient.username}"
+        sender_message = f"You sent KES {amount:.2f} to {recipient.get_full_name() or recipient.username}"
         if reference:
             sender_message += f" (Ref: {reference})"
         
@@ -226,11 +226,11 @@ class NotificationService:
         
         # Notify recipient with SMS
         recipient_title = "Transfer Received"
-        recipient_message = f"You received ${amount:.2f} from {sender.get_full_name() or sender.username}"
+        recipient_message = f"You received KES {amount:.2f} from {sender.get_full_name() or sender.username}"
         if reference:
             recipient_message += f" (Ref: {reference})"
         
-        sms_message = f"💰 Received: ${amount:.2f} from {sender.get_full_name() or sender.username}"
+        sms_message = f"Received: KES {amount:.2f} from {sender.get_full_name() or sender.username}"
         if reference:
             sms_message += f" Ref: {reference}"
         
@@ -262,9 +262,9 @@ class NotificationService:
     def wallet_balance_low(user, wallet_name, current_balance, threshold, send_sms=True):
         """Notify when wallet balance is low - SMS enabled by default"""
         title = "Low Wallet Balance"
-        message = f"Your wallet '{wallet_name}' balance is low (${current_balance:.2f}). Consider adding funds."
+        message = f"Your wallet '{wallet_name}' balance is low (KES {current_balance:.2f}). Consider adding funds."
         
-        sms_message = f"⚠️ Low balance: {wallet_name} - ${current_balance:.2f}. Add funds soon."
+        sms_message = f"⚠️ Low balance: {wallet_name} - KES {current_balance:.2f}. Add funds soon."
         
         return NotificationService.create_notification(
             user, "warning", title, message,

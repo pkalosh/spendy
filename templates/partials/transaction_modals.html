@@ -9,7 +9,7 @@
             <div class="modal-body">
                 <p><strong>Recipient:</strong> {{ transaction.reciever.kyc.full_name }}</p>
                 <p><strong>Type:</strong> {{ transaction.transaction_type|title }}</p>
-                <p><strong>Amount:</strong> ${{ transaction.amount }}</p>
+                <p><strong>Amount:</strong> KES {{ transaction.amount }}</p>
                 <p><strong>Status:</strong> {{ transaction.status|title }}</p>
                 <p><strong>Date:</strong> {{ transaction.date|date:"d M Y, h:i A" }}</p>
             </div>

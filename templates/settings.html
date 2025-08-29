@@ -9,6 +9,7 @@
         addExpenseCategory: "{% url 'wallet:add_expense_category' %}",
         addOperationCategory: "{% url 'wallet:add_operation_category' %}",
         addEventCategory: "{% url 'wallet:add_event_category' %}",
+        addActivationCategory: "{% url 'wallet:add_activation_category' %}",  // New
         addClient: "{% url 'wallet:add_client' %}",
         editClient: "{% url 'wallet:edit_client' %}",
         deleteClient: "{% url 'wallet:delete_client' %}",
@@ -27,21 +28,17 @@
                 <div class="col-xl-12 col-lg-12">
                     <div class="section-content">
                         <div class="transactions-area">
-                            <div class="section-text d-flex 
-justify-content-between align-items-center">
+                            <div class="section-text d-flex justify-content-between align-items-center">
                                 <div>
                                     <h5>System Setup</h5>
-                                    <p>Manage event categories,
-                                        expense categories, groups, and other settings.</p>
+                                    <p>Manage event categories, expense categories, activation categories, groups, and other settings.</p>
                                 </div>
                             </div>
 
                             <div class="settings-container mt-4">
                                 <div class="card">
-                                    <div class="card-header d-flex 
-justify-content-between align-items-center">
-                                        <ul class="nav nav-tabs 
-card-header-tabs" id="categoryTabs" role="tablist">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <ul class="nav nav-tabs card-header-tabs" id="categoryTabs" role="tablist">
                                             <li class="nav-item" role="presentation">
                                                 <button class="nav-link active" id="expense-tab" data-bs-toggle="tab"
                                                     data-bs-target="#expense-pane" type="button" role="tab"
@@ -64,6 +61,13 @@ card-header-tabs" id="categoryTabs" role="tablist">
                                                 </button>
                                             </li>
                                             <li class="nav-item" role="presentation">
+                                                <button class="nav-link" id="activation-tab" data-bs-toggle="tab"
+                                                    data-bs-target="#activation-pane" type="button" role="tab"
+                                                    aria-controls="activation-pane" aria-selected="false">
+                                                    Activation Categories
+                                                </button>
+                                            </li>
+                                            <li class="nav-item" role="presentation">
                                                 <button class="nav-link" id="client-tab" data-bs-toggle="tab"
                                                     data-bs-target="#client-pane" type="button" role="tab"
                                                     aria-controls="client-pane" aria-selected="false">
@@ -73,22 +77,19 @@ card-header-tabs" id="categoryTabs" role="tablist">
                                         </ul>
 
                                         <div class="d-flex gap-2">
-                                            <button class="btn 
-btn-primary btn-sm" id="addExpenseBtn" data-bs-toggle="modal" data-bs-target="#expenseCategoryModal">
-                                                <i class="fas 
-fa-plus"></i> Add Expense Category
+                                            <button class="btn btn-primary btn-sm" id="addExpenseBtn" data-bs-toggle="modal" data-bs-target="#expenseCategoryModal">
+                                                <i class="fas fa-plus"></i> Add Expense Category
                                             </button>
-                                            <button class="btn 
-btn-primary btn-sm d-none" id="addOperationBtn" data-bs-toggle="modal" data-bs-target="#operationCategoryModal">
-                                                <i class="fas 
-fa-plus"></i> Add Operation Category
+                                            <button class="btn btn-primary btn-sm d-none" id="addOperationBtn" data-bs-toggle="modal" data-bs-target="#operationCategoryModal">
+                                                <i class="fas fa-plus"></i> Add Operation Category
                                             </button>
-                                            <button class="btn 
-btn-primary btn-sm d-none" id="addEventBtn" data-bs-toggle="modal" data-bs-target="#eventCategoryModal">
-                                                <i class="fas 
-fa-plus"></i> Add Event Category
+                                            <button class="btn btn-primary btn-sm d-none" id="addEventBtn" data-bs-toggle="modal" data-bs-target="#eventCategoryModal">
+                                                <i class="fas fa-plus"></i> Add Event Category
                                             </button>
-                                            <button class="btn btn-primary btn-sm d-none" id="addClientBtn">
+                                            <button class="btn btn-primary btn-sm d-none" id="addActivationBtn" data-bs-toggle="modal" data-bs-target="#activationCategoryModal">
+                                                <i class="fas fa-plus"></i> Add Activation Category
+                                            </button>
+                                            <button class="btn btn-primary btn-sm d-none" id="addClientBtn" data-bs-toggle="modal" data-bs-target="#clientModal">
                                                 <i class="fas fa-plus"></i> Add Client
                                             </button>
                                         </div>
@@ -96,8 +97,8 @@ fa-plus"></i> Add Event Category
 
                                     <div class="card-body">
                                         <div class="tab-content" id="categoryTabContent">
-                                            <div class="tab-pane fade
- show active" id="expense-pane" role="tabpanel" aria-labelledby="expense-tab">
+                                            <!-- Expense Categories Tab -->
+                                            <div class="tab-pane fade show active" id="expense-pane" role="tabpanel" aria-labelledby="expense-tab">
                                                 <div class="table-responsive">
                                                     <table class="table table-hover" id="expenseTable">
                                                         <thead class="table-light">
@@ -116,18 +117,13 @@ fa-plus"></i> Add Event Category
                                                                 <td>{{ category.created_at|date:"M d, Y" }}</td>
                                                                 <td class="text-center">
                                                                     <div class="btn-group btn-group-sm" role="group">
-                                                                        <button
-                                                                            class="btn btn-outline-primary edit-category"
-                                                                            data-type="expense"
-                                                                            data-id="{{ category.id }}"
-                                                                            data-name="{{ category.name }}"
-                                                                            title="Edit">
+                                                                        <button class="btn btn-outline-primary edit-category"
+                                                                            data-type="expense" data-id="{{ category.id }}"
+                                                                            data-name="{{ category.name }}" title="Edit">
                                                                             <i class="fas fa-edit"></i>
                                                                         </button>
-                                                                        <button
-                                                                            class="btn btn-outline-danger delete-category"
-                                                                            data-type="expense"
-                                                                            data-id="{{ category.id }}" title="Delete">
+                                                                        <button class="btn btn-outline-danger delete-category"
+                                                                            data-type="expense" data-id="{{ category.id }}" title="Delete">
                                                                             <i class="fas fa-trash"></i>
                                                                         </button>
                                                                     </div>
@@ -146,8 +142,8 @@ fa-plus"></i> Add Event Category
                                                 </div>
                                             </div>
 
-                                            <div class="tab-pane 
-fade" id="operation-pane" role="tabpanel" aria-labelledby="operation-tab">
+                                            <!-- Operation Categories Tab -->
+                                            <div class="tab-pane fade" id="operation-pane" role="tabpanel" aria-labelledby="operation-tab">
                                                 <div class="table-responsive">
                                                     <table class="table table-hover" id="operationTable">
                                                         <thead class="table-light">
@@ -166,18 +162,13 @@ fade" id="operation-pane" role="tabpanel" aria-labelledby="operation-tab">
                                                                 <td>{{ category.created_at|date:"M d, Y" }}</td>
                                                                 <td class="text-center">
                                                                     <div class="btn-group btn-group-sm" role="group">
-                                                                        <button
-                                                                            class="btn btn-outline-primary edit-category"
-                                                                            data-type="operation"
-                                                                            data-id="{{ category.id }}"
-                                                                            data-name="{{ category.name }}"
-                                                                            title="Edit">
+                                                                        <button class="btn btn-outline-primary edit-category"
+                                                                            data-type="operation" data-id="{{ category.id }}"
+                                                                            data-name="{{ category.name }}" title="Edit">
                                                                             <i class="fas fa-edit"></i>
                                                                         </button>
-                                                                        <button
-                                                                            class="btn btn-outline-danger delete-category"
-                                                                            data-type="operation"
-                                                                            data-id="{{ category.id }}" title="Delete">
+                                                                        <button class="btn btn-outline-danger delete-category"
+                                                                            data-type="operation" data-id="{{ category.id }}" title="Delete">
                                                                             <i class="fas fa-trash"></i>
                                                                         </button>
                                                                     </div>
@@ -196,8 +187,8 @@ fade" id="operation-pane" role="tabpanel" aria-labelledby="operation-tab">
                                                 </div>
                                             </div>
 
-                                            <div class="tab-pane 
-fade" id="event-pane" role="tabpanel" aria-labelledby="event-tab">
+                                            <!-- Event Categories Tab -->
+                                            <div class="tab-pane fade" id="event-pane" role="tabpanel" aria-labelledby="event-tab">
                                                 <div class="table-responsive">
                                                     <table class="table table-hover" id="eventTable">
                                                         <thead class="table-light">
@@ -216,18 +207,13 @@ fade" id="event-pane" role="tabpanel" aria-labelledby="event-tab">
                                                                 <td>{{ category.created_at|date:"M d, Y" }}</td>
                                                                 <td class="text-center">
                                                                     <div class="btn-group btn-group-sm" role="group">
-                                                                        <button
-                                                                            class="btn btn-outline-primary edit-category"
-                                                                            data-type="event"
-                                                                            data-id="{{ category.id }}"
-                                                                            data-name="{{ category.name }}"
-                                                                            title="Edit">
+                                                                        <button class="btn btn-outline-primary edit-category"
+                                                                            data-type="event" data-id="{{ category.id }}"
+                                                                            data-name="{{ category.name }}" title="Edit">
                                                                             <i class="fas fa-edit"></i>
                                                                         </button>
-                                                                        <button
-                                                                            class="btn btn-outline-danger delete-category"
-                                                                            data-type="event"
-                                                                            data-id="{{ category.id }}" title="Delete">
+                                                                        <button class="btn btn-outline-danger delete-category"
+                                                                            data-type="event" data-id="{{ category.id }}" title="Delete">
                                                                             <i class="fas fa-trash"></i>
                                                                         </button>
                                                                     </div>
@@ -246,8 +232,53 @@ fade" id="event-pane" role="tabpanel" aria-labelledby="event-tab">
                                                 </div>
                                             </div>
 
-                                            <div class="tab-pane fade" id="client-pane" role="tabpanel"
-                                                aria-labelledby="client-tab">
+                                            <!-- Activation Categories Tab -->
+                                            <div class="tab-pane fade" id="activation-pane" role="tabpanel" aria-labelledby="activation-tab">
+                                                <div class="table-responsive">
+                                                    <table class="table table-hover" id="activationTable">
+                                                        <thead class="table-light">
+                                                            <tr>
+                                                                <th scope="col">#</th>
+                                                                <th scope="col">Category Name</th>
+                                                                <th scope="col">Created Date</th>
+                                                                <th scope="col" class="text-center">Actions</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {% for category in activation_categories %}
+                                                            <tr>
+                                                                <td>{{ forloop.counter }}</td>
+                                                                <td class="category-name">{{ category.name }}</td>
+                                                                <td>{{ category.created_at|date:"M d, Y" }}</td>
+                                                                <td class="text-center">
+                                                                    <div class="btn-group btn-group-sm" role="group">
+                                                                        <button class="btn btn-outline-primary edit-category"
+                                                                            data-type="activation" data-id="{{ category.id }}"
+                                                                            data-name="{{ category.name }}" title="Edit">
+                                                                            <i class="fas fa-edit"></i>
+                                                                        </button>
+                                                                        <button class="btn btn-outline-danger delete-category"
+                                                                            data-type="activation" data-id="{{ category.id }}" title="Delete">
+                                                                            <i class="fas fa-trash"></i>
+                                                                        </button>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                            {% empty %}
+                                                            <tr>
+                                                                <td colspan="4" class="text-center text-muted py-4">
+                                                                    <i class="fas fa-inbox fa-2x mb-2"></i><br>
+                                                                    No activation categories found
+                                                                </td>
+                                                            </tr>
+                                                            {% endfor %}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+
+                                            <!-- Clients Tab -->
+                                            <div class="tab-pane fade" id="client-pane" role="tabpanel" aria-labelledby="client-tab">
                                                 <div class="table-responsive">
                                                     <table class="table table-hover" id="clientTable">
                                                         <thead class="table-light">
@@ -270,10 +301,10 @@ fade" id="event-pane" role="tabpanel" aria-labelledby="event-tab">
                                                                     {{ client.contact_person }}<br>
                                                                     {% endif %}
                                                                     {% if client.contact_email %}
-                                                                    {{client.contact_email }}
-                                                                    {% endif %},
+                                                                    {{ client.contact_email }}
+                                                                    {% endif %}
                                                                     {% if client.contact_phone %}
-                                                                    {{ client.contact_phone }}
+                                                                    , {{ client.contact_phone }}
                                                                     {% endif %}
                                                                 </td>
                                                                 <td>
@@ -285,18 +316,15 @@ fade" id="event-pane" role="tabpanel" aria-labelledby="event-tab">
                                                                             style="width: 30px; height: 30px; object-fit: contain;">
                                                                         {% endif %}
                                                                         {{ brand.name }}
-                                                                        <div class="btn-group btn-group-sm ms-2"
-                                                                            role="group">
-                                                                            <button
-                                                                                class="btn btn-outline-primary edit-brand"
+                                                                        <div class="btn-group btn-group-sm ms-2" role="group">
+                                                                            <button class="btn btn-outline-primary edit-brand"
                                                                                 data-id="{{ brand.id }}"
                                                                                 data-name="{{ brand.name }}"
                                                                                 data-client-id="{{ client.id }}"
                                                                                 title="Edit Brand">
                                                                                 <i class="fas fa-edit"></i>
                                                                             </button>
-                                                                            <button
-                                                                                class="btn btn-outline-danger delete-brand"
+                                                                            <button class="btn btn-outline-danger delete-brand"
                                                                                 data-id="{{ brand.id }}"
                                                                                 data-client-id="{{ client.id }}"
                                                                                 title="Delete Brand">
@@ -307,8 +335,7 @@ fade" id="event-pane" role="tabpanel" aria-labelledby="event-tab">
                                                                     {% empty %}
                                                                     <small class="text-muted">No brands</small>
                                                                     {% endfor %}
-                                                                    <button
-                                                                        class="btn btn-sm btn-outline-success mt-2 add-brand-btn"
+                                                                    <button class="btn btn-sm btn-outline-success mt-2 add-brand-btn"
                                                                         data-client-id="{{ client.id }}"
                                                                         data-client-name="{{ client.name }}">
                                                                         <i class="fas fa-plus"></i> Add Brand
@@ -317,8 +344,7 @@ fade" id="event-pane" role="tabpanel" aria-labelledby="event-tab">
                                                                 <td>{{ client.created_at|date:"M d, Y" }}</td>
                                                                 <td class="text-center">
                                                                     <div class="btn-group btn-group-sm" role="group">
-                                                                        <button
-                                                                            class="btn btn-outline-primary edit-client"
+                                                                        <button class="btn btn-outline-primary edit-client"
                                                                             data-id="{{ client.id }}"
                                                                             data-name="{{ client.name }}"
                                                                             data-contact-person="{{ client.contact_person|default_if_none:'' }}"
@@ -333,8 +359,7 @@ fade" id="event-pane" role="tabpanel" aria-labelledby="event-tab">
                                                                             title="Edit Client">
                                                                             <i class="fas fa-edit"></i>
                                                                         </button>
-                                                                        <button
-                                                                            class="btn btn-outline-danger delete-client"
+                                                                        <button class="btn btn-outline-danger delete-client"
                                                                             data-id="{{ client.id }}"
                                                                             title="Delete Client">
                                                                             <i class="fas fa-trash"></i>
@@ -367,8 +392,7 @@ fade" id="event-pane" role="tabpanel" aria-labelledby="event-tab">
 </section>
 
 <!-- Expense Category Modal -->
-<div class="modal fade" id="expenseCategoryModal" tabindex="-1" aria-labelledby="expenseCategoryModalLabel"
-    aria-hidden="true">
+<div class="modal fade" id="expenseCategoryModal" tabindex="-1" aria-labelledby="expenseCategoryModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -393,8 +417,7 @@ fade" id="event-pane" role="tabpanel" aria-labelledby="event-tab">
 </div>
 
 <!-- Operation Category Modal -->
-<div class="modal fade" id="operationCategoryModal" tabindex="-1" aria-labelledby="operationCategoryModalLabel"
-    aria-hidden="true">
+<div class="modal fade" id="operationCategoryModal" tabindex="-1" aria-labelledby="operationCategoryModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -419,8 +442,7 @@ fade" id="event-pane" role="tabpanel" aria-labelledby="event-tab">
 </div>
 
 <!-- Event Category Modal -->
-<div class="modal fade" id="eventCategoryModal" tabindex="-1" aria-labelledby="eventCategoryModalLabel"
-    aria-hidden="true">
+<div class="modal fade" id="eventCategoryModal" tabindex="-1" aria-labelledby="eventCategoryModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -433,6 +455,31 @@ fade" id="event-pane" role="tabpanel" aria-labelledby="event-tab">
                     <div class="mb-3">
                         <label for="eventCategoryName" class="form-label">Category Name</label>
                         <input type="text" class="form-control" id="eventCategoryName" name="name" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Activation Category Modal -->
+<div class="modal fade" id="activationCategoryModal" tabindex="-1" aria-labelledby="activationCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="activationCategoryModalLabel">Add Activation Category</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'wallet:add_activation_category' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="activationCategoryName" class="form-label">Category Name</label>
+                        <input type="text" class="form-control" id="activationCategoryName" name="name" required>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -457,8 +504,7 @@ fade" id="event-pane" role="tabpanel" aria-labelledby="event-tab">
                 <input type="hidden" id="clientId" name="client_id">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="clientName" class="form-label">Client Name <span
-                                class="text-danger">*</span></label>
+                        <label for="clientName" class="form-label">Client Name <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="clientName" name="name" required>
                     </div>
                     <div class="row">
@@ -554,8 +600,7 @@ fade" id="event-pane" role="tabpanel" aria-labelledby="event-tab">
 </div>
 
 <!-- Edit Category Modal -->
-<div class="modal fade" id="editCategoryModal" tabindex="-1" aria-labelledby="editCategoryModalLabel"
-    aria-hidden="true">
+<div class="modal fade" id="editCategoryModal" tabindex="-1" aria-labelledby="editCategoryModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -582,8 +627,7 @@ fade" id="event-pane" role="tabpanel" aria-labelledby="event-tab">
 </div>
 
 <!-- Delete Category Confirmation Modal -->
-<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel"
-    aria-hidden="true">
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -591,8 +635,7 @@ fade" id="event-pane" role="tabpanel" aria-labelledby="event-tab">
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                Are you sure you want to delete this category? This
-                action cannot be undone.
+                Are you sure you want to delete this category? This action cannot be undone.
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -608,8 +651,7 @@ fade" id="event-pane" role="tabpanel" aria-labelledby="event-tab">
 </div>
 
 <!-- Delete Client Confirmation Modal -->
-<div class="modal fade" id="confirmDeleteClientModal" tabindex="-1" aria-labelledby="confirmDeleteClientModalLabel"
-    aria-hidden="true">
+<div class="modal fade" id="confirmDeleteClientModal" tabindex="-1" aria-labelledby="confirmDeleteClientModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -617,8 +659,7 @@ fade" id="event-pane" role="tabpanel" aria-labelledby="event-tab">
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                Are you sure you want to delete this client and all their associated brands? This action cannot be
-                undone.
+                Are you sure you want to delete this client and all their associated brands? This action cannot be undone.
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -633,8 +674,7 @@ fade" id="event-pane" role="tabpanel" aria-labelledby="event-tab">
 </div>
 
 <!-- Delete Brand Confirmation Modal -->
-<div class="modal fade" id="confirmDeleteBrandModal" tabindex="-1" aria-labelledby="confirmDeleteBrandModalLabel"
-    aria-hidden="true">
+<div class="modal fade" id="confirmDeleteBrandModal" tabindex="-1" aria-labelledby="confirmDeleteBrandModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -661,36 +701,29 @@ fade" id="event-pane" role="tabpanel" aria-labelledby="event-tab">
         border-bottom: 2px solid transparent;
         color: #6c757d;
     }
-
     .nav-tabs .nav-link.active {
         border-bottom: 2px solid #0d6efd;
         color: #0d6efd;
         background-color: transparent;
     }
-
     .table th {
         font-weight: 600;
         border-top: none;
     }
-
     .btn-group-sm>.btn {
         margin: 0 1px;
     }
-
     .input-group-text {
         background-color: #f8f9fa;
         border-right: none;
     }
-
     .form-control:focus {
         border-left: 1px solid #86b7fe;
     }
-
     .card-header {
         background-color: #f8f9fa;
         border-bottom: 1px solid #dee2e6;
     }
-
     .table-hover tbody tr:hover {
         background-color: rgba(0, 0, 0, 0.02);
     }
@@ -702,13 +735,12 @@ fade" id="event-pane" role="tabpanel" aria-labelledby="event-tab">
         document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(function (tabButton) {
             tabButton.addEventListener('shown.bs.tab', function (e) {
                 const target = e.target.getAttribute('data-bs-target');
-
                 // Hide all add buttons
                 document.getElementById('addExpenseBtn').classList.add('d-none');
                 document.getElementById('addOperationBtn').classList.add('d-none');
                 document.getElementById('addEventBtn').classList.add('d-none');
+                document.getElementById('addActivationBtn').classList.add('d-none');
                 document.getElementById('addClientBtn').classList.add('d-none');
-
                 // Show appropriate button based on active tab
                 if (target === '#expense-pane') {
                     document.getElementById('addExpenseBtn').classList.remove('d-none');
@@ -716,6 +748,8 @@ fade" id="event-pane" role="tabpanel" aria-labelledby="event-tab">
                     document.getElementById('addOperationBtn').classList.remove('d-none');
                 } else if (target === '#event-pane') {
                     document.getElementById('addEventBtn').classList.remove('d-none');
+                } else if (target === '#activation-pane') {
+                    document.getElementById('addActivationBtn').classList.remove('d-none');
                 } else if (target === '#client-pane') {
                     document.getElementById('addClientBtn').classList.remove('d-none');
                 }
@@ -729,12 +763,6 @@ fade" id="event-pane" role="tabpanel" aria-labelledby="event-tab">
                 const categoryId = button.getAttribute('data-id');
                 const categoryName = button.getAttribute('data-name');
                 const categoryType = button.getAttribute('data-type');
-
-                console.log('Edit category button clicked:', {
-                    categoryId,
-                    categoryName, 
-                    categoryType
-                });
 
                 // Populate the form fields
                 document.getElementById('editCategoryId').value = categoryId;
@@ -757,11 +785,6 @@ fade" id="event-pane" role="tabpanel" aria-labelledby="event-tab">
                 const categoryId = button.getAttribute('data-id');
                 const categoryType = button.getAttribute('data-type');
 
-                console.log('Delete category button clicked:', {
-                    categoryId,
-                    categoryType
-                });
-
                 // Populate the form fields
                 document.getElementById('deleteCategoryId').value = categoryId;
                 document.getElementById('deleteCategoryType').value = categoryType;
@@ -776,12 +799,10 @@ fade" id="event-pane" role="tabpanel" aria-labelledby="event-tab">
             }
         });
 
-        // Add Client button click handler - FIXED VERSION
+        // Add Client button click handler
         document.getElementById('addClientBtn').addEventListener('click', function (e) {
             e.preventDefault();
             e.stopPropagation();
-            
-            console.log('Add client button clicked - proper handler');
             
             const modalTitle = document.getElementById('clientModalLabel');
             modalTitle.textContent = 'Add New Client';
@@ -791,14 +812,12 @@ fade" id="event-pane" role="tabpanel" aria-labelledby="event-tab">
             document.getElementById('clientId').value = '';
             clientForm.action = URLS.addClient;
             
-            // Ensure any existing modal instance is properly disposed
             const modalElement = document.getElementById('clientModal');
             const existingModal = bootstrap.Modal.getInstance(modalElement);
             if (existingModal) {
                 existingModal.dispose();
             }
             
-            // Create new modal instance with proper options
             const clientModal = new bootstrap.Modal(modalElement, {
                 backdrop: true,
                 keyboard: true,
@@ -845,7 +864,6 @@ fade" id="event-pane" role="tabpanel" aria-labelledby="event-tab">
                 const clientForm = document.getElementById('clientForm');
                 clientForm.action = URLS.editClient;
 
-                // Proper modal handling
                 const modalElement = document.getElementById('clientModal');
                 const existingModal = bootstrap.Modal.getInstance(modalElement);
                 if (existingModal) {
@@ -874,7 +892,7 @@ fade" id="event-pane" role="tabpanel" aria-labelledby="event-tab">
             }
         });
 
-        // Add Brand button click handler - FIXED VERSION
+        // Add Brand button click handler
         document.addEventListener('click', function (e) {
             if (e.target.closest('.add-brand-btn')) {
                 e.preventDefault();
@@ -908,7 +926,6 @@ fade" id="event-pane" role="tabpanel" aria-labelledby="event-tab">
                 if (brandIdInput) brandIdInput.value = '';
                 if (currentBrandLogoElement) currentBrandLogoElement.textContent = '';
 
-                // Proper modal handling
                 const modalElement = document.getElementById('brandModal');
                 const existingModal = bootstrap.Modal.getInstance(modalElement);
                 if (existingModal) {
@@ -957,7 +974,6 @@ fade" id="event-pane" role="tabpanel" aria-labelledby="event-tab">
                     brandForm.action = URLS.editBrand;
                 }
 
-                // Proper modal handling
                 const modalElement = document.getElementById('brandModal');
                 const existingModal = bootstrap.Modal.getInstance(modalElement);
                 if (existingModal) {
@@ -989,30 +1005,38 @@ fade" id="event-pane" role="tabpanel" aria-labelledby="event-tab">
         // Modal cleanup event listeners
         const clientModalElement = document.getElementById('clientModal');
         const brandModalElement = document.getElementById('brandModal');
+        const activationCategoryModalElement = document.getElementById('activationCategoryModal');
 
         // Client modal cleanup
         clientModalElement.addEventListener('hidden.bs.modal', function () {
             document.body.classList.remove('modal-open');
             const backdrops = document.querySelectorAll('.modal-backdrop');
             backdrops.forEach(backdrop => backdrop.remove());
-            
-            // Reset form
             const clientForm = document.getElementById('clientForm');
             if (clientForm) {
                 clientForm.reset();
             }
         });
 
-        // Brand modal cleanup  
+        // Brand modal cleanup
         brandModalElement.addEventListener('hidden.bs.modal', function () {
             document.body.classList.remove('modal-open');
             const backdrops = document.querySelectorAll('.modal-backdrop');
             backdrops.forEach(backdrop => backdrop.remove());
-            
-            // Reset form
             const brandForm = document.getElementById('brandForm');
             if (brandForm) {
                 brandForm.reset();
+            }
+        });
+
+        // Activation category modal cleanup
+        activationCategoryModalElement.addEventListener('hidden.bs.modal', function () {
+            document.body.classList.remove('modal-open');
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            backdrops.forEach(backdrop => backdrop.remove());
+            const activationForm = document.getElementById('activationCategoryModal').querySelector('form');
+            if (activationForm) {
+                activationForm.reset();
             }
         });
 
@@ -1025,6 +1049,13 @@ fade" id="event-pane" role="tabpanel" aria-labelledby="event-tab">
         });
 
         brandModalElement.addEventListener('shown.bs.modal', function () {
+            const firstInput = this.querySelector('input[type="text"]');
+            if (firstInput) {
+                firstInput.focus();
+            }
+        });
+
+        activationCategoryModalElement.addEventListener('shown.bs.modal', function () {
             const firstInput = this.querySelector('input[type="text"]');
             if (firstInput) {
                 firstInput.focus();

@@ -19,7 +19,7 @@
     </div>
 
       <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#submitExpenseModal">
-        New Event/Operation
+        New Event/Operation/Activation
       </button>
 
       <!-- Nav tabs -->
@@ -29,6 +29,9 @@
         </li>
         <li class="nav-item" role="presentation">
           <button class="nav-link" id="operation-tab" data-bs-toggle="tab" data-bs-target="#operation" type="button" role="tab" aria-controls="operation" aria-selected="false">Operations</button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="activation-tab" data-bs-toggle="tab" data-bs-target="#activation" type="button" role="tab" aria-controls="activation" aria-selected="false">Activation</button>
         </li>
       </ul>
 
@@ -105,6 +108,55 @@
             </table>
           </div>
         </div>
+
+        <!-- Activations Tab -->
+        <div class="tab-pane fade" id="activation" role="tabpanel" aria-labelledby="activation-tab">
+          <div class="table-responsive">
+            <table class="display table table-striped" style="width:100%">
+              <thead>
+                <tr>
+                  <th>Activation</th>
+                  <th>Category</th>
+                  <th>Client</th>
+                  <th>Budget</th>
+                  <th>Project Lead</th>
+                  <th>Created By</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in all_items %}
+                  {% if item|get_class_name == 'Activation' %}
+                    <tr>
+                      <td>{{ item.name }}</td>
+                      <td>{{ item.category }}</td>
+                      <td>{{ item.client|default:"N/A" }}</td>
+                      <td>{{ item.budget|intcomma|default:"N/A" }}</td>
+                      <td>{{ item.project_lead|default:"N/A" }}</td>
+                      <td><a href="#">{{ item.created_by.get_full_name|default:"N/A" }}</a></td>
+                      <td>
+                        {% if item.approved %}
+                          <span class="badge bg-success">Approved</span>
+                        {% else %}
+                          <span class="badge bg-warning">Pending</span>
+                        {% endif %}
+                        {% if item.paid %}
+                          <span class="badge bg-info">Paid</span>
+                        {% endif %}
+                      </td>
+                      <td>
+                        <a href="{% url 'expense:activation_expense_detail' item.id %}" class="btn btn-sm btn-primary">View Expenses</a>
+                      </td>
+                    </tr>
+                  {% endif %}
+                {% empty %}
+                  <tr><td colspan="8" class="text-center">No activation records found.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
     </div>
@@ -116,13 +168,13 @@
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header bg-light">
-        <h5 class="modal-title">Create Event or Operation</h5>
+        <h5 class="modal-title">Create Event, Activation or Operation</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <!-- Request Form -->
         <div id="requests" class="content-section">
-          <form id="expenseForm" class="bg-white p-4 shadow rounded" method="post" action="{% url 'expense:event-operation' %}">
+          <form id="expenseForm" class="bg-white p-4 shadow rounded" method="post" action="{% url 'expense:event-operation' %}" enctype="multipart/form-data">
             {% csrf_token %}
             <input type="hidden" name="form_type" id="form_type" value="">
             
@@ -133,6 +185,7 @@
                 <option value="">Select Type</option>
                 <option value="event">Event</option>
                 <option value="operation">Operation</option>
+                <option value="activation">Activation</option>
               </select>
             </div>
             
@@ -181,6 +234,11 @@
               </div>
               
               <div class="mb-3">
+                <label for="event_budget_file" class="form-label">Budget File <span class="text-muted">(Optional)</span></label>
+                <input type="file" id="event_budget_file" name="event_budget_file" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx">
+              </div>
+              
+              <div class="mb-3">
                 <label for="event_project_lead" class="form-label">Project Lead</label>
                 <input type="text" id="event_project_lead" name="event_project_lead" class="form-control event-field" maxlength="255">
               </div>
@@ -225,8 +283,62 @@
               </div>
               
               <div class="mb-3">
+                <label for="operation_budget_file" class="form-label">Budget File <span class="text-muted">(Optional)</span></label>
+                <input type="file" id="operation_budget_file" name="operation_budget_file" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx">
+              </div>
+              
+              <div class="mb-3">
                 <label for="operation_project_lead" class="form-label">Project Lead</label>
                 <input type="text" id="operation_project_lead" name="operation_project_lead" class="form-control operation-field" maxlength="255">
+              </div>
+            </div>
+            
+            <!-- Activation Request Fields -->
+            <div id="activationRequestFields" class="hidden">
+              <div class="mb-3">
+                <label for="activation_name" class="form-label">Activation Name</label>
+                <input type="text" id="activation_name" name="activation_name" class="form-control activation-field" maxlength="255">
+              </div>
+              
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="activation_category" class="form-label">Activation Category</label>
+                  <select id="activation_category" name="activation_category" class="form-select activation-field">
+                    <option value="">Select Category</option>
+                    {% for category in activation_categories %}
+                      <option value="{{ category.id }}">{{ category.name }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="activation_client" class="form-label">Client</label>
+                  <select id="activation_client" name="activation_client" class="form-select activation-field">
+                    <option value="">Select Client</option>
+                    {% for client in clients %}
+                      <option value="{{ client.id }}">{{ client.name }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              
+              <div class="mb-3">
+                <label for="activation_budget" class="form-label">Budget <span class="text-muted">(Optional)</span></label>
+                <input type="number" id="activation_budget" name="activation_budget" class="form-control" step="0.01">
+              </div>
+              
+              <div class="mb-3">
+                <label for="activation_budget_file" class="form-label">Budget File <span class="text-muted">(Optional)</span></label>
+                <input type="file" id="activation_budget_file" name="activation_budget_file" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx">
+              </div>
+              
+              <div class="mb-3">
+                <label for="activation_project_lead" class="form-label">Project Lead <span class="text-muted">(Optional)</span></label>
+                <input type="text" id="activation_project_lead" name="activation_project_lead" class="form-control" maxlength="255">
+              </div>
+              
+              <div class="mb-3">
+                <label for="activation_description" class="form-label">Description <span class="text-muted">(Optional)</span></label>
+                <textarea id="activation_description" name="activation_description" class="form-control" rows="4" placeholder="Describe the activation details..."></textarea>
               </div>
             </div>
             
@@ -246,9 +358,10 @@
     // Show/hide appropriate fields
     document.getElementById('eventRequestFields').classList.toggle('hidden', requestType !== 'event');
     document.getElementById('operationRequestFields').classList.toggle('hidden', requestType !== 'operation');
+    document.getElementById('activationRequestFields').classList.toggle('hidden', requestType !== 'activation');
     
     // Remove required attribute from all fields first
-    const allFields = document.querySelectorAll('.event-field, .operation-field');
+    const allFields = document.querySelectorAll('.event-field, .operation-field, .activation-field');
     allFields.forEach(field => {
       field.removeAttribute('required');
       // Also remove any existing validation styling
@@ -265,6 +378,15 @@
       const operationFields = document.querySelectorAll('.operation-field');
       operationFields.forEach(field => {
         field.setAttribute('required', '');
+      });
+    } else if (requestType === 'activation') {
+      // Only name and category are required for activations based on your model
+      const requiredActivationFields = ['activation_name', 'activation_category', 'activation_client'];
+      requiredActivationFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+          field.setAttribute('required', '');
+        }
       });
     }
   }
@@ -360,6 +482,30 @@
         
         // Validate budget
         if (isValid && operationBudget && parseFloat(operationBudget) < 0) {
+          errorMessage = 'Budget cannot be negative';
+          isValid = false;
+        }
+        
+      } else if (requestType === 'activation') {
+        // Validate activation fields (only name, category, and client are required)
+        const activationName = document.getElementById('activation_name').value.trim();
+        const activationCategory = document.getElementById('activation_category').value;
+        const activationClient = document.getElementById('activation_client').value;
+        const activationBudget = document.getElementById('activation_budget').value;
+        
+        if (!activationName) {
+          errorMessage = 'Activation name is required';
+          isValid = false;
+        } else if (!activationCategory) {
+          errorMessage = 'Activation category is required';
+          isValid = false;
+        } else if (!activationClient) {
+          errorMessage = 'Activation client is required';
+          isValid = false;
+        }
+        
+        // Validate budget if provided
+        if (isValid && activationBudget && parseFloat(activationBudget) < 0) {
           errorMessage = 'Budget cannot be negative';
           isValid = false;
         }
