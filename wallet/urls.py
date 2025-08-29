@@ -47,7 +47,7 @@ urlpatterns = [
     path('add-brand/', views.add_brand, name='add_brand'),
     path('edit-brand/', views.edit_brand, name='edit_brand'),
     path('delete-brand/', views.delete_brand, name='delete_brand'),
-
+    path('brands-by-client/', views.get_brands_by_client, name='get_brands_by_client'),
     # STK Push callbacks
     path('stk/callback/', views.stk_push_callback, name='stk_push_callback'),
     path('stk/timeout/', views.stk_push_timeout_callback, name='stk_push_timeout_callback'),

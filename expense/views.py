@@ -283,14 +283,14 @@ def event_operation(request):
                 except (EventCategory.DoesNotExist, ValueError):
                     raise ValidationError("Invalid event category")
 
-                # Get and validate client - using event_client field
-                try:
-                    client_id = request.POST.get('event_client')
-                    if not client_id:
-                        raise ValidationError("Event client is required")
-                    client = Client.objects.get(id=client_id)
-                except (Client.DoesNotExist, ValueError):
-                    raise ValidationError("Invalid event client")
+                # Get and validate client (optional)
+                client = None
+                client_id = request.POST.get('event_client')
+                if client_id:
+                    try:
+                        client = Client.objects.get(id=client_id)
+                    except (Client.DoesNotExist, ValueError):
+                        raise ValidationError("Invalid event client")
 
                 # Validate dates
                 start_date = request.POST.get('event_start_date')
@@ -369,14 +369,14 @@ def event_operation(request):
                 except (OperationCategory.DoesNotExist, ValueError):
                     raise ValidationError("Invalid operation category")
 
-                # Get and validate client - using operation_client field
-                try:
-                    client_id = request.POST.get('operation_client')
-                    if not client_id:
-                        raise ValidationError("Operation client is required")
-                    client = Client.objects.get(id=client_id)
-                except (Client.DoesNotExist, ValueError):
-                    raise ValidationError("Invalid operation client")
+                # Get and validate client (optional)
+                client = None
+                client_id = request.POST.get('operation_client')
+                if client_id:
+                    try:
+                        client = Client.objects.get(id=client_id)
+                    except (Client.DoesNotExist, ValueError):
+                        raise ValidationError("Invalid operation client")
 
                 # Validate budget
                 budget = None
@@ -433,14 +433,14 @@ def event_operation(request):
                 except (ActivationCategory.DoesNotExist, ValueError):
                     raise ValidationError("Invalid activation category")
 
-                # Get and validate client - using activation_client field
-                try:
-                    client_id = request.POST.get('activation_client')
-                    if not client_id:
-                        raise ValidationError("Activation client is required")
-                    client = Client.objects.get(id=client_id)
-                except (Client.DoesNotExist, ValueError):
-                    raise ValidationError("Invalid activation client")
+                # Get and validate client (optional)
+                client = None
+                client_id = request.POST.get('activation_client')
+                if client_id:
+                    try:
+                        client = Client.objects.get(id=client_id)
+                    except (Client.DoesNotExist, ValueError):
+                        raise ValidationError("Invalid activation client")
 
                 # Validate budget (optional for activations based on your model)
                 budget = None
@@ -510,7 +510,6 @@ def event_operation(request):
     
     # Handle GET request
     return redirect('wallet:expenses')
-
 
 @login_required
 def activation_expense_detail(request, pk):

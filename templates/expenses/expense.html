@@ -7,7 +7,30 @@
 <link href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" rel="stylesheet">
 <style>
   .hidden {
-    display: none;
+    display: none !important;
+  }
+  .loading {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+  .form-control:disabled, .form-select:disabled {
+    background-color: #e9ecef;
+    opacity: 1;
+  }
+  /* Nice Select Overrides */
+  .nice-select {
+    width: 100% !important;
+    height: 38px !important;
+    line-height: 36px !important;
+  }
+  .nice-select:disabled {
+    background-color: #e9ecef !important;
+    color: #6c757d !important;
+    pointer-events: none;
+  }
+  .nice-select.loading {
+    opacity: 0.6;
+    pointer-events: none;
   }
 </style>
 <section class="dashboard-section body-collapse">
@@ -181,7 +204,7 @@
             <!-- Request Type -->
             <div class="mb-3">
               <label for="requestType" class="form-label fw-bold">Expense Group</label>
-              <select id="requestType" name="request_type" class="form-select" onchange="toggleRequestFields()" required>
+              <select id="requestType" name="request_type" class="form-select" required data-nice-select="false">
                 <option value="">Select Type</option>
                 <option value="event">Event</option>
                 <option value="operation">Operation</option>
@@ -199,7 +222,7 @@
               <div class="row">
                 <div class="col-md-6 mb-3">
                   <label for="event_category" class="form-label">Event Category</label>
-                  <select id="event_category" name="event_category" class="form-select event-field">
+                  <select id="event_category" name="event_category" class="form-select event-field" data-nice-select="false">
                     <option value="">Select Category</option>
                     {% for category in event_categories %}
                       <option value="{{ category.id }}">{{ category.name }}</option>
@@ -207,14 +230,21 @@
                   </select>
                 </div>
                 <div class="col-md-6 mb-3">
-                  <label for="event_client" class="form-label">Client</label>
-                  <select id="event_client" name="event_client" class="form-select event-field">
+                  <label for="event_client" class="form-label">Client <span class="text-muted">(Optional)</span></label>
+                  <select id="event_client" name="event_client" class="form-select event-field client-select" data-nice-select="false">
                     <option value="">Select Client</option>
                     {% for client in clients %}
                       <option value="{{ client.id }}">{{ client.name }}</option>
                     {% endfor %}
                   </select>
                 </div>
+              </div>
+              
+              <div class="mb-3">
+                <label for="event_brand" class="form-label">Brand <span class="text-muted">(Optional)</span></label>
+                <select id="event_brand" name="event_brand" class="form-select brand-select" disabled data-nice-select="false">
+                  <option value="">Select Client First</option>
+                </select>
               </div>
               
               <div class="row">
@@ -235,7 +265,7 @@
               
               <div class="mb-3">
                 <label for="event_budget_file" class="form-label">Budget File <span class="text-muted">(Optional)</span></label>
-                <input type="file" id="event_budget_file" name="event_budget_file" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx">
+                <input type="file" id="event_budget_file" name="event_budget_file" class="form-control event-field" accept=".pdf,.doc,.docx,.xls,.xlsx">
               </div>
               
               <div class="mb-3">
@@ -259,7 +289,7 @@
               <div class="row">
                 <div class="col-md-6 mb-3">
                   <label for="operation_category" class="form-label">Operation Category</label>
-                  <select id="operation_category" name="operation_category" class="form-select operation-field">
+                  <select id="operation_category" name="operation_category" class="form-select operation-field" data-nice-select="false">
                     <option value="">Select Category</option>
                     {% for category in operation_categories %}
                       <option value="{{ category.id }}">{{ category.name }}</option>
@@ -267,8 +297,8 @@
                   </select>
                 </div>
                 <div class="col-md-6 mb-3">
-                  <label for="operation_client" class="form-label">Client</label>
-                  <select id="operation_client" name="operation_client" class="form-select operation-field">
+                  <label for="operation_client" class="form-label">Client <span class="text-muted">(Optional)</span></label>
+                  <select id="operation_client" name="operation_client" class="form-select operation-field client-select" data-nice-select="false">
                     <option value="">Select Client</option>
                     {% for client in clients %}
                       <option value="{{ client.id }}">{{ client.name }}</option>
@@ -278,13 +308,20 @@
               </div>
               
               <div class="mb-3">
+                <label for="operation_brand" class="form-label">Brand <span class="text-muted">(Optional)</span></label>
+                <select id="operation_brand" name="operation_brand" class="form-select brand-select" disabled data-nice-select="false">
+                  <option value="">Select Client First</option>
+                </select>
+              </div>
+              
+              <div class="mb-3">
                 <label for="operation_budget" class="form-label">Budget</label>
                 <input type="number" id="operation_budget" name="operation_budget" class="form-control operation-field" step="0.01">
               </div>
               
               <div class="mb-3">
                 <label for="operation_budget_file" class="form-label">Budget File <span class="text-muted">(Optional)</span></label>
-                <input type="file" id="operation_budget_file" name="operation_budget_file" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx">
+                <input type="file" id="operation_budget_file" name="operation_budget_file" class="form-control operation-field" accept=".pdf,.doc,.docx,.xls,.xlsx">
               </div>
               
               <div class="mb-3">
@@ -303,7 +340,7 @@
               <div class="row">
                 <div class="col-md-6 mb-3">
                   <label for="activation_category" class="form-label">Activation Category</label>
-                  <select id="activation_category" name="activation_category" class="form-select activation-field">
+                  <select id="activation_category" name="activation_category" class="form-select activation-field" data-nice-select="false">
                     <option value="">Select Category</option>
                     {% for category in activation_categories %}
                       <option value="{{ category.id }}">{{ category.name }}</option>
@@ -311,8 +348,8 @@
                   </select>
                 </div>
                 <div class="col-md-6 mb-3">
-                  <label for="activation_client" class="form-label">Client</label>
-                  <select id="activation_client" name="activation_client" class="form-select activation-field">
+                  <label for="activation_client" class="form-label">Client <span class="text-muted">(Optional)</span></label>
+                  <select id="activation_client" name="activation_client" class="form-select activation-field client-select" data-nice-select="false">
                     <option value="">Select Client</option>
                     {% for client in clients %}
                       <option value="{{ client.id }}">{{ client.name }}</option>
@@ -322,23 +359,30 @@
               </div>
               
               <div class="mb-3">
+                <label for="activation_brand" class="form-label">Brand <span class="text-muted">(Optional)</span></label>
+                <select id="activation_brand" name="activation_brand" class="form-select brand-select" disabled data-nice-select="false">
+                  <option value="">Select Client First</option>
+                </select>
+              </div>
+              
+              <div class="mb-3">
                 <label for="activation_budget" class="form-label">Budget <span class="text-muted">(Optional)</span></label>
-                <input type="number" id="activation_budget" name="activation_budget" class="form-control" step="0.01">
+                <input type="number" id="activation_budget" name="activation_budget" class="form-control activation-field" step="0.01">
               </div>
               
               <div class="mb-3">
                 <label for="activation_budget_file" class="form-label">Budget File <span class="text-muted">(Optional)</span></label>
-                <input type="file" id="activation_budget_file" name="activation_budget_file" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx">
+                <input type="file" id="activation_budget_file" name="activation_budget_file" class="form-control activation-field" accept=".pdf,.doc,.docx,.xls,.xlsx">
               </div>
               
               <div class="mb-3">
                 <label for="activation_project_lead" class="form-label">Project Lead <span class="text-muted">(Optional)</span></label>
-                <input type="text" id="activation_project_lead" name="activation_project_lead" class="form-control" maxlength="255">
+                <input type="text" id="activation_project_lead" name="activation_project_lead" class="form-control activation-field" maxlength="255">
               </div>
               
               <div class="mb-3">
                 <label for="activation_description" class="form-label">Description <span class="text-muted">(Optional)</span></label>
-                <textarea id="activation_description" name="activation_description" class="form-control" rows="4" placeholder="Describe the activation details..."></textarea>
+                <textarea id="activation_description" name="activation_description" class="form-control activation-field" rows="4" placeholder="Describe the activation details..."></textarea>
               </div>
             </div>
             
@@ -351,178 +395,338 @@
 </div>
 
 <script>
-  function toggleRequestFields() {
-    let requestType = document.getElementById('requestType').value;
-    document.getElementById('form_type').value = requestType;
-    
-    // Show/hide appropriate fields
-    document.getElementById('eventRequestFields').classList.toggle('hidden', requestType !== 'event');
-    document.getElementById('operationRequestFields').classList.toggle('hidden', requestType !== 'operation');
-    document.getElementById('activationRequestFields').classList.toggle('hidden', requestType !== 'activation');
-    
-    // Remove required attribute from all fields first
-    const allFields = document.querySelectorAll('.event-field, .operation-field, .activation-field');
-    allFields.forEach(field => {
-      field.removeAttribute('required');
-      // Also remove any existing validation styling
-      field.classList.remove('is-invalid');
-    });
-    
-    // Set required attributes based on request type
-    if (requestType === 'event') {
-      const eventFields = document.querySelectorAll('.event-field');
-      eventFields.forEach(field => {
-        field.setAttribute('required', '');
-      });
-    } else if (requestType === 'operation') {
-      const operationFields = document.querySelectorAll('.operation-field');
-      operationFields.forEach(field => {
-        field.setAttribute('required', '');
-      });
-    } else if (requestType === 'activation') {
-      // Only name and category are required for activations based on your model
-      const requiredActivationFields = ['activation_name', 'activation_category', 'activation_client'];
-      requiredActivationFields.forEach(fieldId => {
-        const field = document.getElementById(fieldId);
-        if (field) {
-          field.setAttribute('required', '');
-        }
-      });
-    }
-  }
-  
-  // Form validation and submission
-  document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function() {
     const expenseForm = document.getElementById('expenseForm');
-    
-    expenseForm.addEventListener('submit', function(e) {
-      e.preventDefault();
-      
-      const requestType = document.getElementById('requestType').value;
-      let isValid = true;
-      let errorMessage = '';
-      
-      // Basic validation
-      if (!requestType) {
-        errorMessage = 'Please select a request type';
-        isValid = false;
-      } else if (requestType === 'event') {
-        // Validate event fields
-        const eventName = document.getElementById('event_name').value.trim();
-        const eventCategory = document.getElementById('event_category').value;
-        const eventClient = document.getElementById('event_client').value;
-        const eventStartDate = document.getElementById('event_start_date').value;
-        const eventEndDate = document.getElementById('event_end_date').value;
-        const eventBudget = document.getElementById('event_budget').value;
-        const eventProjectLead = document.getElementById('event_project_lead').value.trim();
-        const eventLocation = document.getElementById('event_location').value.trim();
-        
-        if (!eventName) {
-          errorMessage = 'Event name is required';
-          isValid = false;
-        } else if (!eventCategory) {
-          errorMessage = 'Event category is required';
-          isValid = false;
-        } else if (!eventClient) {
-          errorMessage = 'Event client is required';
-          isValid = false;
-        } else if (!eventStartDate) {
-          errorMessage = 'Event start date is required';
-          isValid = false;
-        } else if (!eventEndDate) {
-          errorMessage = 'Event end date is required';
-          isValid = false;
-        } else if (!eventBudget) {
-          errorMessage = 'Event budget is required';
-          isValid = false;
-        } else if (!eventProjectLead) {
-          errorMessage = 'Project lead is required';
-          isValid = false;
-        } else if (!eventLocation) {
-          errorMessage = 'Event location is required';
-          isValid = false;
-        }
-        
-        // Validate dates
-        if (isValid && eventStartDate && eventEndDate && new Date(eventStartDate) > new Date(eventEndDate)) {
-          errorMessage = 'End date must be after start date';
-          isValid = false;
-        }
-        
-        // Validate budget
-        if (isValid && eventBudget && parseFloat(eventBudget) < 0) {
-          errorMessage = 'Budget cannot be negative';
-          isValid = false;
-        }
-        
-      } else if (requestType === 'operation') {
-        // Validate operation fields
-        const operationName = document.getElementById('operation_name').value.trim();
-        const operationCategory = document.getElementById('operation_category').value;
-        const operationClient = document.getElementById('operation_client').value;
-        const operationBudget = document.getElementById('operation_budget').value;
-        const operationProjectLead = document.getElementById('operation_project_lead').value.trim();
-        
-        if (!operationName) {
-          errorMessage = 'Operation name is required';
-          isValid = false;
-        } else if (!operationCategory) {
-          errorMessage = 'Operation category is required';
-          isValid = false;
-        } else if (!operationClient) {
-          errorMessage = 'Operation client is required';
-          isValid = false;
-        } else if (!operationBudget) {
-          errorMessage = 'Operation budget is required';
-          isValid = false;
-        } else if (!operationProjectLead) {
-          errorMessage = 'Project lead is required';
-          isValid = false;
-        }
-        
-        // Validate budget
-        if (isValid && operationBudget && parseFloat(operationBudget) < 0) {
-          errorMessage = 'Budget cannot be negative';
-          isValid = false;
-        }
-        
-      } else if (requestType === 'activation') {
-        // Validate activation fields (only name, category, and client are required)
-        const activationName = document.getElementById('activation_name').value.trim();
-        const activationCategory = document.getElementById('activation_category').value;
-        const activationClient = document.getElementById('activation_client').value;
-        const activationBudget = document.getElementById('activation_budget').value;
-        
-        if (!activationName) {
-          errorMessage = 'Activation name is required';
-          isValid = false;
-        } else if (!activationCategory) {
-          errorMessage = 'Activation category is required';
-          isValid = false;
-        } else if (!activationClient) {
-          errorMessage = 'Activation client is required';
-          isValid = false;
-        }
-        
-        // Validate budget if provided
-        if (isValid && activationBudget && parseFloat(activationBudget) < 0) {
-          errorMessage = 'Budget cannot be negative';
-          isValid = false;
-        }
-      }
-      
-      if (!isValid) {
-        alert(errorMessage);
-        return false;
-      }
-      
-      // If validation passes, submit the form
-      this.submit();
+    const submitExpenseModal = document.getElementById('submitExpenseModal');
+    const requestTypeSelect = document.getElementById('requestType');
+
+    // Initialize form when modal is shown
+    if (submitExpenseModal) {
+        submitExpenseModal.addEventListener('shown.bs.modal', function() {
+            console.log('Modal shown, initializing form');
+            initializeForm();
+            
+            // Reinitialize Nice Select if it exists
+            if (typeof $.fn.niceSelect === 'function') {
+                setTimeout(() => {
+                    $('select[data-nice-select="false"]').niceSelect();
+                    console.log('Nice Select initialized');
+                }, 100);
+            }
+        });
+
+        submitExpenseModal.addEventListener('hidden.bs.modal', function() {
+            console.log('Modal hidden, resetting form');
+            resetForm();
+        });
+    }
+
+    // Handle request type change - this will show/hide fields immediately
+    requestTypeSelect.addEventListener('change', function() {
+        console.log('Request type changed to:', this.value);
+        toggleRequestFields();
     });
-    
-    // Initialize field visibility on page load
-    toggleRequestFields();
-  });
+
+    // Also handle input event as backup
+    requestTypeSelect.addEventListener('input', function() {
+        console.log('Request type input changed to:', this.value);
+        toggleRequestFields();
+    });
+
+    // Handle Nice Select if it's being used
+    if (typeof $.fn.niceSelect === 'function') {
+        $(document).on('click', '.nice-select .option', function() {
+            const niceSelect = $(this).closest('.nice-select');
+            const originalSelect = $(`#${niceSelect.attr('data-id') || niceSelect.prev('select').attr('id')}`);
+            
+            if (originalSelect.attr('id') === 'requestType') {
+                setTimeout(() => {
+                    console.log('Nice Select request type changed to:', requestTypeSelect.value);
+                    toggleRequestFields();
+                }, 50);
+            }
+        });
+    }
+
+    // Handle client selection changes - unified event listener for both regular and Nice Select
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('client-select')) {
+            const type = getTypeFromElementId(e.target.id);
+            console.log(`Client changed for ${type}:`, e.target.value);
+            loadBrands(type);
+        }
+    });
+
+    // Handle Nice Select client changes
+    if (typeof $.fn.niceSelect === 'function') {
+        $(document).on('click', '.nice-select .option', function() {
+            const niceSelect = $(this).closest('.nice-select');
+            const originalSelect = niceSelect.prev('select');
+            
+            if (originalSelect.hasClass('client-select')) {
+                setTimeout(() => {
+                    const type = getTypeFromElementId(originalSelect.attr('id'));
+                    console.log(`Nice Select client changed for ${type}:`, originalSelect.val());
+                    loadBrands(type);
+                }, 50);
+            }
+        });
+    }
+
+    // Form submission
+    expenseForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        if (validateForm()) {
+            console.log('Form is valid, submitting...');
+            this.submit();
+        }
+    });
+
+    function initializeForm() {
+        // Reset form state first
+        resetForm();
+        // Don't call toggleRequestFields() here since requestType is empty
+        // Fields will be toggled when user selects a request type
+    }
+
+    function resetForm() {
+        expenseForm.reset();
+        expenseForm.classList.remove('was-validated');
+        
+        // Hide all field containers
+        ['eventRequestFields', 'operationRequestFields', 'activationRequestFields'].forEach(id => {
+            const container = document.getElementById(id);
+            if (container) {
+                container.classList.add('hidden');
+                // Clear validation states and required attributes
+                container.querySelectorAll('input, select, textarea').forEach(field => {
+                    field.classList.remove('is-invalid', 'is-valid');
+                    field.removeAttribute('required');
+                });
+            }
+        });
+
+        // Reset all brand dropdowns
+        document.querySelectorAll('.brand-select').forEach(brandSelect => {
+            brandSelect.innerHTML = '<option value="">Select Client First</option>';
+            brandSelect.disabled = true;
+            brandSelect.classList.remove('loading');
+            // Update nice select if it exists
+            if (typeof $.fn.niceSelect === 'function') {
+                $(brandSelect).niceSelect('update');
+            }
+        });
+
+        // Clear form_type
+        document.getElementById('form_type').value = '';
+    }
+
+    function toggleRequestFields() {
+        const requestType = requestTypeSelect.value;
+        document.getElementById('form_type').value = requestType;
+
+        console.log('Toggling fields for type:', requestType || 'none selected');
+
+        // Get all field containers
+        const containers = {
+            event: document.getElementById('eventRequestFields'),
+            operation: document.getElementById('operationRequestFields'),
+            activation: document.getElementById('activationRequestFields')
+        };
+
+        // Hide all containers first and remove required attributes
+        Object.values(containers).forEach(container => {
+            if (container) {
+                container.classList.add('hidden');
+                container.querySelectorAll('input, select, textarea').forEach(field => {
+                    field.removeAttribute('required');
+                    field.classList.remove('is-invalid', 'is-valid');
+                });
+            }
+        });
+
+        // Only show container if a valid request type is selected
+        if (requestType && containers[requestType]) {
+            containers[requestType].classList.remove('hidden');
+            
+            // Set required fields based on type
+            if (requestType === 'event') {
+                ['event_name', 'event_category', 'event_start_date', 'event_end_date', 'event_budget', 'event_project_lead', 'event_location'].forEach(fieldId => {
+                    const field = document.getElementById(fieldId);
+                    if (field) field.setAttribute('required', '');
+                });
+            } else if (requestType === 'operation') {
+                ['operation_name', 'operation_category', 'operation_budget', 'operation_project_lead'].forEach(fieldId => {
+                    const field = document.getElementById(fieldId);
+                    if (field) field.setAttribute('required', '');
+                });
+            } else if (requestType === 'activation') {
+                ['activation_name', 'activation_category'].forEach(fieldId => {
+                    const field = document.getElementById(fieldId);
+                    if (field) field.setAttribute('required', '');
+                });
+            }
+
+            console.log(`${requestType} fields are now visible and required fields set`);
+        }
+
+        // Reset brand dropdowns when type changes
+        document.querySelectorAll('.brand-select').forEach(brandSelect => {
+            brandSelect.innerHTML = '<option value="">Select Client First</option>';
+            brandSelect.disabled = true;
+            brandSelect.classList.remove('loading');
+            if (typeof $.fn.niceSelect === 'function') {
+                $(brandSelect).niceSelect('update');
+            }
+        });
+    }
+
+    async function loadBrands(type) {
+        const clientSelect = document.getElementById(`${type}_client`);
+        const brandSelect = document.getElementById(`${type}_brand`);
+        const clientId = clientSelect.value;
+
+        console.log(`Loading brands for ${type}, client ID: ${clientId}`);
+
+        if (!clientId) {
+            brandSelect.innerHTML = '<option value="">Select Client First</option>';
+            brandSelect.disabled = true;
+            brandSelect.classList.remove('loading');
+            if (typeof $.fn.niceSelect === 'function') {
+                $(brandSelect).niceSelect('update');
+            }
+            return;
+        }
+
+        // Show loading state
+        brandSelect.innerHTML = '<option value="">Loading...</option>';
+        brandSelect.disabled = true;
+        brandSelect.classList.add('loading');
+        
+        // Update nice select if it exists
+        if (typeof $.fn.niceSelect === 'function') {
+            $(brandSelect).niceSelect('update');
+        }
+
+        try {
+            const response = await fetch(`{% url 'wallet:get_brands_by_client' %}?client_id=${clientId}`);
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to fetch brands');
+            }
+
+            // Clear and populate brands
+            brandSelect.innerHTML = '<option value="">Select Brand (Optional)</option>';
+            if (data.brands && data.brands.length > 0) {
+                data.brands.forEach(brand => {
+                    const option = document.createElement('option');
+                    option.value = brand.id;
+                    option.textContent = brand.name;
+                    brandSelect.appendChild(option);
+                });
+                console.log(`Loaded ${data.brands.length} brands for client ${clientId}`);
+            } else {
+                console.log('No brands found for client ID:', clientId);
+            }
+
+            // Enable dropdown
+            brandSelect.disabled = false;
+            brandSelect.classList.remove('loading');
+            
+            // Update nice select if it exists
+            if (typeof $.fn.niceSelect === 'function') {
+                $(brandSelect).niceSelect('update');
+            }
+
+        } catch (error) {
+            console.error('Error loading brands:', error);
+            brandSelect.innerHTML = '<option value="">Error loading brands</option>';
+            brandSelect.disabled = true;
+            brandSelect.classList.remove('loading');
+            
+            if (typeof $.fn.niceSelect === 'function') {
+                $(brandSelect).niceSelect('update');
+            }
+            alert('Failed to load brands. Please try again.');
+        }
+    }
+
+    function getTypeFromElementId(elementId) {
+        if (elementId.startsWith('event_')) return 'event';
+        if (elementId.startsWith('operation_')) return 'operation';
+        if (elementId.startsWith('activation_')) return 'activation';
+        return '';
+    }
+
+    function validateForm() {
+        const requestType = requestTypeSelect.value;
+        let isValid = true;
+        let errorMessage = '';
+
+        if (!requestType) {
+            errorMessage = 'Please select a request type';
+            isValid = false;
+        } else {
+            // Validate required fields for the selected type
+            const requiredFields = document.querySelectorAll(`#${requestType}RequestFields [required]`);
+            
+            for (let field of requiredFields) {
+                const value = field.type === 'file' ? field.files.length > 0 : field.value.trim();
+                
+                if (!value) {
+                    const label = field.closest('.mb-3').querySelector('label').textContent.replace('*', '').trim();
+                    errorMessage = `${label} is required`;
+                    isValid = false;
+                    field.classList.add('is-invalid');
+                    break;
+                } else {
+                    field.classList.remove('is-invalid');
+                    field.classList.add('is-valid');
+                }
+            }
+
+            // Additional validation for specific fields
+            if (isValid) {
+                if (requestType === 'event') {
+                    const startDate = document.getElementById('event_start_date').value;
+                    const endDate = document.getElementById('event_end_date').value;
+                    const budget = document.getElementById('event_budget').value;
+
+                    if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+                        errorMessage = 'End date must be after start date';
+                        isValid = false;
+                        document.getElementById('event_end_date').classList.add('is-invalid');
+                    } else if (budget && parseFloat(budget) < 0) {
+                        errorMessage = 'Budget cannot be negative';
+                        isValid = false;
+                        document.getElementById('event_budget').classList.add('is-invalid');
+                    }
+                } else if (requestType === 'operation') {
+                    const budget = document.getElementById('operation_budget').value;
+                    if (budget && parseFloat(budget) < 0) {
+                        errorMessage = 'Budget cannot be negative';
+                        isValid = false;
+                        document.getElementById('operation_budget').classList.add('is-invalid');
+                    }
+                } else if (requestType === 'activation') {
+                    const budget = document.getElementById('activation_budget').value;
+                    if (budget && parseFloat(budget) < 0) {
+                        errorMessage = 'Budget cannot be negative';
+                        isValid = false;
+                        document.getElementById('activation_budget').classList.add('is-invalid');
+                    }
+                }
+            }
+        }
+
+        if (!isValid) {
+            alert(errorMessage);
+        }
+
+        return isValid;
+    }
+});
 </script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>

@@ -3092,3 +3092,37 @@ def reversal_timeout_callback(request):
     except Exception as e:
         logger.error(f"Error processing reversal timeout: {str(e)}")
         return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Internal server error'})
+
+
+@login_required
+def get_brands_by_client(request):
+    """
+    API endpoint to get brands associated with a specific client
+    """
+    client_id = request.GET.get('client_id')
+    
+    if not client_id:
+        return JsonResponse({'error': 'Client ID is required'}, status=400)
+    
+    try:
+        # Get the user's company
+        company = get_object_or_404(CompanyKYC, user=request.user)
+        
+        # Verify the client belongs to the user's company
+        client = get_object_or_404(Client, id=client_id, company=company, is_active=True)
+        
+        # Get brands for this client
+        brands = Brand.objects.filter(
+            client=client, 
+            is_active=True
+        ).values('id', 'name')
+        
+        return JsonResponse({
+            'brands': list(brands),
+            'client_name': client.name
+        })
+        
+    except Client.DoesNotExist:
+        return JsonResponse({'error': 'Client not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

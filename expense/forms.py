@@ -4,48 +4,41 @@ from wallet.models import Wallet
 class EventExpenseForm(forms.ModelForm):
     class Meta:
         model = Event
-        fields = ['name', 'category','client', 'start_date','budget_file', 'end_date', 'budget', 'project_lead', 'location']
-        # widgets = {
-        #             'start_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-        #             'end_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-        #             'name': forms.TextInput(attrs={'class': 'form-control'}),
-        #             'category': forms.Select(attrs={'class': 'form-control'}),
-        #             'budget': forms.NumberInput(attrs={'class': 'form-control'}),
-        #             'project_lead': forms.TextInput(attrs={'class': 'form-control'}),
-        #             'location': forms.TextInput(attrs={'class': 'form-control'}),
-        #         }
+        fields = ['name', 'category', 'client', 'start_date', 'budget_file', 'end_date', 'budget', 'project_lead', 'location']
+        
     def __init__(self, *args, **kwargs):
         super(EventExpenseForm, self).__init__(*args, **kwargs)
         for field in self.fields.values():
             field.widget.attrs.update({'class': 'form-control'})
+        
+        # Make client field optional
+        self.fields['client'].required = False
 
 class ActivationExpenseForm(forms.ModelForm):
     class Meta:
         model = Activation
-        fields = ['name','category','client','budget','budget_file','description','project_lead']
-
+        fields = ['name', 'category', 'client', 'budget', 'budget_file', 'description', 'project_lead']
+        
     def __init__(self, *args, **kwargs):
         super(ActivationExpenseForm, self).__init__(*args, **kwargs)
         for field in self.fields.values():
             field.widget.attrs.update({'class': 'form-control'})
+        
+        # Make client field optional
+        self.fields['client'].required = False
 
 class OperationExpenseForm(forms.ModelForm):
     class Meta:
         model = Operation
-        fields = ['name', 'category','client', 'budget','budget_file', 'project_lead']
-        # widgets = {
-        #             'name': forms.TextInput(attrs={'class': 'form-control'}),
-        #             'category': forms.Select(attrs={'class': 'form-control'}),
-        #             'budget': forms.NumberInput(attrs={'class': 'form-control'}),
-        #             'project_lead': forms.Select(attrs={'class': 'form-control'}),
-        #         }
-
+        fields = ['name', 'category', 'client', 'budget', 'budget_file', 'project_lead']
+        
     def __init__(self, *args, **kwargs):
         super(OperationExpenseForm, self).__init__(*args, **kwargs)
         for field in self.fields.values():
             field.widget.attrs.update({'class': 'form-control'})
-
-
+        
+        # Make client field optional
+        self.fields['client'].required = False
 class ExpenseRequestForm(forms.ModelForm):
     """Form for creating expense requests"""
     batch_file = forms.FileField(required=False, widget=forms.FileInput(attrs={'class': 'form-control', 'id': 'batch_file', 'accept': '.csv'}))
