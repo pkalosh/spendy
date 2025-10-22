@@ -626,112 +626,98 @@
 {% endfor %}
 
 <!-- JavaScript -->
+<!-- JavaScript -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded, initializing expense modal');
     
-    // Check for expenses (your existing code)
+    // Check for expenses
     let hasEventExpenses = false;
     let hasOperationExpenses = false;
     let hasActivationExpenses = false;
     
-    document.querySelectorAll('#eventsRequestsTable tbody tr').forEach(function(row) {
-        if (!row.querySelector('td[colspan]')) {
-            hasEventExpenses = true;
-        }
+    document.querySelectorAll('#eventsRequestsTable tbody tr').forEach(row => {
+        if (!row.querySelector('td[colspan]')) hasEventExpenses = true;
     });
-    document.querySelectorAll('#operationsRequestsTable tbody tr').forEach(function(row) {
-        if (!row.querySelector('td[colspan]')) {
-            hasOperationExpenses = true;
-        }
+    document.querySelectorAll('#operationsRequestsTable tbody tr').forEach(row => {
+        if (!row.querySelector('td[colspan]')) hasOperationExpenses = true;
     });
-    document.querySelectorAll('#activationsRequestsTable tbody tr').forEach(function(row) {
-        if (!row.querySelector('td[colspan]')) {
-            hasActivationExpenses = true;
-        }
+    document.querySelectorAll('#activationsRequestsTable tbody tr').forEach(row => {
+        if (!row.querySelector('td[colspan]')) hasActivationExpenses = true;
     });
     
     if (!hasEventExpenses) {
-        document.querySelector('#eventsRequestsTable tbody').innerHTML = '<tr><td colspan="9" class="text-center">No event requests found.</td></tr>';
+        document.querySelector('#eventsRequestsTable tbody').innerHTML =
+            '<tr><td colspan="9" class="text-center">No event requests found.</td></tr>';
     }
     if (!hasOperationExpenses) {
-        document.querySelector('#operationsRequestsTable tbody').innerHTML = '<tr><td colspan="9" class="text-center">No operation requests found.</td></tr>';
+        document.querySelector('#operationsRequestsTable tbody').innerHTML =
+            '<tr><td colspan="9" class="text-center">No operation requests found.</td></tr>';
     }
     if (!hasActivationExpenses) {
-        document.querySelector('#activationsRequestsTable tbody').innerHTML = '<tr><td colspan="9" class="text-center">No activation requests found.</td></tr>';
+        document.querySelector('#activationsRequestsTable tbody').innerHTML =
+            '<tr><td colspan="9" class="text-center">No activation requests found.</td></tr>';
     }
-    
+
     // Sync desktop and mobile tabs
-    document.querySelectorAll('#expenseTypeTabs .nav-link').forEach(function(tab) {
+    document.querySelectorAll('#expenseTypeTabs .nav-link').forEach(tab => {
         tab.addEventListener('click', function() {
             const target = this.getAttribute('data-bs-target');
             const mobileTarget = target + '-mobile';
             const mobileTab = document.querySelector(mobileTarget);
             if (mobileTab) {
-                document.querySelectorAll('#expenseMobileTabContent .tab-pane').forEach(function(pane) {
-                    pane.classList.remove('show', 'active');
-                });
+                document.querySelectorAll('#expenseMobileTabContent .tab-pane').forEach(pane =>
+                    pane.classList.remove('show', 'active')
+                );
                 mobileTab.classList.add('show', 'active');
             }
         });
     });
-    
+
     // Filter functionality
     const filterButtons = document.querySelectorAll('[data-filter]');
     const searchInput = document.getElementById('requestSearch');
     const requestRows = document.querySelectorAll('.request-row');
     const requestCards = document.querySelectorAll('.request-card');
-    
+
     filterButtons.forEach(button => {
         button.addEventListener('click', function() {
             filterButtons.forEach(btn => btn.classList.remove('active'));
             this.classList.add('active');
             const filter = this.getAttribute('data-filter');
             requestRows.forEach(row => {
-                if (filter === 'all' || row.classList.contains(filter + '-request')) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
+                row.style.display =
+                    filter === 'all' || row.classList.contains(filter + '-request') ? '' : 'none';
             });
             requestCards.forEach(card => {
-                if (filter === 'all' || card.classList.contains(filter + '-request')) {
-                    card.style.display = '';
-                } else {
-                    card.style.display = 'none';
-                }
+                card.style.display =
+                    filter === 'all' || card.classList.contains(filter + '-request') ? '' : 'none';
             });
-        });
-    });
-    
-    searchInput.addEventListener('input', function() {
-        const searchTerm = this.value.toLowerCase();
-        requestRows.forEach(row => {
-            const rowText = row.textContent.toLowerCase();
-            row.style.display = rowText.includes(searchTerm) ? '' : 'none';
-        });
-        requestCards.forEach(card => {
-            const cardText = card.textContent.toLowerCase();
-            card.style.display = cardText.includes(searchTerm) ? '' : 'none';
         });
     });
 
-    // Modal initialization - MOVED HERE for better timing
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        requestRows.forEach(row => {
+            row.style.display = row.textContent.toLowerCase().includes(searchTerm) ? '' : 'none';
+        });
+        requestCards.forEach(card => {
+            card.style.display = card.textContent.toLowerCase().includes(searchTerm) ? '' : 'none';
+        });
+    });
+
+    // Modal initialization
     const submitExpenseModal = document.getElementById('submitExpenseModal');
     if (submitExpenseModal) {
-        // Initialize when modal is shown
         submitExpenseModal.addEventListener('shown.bs.modal', function() {
             console.log('Modal shown, initializing fields');
-            
-            // Wait a bit for Nice Select to initialize if present
             setTimeout(() => {
                 initializeExpenseFields();
                 attachExpenseFieldListeners();
                 toggleBatchFields();
-            }, 100);
+            }, 300);
         });
-        
-        // Reset form when modal is hidden
+
         submitExpenseModal.addEventListener('hidden.bs.modal', function() {
             const form = document.getElementById('expense-form');
             if (form) {
@@ -741,12 +727,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
+
     // Form validation
     const expenseForm = document.getElementById('expense-form');
     const batchCheckbox = document.getElementById('id_batch_disbursement_type');
     const batchFile = document.getElementById('batch_file');
-    
     if (expenseForm && batchCheckbox && batchFile) {
         expenseForm.addEventListener('submit', function(event) {
             if (batchCheckbox.checked && !batchFile.value) {
@@ -777,8 +762,6 @@ function initializeExpenseFields() {
         eventField.classList.add('hidden');
         operationField.classList.add('hidden');
         activationField.classList.add('hidden');
-        
-        // Remove required attributes
         document.querySelectorAll('#id_event, #id_operation, #id_activation').forEach(field => {
             if (field) field.removeAttribute('required');
         });
@@ -788,56 +771,55 @@ function initializeExpenseFields() {
     }
 }
 
-// Attach event listeners for expense fields - SEPARATE FUNCTION
+// Attach event listeners for expense fields
 function attachExpenseFieldListeners() {
     const requestTypeSelect = document.getElementById('id_request_type');
     const batchCheckbox = document.getElementById('id_batch_disbursement_type');
-    
     console.log('Attaching listeners to:', {
         requestTypeSelect: !!requestTypeSelect,
         batchCheckbox: !!batchCheckbox
     });
 
     if (requestTypeSelect) {
-        // Remove any existing listeners first
+        // Replace existing listeners
         const newSelect = requestTypeSelect.cloneNode(true);
         requestTypeSelect.parentNode.replaceChild(newSelect, requestTypeSelect);
-        
-        // Add fresh event listener
+
         newSelect.addEventListener('change', function() {
             console.log('Request type changed to:', this.value, 'Text:', this.options[this.selectedIndex]?.text);
             toggleExpenseFields();
         });
 
-        // Handle Nice Select if present
+        // Enhanced Nice Select listener logic
         const modalElement = document.getElementById('submitExpenseModal');
-        const observer = new MutationObserver(function(mutations) {
-            mutations.forEach(function(mutation) {
-                if (mutation.type === 'childList') {
-                    const niceSelect = modalElement.querySelector('.nice-select');
-                    if (niceSelect && !niceSelect.hasAttribute('data-listener-attached')) {
-                        niceSelect.setAttribute('data-listener-attached', 'true');
-                        console.log('Nice Select detected, attaching click listener');
-                        
-                        niceSelect.addEventListener('click', function(e) {
-                            const option = e.target.closest('.option');
-                            if (option) {
-                                console.log('Nice Select option clicked:', option.textContent);
-                                // Wait for Nice Select to update the hidden select
-                                setTimeout(() => {
-                                    const hiddenSelect = modalElement.querySelector('select[name="request_type"]');
-                                    if (hiddenSelect) {
-                                        console.log('Hidden select value after Nice Select update:', hiddenSelect.value);
-                                        toggleExpenseFields();
-                                    }
-                                }, 50);
+
+        const attachNiceSelectListener = () => {
+            const niceSelect = modalElement.querySelector('.nice-select');
+            if (niceSelect && !niceSelect.hasAttribute('data-listener-attached')) {
+                niceSelect.setAttribute('data-listener-attached', 'true');
+                console.log('Nice Select detected, attaching click listener');
+
+                niceSelect.addEventListener('click', function(e) {
+                    const option = e.target.closest('.option');
+                    if (option) {
+                        console.log('Nice Select option clicked:', option.textContent);
+                        setTimeout(() => {
+                            const hiddenSelect = modalElement.querySelector('select[name="request_type"]');
+                            if (hiddenSelect) {
+                                console.log('Hidden select value after Nice Select update:', hiddenSelect.value);
+                                toggleExpenseFields();
                             }
-                        });
+                        }, 100);
                     }
-                }
-            });
-        });
-        
+                });
+            }
+        };
+
+        // Attach immediately if already rendered
+        attachNiceSelectListener();
+
+        // Fallback if created later
+        const observer = new MutationObserver(() => attachNiceSelectListener());
         observer.observe(modalElement, { childList: true, subtree: true });
     }
 
@@ -849,10 +831,11 @@ function attachExpenseFieldListeners() {
     }
 }
 
-// Toggle expense form fields - IMPROVED VERSION
+// Toggle expense form fields
 function toggleExpenseFields() {
-    const requestTypeSelect = document.getElementById('id_request_type') || 
-                              document.querySelector('select[name="request_type"]'); // Fallback selector
+    const requestTypeSelect =
+        document.getElementById('id_request_type') ||
+        document.querySelector('select[name="request_type"]');
     const eventField = document.getElementById('event-field');
     const operationField = document.getElementById('operation-field');
     const activationField = document.getElementById('activation-field');
@@ -872,20 +855,15 @@ function toggleExpenseFields() {
     }
 
     const selectedValue = requestTypeSelect.value;
-    const selectedText = requestTypeSelect.options[requestTypeSelect.selectedIndex]?.text?.toLowerCase().trim() || '';
-    
+    const selectedText =
+        requestTypeSelect.options[requestTypeSelect.selectedIndex]?.text?.toLowerCase().trim() || '';
     console.log('Toggling fields - Value:', selectedValue, 'Text:', selectedText);
 
-    // Hide all fields and remove required attributes first
-    [eventField, operationField, activationField].forEach(field => {
-        field.classList.add('hidden');
-    });
-    
+    [eventField, operationField, activationField].forEach(f => f.classList.add('hidden'));
     document.querySelectorAll('#id_event, #id_operation, #id_activation').forEach(field => {
         if (field) field.removeAttribute('required');
     });
 
-    // Show relevant field based on request type
     if (selectedText.includes('event') || selectedValue.includes('event')) {
         eventField.classList.remove('hidden');
         const eventSelect = document.getElementById('id_event');
