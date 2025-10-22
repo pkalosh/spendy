@@ -12,7 +12,7 @@ from django.urls import reverse
 from django.utils.decorators import method_decorator
 from .models import Expense, Event,BatchPayments, Operation, ExpenseGroup, CategoryBase, ExpenseCategory, EventCategory, OperationCategory,ExpenseRequestType, Activation, ActivationCategory
 from .forms import ExpenseRequestForm, ExpenseApprovalForm, PaymentForm, EventExpenseForm, OperationExpenseForm,ActivationExpenseForm
-from wallet.models import Transaction, CompanyKYC, Wallet,TransactionFee,Client
+from wallet.models import Transaction, CompanyKYC, Wallet,TransactionFee,Client,StaffProfile
 from django.core.exceptions import ValidationError
 from decimal import Decimal, InvalidOperation
 from django.utils import timezone
@@ -535,8 +535,8 @@ def expense_detail(request, id, item_type=None):
     # Initialize context variables
     context = {
         'is_admin': is_admin(user),
-        'users': User.objects.all().order_by('first_name', 'last_name'),
-        'expense_category_choices': ExpenseCategory.objects.all(),
+        'user': StaffProfile.objects.filter(company=company),
+        'expense_category_choices': ExpenseCategory.objects.filter(company=company, is_active=True).order_by('name'),
     }
 
     # Handle query parameters for expense filters
