@@ -32,7 +32,11 @@ class CompanyKYC(models.Model):
     logo = models.ImageField(upload_to="kyc", default="default.jpg",validators=[FileExtensionValidator(['jpg', 'jpeg', 'png'])])
     kra_pin = models.FileField(upload_to="kyc", null=True, blank=True,validators=[FileExtensionValidator(['pdf'])])
     registration_certificate = models.FileField(upload_to="kyc", null=True, blank=True,validators=[FileExtensionValidator(['pdf'])])
+    organization_type = models.CharField(max_length=100, choices=[
+        ('event_organization', 'Event Organization'),
+        ('agency', 'Agency')
 
+    ], blank=True, null=True)
     # Address
     country = models.CharField(max_length=100, null=True, blank=True)
     county = models.CharField(max_length=100, null=True, blank=True)
@@ -147,7 +151,7 @@ NOTIFICATION_TYPE = (
 
 class Transaction(models.Model):
     transaction_id = ShortUUIDField(unique=True, length=15, max_length=20, prefix="SPNDY")
-    transaction_code = models.CharField(unique=True, max_length=100, null=True, blank=True)
+    transaction_code = models.CharField(unique=True, max_length=255, null=True, blank=True)
     # Core fields
     company = models.ForeignKey('CompanyKYC', on_delete=models.SET_NULL, blank=True, null=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="user_transactions")
@@ -216,7 +220,7 @@ class Transaction(models.Model):
 
 class TransactionFee(models.Model):
     transaction_id = ShortUUIDField(unique=True, length=15, max_length=20, prefix="SPNDY")
-    transaction_code = models.CharField(unique=True, max_length=50, null=True, blank=True)
+    transaction_code = models.CharField(unique=True, max_length=255, null=True, blank=True)
     # Core fields
     company = models.ForeignKey('CompanyKYC', on_delete=models.SET_NULL, blank=True, null=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="userfee_transactions")

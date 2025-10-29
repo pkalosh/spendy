@@ -1158,6 +1158,11 @@ def approve_expenses(request, expense_id):
                 {'error': 'This expense has already been processed.'},
                 status=400
             )
+        if expense.wallet.balance < expense.amount:
+            return JsonResponse(
+                {'error': 'Insufficient funds in the wallet.'},
+                status=400
+            )
         expense.approved = True
         expense.approved_by = request.user
         expense.approved_at = timezone.now()
@@ -1392,6 +1397,7 @@ def make_payment(request):
                         # Generate unique transaction reference
                         random_code = get_random_string(6).upper()
                         transaction_ref = f"EXP-{random_code}"
+                        print(transaction_ref)
 
                         # Create transaction record
                         payment_details = {

@@ -31,7 +31,6 @@ urlpatterns = [
     path('staff/update/<int:pk>/', views.update_staff_profile, name='staff-update'),
     path('staff/delete/<int:pk>/', views.delete_staff_profile, name='staff-delete'),
 
-
     path('settings/', views.settings_view, name='settings_view'),
     path('settings/expense-category/add/', views.add_expense_category, name='add_expense_category'),
     path('settings/operation-category/add/', views.add_operation_category, name='add_operation_category'),
