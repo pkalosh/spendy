@@ -10,7 +10,7 @@ django-jazzmin==3.0.1
 et_xmlfile==2.0.0
 idna==3.10
 mysqlclient==2.2.7
-numpy==2.2.6
+numpy==1.26.4
 pandas==2.3.3
 pillow==11.1.0
 pycparser==2.22
