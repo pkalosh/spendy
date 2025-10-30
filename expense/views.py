@@ -1803,16 +1803,20 @@ def initiate_mpesa_payment(payment_method, amount, payment_details, transaction_
             if payment_method == 'paybill_number':
                 receiver_shortcode = payment_details['paybill_number']
                 account_reference = payment_details['account_number']
+                command_id = 'BusinessPayBill'
             else:  # till_number
                 receiver_shortcode = payment_details['till_number']
                 account_reference = transaction_ref
+                command_id = 'BusinessBuyGoods'
             
             response = initiate_b2b_payment(
                 mpesa=mpesa,
                 amount=amount,
                 business_id=receiver_shortcode,
                 wallet=expense.wallet,
-                transaction=transaction_record  # Pass the transaction record
+                account_reference=account_reference,  # Now passed correctly
+                command_id=command_id,  # Dynamic based on method
+                transaction=transaction_record
             )
         else:
             return {'ResponseCode': '1', 'ResponseDescription': 'Unsupported payment method'}
@@ -1822,6 +1826,55 @@ def initiate_mpesa_payment(payment_method, amount, payment_details, transaction_
     except Exception as e:
         logger.error(f"M-Pesa payment initiation error: {str(e)}", exc_info=True)
         return {'ResponseCode': '1', 'ResponseDescription': 'Payment service temporarily unavailable'}
+
+# def initiate_mpesa_payment(payment_method, amount, payment_details, transaction_ref, expense, transaction_record):
+#     """Initiate M-Pesa payment based on method type"""
+    
+#     try:
+#         # Get access token
+#         mpesa = MpesaDaraja()
+#         access_token = mpesa.get_access_token()
+#         if not access_token:
+#             return {'ResponseCode': '1', 'ResponseDescription': 'Failed to authenticate with M-Pesa API'}
+
+#         # Common payment parameters
+#         callback_url = f"{settings.BASE_URL}{reverse('wallet:b2c_result')}"
+#         timeout_url = f"{settings.BASE_URL}{reverse('wallet:b2c_timeout')}"
+        
+#         if payment_method == 'mpesa_number':
+#             # B2C Payment - Pass the transaction_record
+#             response = initiate_b2c_payment(
+#                 mpesa=mpesa,
+#                 amount=amount,
+#                 phone_number=payment_details['phone_number'],
+#                 wallet=expense.wallet,
+#                 transaction=transaction_record  # Pass the transaction record
+#             )
+            
+#         elif payment_method in ['paybill_number', 'till_number']:
+#             # B2B Payment
+#             if payment_method == 'paybill_number':
+#                 receiver_shortcode = payment_details['paybill_number']
+#                 account_reference = payment_details['account_number']
+#             else:  # till_number
+#                 receiver_shortcode = payment_details['till_number']
+#                 account_reference = transaction_ref
+            
+#             response = initiate_b2b_payment(
+#                 mpesa=mpesa,
+#                 amount=amount,
+#                 business_id=receiver_shortcode,
+#                 wallet=expense.wallet,
+#                 transaction=transaction_record  # Pass the transaction record
+#             )
+#         else:
+#             return {'ResponseCode': '1', 'ResponseDescription': 'Unsupported payment method'}
+
+#         return response
+
+#     except Exception as e:
+#         logger.error(f"M-Pesa payment initiation error: {str(e)}", exc_info=True)
+#         return {'ResponseCode': '1', 'ResponseDescription': 'Payment service temporarily unavailable'}
 
 @login_required
 def get_expense_options(request):

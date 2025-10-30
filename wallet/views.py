@@ -1050,16 +1050,18 @@ def initiate_b2c_payment(mpesa, phone_number, amount, wallet, transaction=None):
     
     return response
 
-def initiate_b2b_payment(mpesa, business_id, amount, wallet, transaction=None):
+
+def initiate_b2b_payment(mpesa, business_id, amount, wallet, account_reference=None, command_id='BusinessPayBill', transaction=None):
     """
     Initiate B2B payment
     Business to business payment
     """
-    account_reference = f"{wallet.company.company_name}-{wallet.wallet_number}"
-    remarks = f"Wallet funding for {wallet.company.company_name}"
+    # Use provided account_reference or fallback to wallet-based
+    if account_reference is None:
+        account_reference = f"{wallet.company.company_name}-{wallet.wallet_number}"
     
+    remarks = f"Wallet funding for {wallet.company.company_name}"
     if transaction:
-        account_reference = account_reference
         remarks = f"{remarks} (Ref: {transaction.id})"
     
     response = mpesa.b2b_payment(
@@ -1067,8 +1069,11 @@ def initiate_b2b_payment(mpesa, business_id, amount, wallet, transaction=None):
         receiver_shortcode=business_id,
         account_reference=account_reference,
         remarks=remarks,
-        command_id='BusinessPayBill'  # or 'BusinessBuyGoods' for till numbers
+        command_id=command_id  # Now dynamic: 'BusinessPayBill' or 'BusinessBuyGoods'
     )
+    
+    # Enhanced logging for debugging command_id issues
+    logger.info(f"B2B initiated: command_id={command_id}, shortcode={business_id}, ref={account_reference}, response={response.get('ResponseCode')}")
     
     # Log B2B payment initiation
     if transaction:
@@ -1077,15 +1082,57 @@ def initiate_b2b_payment(mpesa, business_id, amount, wallet, transaction=None):
                 'receiver_shortcode': business_id,
                 'account_reference': account_reference,
                 'remarks': remarks,
+                'command_id': command_id,  # Add for audit
                 'initiated_at': timezone.now().isoformat()
             }
         })
         transaction.conversation_id = response.get('ConversationID')
-        print(f"conversation_id: {transaction.conversation_id}")  # Print the value of transaction.mpesa_checkout_request_id)
+        logger.info(f"Set conversation_id: {transaction.conversation_id}")  # Changed from print for consistency
         transaction.originator_conversation_id = response.get('OriginatorConversationID')
         transaction.save()
     
+    # Early error check for command_id mismatches
+    if response.get('ResponseCode') == '1' and 'command' in response.get('ResponseDescription', '').lower():
+        logger.error(f"B2B failed - possible command_id mismatch: {command_id} for shortcode {business_id}")
+    
     return response
+
+# def initiate_b2b_payment(mpesa, business_id, amount, wallet, transaction=None):
+#     """
+#     Initiate B2B payment
+#     Business to business payment
+#     """
+#     account_reference = f"{wallet.company.company_name}-{wallet.wallet_number}"
+#     remarks = f"Wallet funding for {wallet.company.company_name}"
+    
+#     if transaction:
+#         account_reference = account_reference
+#         remarks = f"{remarks} (Ref: {transaction.id})"
+    
+#     response = mpesa.b2b_payment(
+#         amount=float(amount),
+#         receiver_shortcode=business_id,
+#         account_reference=account_reference,
+#         remarks=remarks,
+#         command_id='BusinessPayBill'  # or 'BusinessBuyGoods' for till numbers
+#     )
+    
+#     # Log B2B payment initiation
+#     if transaction:
+#         transaction.payment_details.update({
+#             'b2b_payment_details': {
+#                 'receiver_shortcode': business_id,
+#                 'account_reference': account_reference,
+#                 'remarks': remarks,
+#                 'initiated_at': timezone.now().isoformat()
+#             }
+#         })
+#         transaction.conversation_id = response.get('ConversationID')
+#         print(f"conversation_id: {transaction.conversation_id}")  # Print the value of transaction.mpesa_checkout_request_id)
+#         transaction.originator_conversation_id = response.get('OriginatorConversationID')
+#         transaction.save()
+    
+#     return response
 
 
 @login_required
