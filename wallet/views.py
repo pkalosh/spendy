@@ -1369,8 +1369,6 @@ def transactions(request):
     if export_format:
         if export_format == 'csv':
             return export_to_csv(txn_queryset)
-        elif export_format == 'excel':
-            return export_to_excel(txn_queryset)
         elif export_format == 'pdf':
             return export_to_pdf(txn_queryset)
     
@@ -1447,29 +1445,6 @@ def export_to_csv(queryset):
         
     return response
 
-
-def export_to_excel(queryset):
-    """
-    Exports a queryset of transactions to an Excel file.
-    """
-    response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="transactions.csv"'
-    
-    writer = csv.writer(response)
-    writer.writerow(['Transaction ID', 'Initiated By', 'Recipient', 'Amount', 'Status', 'Type', 'Date', 'Description'])
-    
-    for txn in queryset:
-        writer.writerow([
-            txn.transaction_id,
-            txn.user.get_full_name() or txn.user.username,
-            txn.receiver.get_full_name() if txn.receiver else "-",
-            f"{txn.sender_wallet.currency if txn.sender_wallet else 'KES'} {txn.amount}",
-            txn.status.title(),
-            txn.transaction_type.replace('_', ' ').title(),
-            txn.date.strftime('%Y-%m-%d %H:%M:%S'),
-            txn.description or "-"
-        ])
-    return response
 
 def export_to_pdf(queryset):
     """
