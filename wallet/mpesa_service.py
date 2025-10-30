@@ -313,7 +313,7 @@ class MpesaDaraja:
             raise
     
     def b2b_payment(self, amount, receiver_shortcode, remarks, account_reference=None,
-                command_id='BusinessPayBill', callback_url=None, timeout_url=None):
+                    command_id='BusinessPayBill', callback_url=None, timeout_url=None):
         """
         Initiate B2B payment
         
@@ -340,17 +340,29 @@ class MpesaDaraja:
             queue_timeout_url = timeout_url or f"{settings.BASE_URL}/b2b/timeout/"
             result_url = callback_url or f"{settings.BASE_URL}/b2b/result/"
             
+            # DYNAMIC: Set identifier types based on command_id
+            sender_identifier_type = 4  # Always organization for sender
+            if command_id == 'BusinessPayBill':
+                receiver_identifier_type = 4  # PayBill receiver
+            elif command_id == 'BusinessBuyGoods':
+                receiver_identifier_type = 2  # Till receiver
+            else:
+                raise ValueError(f"Unsupported command_id: {command_id}. Must be 'BusinessPayBill' or 'BusinessBuyGoods'.")
+            
+            # Log types for debugging
+            logger.info(f"B2B payload types: Sender={sender_identifier_type}, Receiver={receiver_identifier_type} for command={command_id}")
+            
             # Prepare request payload
             payload = {
                 "Initiator": self.initiator_name,
                 "SecurityCredential": self.security_credential,
                 "CommandID": command_id,
-                "SenderIdentifierType": 4,
-                "ReceiverIdentifierType": 4,
+                "SenderIdentifierType": sender_identifier_type,
+                "ReceiverIdentifierType": receiver_identifier_type,  # FIXED: Dynamic + correct spelling
                 "Amount": amount,
                 "PartyA": self.shortcode,
                 "PartyB": receiver_shortcode,
-                "AccountReference": account_reference,
+                "AccountReference": account_reference or "",  # String; empty OK for BuyGoods but use transaction_ref
                 "Remarks": remarks,
                 "QueueTimeOutURL": queue_timeout_url,
                 "ResultURL": result_url
@@ -378,7 +390,7 @@ class MpesaDaraja:
                     amount=amount,
                     party_a=self.shortcode,
                     party_b=receiver_shortcode,
-                    # account_reference=account_reference,
+                    account_reference=account_reference,
                     remarks=remarks,
                     status='PENDING'
                 )
