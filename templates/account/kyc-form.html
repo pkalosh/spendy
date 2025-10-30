@@ -83,6 +83,7 @@
                                                         {% endif %}
                                                     </p>
                                                     <p><strong>Company Name:</strong> {{ kyc.company_name }}</p>
+                                                    <p><strong>Organization Type:</strong> {{ kyc.organization_type }}</p>
 
                                                     <p><strong>KRA PIN:</strong> 
                                                         {% if kyc.kra_pin %}
@@ -142,6 +143,9 @@
                                             <div class="row justify-content-center">
                                                 <div class="col-md-6">
                                                     <div class="single-input"><label>Company Name</label>{{ form.company_name }}</div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="single-input"><label>Organization Type</label>{{ form.organization_type }}</div>
                                                 </div>
                                                 <div class="col-md-6">
                                                     <div class="single-input"><label>KRA PIN</label>{{ form.kra_pin }}</div>

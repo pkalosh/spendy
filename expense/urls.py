@@ -19,6 +19,7 @@ urlpatterns = [
     path('expense/<str:id>/operation/', views.expense_detail, {'item_type': 'operation'}, name='operation_expense_detail'),
     path('approvals/', views.expense_approvals, name='expense_approvals'),
     path('expense/<uuid:expense_id>/approve/', views.approve_expenses, name='approve_expense'),
+    path('expense/<uuid:expense_id>/csv-preview/', views.preview_expense_csv, name='preview_expense_csv'),
     path('expense/<uuid:expense_id>/decline/', views.decline_expense, name='decline_expense'),
     path('expense/<uuid:expense_id>/undo/', views.undo_expense_action, name='undo_expense'),
     
@@ -32,4 +33,5 @@ urlpatterns = [
     path('reports/', views.reports, name='reports'),
     path('analytics/data/', views.analytics_data, name='analytics_data'),
     path('download-batch-template/', views.download_batch_template, name='download_batch_template'),
+    # path('csv-preview/', views.preview_expense_csv, name='preview_expense_csv'),
 ]

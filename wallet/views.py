@@ -1284,6 +1284,7 @@ def kyc_registration(request):
         kyc = CompanyKYC.objects.get(user=user)
         required_fields = [
             kyc.company_name,
+            kyc.organization_type,
             kyc.logo,
             kyc.kra_pin,
             kyc.registration_certificate,

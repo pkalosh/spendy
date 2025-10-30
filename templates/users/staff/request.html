@@ -484,7 +484,7 @@
 
 <!-- Submit Expense Modal -->
 <div class="modal fade" id="submitExpenseModal" tabindex="-1" aria-labelledby="submitExpenseModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header bg-light">
                 <h5 class="modal-title" id="submitExpenseModalLabel">New Expense Request</h5>
@@ -538,13 +538,40 @@
                         <label class="form-label fw-bold">Batch Disbursement Details</label>
                         <div class="mb-2">
                             <a href="{% url 'expense:download_batch_template' %}" class="btn btn-outline-primary btn-sm">Download CSV Template</a>
-                            <small class="form-text text-muted">Download the template to fill in recipient details (name, amount, mobile number).</small>
+                            <small class="form-text text-muted">Download the template to fill in recipient details (name, amount, mobile, id_number).</small>
                         </div>
                         <div class="mb-2">
-                            <label for="batch_file" class="form-label fw-bold">Upload Batch File</label>
+                            <label for="id_batch_file" class="form-label fw-bold">Upload Batch File</label>
                             {{ expense_form.batch_file }}
                             <div class="invalid-feedback">Please upload a valid CSV file.</div>
                         </div>
+                        
+                        <!-- CSV Preview Section (Full Block - Ensure This Is Here) -->
+                        <div class="mb-3" id="batch-preview" style="display: none;">
+                            <label class="form-label fw-bold">Preview Recipients</label>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered" id="csvPreviewTable">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Amount (KES)</th>
+                                            <th>Mobile Number</th>
+                                            <th>ID Number</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="csvPreviewBody">
+                                        <!-- Rows will be populated by JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div id="previewSummary" class="alert alert-info mt-2" style="display: none;">
+                                <strong>Summary:</strong> <span id="totalCount">0</span> recipients | Total Amount: KES <span id="totalAmount">0</span>
+                                <div id="validationErrors" class="mt-2 small text-danger"></div>  <!-- Critical: This fixes the null error -->
+                            </div>
+                        </div>
+                        
+                        <!-- Hidden field for batch data (JSON serialized) -->
+                        <textarea name="batch_data" id="batchData" class="d-none" readonly></textarea>
                     </div>
 
                     <!-- Expense Category Field -->
@@ -725,6 +752,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 form.classList.remove('was-validated');
                 initializeExpenseFields();
             }
+            // Reset CSV preview
+            resetCsvPreview();
         });
     }
 
@@ -750,6 +779,9 @@ document.addEventListener('DOMContentLoaded', function() {
             this.classList.add('was-validated');
         });
     }
+
+    // Attach CSV batch file listener (integrated here to avoid duplicates)
+    attachBatchFileListener();
 });
 
 // Initialize expense fields to hidden state
@@ -912,6 +944,210 @@ function toggleBatchFields() {
         }
         console.log('✓ Batch fields hidden');
     }
+}
+
+// CSV Preview Functionality (New: Integrated with safeguards)
+function handleBatchFileUpload(fileInput) {
+    const file = fileInput.files[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+        alert('Please upload a valid CSV file.');
+        fileInput.value = '';
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const csvContent = e.target.result;
+        const rows = parseCsvContent(csvContent);  // Renamed to avoid any potential conflicts
+        renderCsvPreview(rows);  // Renamed for clarity
+        updateBatchData(rows); // Set all rows for submission
+    };
+    reader.readAsText(file);
+}
+
+function parseCsvContent(csv) {  // Renamed from parseCSV to avoid global conflicts
+    const lines = csv.split('\n').filter(line => line.trim() !== '');
+    if (lines.length < 2) {
+        alert('CSV must have at least a header row and one data row.');
+        return [];
+    }
+
+    // Parse and normalize headers
+    let headers = lines[0].split(',').map(h => normalizeCsvHeader(h.trim().toLowerCase()));  // Renamed helper
+    console.log('Detected raw headers:', lines[0].split(',').map(h => h.trim())); // Debug
+    console.log('Normalized headers:', headers); // Debug
+
+    // Check for required fields after normalization
+    const requiredMapped = ['name', 'amount', 'mobile', 'id_number'];
+    const hasAllRequired = requiredMapped.every(req => headers.includes(req));
+    if (!hasAllRequired) {
+        const detected = lines[0].split(',').map(h => h.trim()).join(', ');
+        alert(`CSV headers mismatch. Detected: "${detected}". Expected (or similar): name, amount, mobile, id_number. Update your CSV to match.`);
+        return [];
+    }
+
+    // Parse data rows
+    const dataRows = lines.slice(1).map((line, rowIndex) => {
+        if (!line.trim()) return null; // Skip empty rows
+        const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
+        const rowObj = {};
+        headers.forEach((header, i) => {
+            rowObj[header] = values[i] || '';
+        });
+        return rowObj;
+    }).filter(row => row !== null);
+
+    // Filter rows with all required fields populated
+    const validRows = dataRows.filter(row => 
+        row.name && row.amount && row.mobile && row.id_number
+    );
+
+    if (validRows.length === 0 && dataRows.length > 0) {
+        alert('No valid data rows found. Ensure all rows have values for name, amount, mobile, and id_number.');
+    }
+
+    return validRows;
+}
+
+// Normalize CSV header variations to standard names (Renamed helper)
+function normalizeCsvHeader(header) {
+    // Trim and lowercase already done in parseCsvContent
+    if (header.includes('file name') || header.includes('filename') || header === 'name') return 'name';
+    if (header.includes('mobile') || header.includes('phone') || header === 'mobile_number') return 'mobile';
+    if (header === 'amount') return 'amount';
+    if (header.includes('id') && header.includes('number')) return 'id_number';
+    // If no match, keep as-is (will fail validation)
+    return header;
+}
+
+function renderCsvPreview(rows) {  // Renamed from renderPreviewTable
+    const tbody = document.getElementById('csvPreviewBody');
+    const previewDiv = document.getElementById('batch-preview');
+    const summaryDiv = document.getElementById('previewSummary');
+    const errorsDiv = document.getElementById('validationErrors');
+
+    // Null checks with fallbacks
+    if (!tbody) {
+        console.error('Element #csvPreviewBody not found. Check HTML.');
+        alert('Preview setup error: Table body missing. Refresh and try again.');
+        return;
+    }
+    if (!previewDiv) {
+        console.error('Element #batch-preview not found. Check HTML.');
+        alert('Preview setup error: Container missing. Refresh and try again.');
+        return;
+    }
+    if (!summaryDiv) {
+        console.error('Element #previewSummary not found. Check HTML.');
+        // Continue without summary (non-critical)
+    }
+
+    if (rows.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No valid recipients found in CSV. Check headers and data.</td></tr>';
+        previewDiv.style.display = 'block';
+        if (summaryDiv) summaryDiv.style.display = 'none';
+        return;
+    }
+
+    let html = '';
+    let validationErrors = [];
+
+    rows.forEach((row, index) => {
+        const amount = parseFloat(row.amount);
+        const isValidAmount = !isNaN(amount) && amount > 0;
+        const isValidMobile = /^\d{10,15}$/.test(row.mobile.replace(/\D/g, '')); // 10-15 digits, strip non-digits
+        const isValidId = /^\d{7,10}$/.test(row.id_number.replace(/\D/g, '')); // 7-10 digits for ID
+
+        if (!isValidAmount) validationErrors.push(`Row ${index + 2}: Invalid amount "${row.amount}" (must be positive number)`);
+        if (!isValidMobile) validationErrors.push(`Row ${index + 2}: Invalid mobile "${row.mobile}" (10-15 digits)`);
+        if (!isValidId) validationErrors.push(`Row ${index + 2}: Invalid ID "${row.id_number}" (7-10 digits)`);
+
+        html += `
+            <tr>
+                <td>${row.name || 'N/A'}</td>
+                <td>${isValidAmount ? 'KES ' + amount.toLocaleString() : '<span class="text-danger">' + row.amount + '</span>'}</td>
+                <td>${isValidMobile ? row.mobile : '<span class="text-danger">' + row.mobile + '</span>'}</td>
+                <td>${isValidId ? row.id_number : '<span class="text-danger">' + row.id_number + '</span>'}</td>
+            </tr>
+        `;
+    });
+
+    tbody.innerHTML = html;
+    previewDiv.style.display = 'block';
+
+    // Safe summary and errors update
+    if (summaryDiv) {
+        summaryDiv.style.display = 'block';
+        updateCsvSummary(rows);  // Renamed
+    } else {
+        console.warn('Summary div not available; skipping summary display.');
+    }
+
+    if (errorsDiv) {
+        errorsDiv.innerHTML = validationErrors.length > 0 ? validationErrors.join('<br>') : '<span class="text-success">All rows valid!</span>';
+    } else {
+        console.error('Element #validationErrors not found. Check HTML for <div id="validationErrors">.');
+        // Optional: Alert if critical, or just log
+    }
+}
+
+function updateCsvSummary(rows) {  // Renamed from updateSummary
+    const totalCountEl = document.getElementById('totalCount');
+    const totalAmountEl = document.getElementById('totalAmount');
+
+    if (!totalCountEl || !totalAmountEl) {
+        console.error('Summary elements (#totalCount or #totalAmount) not found.');
+        return;
+    }
+
+    const totalCount = rows.length;
+    let totalAmount = 0;
+
+    rows.forEach(row => {
+        totalAmount += parseFloat(row.amount) || 0;
+    });
+
+    totalCountEl.textContent = totalCount;
+    totalAmountEl.textContent = totalAmount.toLocaleString();
+}
+
+function updateBatchData(rows) {
+    const batchDataEl = document.getElementById('batchData');
+    if (batchDataEl) {
+        batchDataEl.value = JSON.stringify(rows);
+    } else {
+        console.error('Element #batchData not found. Batch data won\'t be submitted.');
+    }
+}
+
+// Attach batch file listener (New: Dedicated function to avoid duplicates)
+function attachBatchFileListener() {
+    const batchFileInput = document.getElementById('id_batch_file') || document.querySelector('input[name="batch_file"]');
+    if (batchFileInput && !batchFileInput.hasAttribute('data-csv-listener')) {  // Prevent multiple attachments
+        batchFileInput.setAttribute('data-csv-listener', 'true');
+        batchFileInput.addEventListener('change', function() {
+            handleBatchFileUpload(this);
+        });
+        console.log('CSV batch file listener attached.');
+    } else if (!batchFileInput) {
+        console.error('Batch file input not found. Check form field ID/name.');
+    }
+}
+
+// Reset CSV preview (New: For modal hide)
+function resetCsvPreview() {
+    const previewDiv = document.getElementById('batch-preview');
+    const summaryDiv = document.getElementById('previewSummary');
+    const batchFileInput = document.getElementById('id_batch_file') || document.querySelector('input[name="batch_file"]');
+    if (previewDiv) previewDiv.style.display = 'none';
+    if (summaryDiv) summaryDiv.style.display = 'none';
+    if (batchFileInput) batchFileInput.value = '';
+    updateBatchData([]);
+    const tbody = document.getElementById('csvPreviewBody');
+    if (tbody) tbody.innerHTML = '';
 }
 </script>
 

@@ -142,7 +142,8 @@
                   {% for expense in activation_requests %}
                   <tr data-status="pending"
                       data-expense-id="{{ expense.id }}"
-                      data-search="{{ expense.created_by.get_full_name|lower }} {{ expense.activation.name|lower }} {{ expense.expense_category.name|lower }} {{ expense.description|lower }}">
+                      data-search="{{ expense.created_by.get_full_name|lower }} {{ expense.activation.name|lower }} {{ expense.expense_category.name|lower }} {{ expense.description|lower }}"
+                      data-batch-disbursement="{{ expense.batch_disbursement_type }}">
                     <td>
                       <div class="d-flex align-items-center">
                         <div>
@@ -190,7 +191,8 @@
                                 data-requester="{{ expense.created_by.get_full_name }}"
                                 data-amount="KSH {{ expense.amount|floatformat:2|intcomma }}"
                                 data-description="{{ expense.description }}"
-                                data-item-name="{{ expense.activation.name }}">
+                                data-item-name="{{ expense.activation.name }}"
+                                data-batch-disbursement="{{ expense.batch_disbursement_type }}">
                             Approve
                         </button>
                         <button class="btn btn-danger btn-sm reject-btn"
@@ -275,7 +277,8 @@
                   {% for expense in event_requests %}
                   <tr data-status="{% if expense.approved %}approved{% elif expense.declined %}rejected{% else %}pending{% endif %}"
                       data-expense-id="{{ expense.id }}"
-                      data-search="{{ expense.created_by.get_full_name|lower }} {{ expense.event.name|lower }} {{ expense.expense_category.name|lower }} {{ expense.description|lower }}">
+                      data-search="{{ expense.created_by.get_full_name|lower }} {{ expense.event.name|lower }} {{ expense.expense_category.name|lower }} {{ expense.description|lower }}"
+                      data-batch-disbursement="{{ expense.batch_disbursement_type }}">
                     <td>
                       <div class="d-flex align-items-center">
                         <div>
@@ -340,7 +343,8 @@
                                 data-requester="{{ expense.created_by.get_full_name }}"
                                 data-amount="KSH {{ expense.amount|floatformat:2|intcomma }}"
                                 data-description="{{ expense.description }}"
-                                data-item-name="{{ expense.event.name }}">
+                                data-item-name="{{ expense.event.name }}"
+                                data-batch-disbursement="{{ expense.batch_disbursement_type }}">
                             Approve
                         </button>
                         <button class="btn btn-danger btn-sm reject-btn"
@@ -437,7 +441,8 @@
                   {% for expense in operation_requests %}
                   <tr data-status="{% if expense.approved %}approved{% elif expense.declined %}rejected{% else %}pending{% endif %}"
                       data-expense-id="{{ expense.id }}"
-                      data-search="{{ expense.created_by.get_full_name|lower }} {{ expense.operation.name|default:'general operation'|lower }} {{ expense.expense_category.name|lower }} {{ expense.description|lower }}">
+                      data-search="{{ expense.created_by.get_full_name|lower }} {{ expense.operation.name|default:'general operation'|lower }} {{ expense.expense_category.name|lower }} {{ expense.description|lower }}"
+                      data-batch-disbursement="{{ expense.batch_disbursement_type }}">
                     <td>
                       <div class="d-flex align-items-center">
                         <div>
@@ -503,7 +508,8 @@
                                 data-requester="{{ expense.created_by.get_full_name }}"
                                 data-amount="KSH {{ expense.amount|floatformat:2|intcomma }}"
                                 data-description="{{ expense.description }}"
-                                data-item-name="{% if expense.operation %}{{ expense.operation.name }}{% else %}General Operation{% endif %}">
+                                data-item-name="{% if expense.operation %}{{ expense.operation.name }}{% else %}General Operation{% endif %}"
+                                data-batch-disbursement="{{ expense.batch_disbursement_type }}">
                             Approve
                         </button>
                         <button class="btn btn-danger btn-sm reject-btn"
@@ -602,7 +608,8 @@
                   {% for expense in past_requests %}
                   <tr data-status="{% if expense.approved %}approved{% elif expense.declined %}rejected{% else %}pending{% endif %}"
                       data-expense-id="{{ expense.id }}"
-                      data-search="{{ expense.created_by.get_full_name|lower }} {% if expense.event %}{{ expense.event.name|lower }}{% elif expense.activation %}{{ expense.activation.name|lower }}{% else %}{{ expense.operation.name|default:'general operation'|lower }}{% endif %} {{ expense.expense_category.name|lower }} {{ expense.description|lower }}">
+                      data-search="{{ expense.created_by.get_full_name|lower }} {% if expense.event %}{{ expense.event.name|lower }}{% elif expense.activation %}{{ expense.activation.name|lower }}{% else %}{{ expense.operation.name|default:'general operation'|lower }}{% endif %} {{ expense.expense_category.name|lower }} {{ expense.description|lower }}"
+                      data-batch-disbursement="{{ expense.batch_disbursement_type }}">
                     <td>
                       <div class="d-flex align-items-center">
                         <div>
@@ -738,7 +745,7 @@
 
 <!-- Approve Confirmation Modal -->
 <div class="modal fade" id="approveModal" tabindex="-1" aria-labelledby="approveModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-xl">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="approveModalLabel">
@@ -771,6 +778,25 @@
           <div class="row mt-2">
             <div class="col-sm-4"><strong>Description:</strong></div>
             <div class="col-sm-8" id="approve-description">—</div>
+          </div>
+          <!-- CSV Preview Section -->
+          <div class="row mt-3">
+            <div class="col-12">
+              <div id="csv-preview-section" class="d-none">
+                <h6 class="text-primary"><i class="fas fa-file-csv"></i> Batch Disbursement CSV Preview (Name, Amount, Mobile, ID Number)</h6>
+                <div id="csv-preview-loading" class="text-center py-3 d-none">
+                  <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
+                  <p class="mt-2">Loading CSV preview...</p>
+                </div>
+                <div id="csv-preview-content" class="table-responsive"></div>
+                <div id="csv-preview-error" class="alert alert-danger d-none mt-2"></div>
+              </div>
+              <div id="no-csv-message" class="text-muted small">
+                No CSV file attached to this batch disbursement.
+              </div>
+            </div>
           </div>
           <hr>
           <p class="text-center mb-0">Are you sure you want to <strong class="text-success">approve</strong> this expense request?</p>
@@ -955,7 +981,9 @@
         const modalBody = modalElement.querySelector('.modal-body');
 
         modalTitle.textContent = title;
-        modalTitle.className = `modal-title text-${type}`;
+        if (type) {
+            modalTitle.className = `modal-title text-${type}`;
+        }
         modalBody.innerHTML = message;
 
         const bsModal = new bootstrap.Modal(modalElement);
@@ -1007,10 +1035,52 @@
         window.location.reload();
     }
 
+    // Function to load CSV preview
+    async function loadCsvPreview(expenseId) {
+        const modal = document.getElementById('approveModal');
+        if (!modal) return;
+
+        const previewSection = modal.querySelector('#csv-preview-section');
+        const loadingEl = modal.querySelector('#csv-preview-loading');
+        const contentEl = modal.querySelector('#csv-preview-content');
+        const errorEl = modal.querySelector('#csv-preview-error');
+
+        if (!previewSection || !loadingEl || !contentEl || !errorEl) {
+            console.error('CSV preview elements not found in modal');
+            return;
+        }
+
+        // Reset
+        contentEl.innerHTML = '';
+        errorEl.classList.add('d-none');
+        loadingEl.classList.remove('d-none');
+
+        try {
+            const response = await fetch(`/expense/${expenseId}/csv-preview/`);
+            const data = await response.json();
+
+            loadingEl.classList.add('d-none');
+
+            if (response.ok && data.success) {
+                contentEl.innerHTML = data.html;
+                previewSection.classList.remove('d-none');
+            } else {
+                errorEl.textContent = data.error || 'Failed to load CSV preview.';
+                errorEl.classList.remove('d-none');
+                previewSection.classList.remove('d-none');
+            }
+        } catch (error) {
+            loadingEl.classList.add('d-none');
+            errorEl.textContent = 'An error occurred while loading the CSV preview.';
+            errorEl.classList.remove('d-none');
+            previewSection.classList.remove('d-none');
+        }
+    }
+
     // Approve Modal
     const approveModal = document.getElementById('approveModal');
     if (approveModal) {
-        approveModal.addEventListener('show.bs.modal', function (event) {
+        approveModal.addEventListener('show.bs.modal', async function (event) {
             const button = event.relatedTarget;
             const expenseId = button.dataset.expenseId;
             const expenseType = button.dataset.expenseType;
@@ -1018,15 +1088,36 @@
             const amount = button.dataset.amount;
             const description = button.dataset.description;
             const itemName = button.dataset.itemName;
+            const isBatchDisbursement = button.dataset.batchDisbursement === 'True';
 
-            approveModal.querySelector('#approve-requester').textContent = requester;
-            approveModal.querySelector('#approve-item-name').textContent = itemName;
-            approveModal.querySelector('#approve-type').textContent = expenseType.charAt(0).toUpperCase() + expenseType.slice(1) + ' Expense';
-            approveModal.querySelector('#approve-amount').textContent = amount;
-            approveModal.querySelector('#approve-description').textContent = description;
+            const approveRequester = approveModal.querySelector('#approve-requester');
+            const approveItemName = approveModal.querySelector('#approve-item-name');
+            const approveType = approveModal.querySelector('#approve-type');
+            const approveAmount = approveModal.querySelector('#approve-amount');
+            const approveDescription = approveModal.querySelector('#approve-description');
+
+            if (approveRequester) approveRequester.textContent = requester;
+            if (approveItemName) approveItemName.textContent = itemName;
+            if (approveType) approveType.textContent = expenseType.charAt(0).toUpperCase() + expenseType.slice(1) + ' Expense';
+            if (approveAmount) approveAmount.textContent = amount;
+            if (approveDescription) approveDescription.textContent = description;
 
             const approveForm = approveModal.querySelector('#approveForm');
-            approveForm.action = `/expense/${expenseId}/approve/`;
+            if (approveForm) approveForm.action = `/expense/${expenseId}/approve/`;
+
+            const previewSection = approveModal.querySelector('#csv-preview-section');
+            const noCsvEl = approveModal.querySelector('#no-csv-message');
+
+            if (previewSection && noCsvEl) {
+                if (isBatchDisbursement) {
+                    noCsvEl.classList.add('d-none');
+                    await loadCsvPreview(expenseId);
+                } else {
+                    previewSection.classList.add('d-none');
+                    noCsvEl.textContent = 'This is not a batch disbursement expense.';
+                    noCsvEl.classList.remove('d-none');
+                }
+            }
         });
 
         const approveForm = document.getElementById('approveForm');
@@ -1035,18 +1126,23 @@
                 event.preventDefault();
 
                 const form = event.target;
-                const expenseId = form.action.match(/expense\/([0-9a-f-]+)\/approve\//)[1];
-                const csrfToken = form.querySelector('input[name="csrfmiddlewaretoken"]').value;
-                const expenseType = form.querySelector('#approve-type').textContent.toLowerCase().replace(' expense', '');
+                const expenseIdMatch = form.action.match(/expense\/([0-9a-f-]+)\/approve\//);
+                if (!expenseIdMatch) return;
+                const expenseId = expenseIdMatch[1];
+                const csrfToken = form.querySelector('input[name="csrfmiddlewaretoken"]');
+                if (!csrfToken) return;
+                const expenseType = form.querySelector('#approve-type');
+                if (!expenseType) return;
+                const expenseTypeStr = expenseType.textContent.toLowerCase().replace(' expense', '');
 
                 const modalInstance = bootstrap.Modal.getInstance(approveModal);
-                modalInstance.hide();
+                if (modalInstance) modalInstance.hide();
 
                 try {
                     const response = await fetch(form.action, {
                         method: 'POST',
                         headers: {
-                            'X-CSRFToken': csrfToken
+                            'X-CSRFToken': csrfToken.value
                         },
                         body: new FormData(form)
                     });
@@ -1055,7 +1151,7 @@
 
                     if (response.ok) {
                         showMessageBox('Success', data.message, 'success');
-                        updateTableRowStatus(expenseId, expenseType, 'approved', data.approved_by_name);
+                        updateTableRowStatus(expenseId, expenseTypeStr, 'approved', data.approved_by_name);
                         setTimeout(() => {
                             if (confirm('Expense approved. Would you like to refresh the page to see the latest updates?')) {
                                 reloadWithCurrentParams();
@@ -1083,18 +1179,26 @@
             const description = button.dataset.description;
             const itemName = button.dataset.itemName;
 
-            rejectModal.querySelector('#reject-requester').textContent = requester;
-            rejectModal.querySelector('#reject-item-name').textContent = itemName;
-            rejectModal.querySelector('#reject-type').textContent = expenseType.charAt(0).toUpperCase() + expenseType.slice(1) + ' Expense';
-            rejectModal.querySelector('#reject-amount').textContent = amount;
-            rejectModal.querySelector('#reject-description').textContent = description;
+            const rejectRequester = rejectModal.querySelector('#reject-requester');
+            const rejectItemName = rejectModal.querySelector('#reject-item-name');
+            const rejectType = rejectModal.querySelector('#reject-type');
+            const rejectAmount = rejectModal.querySelector('#reject-amount');
+            const rejectDescription = rejectModal.querySelector('#reject-description');
+
+            if (rejectRequester) rejectRequester.textContent = requester;
+            if (rejectItemName) rejectItemName.textContent = itemName;
+            if (rejectType) rejectType.textContent = expenseType.charAt(0).toUpperCase() + expenseType.slice(1) + ' Expense';
+            if (rejectAmount) rejectAmount.textContent = amount;
+            if (rejectDescription) rejectDescription.textContent = description;
 
             const rejectForm = rejectModal.querySelector('#rejectForm');
-            rejectForm.action = `/expense/${expenseId}/decline/`;
+            if (rejectForm) rejectForm.action = `/expense/${expenseId}/decline/`;
 
             const declineReasonInput = rejectModal.querySelector('#declineReason');
-            declineReasonInput.value = '';
-            declineReasonInput.classList.remove('is-invalid');
+            if (declineReasonInput) {
+                declineReasonInput.value = '';
+                declineReasonInput.classList.remove('is-invalid');
+            }
         });
 
         const rejectForm = document.getElementById('rejectForm');
@@ -1103,21 +1207,27 @@
                 event.preventDefault();
 
                 const form = event.target;
-                const expenseId = form.action.match(/expense\/([0-9a-f-]+)\/decline\//)[1];
+                const expenseIdMatch = form.action.match(/expense\/([0-9a-f-]+)\/decline\//);
+                if (!expenseIdMatch) return;
+                const expenseId = expenseIdMatch[1];
                 const declineReasonInput = form.querySelector('#declineReason');
+                if (!declineReasonInput) return;
                 const declineReason = declineReasonInput.value.trim();
-                const csrfToken = form.querySelector('input[name="csrfmiddlewaretoken"]').value;
-                const expenseType = form.querySelector('#reject-type').textContent.toLowerCase().replace(' expense', '');
+                const csrfToken = form.querySelector('input[name="csrfmiddlewaretoken"]');
+                if (!csrfToken) return;
+                const rejectType = form.querySelector('#reject-type');
+                if (!rejectType) return;
+                const expenseTypeStr = rejectType.textContent.toLowerCase().replace(' expense', '');
 
                 if (!declineReason) {
-                    declineReasonInput.classList.add('is-invalid');
+                    if (declineReasonInput) declineReasonInput.classList.add('is-invalid');
                     return;
                 } else {
-                    declineReasonInput.classList.remove('is-invalid');
+                    if (declineReasonInput) declineReasonInput.classList.remove('is-invalid');
                 }
 
                 const modalInstance = bootstrap.Modal.getInstance(rejectModal);
-                modalInstance.hide();
+                if (modalInstance) modalInstance.hide();
 
                 try {
                     const formData = new FormData(form);
@@ -1126,7 +1236,7 @@
                     const response = await fetch(form.action, {
                         method: 'POST',
                         headers: {
-                            'X-CSRFToken': csrfToken
+                            'X-CSRFToken': csrfToken.value
                         },
                         body: formData
                     });
@@ -1135,7 +1245,7 @@
 
                     if (response.ok) {
                         showMessageBox('Success', data.message, 'success');
-                        updateTableRowStatus(expenseId, expenseType, 'rejected', data.approved_by_name, declineReason);
+                        updateTableRowStatus(expenseId, expenseTypeStr, 'rejected', null, declineReason);
                         setTimeout(() => {
                             if (confirm('Expense rejected. Would you like to refresh the page to see the latest updates?')) {
                                 reloadWithCurrentParams();
@@ -1164,15 +1274,22 @@
             const itemName = button.dataset.itemName;
             const status = button.dataset.status;
 
-            undoModal.querySelector('#undo-requester').textContent = requester;
-            undoModal.querySelector('#undo-item-name').textContent = itemName;
-            undoModal.querySelector('#undo-type').textContent = expenseType.charAt(0).toUpperCase() + expenseType.slice(1) + ' Expense';
-            undoModal.querySelector('#undo-amount').textContent = amount;
-            undoModal.querySelector('#undo-description').textContent = description;
-            undoModal.querySelector('#undo-status').textContent = status.charAt(0).toUpperCase() + status.slice(1);
+            const undoRequester = undoModal.querySelector('#undo-requester');
+            const undoItemName = undoModal.querySelector('#undo-item-name');
+            const undoType = undoModal.querySelector('#undo-type');
+            const undoAmount = undoModal.querySelector('#undo-amount');
+            const undoDescription = undoModal.querySelector('#undo-description');
+            const undoStatus = undoModal.querySelector('#undo-status');
+
+            if (undoRequester) undoRequester.textContent = requester;
+            if (undoItemName) undoItemName.textContent = itemName;
+            if (undoType) undoType.textContent = expenseType.charAt(0).toUpperCase() + expenseType.slice(1) + ' Expense';
+            if (undoAmount) undoAmount.textContent = amount;
+            if (undoDescription) undoDescription.textContent = description;
+            if (undoStatus) undoStatus.textContent = status.charAt(0).toUpperCase() + status.slice(1);
 
             const undoForm = undoModal.querySelector('#undoForm');
-            undoForm.action = `/expense/${expenseId}/undo/`;
+            if (undoForm) undoForm.action = `/expense/${expenseId}/undo/`;
         });
 
         const undoForm = document.getElementById('undoForm');
@@ -1181,18 +1298,23 @@
                 event.preventDefault();
 
                 const form = event.target;
-                const expenseId = form.action.match(/expense\/([0-9a-f-]+)\/undo\//)[1];
-                const csrfToken = form.querySelector('input[name="csrfmiddlewaretoken"]').value;
-                const expenseType = form.querySelector('#undo-type').textContent.toLowerCase().replace(' expense', '');
+                const expenseIdMatch = form.action.match(/expense\/([0-9a-f-]+)\/undo\//);
+                if (!expenseIdMatch) return;
+                const expenseId = expenseIdMatch[1];
+                const csrfToken = form.querySelector('input[name="csrfmiddlewaretoken"]');
+                if (!csrfToken) return;
+                const undoType = form.querySelector('#undo-type');
+                if (!undoType) return;
+                const expenseTypeStr = undoType.textContent.toLowerCase().replace(' expense', '');
 
                 const modalInstance = bootstrap.Modal.getInstance(undoModal);
-                modalInstance.hide();
+                if (modalInstance) modalInstance.hide();
 
                 try {
                     const response = await fetch(form.action, {
                         method: 'POST',
                         headers: {
-                            'X-CSRFToken': csrfToken
+                            'X-CSRFToken': csrfToken.value
                         },
                         body: new FormData(form)
                     });
@@ -1201,7 +1323,7 @@
 
                     if (response.ok) {
                         showMessageBox('Success', data.message, 'success');
-                        updateTableRowStatus(expenseId, expenseType, 'pending', '');
+                        updateTableRowStatus(expenseId, expenseTypeStr, 'pending', '');
                         setTimeout(() => {
                             if (confirm('Expense action undone. Would you like to refresh the page to see the latest updates?')) {
                                 reloadWithCurrentParams();
@@ -1221,7 +1343,14 @@
      * Updates the status of a specific table row after approval/rejection/undo.
      */
     function updateTableRowStatus(expenseId, expenseType, newStatus, processedByName, declineReason = '') {
-        const tableId = (expenseType === 'event' ? 'eventTable' : expenseType === 'operation' ? 'operationTable' : 'activationTable');
+        let tableId;
+        if (expenseType === 'event') {
+            tableId = 'eventTable';
+        } else if (expenseType === 'operation') {
+            tableId = 'operationTable';
+        } else {
+            tableId = 'activationTable';
+        }
         const table = document.getElementById(tableId);
         if (!table) return;
 
@@ -1230,15 +1359,35 @@
 
         row.dataset.status = newStatus;
 
-        let statusCellIndex = table.id === 'eventTable' ? 7 : table.id === 'operationTable' ? 6 : table.id === 'activationTable' ? -1 : 6;
-        let actionCellIndex = table.id === 'historyTable' ? 8 : table.id === 'eventTable' ? 8 : table.id === 'operationTable' ? 7 : table.id === 'activationTable' ? 7 : 7;
+        let statusCellIndex = -1;
+        if (tableId === 'eventTable') {
+            statusCellIndex = 7;
+        } else if (tableId === 'operationTable') {
+            statusCellIndex = 6;
+        } else if (tableId === 'activationTable') {
+            statusCellIndex = -1; // No status column
+        }
+
+        let actionCellIndex = 7; // Default
+        if (tableId === 'historyTable') {
+            actionCellIndex = 9;
+        } else if (tableId === 'eventTable') {
+            actionCellIndex = 8;
+        } else if (tableId === 'operationTable') {
+            actionCellIndex = 7;
+        } else if (tableId === 'activationTable') {
+            actionCellIndex = 7;
+        }
 
         if (statusCellIndex !== -1) {
             const statusCell = row.cells[statusCellIndex];
             if (statusCell) {
                 let statusHtml = '';
                 if (newStatus === 'approved') {
-                    statusHtml = `<span class="badge bg-success">Approved</span><br><small class="text-muted">by ${processedByName}</small>`;
+                    statusHtml = `<span class="badge bg-success">Approved</span>`;
+                    if (processedByName) {
+                        statusHtml += `<br><small class="text-muted">by ${processedByName}</small>`;
+                    }
                 } else if (newStatus === 'rejected') {
                     statusHtml = `<span class="badge bg-danger">Rejected</span>`;
                     if (declineReason) {
@@ -1256,39 +1405,65 @@
         if (actionCell) {
             let actionHtml = '';
             if (newStatus === 'pending') {
+                const requester = row.querySelector('td:first-child strong');
+                const requesterName = requester ? requester.textContent.trim() : '';
+                let amountCellIndex = 3;
+                if (tableId === 'activationTable') amountCellIndex = 4;
+                const amount = row.cells[amountCellIndex] ? row.cells[amountCellIndex].textContent.trim() : '';
+                const descriptionCell = row.querySelector('.description-cell');
+                const description = descriptionCell ? descriptionCell.textContent.trim() : '';
+                let itemNameCellIndex = 1;
+                if (tableId === 'activationTable') itemNameCellIndex = 2;
+                const itemNameEl = row.cells[itemNameCellIndex].querySelector('strong');
+                const itemName = itemNameEl ? itemNameEl.textContent.trim() : (tableId === 'operationTable' ? 'General Operation' : '—');
+                const batchDisbursement = row.dataset.batchDisbursement || 'False';
+
                 actionHtml = `
                     <div class="btn-group-vertical" role="group">
                         <button class="btn btn-success btn-sm approve-btn"
                                 data-bs-toggle="modal" data-bs-target="#approveModal"
                                 data-expense-id="${expenseId}"
                                 data-expense-type="${expenseType}"
-                                data-requester="${row.querySelector('td:first-child strong').textContent}"
-                                data-amount="${row.cells[table.id === 'eventTable' ? 3 : table.id === 'operationTable' ? 3 : 4].textContent.trim()}"
-                                data-description="${row.querySelector('.description-cell').textContent.trim()}"
-                                data-item-name="${row.cells[table.id === 'eventTable' ? 1 : table.id === 'operationTable' ? 1 : 2].querySelector('strong')?.textContent || 'General Operation'}">
+                                data-requester="${requesterName}"
+                                data-amount="${amount}"
+                                data-description="${description}"
+                                data-item-name="${itemName}"
+                                data-batch-disbursement="${batchDisbursement}">
                             Approve
                         </button>
                         <button class="btn btn-danger btn-sm reject-btn"
                                 data-bs-toggle="modal" data-bs-target="#rejectModal"
                                 data-expense-id="${expenseId}"
                                 data-expense-type="${expenseType}"
-                                data-requester="${row.querySelector('td:first-child strong').textContent}"
-                                data-amount="${row.cells[table.id === 'eventTable' ? 3 : table.id === 'operationTable' ? 3 : 4].textContent.trim()}"
-                                data-description="${row.querySelector('.description-cell').textContent.trim()}"
-                                data-item-name="${row.cells[table.id === 'eventTable' ? 1 : table.id === 'operationTable' ? 1 : 2].querySelector('strong')?.textContent || 'General Operation'}">
+                                data-requester="${requesterName}"
+                                data-amount="${amount}"
+                                data-description="${description}"
+                                data-item-name="${itemName}">
                             Reject
                         </button>
                     </div>`;
             } else {
+                const requester = row.querySelector('td:first-child strong');
+                const requesterName = requester ? requester.textContent.trim() : '';
+                let amountCellIndex = 3;
+                if (tableId === 'activationTable') amountCellIndex = 4;
+                const amount = row.cells[amountCellIndex] ? row.cells[amountCellIndex].textContent.trim() : '';
+                const descriptionCell = row.querySelector('.description-cell');
+                const description = descriptionCell ? descriptionCell.textContent.trim() : '';
+                let itemNameCellIndex = 1;
+                if (tableId === 'activationTable') itemNameCellIndex = 2;
+                const itemNameEl = row.cells[itemNameCellIndex].querySelector('strong');
+                const itemName = itemNameEl ? itemNameEl.textContent.trim() : (tableId === 'operationTable' ? 'General Operation' : '—');
+
                 actionHtml = `
                     <button class="btn btn-warning btn-sm undo-btn"
                             data-bs-toggle="modal" data-bs-target="#undoModal"
                             data-expense-id="${expenseId}"
                             data-expense-type="${expenseType}"
-                            data-requester="${row.querySelector('td:first-child strong').textContent}"
-                            data-amount="${row.cells[table.id === 'eventTable' ? 3 : table.id === 'operationTable' ? 3 : 4].textContent.trim()}"
-                            data-description="${row.querySelector('.description-cell').textContent.trim()}"
-                            data-item-name="${row.cells[table.id === 'eventTable' ? 1 : table.id === 'operationTable' ? 1 : 2].querySelector('strong')?.textContent || 'General Operation'}"
+                            data-requester="${requesterName}"
+                            data-amount="${amount}"
+                            data-description="${description}"
+                            data-item-name="${itemName}"
                             data-status="${newStatus}">
                         Undo
                     </button>`;

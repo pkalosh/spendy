@@ -9,6 +9,7 @@ class UserRegisterForm(UserCreationForm):
         ('KENYA', 'Kenya'),
         ('UGANDA', 'Uganda'),
     ]
+
     phone_number = forms.CharField(
         widget=forms.TextInput(attrs={"placeholder": "Phone Number"}),
         max_length=15,
@@ -29,6 +30,7 @@ class UserRegisterForm(UserCreationForm):
         max_length=50,
         required=True
     )
+
     email = forms.EmailField(
         widget=forms.EmailInput(attrs={"placeholder": "Email"}),
         required=True

@@ -20,6 +20,8 @@ from django.db.models import Sum, Count, Avg, Q
 from django.db.models.functions import TruncMonth, TruncYear
 from datetime import datetime, timedelta
 import csv
+from django.http import Http404
+import pandas as pd
 import io
 from io import StringIO
 from django.core.paginator import Paginator
@@ -178,6 +180,7 @@ def submit_expense(request):
                 batch_file = request.FILES['batch_file']
                 BatchPayments.objects.create(
                     expense=expense,
+                    created_by=request.user,
                     file=batch_file,
                     company=company
                 )
@@ -216,9 +219,9 @@ def download_batch_template(request):
     response['Content-Disposition'] = 'attachment; filename="batch_disbursement_template.csv"'
 
     writer = csv.writer(response)
-    writer.writerow(['name', 'amount', 'mobile_number'])
-    writer.writerow(['John Doe', '1000.00', '+254700123456'])
-    writer.writerow(['Jane Smith', '2000.00', '+254700654321'])
+    writer.writerow(['name', 'amount', 'mobile','id_number'])
+    writer.writerow(['John Doe', '1000.00', '+254725797597', '12345678'])
+    writer.writerow(['Jane Smith', '2000.00', '+254725797597', '87654321'])
 
     return response
 
@@ -1060,21 +1063,25 @@ def expense_approvals(request):
             return base_queryset.filter(approved=False, declined=False)
         return base_queryset  # 'all'
 
-    # Define base querysets without status filter
+    # Define base querysets without status filter, with prefetch for batchpayments_set
     base_activation = Expense.objects.filter(base_filter & Q(activation__isnull=False, approved=False, declined=False)) \
         .select_related('activation', 'expense_category', 'created_by', 'approved_by') \
+        .prefetch_related('batchpayments_set') \
         .order_by('-created_at')
     
     base_event = Expense.objects.filter(base_filter & Q(event__isnull=False)) \
         .select_related('event', 'expense_category', 'created_by', 'approved_by') \
+        .prefetch_related('batchpayments_set') \
         .order_by('-created_at')
 
     base_operation = Expense.objects.filter(base_filter & Q(operation__isnull=False)) \
         .select_related('operation', 'expense_category', 'created_by', 'approved_by') \
+        .prefetch_related('batchpayments_set') \
         .order_by('-created_at')
 
     base_history = Expense.objects.filter(base_filter & (Q(approved=True) | Q(declined=True))) \
         .select_related('expense_category', 'created_by', 'approved_by', 'event', 'activation', 'operation') \
+        .prefetch_related('batchpayments_set') \
         .order_by('-updated_at')
 
     # Compute tab-specific summaries
@@ -1148,6 +1155,7 @@ def expense_approvals(request):
 
     return render(request, 'expenses/approvals.html', context)
 
+
 @require_POST
 @login_required
 def approve_expenses(request, expense_id):
@@ -1163,19 +1171,87 @@ def approve_expenses(request, expense_id):
                 {'error': 'Insufficient funds in the wallet.'},
                 status=400
             )
+
+        # Deduct from wallet (for both single and batch - batch total is expense.amount)
+        expense.wallet.balance -= expense.amount
+        expense.wallet.save()
+
+        # Mark expense as approved (no batch processing here - preview only)
         expense.approved = True
         expense.approved_by = request.user
         expense.approved_at = timezone.now()
         expense.declined = False
         expense.decline_reason = None
         expense.save()
-        notify_expense_workflow(expense=expense, action='approved', approver_name=expense.approved_by.get_full_name())
+
+        # Notification
+        notify_expense_workflow(
+            expense=expense, 
+            action='approved', 
+            approver_name=expense.approved_by.get_full_name()
+        )
+
+        message = 'Expense approved successfully.'
         return JsonResponse({
-            'message': 'Expense approved successfully.',
+            'message': message,
             'approved_by_name': request.user.get_full_name() or request.user.username
         }, status=200)
+
     except Exception as e:
         return JsonResponse({'error': f'Failed to approve expense: {str(e)}'}, status=500)
+
+
+@login_required
+def preview_expense_csv(request, expense_id):
+    """
+    View to preview CSV file associated with an expense via BatchPayments.
+    """
+    expense = get_object_or_404(Expense, id=expense_id)
+    if not request.user.companykyc == expense.company:
+        raise Http404("Permission denied")
+
+    if not expense.batch_disbursement_type:
+        return JsonResponse({'error': 'This is not a batch disbursement expense.'}, status=400)
+
+    batch_payment = expense.batchpayments_set.first()
+    if not batch_payment or not batch_payment.file:
+        return JsonResponse({'error': 'No CSV file attached to this batch disbursement.'}, status=404)
+
+    try:
+        # Read CSV using pandas
+        df = pd.read_csv(batch_payment.file.path)
+        if df.empty:
+            return JsonResponse({'error': 'CSV file is empty.'}, status=400)
+
+        # Ensure required columns: name, amount, mobile, id_number
+        required_cols = ['name', 'amount', 'mobile', 'id_number']
+        missing_cols = [col for col in required_cols if col not in df.columns]
+        if missing_cols:
+            return JsonResponse({'error': f'Missing required columns: {", ".join(missing_cols)}'}, status=400)
+
+        # Preview first 10 rows
+        max_rows = 10
+        preview_df = df[required_cols].head(max_rows)
+        html_table = preview_df.to_html(
+            classes='table table-striped table-sm table-responsive',
+            index=False,
+            escape=False,
+            table_id='csv-preview-table'
+        )
+
+        # Add note if truncated
+        total_rows = len(df)
+        note = f"<p class='text-muted small mt-2'>Showing first {max_rows} of {total_rows} rows. <a href='{batch_payment.file.url}' target='_blank' class='btn btn-sm btn-outline-primary'>Download full CSV</a></p>" if total_rows > max_rows else "<p class='text-muted small mt-2'>Full CSV preview ({total_rows} rows).</p>"
+
+        return JsonResponse({
+            'success': True,
+            'html': html_table + note,
+            'total_rows': total_rows
+        })
+    except pd.errors.EmptyDataError:
+        return JsonResponse({'error': 'CSV file is empty or invalid.'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': f'Failed to parse CSV: {str(e)}'}, status=500)
 
 @require_POST
 @login_required
