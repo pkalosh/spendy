@@ -1635,8 +1635,7 @@ def make_payment(request):
         else:
             return JsonResponse({
                 'success': False,
-                'message': f'Insufficient funds. Total required: KES {total_amount} (Amount: KES {input_amount} + Fee: KES {transfer_fee}). '
-                           f'Expense wallet balance: KES {expense_type_wallet.balance}.'
+                'message': f'Insufficient funds. Total required: KES {total_amount} (Amount: KES {input_amount} + Fee: KES {transfer_fee}).'
             })
 
         # Validate payment method and extract details
