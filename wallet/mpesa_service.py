@@ -346,7 +346,7 @@ class MpesaDaraja:
                 "SecurityCredential": self.security_credential,
                 "CommandID": command_id,
                 "SenderIdentifierType": 4,
-                "RecieverIdentifierType": 4,
+                "ReceiverIdentifierType": 4,
                 "Amount": amount,
                 "PartyA": self.shortcode,
                 "PartyB": receiver_shortcode,
