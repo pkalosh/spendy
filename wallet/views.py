@@ -25,7 +25,7 @@ from django.db import transaction
 from django.core.paginator import Paginator
 from datetime import datetime
 import csv
-from openpyxl import Workbook
+# from openpyxl import Workbook
 from reportlab.lib.pagesizes import letter, landscape
 from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
@@ -1456,26 +1456,26 @@ def export_to_excel(queryset):
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = 'attachment; filename="transactions.xlsx"'
     
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "Transactions"
+    # wb = Workbook()
+    # ws = wb.active
+    # ws.title = "Transactions"
     
-    columns = ['Transaction ID', 'Initiated By', 'Recipient', 'Amount', 'Status', 'Type', 'Date', 'Description']
-    ws.append(columns)
+    # columns = ['Transaction ID', 'Initiated By', 'Recipient', 'Amount', 'Status', 'Type', 'Date', 'Description']
+    # ws.append(columns)
     
-    for txn in queryset:
-        ws.append([
-            txn.transaction_id,
-            txn.user.get_full_name() or txn.user.username,
-            txn.receiver.get_full_name() if txn.receiver else "-",
-            f"{txn.sender_wallet.currency if txn.sender_wallet else 'KES'} {txn.amount}",
-            txn.status.title(),
-            txn.transaction_type.replace('_', ' ').title(),
-            txn.date.strftime('%Y-%m-%d %H:%M:%S'),
-            txn.description or "-"
-        ])
+    # for txn in queryset:
+    #     ws.append([
+    #         txn.transaction_id,
+    #         txn.user.get_full_name() or txn.user.username,
+    #         txn.receiver.get_full_name() if txn.receiver else "-",
+    #         f"{txn.sender_wallet.currency if txn.sender_wallet else 'KES'} {txn.amount}",
+    #         txn.status.title(),
+    #         txn.transaction_type.replace('_', ' ').title(),
+    #         txn.date.strftime('%Y-%m-%d %H:%M:%S'),
+    #         txn.description or "-"
+    #     ])
         
-    wb.save(response)
+    # wb.save(response)
     return response
 
 def export_to_pdf(queryset):
