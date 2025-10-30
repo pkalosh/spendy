@@ -351,14 +351,15 @@ class MpesaDaraja:
             
             # Log types for debugging
             logger.info(f"B2B payload types: Sender={sender_identifier_type}, Receiver={receiver_identifier_type} for command={command_id}")
-            
+            # RecieverIdentifierType
+            # ReceiverIdentifierType
             # Prepare request payload
             payload = {
                 "Initiator": self.initiator_name,
                 "SecurityCredential": self.security_credential,
                 "CommandID": command_id,
                 "SenderIdentifierType": sender_identifier_type,
-                "ReceiverIdentifierType": receiver_identifier_type,  # FIXED: Dynamic + correct spelling
+                "RecieverIdentifierType": receiver_identifier_type,  # FIXED: Dynamic + correct spelling
                 "Amount": amount,
                 "PartyA": self.shortcode,
                 "PartyB": receiver_shortcode,
