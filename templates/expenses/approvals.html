@@ -601,7 +601,7 @@
                     <th>Status</th>
                     <th>Processed By</th>
                     <th>Date Processed</th>
-                    <th>Action</th>
+                    <!-- <th>Action</th> -->
                   </tr>
                 </thead>
                 <tbody>
@@ -677,7 +677,7 @@
                     <td>
                       <small>{{ expense.updated_at|date:"M d, Y" }}<br>{{ expense.updated_at|time:"g:i A" }}</small>
                     </td>
-                    <td>
+                    <!-- <td>
                       <button class="btn btn-warning btn-sm undo-btn"
                               data-bs-toggle="modal" data-bs-target="#undoModal"
                               data-expense-id="{{ expense.id }}"
@@ -689,7 +689,7 @@
                               data-status="{% if expense.approved %}approved{% else %}rejected{% endif %}">
                         Undo
                       </button>
-                    </td>
+                    </td> -->
                   </tr>
                   {% empty %}
                   <tr class="no-results">
