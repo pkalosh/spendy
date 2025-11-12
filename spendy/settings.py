@@ -165,7 +165,7 @@ CACHES = {
 
 LOGIN_URL = "userauths:sign-in"
 LOGIN_REDIRECT_URL = "userauths:sign-in"
-LOGOUT_REDIRECT_URL = "userauths:home"
+LOGOUT_REDIRECT_URL = "userauths:sign-in"
 
 # Session settings
 SESSION_COOKIE_AGE = 600
