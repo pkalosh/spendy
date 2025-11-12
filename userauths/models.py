@@ -56,3 +56,17 @@ class User(AbstractUser):
     def __str__(self):
         return self.email
 
+
+class ContactMessage(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    organization = models.CharField(max_length=250, blank=True, null=True)
+    phone_number = models.CharField(max_length=50,  blank=True, null=True)
+    subject = models.CharField(max_length=200, blank=True, null=True)
+    message = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_demo_request = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Message from {self.name} - {self.subject}"

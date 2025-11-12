@@ -1,0 +1,593 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spendy - Simplify Your Events. Spend Smarter.</title>
+    <link rel="shortcut icon" href="{% static 'logo/Spendy_Icon_1.svg' %}" type="image/x-icon">
+
+    <!-- Bootstrap CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <!-- Google Fonts for modern sans-serif -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS for Spendy theme: Adjusted to match React features section (green #98e23f, dark #093b40) -->
+    <link rel="stylesheet" href="{% static 'public.css' %}">
+                <!-- alert start -->
+        
+        {% if messages %}
+            {% for m in messages %}
+            <div class="alert alert-{{m.tags}}">
+                <strong>{{m}}</strong>
+            </div>
+            {% endfor %}
+        {% endif %}
+        <script>
+            setTimeout (() => {
+                $(".alert").alert("close");
+            }, 4000)
+        </script>
+        
+        <!-- alert end -->
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="/"><img src="{% static 'logo/Spendy1.png' %}" alt="Spendy Logo" class="logo"></a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto">
+                    <li class="nav-item"><a class="nav-link" href="#home">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#steps">How It Works</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#faq">FAQ</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
+                </ul>
+                <a href="{% url 'userauths:sign-up' %}" class="btn btn-primary ms-3">Get Started</a>
+            </div>
+
+        </div>
+
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero animate-fade-in" onmousemove="handleMouseMove(event)">
+        <div class="container">
+            <div class="row align-items-center hero-content">
+                <div class="col-lg-5 hero-text animate-fade-in">
+                    <h1 class="hero-title">
+                        Simplify Your <span>Events.</span><br>
+                        Spend <span>Smarter.</span>
+                    </h1>
+                    <p>Centralize event planning, wallet management, expense tracking, analytics, inventory, and supplier billing — all in one smart dashboard.</p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button class="btn btn-primary btn-lg">Start Free Trial</button>
+                        <button type="button" class="btn btn-outline-primary btn-lg" data-bs-toggle="modal" data-bs-target="#demoModal">Request Demo</button>
+                    </div>
+                </div>
+                <div class="col-lg-7">
+                    <div class="dashboard-mock dashboard-mockup-container">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary-green rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                                    <span class="fw-bold text-dark-teal fs-6">S</span>
+                                </div>
+                                <div>
+                                    <h5 class="mb-0">Tech Summit 2025</h5>
+                                    <small class="text-white-50">Active Event</small>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <div class="status-dot me-1"></div>
+                                <span class="text-white-50">Live</span>
+                            </div>
+                        </div>
+                        <div class="metric-grid">
+                            <div class="budget-metric" id="budget-card">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="text-white-50 small">Total Budget</span>
+                                    <div class="bg-light-green rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                        <div class="bg-primary-green rounded-circle" style="width: 12px; height: 12px;"></div>
+                                    </div>
+                                </div>
+                                <div class="amount">KSh 8.5M</div>
+                                <div class="progress mt-2">
+                                    <div class="progress-bar" id="budget-progress"></div>
+                                </div>
+                                <small class="text-white-50">65%</small>
+                            </div>
+                            <div class="small-metric" id="pending-card">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="text-white-50 small">Pending Approval</span>
+                                    <div class="bg-warning rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                        <div class="bg-warning rounded-circle" style="width: 12px; height: 12px;"></div>
+                                    </div>
+                                </div>
+                                <div class="value">24</div>
+                                <div class="subtext">Worth KSh 1.2M</div>
+                            </div>
+                            <div class="small-metric" id="payments-card">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="text-white-50 small">M-Pesa Payments</span>
+                                    <div class="bg-success rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                        <div class="bg-success rounded-circle" style="width: 12px; height: 12px;"></div>
+                                    </div>
+                                </div>
+                                <div class="value">156</div>
+                                <div class="subtext">This month</div>
+                            </div>
+                        </div>
+                        <div class="activity-section">
+                            <h6>Recent Activity</h6>
+                            <div class="activity-item animate-slide-in" style="animation-delay: 0ms;">
+                                <div class="activity-icon">🏛️</div>
+                                <div class="activity-details">
+                                    <div>Venue Deposit</div>
+                                    <div class="activity-time">2h ago</div>
+                                </div>
+                                <div class="activity-right">
+                                    <div class="activity-amount">KSh 450K</div>
+                                    <span class="activity-status status-approved">Approved</span>
+                                </div>
+                            </div>
+                            <div class="activity-item animate-slide-in" style="animation-delay: 200ms;">
+                                <div class="activity-icon">🍽️</div>
+                                <div class="activity-details">
+                                    <div>Catering Services</div>
+                                    <div class="activity-time">5h ago</div>
+                                </div>
+                                <div class="activity-right">
+                                    <div class="activity-amount">KSh 320K</div>
+                                    <span class="activity-status status-pending">Pending</span>
+                                </div>
+                            </div>
+                            <div class="activity-item animate-slide-in" style="animation-delay: 400ms;">
+                                <div class="activity-icon">🎤</div>
+                                <div class="activity-details">
+                                    <div>AV Equipment</div>
+                                    <div class="activity-time">1d ago</div>
+                                </div>
+                                <div class="activity-right">
+                                    <div class="activity-amount">KSh 180K</div>
+                                    <span class="activity-status status-paid">Paid</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Request Modal -->
+    <div class="modal fade" id="demoModal" tabindex="-1" aria-labelledby="demoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="demoModalLabel">Request a Demo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="demoForm" action="{% url  'userauths:demo' %}" method="POST">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="fullName" class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="fullName" name="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="company" class="form-label">Company / Organization</label>
+                            <input type="text" class="form-control" id="company" name="organization" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email Address</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">Phone Number</label>
+                            <input type="tel" class="form-control" id="phone" name="phone_number" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Submit Request</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trusted Brands Section -->
+    <section class="brands">
+        <div class="container">
+            <div class="text-center mb-4">
+                <span class="step-badge">Trusted By</span>
+                <h2 class="display-4 fw-bold text-dark mb-3">Leading Brands, Clients, & Partners</h2>
+                <p class="lead text-muted">Powering events across Africa</p>
+            </div>
+            <div class="brands-logos">
+                <a href="https://www.eabl.com/" target="_blank"><img src="{% static 'trusted_brands/logo-small.png' %}" alt="EABL"></a>
+                <a href="https://www.eabl.com/" target="_blank"><img src="{% static 'trusted_brands/singleton.png' %}" alt="Singleton"></a>
+                <a href="#" target="_blank"><img src="{% static 'trusted_brands/bakozi.png' %}" alt="Bakozi EA Limited"></a>
+                <a href="https://www.leafandluna.com/" target="_blank"><img src="{% static 'trusted_brands/leaf_luna.png' %}" alt="Leaf and Luna"></a>
+                <a href="#" target="_blank"><img src="{% static 'images/elan-affairs-limited.png' %}" alt="Elan Affairs Limited"></a>
+                <a href="https://www.m-pesa.africa/" target="_blank"><img src="{% static 'trusted_brands/mpesa-logo.png' %}" alt="M-Pesa"></a>
+                <a href="https://www.eabl.com/" target="_blank"><img src="{% static 'trusted_brands/manyatta.jpg' %}" alt="Manyatta"></a>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section id="steps" class="steps-section">
+        <div class="container">
+            <div class="text-center mb-5">
+                <span class="step-badge">Get Started in 5 Steps</span>
+                <h2 class="display-4 fw-bold text-dark mb-3" style="font-family: var(--font-poppins);">How Spendy Works</h2>
+                <p class="lead text-muted">Five simple steps to streamline your event management</p>
+            </div>
+            <div class="row g-4 mb-4">
+                <div class="col-md-4">
+                    <div class="step-card">
+                        <div class="step-icon-container">
+                            <i class="fas fa-calendar-plus step-icon"></i>
+                        </div>
+                        <h5>1. Create an Event</h5>
+                        <p>Define event details, budgets, and goals in minutes.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="step-card">
+                        <div class="step-icon-container">
+                            <i class="fas fa-users step-icon"></i>
+                        </div>
+                        <h5>2. Add Your Team</h5>
+                        <p>Assign roles and permissions to team members.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="step-card">
+                        <div class="step-icon-container">
+                            <i class="fas fa-check-circle step-icon"></i>
+                        </div>
+                        <h5>3. Track & Approve</h5>
+                        <p>Submit, review, and approve expenses with one click.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="step-card">
+                        <div class="step-icon-container">
+                            <i class="fas fa-credit-card step-icon"></i>
+                        </div>
+                        <h5>4. Pay via M-Pesa</h5>
+                        <p>Secure instant settlements to vendors and suppliers.</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="step-card">
+                        <div class="step-icon-container">
+                            <i class="fas fa-chart-bar step-icon"></i>
+                        </div>
+                        <h5>5. Visualize Results</h5>
+                        <p>Analyze performance and optimize future events.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Redesigned Features Section -->
+    <section id="features" class="features">
+        <div class="container">
+            <div class="text-center mb-5">
+                <span class="features-badge">Features</span>
+                <h2>Why Spend with Spendy</h2>
+                <p class="mx-auto">Everything you need to manage events efficiently</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-lg-4 col-md-6">
+                    <div class="feature-card">
+                        <div class="feature-icon-container icon-blue">
+                            <i class="fas fa-calendar-days feature-icon"></i>
+                        </div>
+                        <h5 class="feature-title">Event Planning</h5>
+                        <p class="feature-description">Centralize your events, activations, and operations workflows in one smart dashboard.</p>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6">
+                    <div class="feature-card">
+                        <div class="feature-icon-container icon-purple">
+                            <i class="fas fa-wallet feature-icon"></i>
+                        </div>
+                        <h5 class="feature-title">Wallet Management</h5>
+                        <p class="feature-description">Track your event balances, fund flow, and transactions securely.</p>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6">
+                    <div class="feature-card">
+                        <div class="feature-icon-container icon-green">
+                            <i class="fas fa-users feature-icon"></i>
+                        </div>
+                        <h5 class="feature-title">Expense Tracking</h5>
+                        <p class="feature-description">Categorize, tag, and monitor all costs effortlessly with approval workflows.</p>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6">
+                    <div class="feature-card">
+                        <div class="feature-icon-container icon-orange">
+                            <i class="fas fa-chart-line feature-icon"></i>
+                        </div>
+                        <div class="d-flex justify-content-center align-items-center mb-3">
+                            <h5 class="feature-title mb-0">Analytics</h5>
+                            <span class="feature-tag">demo</span>
+                        </div>
+                        <p class="feature-description">Visualize spending patterns and improve budgeting accuracy.</p>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6">
+                    <div class="feature-card">
+                        <div class="feature-icon-container icon-pink">
+                            <i class="fas fa-box feature-icon"></i>
+                        </div>
+                        <h5 class="feature-title">Inventory Tracking</h5>
+                        <p class="feature-description">Manage event assets, their condition, and location in real time.</p>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6">
+                    <div class="feature-card">
+                        <div class="feature-icon-container icon-teal">
+                            <i class="fas fa-receipt feature-icon"></i>
+                        </div>
+                        <h5 class="feature-title">Supplier Billing</h5>
+                        <p class="feature-description">Handle supplier invoices and settle via integrated M-Pesa API.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section id="faq" class="faq">
+        <div class="container">
+            <div class="text-center mb-5">
+                <span class="faq-badge">Frequently Asked</span>
+                <h2 class="display-4 fw-bold text-dark mb-3" style="font-family: var(--font-poppins);">Questions? We have answers.</h2>
+                <p class="lead text-muted">Everything you need to know about Spendy</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="faq-item" id="faq1">
+                        <button class="faq-question" onclick="toggleFaq('faq1')">
+                            What is Spendy?
+                            <i class="fas fa-chevron-down chevron ms-auto"></i>
+                        </button>
+                        <div class="faq-answer" style="display: block;">
+                            Spendy is an event management system that helps planners and agencies track expenses, manage approvals, and process payments seamlessly. It's designed to simplify financial operations for events of all sizes.
+                        </div>
+                    </div>
+                    <div class="faq-item" id="faq3">
+                        <button class="faq-question" onclick="toggleFaq('faq3')">
+                            Is M-Pesa integration automatic?
+                            <i class="fas fa-chevron-down chevron ms-auto"></i>
+                        </button>
+                        <div class="faq-answer" style="display: none;">
+                            Yes, Spendy comes with built-in M-Pesa integration, allowing for seamless payments to vendors and service providers directly from your event wallet.
+                        </div>
+                    </div>
+                    <div class="faq-item" id="faq5">
+                        <button class="faq-question" onclick="toggleFaq('faq5')">
+                            How secure are my event transactions?
+                            <i class="fas fa-chevron-down chevron ms-auto"></i>
+                        </button>
+                        <div class="faq-answer" style="display: none;">
+                            Spendy uses bank-level encryption and security protocols to ensure all your financial data and transactions are completely secure. We also provide multi-factor authentication for added protection.
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="faq-item" id="faq2">
+                        <button class="faq-question" onclick="toggleFaq('faq2')">
+                            Can I manage multiple wallets or events?
+                            <i class="fas fa-chevron-down chevron ms-auto"></i>
+                        </button>
+                        <div class="faq-answer" style="display: none;">
+                            Yes, Spendy allows you to create and manage multiple events and wallets simultaneously. Each event can have its own budget, team members, and expense tracking.
+                        </div>
+                    </div>
+                    <div class="faq-item" id="faq4">
+                        <button class="faq-question" onclick="toggleFaq('faq4')">
+                            Do you support team roles and permissions?
+                            <i class="fas fa-chevron-down chevron ms-auto"></i>
+                        </button>
+                        <div class="faq-answer" style="display: none;">
+                            Yes, Spendy offers comprehensive role-based permissions. You can assign team members as Administrators, Staff, or Approvers, each with different levels of access and authorization.
+                        </div>
+                    </div>
+                    <div class="faq-item" id="faq6">
+                        <button class="faq-question" onclick="toggleFaq('faq6')">
+                            How can I request a demo?
+                            <i class="fas fa-chevron-down chevron ms-auto"></i>
+                        </button>
+                        <div class="faq-answer" style="display: none;">
+                            You can request a personalized demo by clicking the 'Request Demo' button on our homepage or by contacting our sales team directly at demo@spendyafrica.com.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+        <!-- Contact Section -->
+    <section id="contact" class="contact">
+    <div class="container">
+        <!-- Contact Cards -->
+        <div class="contact-grid">
+        <div class="contact-card">
+            <div class="icon-container">
+            <i class="fas fa-envelope"></i>
+            </div>
+            <h3>Email Us</h3>
+            <p>Our team is here to help you</p>
+            <a href="mailto:support@spendyafrica.com" class="contact-link">support@spendyafrica.com</a>
+        </div>
+        <div class="contact-card">
+            <div class="icon-container">
+            <i class="fas fa-phone"></i>
+            </div>
+            <h3>Call Us</h3>
+            <p>Mon-Fri from 8am to 5pm EAT</p>
+            <a href="tel:+254110000888" class="contact-link">+254 110 000 888</a>
+        </div>
+        <div class="contact-card">
+            <div class="icon-container">
+            <i class="fas fa-map-marker-alt"></i>
+            </div>
+            <h3>Visit Us</h3>
+            <p>Come say hello at our office</p>
+            <p class="contact-link mb-0">Nairobi, Kenya</p>
+        </div>
+        </div>
+        <!-- Contact Form -->
+        <div class="form-container">
+        <h2>Send us a message</h2>
+        <form id="contactForm" action="{% url 'userauths:contact' %}" method="POST">
+            {% csrf_token %}
+            <div class="form-row">
+            <div class="form-group">
+                <label for="name" class="form-label">Full Name</label>
+                <input type="text" class="form-control" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="email" class="form-label">Email Address</label>
+                <input type="email" class="form-control" id="email" name="email" required>
+            </div>
+            </div>
+            <div class="form-row">
+            <div class="form-group">
+                <label for="phone" class="form-label">Phone Number</label>
+                <input type="tel" class="form-control" id="phone" name="phone_number">
+            </div>
+            <div class="form-group">
+                <label for="subject" class="form-label">Subject</label>
+                <input type="text" class="form-control" id="subject" name="subject" required>
+            </div>
+            </div>
+            <div class="form-group">
+            <label for="message" class="form-label">Message</label>
+            <textarea class="form-control" id="message" name="message" rows="6" required></textarea>
+            </div>
+            <button type="submit" class="form-submit">Send Message</button>
+        </form>
+        </div>
+    </div>
+    </section>
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="footer-logo"><i class="fas fa-clock logo-icon"></i>Spendy</div>
+                    <div class="social-icons">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+                <div class="col-md-3 footer-section">
+                    <h6>Product</h6>
+                    <ul>
+                        <li><a href="#">Overview</a></li>
+                        <li><a href="#">Features</a></li>
+                        <li><a href="#">Pricing</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3 footer-section">
+                    <h6>Company</h6>
+                    <ul>
+                        <li><a href="#">Contact</a></li>
+                        <li><a href="#">Help Center</a></li>
+                        <li><a href="#">FAQ</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3 footer-section">
+                    <h6>Legal</h6>
+                    <ul>
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>Spendy is a professional event management system for planners and agencies. Track expenses, manage approvals, and process payments seamlessly with M-Pesa integration. Made for event professionals across Africa.</p>
+                <p>&copy; 2025 Spendy Africa. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scroll to Top Button -->
+    <button class="scroll-top" onclick="scrollToTop()">
+        <i class="fas fa-chevron-up"></i>
+    </button>
+
+    <!-- Bootstrap JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script>
+        let mousePosition = { x: 50, y: 50 };
+        function handleMouseMove(e) {
+            const rect = e.currentTarget.getBoundingClientRect();
+            const x = ((e.clientX - rect.left) / rect.width) * 100;
+            const y = ((e.clientY - rect.top) / rect.height) * 100;
+            mousePosition = { x, y };
+            document.querySelector('.hero::before').style.backgroundPosition = `${x}% ${y + 10}%`;
+        }
+        let activeCard = 0;
+        const cards = ['budget-card', 'pending-card', 'payments-card'];
+        setInterval(() => {
+            document.querySelectorAll('.budget-metric, .small-metric').forEach(c => c.classList.remove('active'));
+            const currentCard = document.getElementById(cards[activeCard]);
+            if (currentCard) currentCard.classList.add('active');
+            activeCard = (activeCard + 1) % 3;
+        }, 2000);
+        // Scroll to top
+        window.addEventListener('scroll', function() {
+            const scrollTop = document.querySelector('.scroll-top');
+            if (window.pageYOffset > 300) {
+                scrollTop.classList.add('show');
+            } else {
+                scrollTop.classList.remove('show');
+            }
+        });
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        function toggleFaq(id) {
+            const item = document.getElementById(id);
+            const answer = item.querySelector('.faq-answer');
+            const chevron = item.querySelector('.chevron');
+            const isOpen = answer.style.display === 'block';
+            answer.style.display = isOpen ? 'none' : 'block';
+            item.classList.toggle('open', !isOpen);
+            chevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+        }
+        // Demo Modal Form Submission
+        document.addEventListener('DOMContentLoaded', function() {
+            const demoForm = document.getElementById('demoForm');
+            if (demoForm) {
+                demoForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const formData = new FormData(this);
+                    const data = Object.fromEntries(formData);
+                    console.log('Demo Request:', data);
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('demoModal'));
+                    modal.hide();
+                    alert('Demo request submitted! We\'ll contact you soon.');
+                    this.reset();
+                });
+            }
+        });
+    </script>
+</body>
+</html>

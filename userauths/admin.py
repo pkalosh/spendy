@@ -1,5 +1,5 @@
 from django.contrib import admin
-from userauths.models import User
+from userauths.models import User,ContactMessage
 # Register your models here.
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils.html import format_html
@@ -46,3 +46,4 @@ class UserAdmin(BaseUserAdmin):
 
 # Register the custom UserAdmin
 admin.site.register(User, UserAdmin)
+admin.site.register(ContactMessage)

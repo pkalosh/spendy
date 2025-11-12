@@ -1,63 +1,289 @@
-
-
-{% extends 'partials/base.html' %}
 {% load static %}
-{% block content %}
-      <!-- Login Reg start -->
-      <section class="login-reg">
-        <div class="overlay pt-120">
-            <div class="container">
-                <div class="row align-items-center justify-content-center">
-                    <div class="col-xl-6 order-xl-0 order-1">
-                        <div class="sec-img d-rtl">
-                            <img src="{% static 'assets/images/login-reg-bg.png' %}" class="max-un" alt="image">
-                        </div>
-                    </div>
-                    <div class="col-xl-5">
-                        <div class="section-text text-center">
-                            <h4 class="title">Welcome to Spendy</h4>
-                            <p class="dont-acc">Already have an account? <a href="{% url 'userauths:sign-in' %}">Login</a></p>
-                            
-                        </div>
-                        <form method="POST" accept="{% url 'userauths:sign-up' %}">
-                            {% csrf_token %}
-                            <div class="row">
-                                <div class="col-12">
-                                    <div class="single-input">
-                                        {{form.phone_number}}
-                                    </div>
-                                    <div class="single-input">
-                                        {{form.email}}
-                                    </div>
-                                    <div class="single-input">
-                                        {{form.first_name}}
-                                    </div>
-                                    <div class="single-input">
-                                        {{form.last_name}}
-                                    </div>
-                                    <div class="single-input">
-                                        {{form.company_name}}
-                                    </div>
-                                    <div class="single-input">
-                                        {{form.country}}
-                                    </div>
-                                    <div class="single-input">
-                                        {{form.mobile_provider}}
-                                    </div>
-                                    <div class="single-input">
-                                        {{form.password1}}
-                                    </div>
-                                    <div class="single-input">
-                                        {{form.password2}}
-                                    </div>
-                                    <button class="cmn-btn w-100" type="submit">Sign Up</button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign Up - Spendy</title>
+    <!-- Bootstrap CSS -->
+    <link
+      rel="shortcut icon"
+      href="{% static 'logo/Spendy_Icon_1.svg' %}"
+      type="image/x-icon"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+      crossorigin="anonymous"
+    />
+    <!-- Custom CSS -->
+    <style>
+      :root {
+        --primary-dark: #093b40;
+        --primary-green: #98e23f;
+        --bg-light: #f5f5f7;
+        --text-dark: #191919;
+      }
+      body {
+        background-color: var(--bg-light);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 2rem 1rem;
+      }
+      .logo {
+        height: 3rem;
+      }
+      .form-container {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 0.75rem;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+          0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        border: 1px solid #dee2e6;
+      }
+      .btn-primary-custom {
+        background-color: var(--primary-dark);
+        border-color: var(--primary-dark);
+        color: white;
+        border-radius: 50rem;
+        padding: 0.625rem 1rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: all 0.3s;
+      }
+      .btn-primary-custom:hover {
+        background-color: var(--primary-green);
+        border-color: var(--primary-green);
+        color: var(--text-dark);
+      }
+      .form-control {
+        font-size: 0.875rem;
+        padding: 0.5rem 0.75rem;
+      }
+      .form-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        margin-bottom: 0.375rem;
+      }
+      .password-toggle {
+        cursor: pointer;
+      }
+      .terms-link {
+        color: var(--primary-dark);
+        text-decoration: none;
+        font-weight: 500;
+      }
+      .terms-link:hover {
+        color: var(--primary-green);
+      }
+      .signin-link {
+        color: var(--primary-dark);
+        text-decoration: none;
+        font-weight: 500;
+      }
+      .signin-link:hover {
+        color: var(--primary-green);
+      }
+    </style>
+    <!-- Font Awesome for icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="container">
+                  {% if messages %}
+                                {% for message in messages %}
+                                    <strong>{{ message }}</strong>
+                                {% endfor %}
+                            {% endif %}                  
+      <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-4">
+          <a href="/" class="d-flex justify-content-center mb-4">
+            <img
+              src="{% static 'logo/Spendy1.png' %}"
+              alt="Spendy"
+              class="logo"
+            />
+          </a>
+          <h2
+            class="text-center font-semibold text-xl mb-1"
+            style="color: var(--text-dark)"
+          >
+            Create your account
+          </h2>
+          <p class="text-center text-sm text-muted mb-4">
+            Join thousands of event organizers across Africa
+          </p>
+          <div class="form-container">
+            <form class="space-y-3" method="POST" action="{% url 'userauths:sign-up' %}">
+                {% csrf_token %}
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="first_name" class="form-label">First Name</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="first_name"
+                    placeholder="John"
+                    required
+                  />
                 </div>
+                <div class="col-md-6 mb-3">
+                  <label for="last_name" class="form-label">Last Name</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="last_name"
+                    placeholder="Doe"
+                    required
+                  />
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="email" class="form-label">Email Address</label>
+                  <input
+                    type="email"
+                    class="form-control"
+                    id="email"
+                    placeholder="you@company.com"
+                    required
+                  />
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="phone" class="form-label">Phone Number</label>
+                  <input
+                    type="tel"
+                    class="form-control"
+                    id="phone"
+                    placeholder="+254712345678"
+                    required
+                  />
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="company" class="form-label">Company Name</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="company"
+                    placeholder="Your Company Ltd"
+                    required
+                  />
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="country" class="form-label">Country</label>
+                  <select
+                    class="form-select form-control"
+                    id="country"
+                    required
+                  >
+                    <option value="">Select a country</option>
+                    <option value="kenya">Kenya</option>
+                    <option value="tanzania">Tanzania</option>
+                    <option value="uganda">Uganda</option>
+                    <option value="rwanda">Rwanda</option>
+                    <option value="ethiopia">Ethiopia</option>
+                    <option value="nigeria">Nigeria</option>
+                    <option value="ghana">Ghana</option>
+                    <option value="south-africa">South Africa</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="password" class="form-label">Password</label>
+                  <div class="input-group">
+                    <input
+                      type="password"
+                      class="form-control"
+                      id="password"
+                      placeholder="Enter password"
+                      required
+                    />
+                    <span
+                      class="input-group-text password-toggle"
+                      onclick="togglePassword('password', this)"
+                    >
+                      <i class="fas fa-eye"></i>
+                    </span>
+                  </div>
+                 
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="confirmPassword" class="form-label"
+                    >Confirm Password</label
+                  >
+                  <div class="input-group">
+                    <input
+                      type="password"
+                      class="form-control"
+                      id="confirmPassword"
+                      placeholder="Re-enter password"
+                      required
+                    />
+                    <span
+                      class="input-group-text password-toggle"
+                      onclick="togglePassword('confirmPassword', this)"
+                    >
+                      <i class="fas fa-eye"></i>
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="form-check mb-3">
+                <input
+                  type="checkbox"
+                  class="form-check-input"
+                  id="terms"
+                  required
+                />
+                <label class="form-check-label text-xs" for="terms">
+                  I agree to the
+                  <a href="#terms" class="terms-link">Terms</a> and
+                  <a href="#privacy" class="terms-link">Privacy Policy</a>
+                </label>
+              </div>
+              <button type="submit" class="btn btn-primary-custom w-100">
+                Create Account
+              </button>
+            </form>
+            <div class="text-center mt-3">
+              <p class="text-xs text-muted">
+                Already have an account?
+                <a href="{% url 'userauths:sign-in' %}" class="signin-link"
+                  >Sign in</a
+                >
+              </p>
             </div>
+          </div>
         </div>
-    </section>
-    <!-- Login Reg end -->
- {% endblock content %}
+      </div>
+    </div>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+      crossorigin="anonymous"
+    ></script>
+    <script>
+      function togglePassword(id, element) {
+        const input = document.getElementById(id);
+        const icon = element.querySelector("i");
+        if (input.type === "password") {
+          input.type = "text";
+          icon.classList.remove("fa-eye");
+          icon.classList.add("fa-eye-slash");
+        } else {
+          input.type = "password";
+          icon.classList.remove("fa-eye-slash");
+          icon.classList.add("fa-eye");
+        }
+      }
+    </script>
+  </body>
+</html>

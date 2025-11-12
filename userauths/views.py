@@ -5,8 +5,8 @@ from wallet.models import CompanyKYC, StaffProfile, Role
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordChangeForm
 
-from userauths.models import User
-from userauths.forms import UserRegisterForm
+from userauths.models import User,ContactMessage
+from userauths.forms import UserRegisterForm, ContactMessageForm,DemoForm
 
 def RegisterView(request):
     if request.method == "POST":
@@ -75,6 +75,7 @@ def LoginView(request):
     if request.method == "POST":
         email = request.POST.get("email")
         password = request.POST.get("password")
+        print(email, password)
 
         try:
             user = User.objects.get(email=email)
@@ -110,10 +111,25 @@ def LoginView(request):
 def logoutView(request):
     logout(request)
     messages.success(request, "You have been logged out.")
-    return redirect("userauths:sign-in")
+    return redirect("userauths:home")
 
 
+def reset_passwordView(request):
 
+    if request.method == "POST":
+        email = request.POST.get("email")
+        try:
+            user = User.objects.get(email=email)
+            if user:
+                # Send password reset email
+                user.send_password_reset_email()
+                messages.success(request, "Password reset email sent successfully.")
+                return redirect("userauths:sign-in")
+        except User.DoesNotExist:
+            messages.error(request, "No user found with the provided email.")
+            return redirect("userauths:reset-password")
+
+    return render(request, "users/resetpassword.html")
 
 @login_required
 def change_passwordView(request):
@@ -130,3 +146,35 @@ def change_passwordView(request):
         form = PasswordChangeForm(user=request.user)
     
     return render(request, "users/changepassword.html", {'form': form})
+
+
+def homeView(request):
+    contact_form = ContactMessageForm()
+    demo_form = DemoForm()
+
+    return render(request, "public/index.html",{'contact_form': contact_form, 'demo_form': demo_form})
+
+def contact(request):
+    if request.method == "POST":
+        form = ContactMessageForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Your message has been sent successfully.")
+            return redirect("userauths:home")
+        else:
+            messages.error(request, "There was an error with your message. Please try again.")
+
+    return render(request, "public/index.html",{})
+
+def demo(request):
+    if request.method == "POST":
+        form = DemoForm(request.POST)
+        if form.is_valid():
+            demo_request = form.save(commit=False)
+            demo_request.is_demo_request = True
+            demo_request.save()
+            messages.success(request, "Your demo request has been sent successfully.")
+            return redirect("userauths:home")
+        else:
+            messages.error(request, "There was an error with your demo request. Please try again.")
+    return render(request, "public/index.html",{})

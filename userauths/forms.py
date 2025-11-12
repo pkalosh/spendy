@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import User
+from .models import User, ContactMessage
 from django.core.exceptions import ValidationError
 
 
@@ -88,4 +88,16 @@ class UserRegisterForm(UserCreationForm):
         if commit:
             user.save()
         return user
+    
 
+class ContactMessageForm(forms.ModelForm):
+    class Meta:
+        model = ContactMessage
+        fields = ['name', 'email', 'phone_number','subject', 'message']
+
+
+class DemoForm(forms.ModelForm):
+    class Meta:
+        model = ContactMessage
+        fields = ['name', 'email', 'phone_number','organization']
+  

@@ -28,7 +28,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-(l9rl!48izpso!ltoi4c_^9*&ddu9iii$r!9gvo6#^bt=yp$jx'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*','127.0.0.1', 'localhost','spendy.africa']
 
@@ -165,7 +165,7 @@ CACHES = {
 
 LOGIN_URL = "userauths:sign-in"
 LOGIN_REDIRECT_URL = "userauths:sign-in"
-LOGOUT_REDIRECT_URL = "userauths:sign-in"
+LOGOUT_REDIRECT_URL = "userauths:home"
 
 # Session settings
 SESSION_COOKIE_AGE = 600
