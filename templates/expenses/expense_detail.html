@@ -521,7 +521,7 @@
                                                                         <td>{{ txn.receiver.get_full_name|default:"-" }}</td>
                                                                         <td>{{ txn.sender_wallet.currency|default:"KES" }} {{ txn.amount|floatformat:2|intcomma }}</td>
                                                                         <td>{{ txn.expense }}</td>
-                                                                        <td>{{ txn.transaction_code }}</td>
+                                                                        <td>{{ txn.mpesa_code }}</td>
                                                                         <td>
                                                                             {% if txn.transaction_type == 'send_money' %}
                                                                                 <span class="badge bg-info">Send Money</span>

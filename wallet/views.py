@@ -2050,6 +2050,7 @@ def stk_push_callback(request):
                 # Update wallet funding Transaction record if found
                 if funding_transaction:
                     funding_transaction.status = "COMPLETED"
+                    funding_transaction.mpesa_code = metadata_dict.get('MpesaReceiptNumber')
                     funding_transaction.completed_at = timezone.now()
                     funding_transaction.payment_completed = True
                     funding_transaction.paid_at = timezone.now()

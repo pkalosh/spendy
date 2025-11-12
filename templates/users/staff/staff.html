@@ -205,7 +205,7 @@
                             <table class="table table-bordered table-hover responsive-table">
                                 <thead class="bg-light">
                                     <tr>
-                                        <th><i class="fas fa-hashtag me-1"></i>Transaction Code</th>
+                                        <th><i class="fas fa-hashtag me-1"></i>Mpesa Code</th>
                                         <th><i class="fas fa-user me-1"></i>Initiated By</th>
                                         <th><i class="fas fa-user-check me-1"></i>Recipient</th>
                                         <th><i class="fas fa-money-bill me-1"></i>Amount</th>
@@ -219,7 +219,7 @@
                                     {% for txn in transactions %}
                                         <tr>
                                             <td data-label="Transaction Code">
-                                                <span class="">{{ txn.transaction_id }}</span>
+                                                <span class="">{{ txn.mpesa_code }}</span>
                                             </td>
                                             <td data-label="Initiated By">
                                                 <div class="d-flex align-items-center">
@@ -310,8 +310,8 @@
                                                     <div class="col-md-6">
                                                         <div class="info-item">
                                                             <i class="fas fa-hashtag text-primary me-2"></i>
-                                                            <strong>Transaction ID:</strong> 
-                                                            <span class="text-primary">{{ txn.transaction_id }}</span>
+                                                            <strong>Mpesa Code:</strong> 
+                                                            <span class="text-primary">{{ txn.mpesa_code }}</span>
                                                         </div>
                                                     </div>
                                                     <div class="col-md-6">

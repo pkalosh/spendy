@@ -165,6 +165,7 @@ class Transaction(models.Model):
     sender_wallet = models.ForeignKey('Wallet', on_delete=models.SET_NULL, null=True, blank=True, related_name="sent_transactions")
     
     # Transaction state
+    mpesa_code = models.CharField(max_length=255, blank=True, null=True, help_text="M-Pesa transaction code")
     status = models.CharField(choices=TRANSACTION_STATUS, max_length=100, default="pending")
     transaction_type = models.CharField(choices=TRANSACTION_TYPE, max_length=100, default="none")
     mpesa_checkout_request_id=models.CharField(max_length=100, blank=True, null=True)

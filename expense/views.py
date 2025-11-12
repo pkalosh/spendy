@@ -1288,6 +1288,11 @@ def decline_expense(request, expense_id):
 def undo_expense_action(request, expense_id):
     try:
         expense = get_object_or_404(Expense, id=expense_id)
+        if expense.paid:
+            return JsonResponse(
+                {'error': 'Cannot undo action on a paid expense.'},
+                status=400
+            )
         if not (expense.approved or expense.declined):
             return JsonResponse(
                 {'error': 'This expense is already pending.'},
