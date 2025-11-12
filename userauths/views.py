@@ -1,75 +1,170 @@
 from django.shortcuts import render, redirect
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_decode
+from django.utils.encoding import force_str
+from django.contrib import messages
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import login
 from django.contrib.auth import authenticate, login, logout,update_session_auth_hash
 from django.contrib import messages
 from wallet.models import CompanyKYC, StaffProfile, Role
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordChangeForm
-
+from django.conf import settings
+from django.db import IntegrityError,transaction
 from userauths.models import User,ContactMessage
 from userauths.forms import UserRegisterForm, ContactMessageForm,DemoForm
-
+from django.core.mail import send_mail
+import re
+@transaction.atomic  # Ensures all-or-nothing: auto-rollback on any exception in try
 def RegisterView(request):
+    if request.user.is_authenticated:
+        messages.warning(request, "You are already logged in.")
+        return redirect("wallet:wallet")
+
     if request.method == "POST":
-        form = UserRegisterForm(request.POST)
-        if form.is_valid():
-            # Save the user
-            new_user = form.save()
-            username = form.cleaned_data.get("email")
-            
-            # Create StaffProfile with admin role
+        print(request.POST)  # Keep for debugging
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        email = request.POST.get('email', '').strip()
+        phone_number = request.POST.get('phone_number', '').strip()
+        company_name = request.POST.get('company', '').strip()
+        country = request.POST.get('country', '').strip()
+        password = request.POST.get('password', '').strip()
+        password_confirm = request.POST.get('confirmPassword', '').strip()
+
+        # Normalize phone (strip non-digits, ensure + prefix; example for Kenya)
+        phone_digits = re.sub(r'[^\d+]', '', phone_number)
+        if phone_digits.startswith('254'):
+            phone_number = f'+{phone_digits}'
+        elif len(phone_digits) > 3 and not phone_digits.startswith('+'):
+            phone_number = f'+{phone_digits}'
+
+        # Full validation
+        errors = []
+        required_fields = [first_name, last_name, email, phone_number, company_name, country, password, password_confirm]
+        if not all(required_fields):
+            errors.append("All fields are required.")
+
+        if password != password_confirm:
+            errors.append("Passwords do not match.")
+        if len(password) < 8:
+            errors.append("Password must be at least 8 characters long.")
+        if not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
+            errors.append("Please enter a valid email address.")
+        if not re.match(r'^\+\d{10,15}$', phone_number):
+            errors.append("Please enter a valid phone number (e.g., +254723456780).")
+        valid_countries = ['kenya', 'tanzania', 'uganda', 'rwanda', 'ethiopia', 'nigeria', 'ghana', 'south-africa']
+        if country.lower() not in valid_countries:
+            errors.append("Please select a valid country.")
+
+        if errors:
+            for error in errors:
+                messages.error(request, error)
+            return render(request, "users/sign-up.html")
+
+        # Pre-check User duplicates
+        if User.objects.filter(email__iexact=email).exists():
+            messages.error(request, f"An account with email '{email}' already exists.")
+            return render(request, "users/sign-up.html")
+        if User.objects.filter(phone_number=phone_number).exists():
+            messages.error(request, f"An account with phone '{phone_number}' already exists.")
+            return render(request, "users/sign-up.html")
+
+        try:
+            # Create User
+            new_user = User.objects.create_user(
+                email=email,
+                password=password,
+                first_name=first_name,
+                last_name=last_name,
+                phone_number=phone_number,
+                company_name=company_name,
+                country=country.upper(),
+            )
+            print(f"Created User ID: {new_user.id}")  # Debug: Track ID
+
+            # Orphan guard: Clean any existing CompanyKYC/StaffProfile for this new ID (handles ghosts)
+            CompanyKYC.objects.filter(user=new_user).delete()
+            StaffProfile.objects.filter(user=new_user).delete()
+
+            # Create CompanyKYC
+            user_company = CompanyKYC.objects.create(
+                user=new_user,
+                company_name=company_name,
+                country=country.title(),
+                mobile=phone_number,
+                organization_type='event_organization',
+                status='pending',
+                kyc_submitted=False,
+                kyc_confirmed=False,
+            )
+
+            # Create StaffProfile (inner try for Role-specific error)
             try:
-                # Get the admin role (adjust the filter based on your Role model)
-                admin_role = Role.objects.get(is_admin=True)  # or Role.objects.get(name='Admin')
-                
-                # Get the user's company if it exists
-                try:
-                    user_company = CompanyKYC.objects.get(user=new_user)
-                except CompanyKYC.DoesNotExist:
-                    user_company = None
-                
-                # Create StaffProfile
-                staff_profile = StaffProfile.objects.create(
+                admin_role = Role.objects.get(is_admin=True)
+                StaffProfile.objects.create(
                     user=new_user,
                     role=admin_role,
                     company=user_company,
-                    is_active=True
-                    # assigned_modules will be empty as intended
+                    is_active=True,
                 )
-                
             except Role.DoesNotExist:
-                # Handle case where admin role doesn't exist
-                messages.error(request, "Admin role not found. Please contact administrator.")
-                # Optionally delete the created user if staff profile creation fails
-                new_user.delete()
-                return render(request, "users/sign-up.html", {"form": form})
-            
-            except Exception as e:
-                # Handle any other errors during staff profile creation
-                messages.error(request, f"Error creating staff profile: {str(e)}")
-                new_user.delete()
-                return render(request, "users/sign-up.html", {"form": form})
-            
-            messages.success(request, f"Hey {username}, your account was created successfully.")
-            
-            # Authenticate and login the user
-            new_user = authenticate(
-                email=form.cleaned_data['email'],
-                password=form.cleaned_data['password1']
+                raise ValueError("Admin role not found. Please contact administrator.")  # Re-raise to trigger transaction rollback
+
+            # Send welcome email (non-blocking)
+            message = f"""
+Hi {first_name},
+
+Welcome to Spendy! We're excited to help you take control of your event and operational expenses.
+
+Ready to get started? Set up your first wallet in under 2 minutes: https://spendy.africa/sign-in/
+
+With Spendy, you can:
+- Create dedicated wallets for events and operations
+- Manage and approve expenses in real time
+- Track budgets and spending effortlessly
+- Generate reports that keep your team informed
+
+We built Spendy for event professionals like you who value transparency, teamwork, and smarter financial decisions.
+
+Need help? Our support team is here for you at info@spendy.africa
+
+Best regards,
+The Spendy Team
+            """.strip()
+            send_mail(
+                subject='Welcome to Spendy — where event expense management gets simple',
+                message=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[new_user.email],
+                fail_silently=True,  # Prevents crash; log errors via logging
             )
-            login(request, new_user)
+
+            # Authenticate and login
+            user = authenticate(request, email=email, password=password)
+            login(request, user or new_user)
+            messages.success(request, f"Hey {first_name}, your account was created successfully.")
             return redirect("wallet:wallet")
-    
-    if request.user.is_authenticated:
-        messages.warning(request, f"You are already logged in.")
-        return redirect("wallet:wallet")
-    else:
-        form = UserRegisterForm()
-        context = {
-            "form": form
-        }
-        return render(request, "users/sign-up.html", context)
 
+        except ValueError as ve:  # For Role error
+            messages.error(request, str(ve))
+            return render(request, "users/sign-up.html")
+        except IntegrityError as ie:
+            error_str = str(ie)
+            if 'companykyc' in error_str.lower() and 'user_id' in error_str.lower():
+                user_id_match = re.search(r"'(\d+)'", error_str)
+                orphan_id = user_id_match.group(1) if user_id_match else "unknown"
+                messages.error(request, f"Company setup conflict for ID {orphan_id}. Try again or contact support.")
+            else:
+                messages.error(request, f"Duplicate account detected: {error_str}")
+            return render(request, "users/sign-up.html")
+        except Exception as e:
+            messages.error(request, f"An error occurred during registration: {str(e)}")
+            return render(request, "users/sign-up.html")
 
+    # GET: Render template
+    return render(request, "users/sign-up.html")
 
 def LoginView(request):
     if request.method == "POST":
@@ -130,6 +225,37 @@ def reset_passwordView(request):
             return redirect("userauths:reset-password")
 
     return render(request, "users/resetpassword.html")
+
+def password_reset_confirm(request, uidb64, token):
+    """
+    Handles the password reset confirmation via the emailed link.
+    Validates the token and allows setting a new password.
+    """
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = get_object_or_404(User, id=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    if user is not None and default_token_generator.check_token(user, token):
+        if request.method == "POST":
+            password = request.POST.get("password")
+            password_confirm = request.POST.get("password_confirm")
+            if password == password_confirm:
+                if len(password) < 8:
+                    messages.error(request, "Password must be at least 8 characters long.")
+                else:
+                    user.set_password(password)
+                    user.save()
+                    messages.success(request, "Password reset successfully. You can now sign in.")
+                    login(request, user)  # Auto-login after reset (optional; remove if preferred)
+                    return redirect("userauths:sign-in")
+            else:
+                messages.error(request, "Passwords do not match.")
+        return render(request, "users/resetconfirm.html", {"uidb64": uidb64, "token": token})
+    else:
+        messages.error(request, "Invalid or expired reset link.")
+        return redirect("userauths:sign-in")
 
 @login_required
 def change_passwordView(request):

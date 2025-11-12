@@ -1,6 +1,12 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 import uuid
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
+from django.urls import reverse
+from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -56,6 +62,60 @@ class User(AbstractUser):
     def __str__(self):
         return self.email
 
+    def send_password_reset_email(self):
+        """
+        Generates a password reset token and sends an email with a reset link to the user.
+        Assumes a URL pattern named 'password_reset_confirm' under app_name='userauths'.
+        """
+        # Generate the token and UID
+        token = default_token_generator.make_token(self)
+        uid = urlsafe_base64_encode(force_bytes(self.pk))
+        
+        # Build the reset URL (using app label 'userauths')
+        reset_url = reverse('userauths:password_reset_confirm', kwargs={'uidb64': uid, 'token': token})
+        
+        # Determine domain from ALLOWED_HOSTS (prefer production domain like 'spendy.africa', fallback to localhost:8000)
+        from django.conf import settings
+        allowed_hosts = settings.ALLOWED_HOSTS
+        domain = 'localhost:8000'  # Default fallback
+        for host in allowed_hosts:
+            if 'spendy.africa' in host:  # Prioritize production (handles exact or wildcard)
+                domain = host.replace('*', 'spendy')  # Strip wildcard if present
+                break
+            elif host == '127.0.0.1':
+                domain = '127.0.0.1:8000'
+                break
+            elif host == 'localhost':
+                domain = 'localhost:8000'
+                break
+        
+        # Use HTTPS for production domains, HTTP for localhost
+        protocol = 'https' if not domain.startswith('localhost') and not domain.startswith('127.0.0.1') else 'http'
+        full_reset_url = f"{protocol}://{domain}{reset_url}"
+        
+        # Email configuration (adjusted to use full name since username is disabled)
+        subject = 'Password Reset Request'
+        full_name = f"{self.first_name} {self.last_name}".strip() or self.email
+        message = f"""
+        Hello {full_name},
+        
+        You requested a password reset. Click the link below to set a new password:
+        {full_reset_url}
+        
+        If you didn't request this, please ignore this email.
+        
+        Best regards,
+        Your App Team
+        """
+        
+        # Send the email
+        send_mail(
+            subject=subject,
+            message=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[self.email],
+            fail_silently=False,
+        )
 
 class ContactMessage(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
