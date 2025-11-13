@@ -18,6 +18,8 @@ from django.core.mail import send_mail
 import re
 import logging
 
+from mailjet_rest import Client  # New: Mailjet API client
+
 logger = logging.getLogger(__name__)
 
 @transaction.atomic  # Ensures all-or-nothing: auto-rollback on any exception in try
@@ -92,8 +94,6 @@ def RegisterView(request):
                 phone_number=phone_number,
                 company_name=company_name,
                 country=country.upper(),
-                is_admin = True,
-                is_verified = True
             )
             print(f"Created User ID: {new_user.id}")  # Debug: Track ID
             logger.info(f"User created: ID {new_user.id}, email {email}")
@@ -142,10 +142,33 @@ def RegisterView(request):
                 login(request, new_user)
             logger.info(f"User {new_user.id} authenticated and logged in")
 
-            # Send welcome email (non-blocking; moved after login for better flow, but still in try)
-            # Note: If email hangs, consider async (e.g., Celery) or console backend for dev
+            # Send welcome email via Mailjet API (non-blocking)
             try:
-                message = f"""
+                if not settings.MAILJET_API_KEY or not settings.MAILJET_SECRET_KEY:
+                    raise ValueError("Mailjet API keys not configured in settings")
+
+                # Initialize Mailjet client (v3.1 for Send API)
+                mailjet = Client(
+                    auth=(settings.MAILJET_API_KEY, settings.MAILJET_SECRET_KEY),
+                    version='v3.1'  # Required for Send API
+                )
+
+                # Prepare message data
+                message_data = {
+                    'Messages': [
+                        {
+                            "From": {
+                                "Email": settings.MAILJET_SENDER_EMAIL.split('<')[1].split('>')[0],  # Extract email from 'Name <email>'
+                                "Name": settings.MAILJET_SENDER_NAME
+                            },
+                            "To": [
+                                {
+                                    "Email": new_user.email,
+                                    "Name": f"{first_name} {last_name}"
+                                }
+                            ],
+                            "Subject": 'Welcome to Spendy — where event expense management gets simple',
+                            "TextPart": f"""
 Hi {first_name},
 Welcome to Spendy! We're excited to help you take control of your event and operational expenses.
 Ready to get started? Set up your first wallet in under 2 minutes: https://spendy.africa/sign-in/
@@ -158,18 +181,37 @@ We built Spendy for event professionals like you who value transparency, teamwor
 Need help? Our support team is here for you at info@spendy.africa
 Best regards,
 The Spendy Team
-                """.strip()
-                send_mail(
-                    subject='Welcome to Spendy — where event expense management gets simple',
-                    message=message,
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[new_user.email],
-                    fail_silently=True,  # Prevents crash; log errors via logging
-                )
-                logger.info(f"Welcome email sent to {new_user.email}")
+                            """.strip(),
+                            "HTMLPart": f"""
+<h3>Hi {first_name},</h3>
+<p>Welcome to Spendy! We're excited to help you take control of your event and operational expenses.</p>
+<p><strong>Ready to get started?</strong> Set up your first wallet in under 2 minutes: <a href="https://spendy.africa/sign-in/">https://spendy.africa/sign-in/</a></p>
+<p>With Spendy, you can:</p>
+<ul>
+<li>Create dedicated wallets for events and operations</li>
+<li>Manage and approve expenses in real time</li>
+<li>Track budgets and spending effortlessly</li>
+<li>Generate reports that keep your team informed</li>
+</ul>
+<p>We built Spendy for event professionals like you who value transparency, teamwork, and smarter financial decisions.</p>
+<p>Need help? Our support team is here for you at <a href="mailto:info@spendy.africa">info@spendy.africa</a></p>
+<p>Best regards,<br>The Spendy Team</p>
+                            """,  # Simple HTML version for better rendering
+                        }
+                    ]
+                }
+
+                # Send the email
+                result = mailjet.send.create(data=message_data)
+                if result.status_code != 200:
+                    raise ValueError(f"Mailjet API error: {result.status_code} - {result.json()}")
+                
+                sent_count = len(message_data['Messages'])  # 1 for single email
+                logger.info(f"Mailjet API email sent to {new_user.email} (status: {result.status_code}, reached: {sent_count})")
             except Exception as email_err:
-                logger.error(f"Failed to send welcome email to {new_user.email}: {email_err}")
+                logger.error(f"Mailjet API email failed for {new_user.email}: {email_err}", exc_info=True)
                 # Don't rollback transaction for email failure
+                messages.info(request, "Account created! (Welcome email delivery delayed—check spam folder.)")
 
             messages.success(request, f"Hey {first_name}, your account was created successfully.")
             logger.info(f"Registration successful for user {new_user.id}; redirecting to wallet")

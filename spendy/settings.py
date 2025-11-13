@@ -153,6 +153,9 @@ EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 
 
 
+MAILJET_SENDER_EMAIL = 'info@spendy.africa'  # Verified sender
+MAILJET_SENDER_NAME = 'Spendy Team'
+
 SITE_ID = 1
 
 
