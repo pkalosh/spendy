@@ -1722,11 +1722,11 @@ def dashboard(request):
     page_number = request.GET.get("page")
     transactions = paginator.get_page(page_number)
 
-    primary_wallets = Wallet.objects.filter(company=kyc, wallet_type="PRIMARY").order_by("-id")
+    primary_wallets = Wallet.objects.filter(company=kyc, wallet_type="PRIMARY").order_by("-id").first()
     wallets = Wallet.objects.filter(company=kyc).exclude(wallet_type="PRIMARY").order_by("-id")
 
     # Combine wallets for utilization tracking
-    all_wallets = list(primary_wallets) + list(wallets)
+    all_wallets = list(wallets)
 
     for wallet in all_wallets:
         approved_paid_tx = Transaction.objects.filter(

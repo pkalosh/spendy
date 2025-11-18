@@ -1,734 +1,896 @@
 {% extends "partials/dashboard-base.html" %}
 {% load static %}
 {% load humanize %}
-{% load custom_filters %} 
-
+{% load custom_filters %}
 {% block content %}
 <link href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" rel="stylesheet">
 <style>
-  .hidden {
-    display: none !important;
+:root {
+  --primary-color: #98e23f;
+  --secondary-color: #7ab82c;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --danger-color: #ef4444;
+  --info-color: #06b6d4;
+  --light-bg: #f8fafc;
+  --dark-text: #1f2937;
+  --muted-text: #6b7280;
+  --border-color: #e5e7eb;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --border-radius: 12px;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+body {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+.dashboard-section {
+  min-height: 100vh;
+  background: transparent;
+}
+.hidden {
+  display: none !important;
+}
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+.form-control:disabled, .form-select:disabled {
+  background-color: #e9ecef;
+  opacity: 1;
+}
+/* Nice Select Overrides */
+.nice-select {
+  width: 100% !important;
+  height: 38px !important;
+  line-height: 36px !important;
+}
+.nice-select:disabled {
+  background-color: #e9ecef !important;
+  color: #6c757d !important;
+  pointer-events: none;
+}
+.nice-select.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+/* Section Header */
+.section-header {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: var(--border-radius);
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  position: relative;
+  overflow: hidden;
+}
+.section-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
+  z-index: 1;
+}
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--dark-text);
+  margin-bottom: 0.5rem;
+  position: relative;
+  z-index: 2;
+}
+.section-title.text-gradient {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.section-subtitle {
+  color: var(--muted-text);
+  font-size: 0.875rem;
+  position: relative;
+  z-index: 2;
+}
+/* Button Enhancements */
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  border: none;
+  color: white;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  transition: var(--transition);
+  box-shadow: var(--shadow-sm);
+  padding: 0.75rem 1.5rem;
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  color: white;
+}
+/* Nav Tabs */
+.nav-tabs {
+  border: none;
+  background: white;
+  border-radius: var(--border-radius);
+  padding: 0.5rem;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 1rem;
+}
+.nav-tabs .nav-link {
+  border: none;
+  color: var(--muted-text);
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  transition: var(--transition);
+  margin: 0 0.25rem;
+}
+.nav-tabs .nav-link:hover {
+  color: var(--primary-color);
+  background: rgba(152, 226, 63, 0.1);
+}
+.nav-tabs .nav-link.active {
+  background: var(--primary-color);
+  color: white;
+  box-shadow: var(--shadow-sm);
+}
+/* Table Enhancements */
+.table-responsive {
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  background: white;
+}
+.table {
+  margin-bottom: 0;
+}
+.table thead th {
+  border-bottom: 2px solid var(--border-color);
+  font-weight: 600;
+  color: var(--dark-text);
+  padding: 1rem 0.75rem;
+  background: var(--light-bg);
+}
+.table tbody td {
+  padding: 1rem 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+.table tbody tr:hover {
+  background: rgba(152, 226, 63, 0.05);
+  transition: var(--transition);
+  transform: scale(1.01);
+}
+/* Badge Enhancements */
+.badge {
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid;
+}
+.bg-success {
+  background: rgba(16, 185, 129, 0.1) !important;
+  color: var(--success-color) !important;
+  border-color: rgba(16, 185, 129, 0.2);
+}
+.bg-warning {
+  background: rgba(245, 158, 11, 0.1) !important;
+  color: var(--warning-color) !important;
+  border-color: rgba(245, 158, 11, 0.2);
+}
+.bg-info {
+  background: rgba(6, 182, 212, 0.1) !important;
+  color: var(--info-color) !important;
+  border-color: rgba(6, 182, 212, 0.2);
+}
+/* Modal Enhancements */
+.modal-content {
+  border: none;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-lg);
+}
+.modal-header {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: white;
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
+}
+.modal-body {
+  background: #f8fafc;
+}
+/* Form Elements */
+.form-control, .form-select {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  transition: var(--transition);
+}
+.form-control:focus, .form-select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 0.2rem rgba(152, 226, 63, 0.25);
+}
+.is-invalid {
+  border-color: var(--danger-color);
+}
+.is-valid {
+  border-color: var(--success-color);
+}
+/* Empty States */
+.text-center {
+  text-align: center;
+  padding: 3rem 2rem;
+  border-radius: var(--border-radius);
+  background: linear-gradient(135deg, rgba(152, 226, 63, 0.05) 0%, rgba(122, 184, 44, 0.05) 100%);
+  border: 1px solid rgba(152, 226, 63, 0.2);
+}
+/* Responsive Design */
+@media (max-width: 768px) {
+  .section-header {
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
   }
-  .loading {
-    opacity: 0.6;
-    pointer-events: none;
+  .nav-tabs {
+    flex-direction: column;
   }
-  .form-control:disabled, .form-select:disabled {
-    background-color: #e9ecef;
-    opacity: 1;
+  .nav-tabs .nav-link {
+    margin: 0.25rem 0;
   }
-  /* Nice Select Overrides */
-  .nice-select {
-    width: 100% !important;
-    height: 38px !important;
-    line-height: 36px !important;
+  .table thead {
+    display: none;
   }
-  .nice-select:disabled {
-    background-color: #e9ecef !important;
-    color: #6c757d !important;
-    pointer-events: none;
+  .table tbody tr {
+    display: block;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: white;
+    box-shadow: var(--shadow-sm);
   }
-  .nice-select.loading {
-    opacity: 0.6;
-    pointer-events: none;
+  .table tbody td {
+    display: block;
+    border: none;
+    padding: 0.25rem 0;
+    text-align: left;
   }
+  .table tbody td:before {
+    content: attr(data-label) ": ";
+    font-weight: 600;
+    color: var(--dark-text);
+  }
+}
 </style>
 <section class="dashboard-section body-collapse">
-  <div class="overlay pt-120">
-    <div class="container-fluid">
-      <div class="col-12">
-        <h4 class="mb-1">Expenses</h4>
-        <p class="mb-3">Create and track events with categorized expenses.</p>
+<div class="overlay pt-120">
+<div class="container-fluid">
+<div class="section-header">
+  <div class="row align-items-center">
+    <div class="col-lg-8">
+      <h4 class="section-title text-gradient mb-0">Expenses</h4>
+      <p class="section-subtitle mb-0">Create and track events with categorized expenses.</p>
     </div>
-
+    <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
       <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#submitExpenseModal">
-        New Event/Operation/Activation
+        <i class="fas fa-plus me-2"></i>New Event/Operation/Activation
       </button>
-
-      <!-- Nav tabs -->
-      <ul class="nav nav-tabs mt-4" id="expenseTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-          <button class="nav-link active" id="event-tab" data-bs-toggle="tab" data-bs-target="#event" type="button" role="tab" aria-controls="event" aria-selected="true">Events</button>
-        </li>
-        <li class="nav-item" role="presentation">
-          <button class="nav-link" id="operation-tab" data-bs-toggle="tab" data-bs-target="#operation" type="button" role="tab" aria-controls="operation" aria-selected="false">Operations</button>
-        </li>
-        <li class="nav-item" role="presentation">
-          <button class="nav-link" id="activation-tab" data-bs-toggle="tab" data-bs-target="#activation" type="button" role="tab" aria-controls="activation" aria-selected="false">Activation</button>
-        </li>
-      </ul>
-
-      <!-- Tab panes -->
-      <div class="tab-content mt-3">
-        <!-- Events Tab -->
-        <div class="tab-pane fade show active" id="event" role="tabpanel" aria-labelledby="event-tab">
-          <div class="table-responsive">
-            <table class="display table table-striped" style="width:100%">
-              <thead>
-                <tr>
-                  <th>Event</th>
-                  <th>Category</th>
-                  <th>Client</th>
-                  <th>Budget</th>
-                  <th>Created By</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for item in all_items %}
-                  {% if item|get_class_name == 'Event' %}
-                    <tr>
-                      <td>{{ item.name }}</td>
-                      <td>{{ item.category }}</td>
-                      <td>{{ item.client }}</td>
-                      <td>{{ item.budget|intcomma }}</td>
-                      <td><a href="#">{{ item.created_by.get_full_name }}</a></td>
-                      <td>
-                        <a href="{% url 'expense:event_expense_detail' item.id %}" class="btn btn-sm btn-primary">View Expenses</a>
-                      </td>
-                    </tr>
-                  {% endif %}
-                {% empty %}
-                  <tr><td colspan="6" class="text-center">No event records found.</td></tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Operations Tab -->
-        <div class="tab-pane fade" id="operation" role="tabpanel" aria-labelledby="operation-tab">
-          <div class="table-responsive">
-            <table class="display table table-striped" style="width:100%">
-              <thead>
-                <tr>
-                  <th>Operation</th>
-                  <th>Category</th>
-                  <th>Client</th>
-                  <th>Budget</th>
-                  <th>Created By</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for item in all_items %}
-                  {% if item|get_class_name == 'Operation' %}
-                    <tr>
-                      <td>{{ item.name }}</td>
-                      <td>{{ item.category }}</td>
-                      <td>{{ item.client }}</td>
-                      <td>{{ item.budget|intcomma }}</td>
-                      <td><a href="#">{{ item.created_by.get_full_name }}</a></td>
-                      <td>
-                        <a href="{% url 'expense:operation_expense_detail' item.id %}" class="btn btn-sm btn-primary">View Expenses</a>
-                      </td>
-                    </tr>
-                  {% endif %}
-                {% empty %}
-                  <tr><td colspan="6" class="text-center">No operation records found.</td></tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Activations Tab -->
-        <div class="tab-pane fade" id="activation" role="tabpanel" aria-labelledby="activation-tab">
-          <div class="table-responsive">
-            <table class="display table table-striped" style="width:100%">
-              <thead>
-                <tr>
-                  <th>Activation</th>
-                  <th>Category</th>
-                  <th>Client</th>
-                  <th>Budget</th>
-                  <th>Project Lead</th>
-                  <th>Created By</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for item in all_items %}
-                  {% if item|get_class_name == 'Activation' %}
-                    <tr>
-                      <td>{{ item.name }}</td>
-                      <td>{{ item.category }}</td>
-                      <td>{{ item.client|default:"N/A" }}</td>
-                      <td>{{ item.budget|intcomma|default:"N/A" }}</td>
-                      <td>{{ item.project_lead|default:"N/A" }}</td>
-                      <td><a href="#">{{ item.created_by.get_full_name|default:"N/A" }}</a></td>
-                      <td>
-                        {% if item.approved %}
-                          <span class="badge bg-success">Approved</span>
-                        {% else %}
-                          <span class="badge bg-warning">Pending</span>
-                        {% endif %}
-                        {% if item.paid %}
-                          <span class="badge bg-info">Paid</span>
-                        {% endif %}
-                      </td>
-                      <td>
-                        <a href="{% url 'expense:activation_expense_detail' item.id %}" class="btn btn-sm btn-primary">View Expenses</a>
-                      </td>
-                    </tr>
-                  {% endif %}
-                {% empty %}
-                  <tr><td colspan="8" class="text-center">No activation records found.</td></tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </div>
-</section>
-
-<!-- Submit Expense Modal -->
-<div class="modal fade" id="submitExpenseModal" tabindex="-1" aria-labelledby="submitExpenseModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header bg-light">
-        <h5 class="modal-title">Create Event, Activation or Operation</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <!-- Request Form -->
-        <div id="requests" class="content-section">
-          <form id="expenseForm" class="bg-white p-4 shadow rounded" method="post" action="{% url 'expense:event-operation' %}" enctype="multipart/form-data">
-            {% csrf_token %}
-            <input type="hidden" name="form_type" id="form_type" value="">
-            
-            <!-- Request Type -->
-            <div class="mb-3">
-              <label for="requestType" class="form-label fw-bold">Expense Group</label>
-              <select id="requestType" name="request_type" class="form-select" required data-nice-select="false">
-                <option value="">Select Type</option>
-                <option value="event">Event</option>
-                <option value="operation">Operation</option>
-                <option value="activation">Activation</option>
-              </select>
-            </div>
-            
-            <!-- Event Request Fields -->
-            <div id="eventRequestFields" class="hidden">
-              <div class="mb-3">
-                <label for="event_name" class="form-label">Event Name</label>
-                <input type="text" id="event_name" name="event_name" class="form-control event-field" maxlength="255">
-              </div>
-              
-              <div class="row">
-                <div class="col-md-6 mb-3">
-                  <label for="event_category" class="form-label">Event Category</label>
-                  <select id="event_category" name="event_category" class="form-select event-field" data-nice-select="false">
-                    <option value="">Select Category</option>
-                    {% for category in event_categories %}
-                      <option value="{{ category.id }}">{{ category.name }}</option>
-                    {% endfor %}
-                  </select>
-                </div>
-                <div class="col-md-6 mb-3">
-                  <label for="event_client" class="form-label">Client <span class="text-muted">(Optional)</span></label>
-                  <select id="event_client" name="event_client" class="form-select event-field client-select" data-nice-select="false">
-                    <option value="">Select Client</option>
-                    {% for client in clients %}
-                      <option value="{{ client.id }}">{{ client.name }}</option>
-                    {% endfor %}
-                  </select>
-                </div>
-              </div>
-              
-              <div class="mb-3">
-                <label for="event_brand" class="form-label">Brand <span class="text-muted">(Optional)</span></label>
-                <select id="event_brand" name="event_brand" class="form-select brand-select" disabled data-nice-select="false">
-                  <option value="">Select Client First</option>
-                </select>
-              </div>
-              
-              <div class="row">
-                <div class="col-md-6 mb-3">
-                  <label for="event_start_date" class="form-label">Start Date</label>
-                  <input type="date" id="event_start_date" name="event_start_date" class="form-control event-field">
-                </div>
-                <div class="col-md-6 mb-3">
-                  <label for="event_end_date" class="form-label">End Date</label>
-                  <input type="date" id="event_end_date" name="event_end_date" class="form-control event-field">
-                </div>
-              </div>
-              
-              <div class="mb-3">
-                <label for="event_budget" class="form-label">Budget</label>
-                <input type="number" id="event_budget" name="event_budget" class="form-control event-field" step="0.01">
-              </div>
-              
-              <div class="mb-3">
-                <label for="event_budget_file" class="form-label">Budget File <span class="text-muted">(Optional)</span></label>
-                <input type="file" id="event_budget_file" name="event_budget_file" class="form-control event-field" accept=".pdf,.doc,.docx,.xls,.xlsx">
-              </div>
-              
-              <div class="mb-3">
-                <label for="event_project_lead" class="form-label">Project Lead</label>
-                <input type="text" id="event_project_lead" name="event_project_lead" class="form-control event-field" maxlength="255">
-              </div>
-              
-              <div class="mb-3">
-                <label for="event_location" class="form-label">Location</label>
-                <input type="text" id="event_location" name="event_location" class="form-control event-field" maxlength="255">
-              </div>
-            </div>
-            
-            <!-- Operation Request Fields -->
-            <div id="operationRequestFields" class="hidden">
-              <div class="mb-3">
-                <label for="operation_name" class="form-label">Operation Name</label>
-                <input type="text" id="operation_name" name="operation_name" class="form-control operation-field" maxlength="255">
-              </div>
-              
-              <div class="row">
-                <div class="col-md-6 mb-3">
-                  <label for="operation_category" class="form-label">Operation Category</label>
-                  <select id="operation_category" name="operation_category" class="form-select operation-field" data-nice-select="false">
-                    <option value="">Select Category</option>
-                    {% for category in operation_categories %}
-                      <option value="{{ category.id }}">{{ category.name }}</option>
-                    {% endfor %}
-                  </select>
-                </div>
-                <div class="col-md-6 mb-3">
-                  <label for="operation_client" class="form-label">Client <span class="text-muted">(Optional)</span></label>
-                  <select id="operation_client" name="operation_client" class="form-select operation-field client-select" data-nice-select="false">
-                    <option value="">Select Client</option>
-                    {% for client in clients %}
-                      <option value="{{ client.id }}">{{ client.name }}</option>
-                    {% endfor %}
-                  </select>
-                </div>
-              </div>
-              
-              <div class="mb-3">
-                <label for="operation_brand" class="form-label">Brand <span class="text-muted">(Optional)</span></label>
-                <select id="operation_brand" name="operation_brand" class="form-select brand-select" disabled data-nice-select="false">
-                  <option value="">Select Client First</option>
-                </select>
-              </div>
-              
-              <div class="mb-3">
-                <label for="operation_budget" class="form-label">Budget</label>
-                <input type="number" id="operation_budget" name="operation_budget" class="form-control operation-field" step="0.01">
-              </div>
-              
-              <div class="mb-3">
-                <label for="operation_budget_file" class="form-label">Budget File <span class="text-muted">(Optional)</span></label>
-                <input type="file" id="operation_budget_file" name="operation_budget_file" class="form-control operation-field" accept=".pdf,.doc,.docx,.xls,.xlsx">
-              </div>
-              
-              <div class="mb-3">
-                <label for="operation_project_lead" class="form-label">Project Lead</label>
-                <input type="text" id="operation_project_lead" name="operation_project_lead" class="form-control operation-field" maxlength="255">
-              </div>
-            </div>
-            
-            <!-- Activation Request Fields -->
-            <div id="activationRequestFields" class="hidden">
-              <div class="mb-3">
-                <label for="activation_name" class="form-label">Activation Name</label>
-                <input type="text" id="activation_name" name="activation_name" class="form-control activation-field" maxlength="255">
-              </div>
-              
-              <div class="row">
-                <div class="col-md-6 mb-3">
-                  <label for="activation_category" class="form-label">Activation Category</label>
-                  <select id="activation_category" name="activation_category" class="form-select activation-field" data-nice-select="false">
-                    <option value="">Select Category</option>
-                    {% for category in activation_categories %}
-                      <option value="{{ category.id }}">{{ category.name }}</option>
-                    {% endfor %}
-                  </select>
-                </div>
-                <div class="col-md-6 mb-3">
-                  <label for="activation_client" class="form-label">Client <span class="text-muted">(Optional)</span></label>
-                  <select id="activation_client" name="activation_client" class="form-select activation-field client-select" data-nice-select="false">
-                    <option value="">Select Client</option>
-                    {% for client in clients %}
-                      <option value="{{ client.id }}">{{ client.name }}</option>
-                    {% endfor %}
-                  </select>
-                </div>
-              </div>
-              
-              <div class="mb-3">
-                <label for="activation_brand" class="form-label">Brand <span class="text-muted">(Optional)</span></label>
-                <select id="activation_brand" name="activation_brand" class="form-select brand-select" disabled data-nice-select="false">
-                  <option value="">Select Client First</option>
-                </select>
-              </div>
-              
-              <div class="mb-3">
-                <label for="activation_budget" class="form-label">Budget <span class="text-muted">(Optional)</span></label>
-                <input type="number" id="activation_budget" name="activation_budget" class="form-control activation-field" step="0.01">
-              </div>
-              
-              <div class="mb-3">
-                <label for="activation_budget_file" class="form-label">Budget File <span class="text-muted">(Optional)</span></label>
-                <input type="file" id="activation_budget_file" name="activation_budget_file" class="form-control activation-field" accept=".pdf,.doc,.docx,.xls,.xlsx">
-              </div>
-              
-              <div class="mb-3">
-                <label for="activation_project_lead" class="form-label">Project Lead <span class="text-muted">(Optional)</span></label>
-                <input type="text" id="activation_project_lead" name="activation_project_lead" class="form-control activation-field" maxlength="255">
-              </div>
-              
-              <div class="mb-3">
-                <label for="activation_description" class="form-label">Description <span class="text-muted">(Optional)</span></label>
-                <textarea id="activation_description" name="activation_description" class="form-control activation-field" rows="4" placeholder="Describe the activation details..."></textarea>
-              </div>
-            </div>
-            
-            <button type="submit" class="btn btn-primary mt-3">Save</button>
-          </form>
-        </div>
-      </div>
     </div>
   </div>
 </div>
-
+<!-- Nav tabs -->
+<ul class="nav nav-tabs mt-4" id="expenseTabs" role="tablist">
+<li class="nav-item" role="presentation">
+<button class="nav-link active" id="event-tab" data-bs-toggle="tab" data-bs-target="#event" type="button" role="tab" aria-controls="event" aria-selected="true">Events</button>
+</li>
+<li class="nav-item" role="presentation">
+<button class="nav-link" id="operation-tab" data-bs-toggle="tab" data-bs-target="#operation" type="button" role="tab" aria-controls="operation" aria-selected="false">Operations</button>
+</li>
+<li class="nav-item" role="presentation">
+<button class="nav-link" id="activation-tab" data-bs-toggle="tab" data-bs-target="#activation" type="button" role="tab" aria-controls="activation" aria-selected="false">Activation</button>
+</li>
+</ul>
+<!-- Tab panes -->
+<div class="tab-content mt-3">
+<!-- Events Tab -->
+<div class="tab-pane fade show active" id="event" role="tabpanel" aria-labelledby="event-tab">
+<div class="table-responsive">
+<table class="display table table-striped" style="width:100%">
+<thead>
+<tr>
+<th>Event</th>
+<th>Category</th>
+<th>Client</th>
+<th>Budget</th>
+<th>Created By</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody>
+                {% for item in all_items %}
+                  {% if item|get_class_name == 'Event' %}
+<tr>
+<td data-label="Event">{{ item.name }}</td>
+<td data-label="Category">{{ item.category }}</td>
+<td data-label="Client">{{ item.client }}</td>
+<td data-label="Budget">{{ item.budget|intcomma }}</td>
+<td data-label="Created By"><a href="#">{{ item.created_by.get_full_name }}</a></td>
+<td data-label="Actions">
+<a href="{% url 'expense:event_expense_detail' item.id %}" class="btn btn-sm btn-primary">View Expenses</a>
+</td>
+</tr>
+                  {% endif %}
+                {% empty %}
+<tr><td colspan="6" class="text-center">No event records found.</td></tr>
+                {% endfor %}
+</tbody>
+</table>
+</div>
+</div>
+<!-- Operations Tab -->
+<div class="tab-pane fade" id="operation" role="tabpanel" aria-labelledby="operation-tab">
+<div class="table-responsive">
+<table class="display table table-striped" style="width:100%">
+<thead>
+<tr>
+<th>Operation</th>
+<th>Category</th>
+<th>Client</th>
+<th>Budget</th>
+<th>Created By</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody>
+                {% for item in all_items %}
+                  {% if item|get_class_name == 'Operation' %}
+<tr>
+<td data-label="Operation">{{ item.name }}</td>
+<td data-label="Category">{{ item.category }}</td>
+<td data-label="Client">{{ item.client }}</td>
+<td data-label="Budget">{{ item.budget|intcomma }}</td>
+<td data-label="Created By"><a href="#">{{ item.created_by.get_full_name }}</a></td>
+<td data-label="Actions">
+<a href="{% url 'expense:operation_expense_detail' item.id %}" class="btn btn-sm btn-primary">View Expenses</a>
+</td>
+</tr>
+                  {% endif %}
+                {% empty %}
+<tr><td colspan="6" class="text-center">No operation records found.</td></tr>
+                {% endfor %}
+</tbody>
+</table>
+</div>
+</div>
+<!-- Activations Tab -->
+<div class="tab-pane fade" id="activation" role="tabpanel" aria-labelledby="activation-tab">
+<div class="table-responsive">
+<table class="display table table-striped" style="width:100%">
+<thead>
+<tr>
+<th>Activation</th>
+<th>Category</th>
+<th>Client</th>
+<th>Budget</th>
+<th>Project Lead</th>
+<th>Created By</th>
+<th>Status</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody>
+                {% for item in all_items %}
+                  {% if item|get_class_name == 'Activation' %}
+<tr>
+<td data-label="Activation">{{ item.name }}</td>
+<td data-label="Category">{{ item.category }}</td>
+<td data-label="Client">{{ item.client|default:"N/A" }}</td>
+<td data-label="Budget">{{ item.budget|intcomma|default:"N/A" }}</td>
+<td data-label="Project Lead">{{ item.project_lead|default:"N/A" }}</td>
+<td data-label="Created By"><a href="#">{{ item.created_by.get_full_name|default:"N/A" }}</a></td>
+<td data-label="Status">
+                        {% if item.approved %}
+<span class="badge bg-success">Approved</span>
+                        {% else %}
+<span class="badge bg-warning">Pending</span>
+                        {% endif %}
+                        {% if item.paid %}
+<span class="badge bg-info">Paid</span>
+                        {% endif %}
+</td>
+<td data-label="Actions">
+<a href="{% url 'expense:activation_expense_detail' item.id %}" class="btn btn-sm btn-primary">View Expenses</a>
+</td>
+</tr>
+                  {% endif %}
+                {% empty %}
+<tr><td colspan="8" class="text-center">No activation records found.</td></tr>
+                {% endfor %}
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Submit Expense Modal -->
+<div class="modal fade" id="submitExpenseModal" tabindex="-1" aria-labelledby="submitExpenseModalLabel" aria-hidden="true">
+<div class="modal-dialog modal-lg">
+<div class="modal-content">
+<div class="modal-header">
+<h5 class="modal-title">Create Event, Activation or Operation</h5>
+<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+<div class="modal-body">
+<!-- Request Form -->
+<div id="requests" class="content-section">
+<form id="expenseForm" class="bg-white p-4 shadow rounded" method="post" action="{% url 'expense:event-operation' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+<input type="hidden" name="form_type" id="form_type" value="">
+<!-- Request Type -->
+<div class="mb-3">
+<label for="requestType" class="form-label fw-bold">Expense Group</label>
+<select id="requestType" name="request_type" class="form-select" required data-nice-select="false">
+<option value="">Select Type</option>
+<option value="event">Event</option>
+<option value="operation">Operation</option>
+<option value="activation">Activation</option>
+</select>
+</div>
+<!-- Event Request Fields -->
+<div id="eventRequestFields" class="hidden">
+<div class="mb-3">
+<label for="event_name" class="form-label">Event Name</label>
+<input type="text" id="event_name" name="event_name" class="form-control event-field" maxlength="255">
+</div>
+<div class="row">
+<div class="col-md-6 mb-3">
+<label for="event_category" class="form-label">Event Category</label>
+<select id="event_category" name="event_category" class="form-select event-field" data-nice-select="false">
+<option value="">Select Category</option>
+                    {% for category in event_categories %}
+<option value="{{ category.id }}">{{ category.name }}</option>
+                    {% endfor %}
+</select>
+</div>
+<div class="col-md-6 mb-3">
+<label for="event_client" class="form-label">Client <span class="text-muted">(Optional)</span></label>
+<select id="event_client" name="event_client" class="form-select event-field client-select" data-nice-select="false">
+<option value="">Select Client</option>
+                    {% for client in clients %}
+<option value="{{ client.id }}">{{ client.name }}</option>
+                    {% endfor %}
+</select>
+</div>
+</div>
+<div class="mb-3">
+<label for="event_brand" class="form-label">Brand <span class="text-muted">(Optional)</span></label>
+<select id="event_brand" name="event_brand" class="form-select brand-select" disabled data-nice-select="false">
+<option value="">Select Client First</option>
+</select>
+</div>
+<div class="row">
+<div class="col-md-6 mb-3">
+<label for="event_start_date" class="form-label">Start Date</label>
+<input type="date" id="event_start_date" name="event_start_date" class="form-control event-field">
+</div>
+<div class="col-md-6 mb-3">
+<label for="event_end_date" class="form-label">End Date</label>
+<input type="date" id="event_end_date" name="event_end_date" class="form-control event-field">
+</div>
+</div>
+<div class="mb-3">
+<label for="event_budget" class="form-label">Budget</label>
+<input type="number" id="event_budget" name="event_budget" class="form-control event-field" step="0.01">
+</div>
+<div class="mb-3">
+<label for="event_budget_file" class="form-label">Budget File <span class="text-muted">(Optional)</span></label>
+<input type="file" id="event_budget_file" name="event_budget_file" class="form-control event-field" accept=".pdf,.doc,.docx,.xls,.xlsx">
+</div>
+<div class="mb-3">
+<label for="event_project_lead" class="form-label">Project Lead</label>
+<input type="text" id="event_project_lead" name="event_project_lead" class="form-control event-field" maxlength="255">
+</div>
+<div class="mb-3">
+<label for="event_location" class="form-label">Location</label>
+<input type="text" id="event_location" name="event_location" class="form-control event-field" maxlength="255">
+</div>
+</div>
+<!-- Operation Request Fields -->
+<div id="operationRequestFields" class="hidden">
+<div class="mb-3">
+<label for="operation_name" class="form-label">Operation Name</label>
+<input type="text" id="operation_name" name="operation_name" class="form-control operation-field" maxlength="255">
+</div>
+<div class="row">
+<div class="col-md-6 mb-3">
+<label for="operation_category" class="form-label">Operation Category</label>
+<select id="operation_category" name="operation_category" class="form-select operation-field" data-nice-select="false">
+<option value="">Select Category</option>
+                    {% for category in operation_categories %}
+<option value="{{ category.id }}">{{ category.name }}</option>
+                    {% endfor %}
+</select>
+</div>
+<div class="col-md-6 mb-3">
+<label for="operation_client" class="form-label">Client <span class="text-muted">(Optional)</span></label>
+<select id="operation_client" name="operation_client" class="form-select operation-field client-select" data-nice-select="false">
+<option value="">Select Client</option>
+                    {% for client in clients %}
+<option value="{{ client.id }}">{{ client.name }}</option>
+                    {% endfor %}
+</select>
+</div>
+</div>
+<div class="mb-3">
+<label for="operation_brand" class="form-label">Brand <span class="text-muted">(Optional)</span></label>
+<select id="operation_brand" name="operation_brand" class="form-select brand-select" disabled data-nice-select="false">
+<option value="">Select Client First</option>
+</select>
+</div>
+<div class="mb-3">
+<label for="operation_budget" class="form-label">Budget</label>
+<input type="number" id="operation_budget" name="operation_budget" class="form-control operation-field" step="0.01">
+</div>
+<div class="mb-3">
+<label for="operation_budget_file" class="form-label">Budget File <span class="text-muted">(Optional)</span></label>
+<input type="file" id="operation_budget_file" name="operation_budget_file" class="form-control operation-field" accept=".pdf,.doc,.docx,.xls,.xlsx">
+</div>
+<div class="mb-3">
+<label for="operation_project_lead" class="form-label">Project Lead</label>
+<input type="text" id="operation_project_lead" name="operation_project_lead" class="form-control operation-field" maxlength="255">
+</div>
+</div>
+<!-- Activation Request Fields -->
+<div id="activationRequestFields" class="hidden">
+<div class="mb-3">
+<label for="activation_name" class="form-label">Activation Name</label>
+<input type="text" id="activation_name" name="activation_name" class="form-control activation-field" maxlength="255">
+</div>
+<div class="row">
+<div class="col-md-6 mb-3">
+<label for="activation_category" class="form-label">Activation Category</label>
+<select id="activation_category" name="activation_category" class="form-select activation-field" data-nice-select="false">
+<option value="">Select Category</option>
+                    {% for category in activation_categories %}
+<option value="{{ category.id }}">{{ category.name }}</option>
+                    {% endfor %}
+</select>
+</div>
+<div class="col-md-6 mb-3">
+<label for="activation_client" class="form-label">Client <span class="text-muted">(Optional)</span></label>
+<select id="activation_client" name="activation_client" class="form-select activation-field client-select" data-nice-select="false">
+<option value="">Select Client</option>
+                    {% for client in clients %}
+<option value="{{ client.id }}">{{ client.name }}</option>
+                    {% endfor %}
+</select>
+</div>
+</div>
+<div class="mb-3">
+<label for="activation_brand" class="form-label">Brand <span class="text-muted">(Optional)</span></label>
+<select id="activation_brand" name="activation_brand" class="form-select brand-select" disabled data-nice-select="false">
+<option value="">Select Client First</option>
+</select>
+</div>
+<div class="mb-3">
+<label for="activation_budget" class="form-label">Budget <span class="text-muted">(Optional)</span></label>
+<input type="number" id="activation_budget" name="activation_budget" class="form-control activation-field" step="0.01">
+</div>
+<div class="mb-3">
+<label for="activation_budget_file" class="form-label">Budget File <span class="text-muted">(Optional)</span></label>
+<input type="file" id="activation_budget_file" name="activation_budget_file" class="form-control activation-field" accept=".pdf,.doc,.docx,.xls,.xlsx">
+</div>
+<div class="mb-3">
+<label for="activation_project_lead" class="form-label">Project Lead <span class="text-muted">(Optional)</span></label>
+<input type="text" id="activation_project_lead" name="activation_project_lead" class="form-control activation-field" maxlength="255">
+</div>
+<div class="mb-3">
+<label for="activation_description" class="form-label">Description <span class="text-muted">(Optional)</span></label>
+<textarea id="activation_description" name="activation_description" class="form-control activation-field" rows="4" placeholder="Describe the activation details..."></textarea>
+</div>
+</div>
+<button type="submit" class="btn btn-primary mt-3">Save</button>
+</form>
+</div>
+</div>
+</div>
+</div>
+</div>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const expenseForm = document.getElementById('expenseForm');
-    const submitExpenseModal = document.getElementById('submitExpenseModal');
-    const requestTypeSelect = document.getElementById('requestType');
-
-    // Initialize form when modal is shown
-    if (submitExpenseModal) {
-        submitExpenseModal.addEventListener('shown.bs.modal', function() {
-            console.log('Modal shown, initializing form');
-            initializeForm();
-            
-            // Reinitialize Nice Select if it exists
-            if (typeof $.fn.niceSelect === 'function') {
-                setTimeout(() => {
-                    $('select[data-nice-select="false"]').niceSelect();
-                    console.log('Nice Select initialized');
+const expenseForm = document.getElementById('expenseForm');
+const submitExpenseModal = document.getElementById('submitExpenseModal');
+const requestTypeSelect = document.getElementById('requestType');
+// Initialize form when modal is shown
+if (submitExpenseModal) {
+submitExpenseModal.addEventListener('shown.bs.modal', function() {
+console.log('Modal shown, initializing form');
+initializeForm();
+// Reinitialize Nice Select if it exists
+if (typeof $.fn.niceSelect === 'function') {
+setTimeout(() => {
+$('select[data-nice-select="false"]').niceSelect();
+console.log('Nice Select initialized');
                 }, 100);
             }
         });
-
-        submitExpenseModal.addEventListener('hidden.bs.modal', function() {
-            console.log('Modal hidden, resetting form');
-            resetForm();
+submitExpenseModal.addEventListener('hidden.bs.modal', function() {
+console.log('Modal hidden, resetting form');
+resetForm();
         });
     }
-
-    // Handle request type change - this will show/hide fields immediately
-    requestTypeSelect.addEventListener('change', function() {
-        console.log('Request type changed to:', this.value);
-        toggleRequestFields();
+// Handle request type change - this will show/hide fields immediately
+requestTypeSelect.addEventListener('change', function() {
+console.log('Request type changed to:', this.value);
+toggleRequestFields();
     });
-
-    // Also handle input event as backup
-    requestTypeSelect.addEventListener('input', function() {
-        console.log('Request type input changed to:', this.value);
-        toggleRequestFields();
+// Also handle input event as backup
+requestTypeSelect.addEventListener('input', function() {
+console.log('Request type input changed to:', this.value);
+toggleRequestFields();
     });
-
-    // Handle Nice Select if it's being used
-    if (typeof $.fn.niceSelect === 'function') {
-        $(document).on('click', '.nice-select .option', function() {
-            const niceSelect = $(this).closest('.nice-select');
-            const originalSelect = $(`#${niceSelect.attr('data-id') || niceSelect.prev('select').attr('id')}`);
-            
-            if (originalSelect.attr('id') === 'requestType') {
-                setTimeout(() => {
-                    console.log('Nice Select request type changed to:', requestTypeSelect.value);
-                    toggleRequestFields();
+// Handle Nice Select if it's being used
+if (typeof $.fn.niceSelect === 'function') {
+$(document).on('click', '.nice-select .option', function() {
+const niceSelect = $(this).closest('.nice-select');
+const originalSelect = $(`#${niceSelect.attr('data-id') || niceSelect.prev('select').attr('id')}`);
+if (originalSelect.attr('id') === 'requestType') {
+setTimeout(() => {
+console.log('Nice Select request type changed to:', requestTypeSelect.value);
+toggleRequestFields();
                 }, 50);
             }
         });
     }
-
-    // Handle client selection changes - unified event listener for both regular and Nice Select
-    document.addEventListener('change', function(e) {
-        if (e.target.classList.contains('client-select')) {
-            const type = getTypeFromElementId(e.target.id);
-            console.log(`Client changed for ${type}:`, e.target.value);
-            loadBrands(type);
+// Handle client selection changes - unified event listener for both regular and Nice Select
+document.addEventListener('change', function(e) {
+if (e.target.classList.contains('client-select')) {
+const type = getTypeFromElementId(e.target.id);
+console.log(`Client changed for ${type}:`, e.target.value);
+loadBrands(type);
         }
     });
-
-    // Handle Nice Select client changes
-    if (typeof $.fn.niceSelect === 'function') {
-        $(document).on('click', '.nice-select .option', function() {
-            const niceSelect = $(this).closest('.nice-select');
-            const originalSelect = niceSelect.prev('select');
-            
-            if (originalSelect.hasClass('client-select')) {
-                setTimeout(() => {
-                    const type = getTypeFromElementId(originalSelect.attr('id'));
-                    console.log(`Nice Select client changed for ${type}:`, originalSelect.val());
-                    loadBrands(type);
+// Handle Nice Select client changes
+if (typeof $.fn.niceSelect === 'function') {
+$(document).on('click', '.nice-select .option', function() {
+const niceSelect = $(this).closest('.nice-select');
+const originalSelect = niceSelect.prev('select');
+if (originalSelect.hasClass('client-select')) {
+setTimeout(() => {
+const type = getTypeFromElementId(originalSelect.attr('id'));
+console.log(`Nice Select client changed for ${type}:`, originalSelect.val());
+loadBrands(type);
                 }, 50);
             }
         });
     }
-
-    // Form submission
-    expenseForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        if (validateForm()) {
-            console.log('Form is valid, submitting...');
-            this.submit();
+// Form submission
+expenseForm.addEventListener('submit', function(e) {
+e.preventDefault();
+if (validateForm()) {
+console.log('Form is valid, submitting...');
+this.submit();
         }
     });
-
-    function initializeForm() {
-        // Reset form state first
-        resetForm();
-        // Don't call toggleRequestFields() here since requestType is empty
-        // Fields will be toggled when user selects a request type
+function initializeForm() {
+// Reset form state first
+resetForm();
+// Don't call toggleRequestFields() here since requestType is empty
+// Fields will be toggled when user selects a request type
     }
-
-    function resetForm() {
-        expenseForm.reset();
-        expenseForm.classList.remove('was-validated');
-        
-        // Hide all field containers
+function resetForm() {
+expenseForm.reset();
+expenseForm.classList.remove('was-validated');
+// Hide all field containers
         ['eventRequestFields', 'operationRequestFields', 'activationRequestFields'].forEach(id => {
-            const container = document.getElementById(id);
-            if (container) {
-                container.classList.add('hidden');
-                // Clear validation states and required attributes
-                container.querySelectorAll('input, select, textarea').forEach(field => {
-                    field.classList.remove('is-invalid', 'is-valid');
-                    field.removeAttribute('required');
+const container = document.getElementById(id);
+if (container) {
+container.classList.add('hidden');
+// Clear validation states and required attributes
+container.querySelectorAll('input, select, textarea').forEach(field => {
+field.classList.remove('is-invalid', 'is-valid');
+field.removeAttribute('required');
                 });
             }
         });
-
-        // Reset all brand dropdowns
-        document.querySelectorAll('.brand-select').forEach(brandSelect => {
-            brandSelect.innerHTML = '<option value="">Select Client First</option>';
-            brandSelect.disabled = true;
-            brandSelect.classList.remove('loading');
-            // Update nice select if it exists
-            if (typeof $.fn.niceSelect === 'function') {
-                $(brandSelect).niceSelect('update');
+// Reset all brand dropdowns
+document.querySelectorAll('.brand-select').forEach(brandSelect => {
+brandSelect.innerHTML = '<option value="">Select Client First</option>';
+brandSelect.disabled = true;
+brandSelect.classList.remove('loading');
+// Update nice select if it exists
+if (typeof $.fn.niceSelect === 'function') {
+$(brandSelect).niceSelect('update');
             }
         });
-
-        // Clear form_type
-        document.getElementById('form_type').value = '';
+// Clear form_type
+document.getElementById('form_type').value = '';
     }
-
-    function toggleRequestFields() {
-        const requestType = requestTypeSelect.value;
-        document.getElementById('form_type').value = requestType;
-
-        console.log('Toggling fields for type:', requestType || 'none selected');
-
-        // Get all field containers
-        const containers = {
-            event: document.getElementById('eventRequestFields'),
-            operation: document.getElementById('operationRequestFields'),
-            activation: document.getElementById('activationRequestFields')
+function toggleRequestFields() {
+const requestType = requestTypeSelect.value;
+document.getElementById('form_type').value = requestType;
+console.log('Toggling fields for type:', requestType || 'none selected');
+// Get all field containers
+const containers = {
+event: document.getElementById('eventRequestFields'),
+operation: document.getElementById('operationRequestFields'),
+activation: document.getElementById('activationRequestFields')
         };
-
-        // Hide all containers first and remove required attributes
-        Object.values(containers).forEach(container => {
-            if (container) {
-                container.classList.add('hidden');
-                container.querySelectorAll('input, select, textarea').forEach(field => {
-                    field.removeAttribute('required');
-                    field.classList.remove('is-invalid', 'is-valid');
+// Hide all containers first and remove required attributes
+Object.values(containers).forEach(container => {
+if (container) {
+container.classList.add('hidden');
+container.querySelectorAll('input, select, textarea').forEach(field => {
+field.removeAttribute('required');
+field.classList.remove('is-invalid', 'is-valid');
                 });
             }
         });
-
-        // Only show container if a valid request type is selected
-        if (requestType && containers[requestType]) {
-            containers[requestType].classList.remove('hidden');
-            
-            // Set required fields based on type
-            if (requestType === 'event') {
+// Only show container if a valid request type is selected
+if (requestType && containers[requestType]) {
+containers[requestType].classList.remove('hidden');
+// Set required fields based on type
+if (requestType === 'event') {
                 ['event_name', 'event_category', 'event_start_date', 'event_end_date', 'event_budget', 'event_project_lead', 'event_location'].forEach(fieldId => {
-                    const field = document.getElementById(fieldId);
-                    if (field) field.setAttribute('required', '');
+const field = document.getElementById(fieldId);
+if (field) field.setAttribute('required', '');
                 });
             } else if (requestType === 'operation') {
                 ['operation_name', 'operation_category', 'operation_budget', 'operation_project_lead'].forEach(fieldId => {
-                    const field = document.getElementById(fieldId);
-                    if (field) field.setAttribute('required', '');
+const field = document.getElementById(fieldId);
+if (field) field.setAttribute('required', '');
                 });
             } else if (requestType === 'activation') {
                 ['activation_name', 'activation_category'].forEach(fieldId => {
-                    const field = document.getElementById(fieldId);
-                    if (field) field.setAttribute('required', '');
+const field = document.getElementById(fieldId);
+if (field) field.setAttribute('required', '');
                 });
             }
-
-            console.log(`${requestType} fields are now visible and required fields set`);
+console.log(`${requestType} fields are now visible and required fields set`);
         }
-
-        // Reset brand dropdowns when type changes
-        document.querySelectorAll('.brand-select').forEach(brandSelect => {
-            brandSelect.innerHTML = '<option value="">Select Client First</option>';
-            brandSelect.disabled = true;
-            brandSelect.classList.remove('loading');
-            if (typeof $.fn.niceSelect === 'function') {
-                $(brandSelect).niceSelect('update');
+// Reset brand dropdowns when type changes
+document.querySelectorAll('.brand-select').forEach(brandSelect => {
+brandSelect.innerHTML = '<option value="">Select Client First</option>';
+brandSelect.disabled = true;
+brandSelect.classList.remove('loading');
+if (typeof $.fn.niceSelect === 'function') {
+$(brandSelect).niceSelect('update');
             }
         });
     }
-
-    async function loadBrands(type) {
-        const clientSelect = document.getElementById(`${type}_client`);
-        const brandSelect = document.getElementById(`${type}_brand`);
-        const clientId = clientSelect.value;
-
-        console.log(`Loading brands for ${type}, client ID: ${clientId}`);
-
-        if (!clientId) {
-            brandSelect.innerHTML = '<option value="">Select Client First</option>';
-            brandSelect.disabled = true;
-            brandSelect.classList.remove('loading');
-            if (typeof $.fn.niceSelect === 'function') {
-                $(brandSelect).niceSelect('update');
+async function loadBrands(type) {
+const clientSelect = document.getElementById(`${type}_client`);
+const brandSelect = document.getElementById(`${type}_brand`);
+const clientId = clientSelect.value;
+console.log(`Loading brands for ${type}, client ID: ${clientId}`);
+if (!clientId) {
+brandSelect.innerHTML = '<option value="">Select Client First</option>';
+brandSelect.disabled = true;
+brandSelect.classList.remove('loading');
+if (typeof $.fn.niceSelect === 'function') {
+$(brandSelect).niceSelect('update');
             }
-            return;
+return;
         }
-
-        // Show loading state
-        brandSelect.innerHTML = '<option value="">Loading...</option>';
-        brandSelect.disabled = true;
-        brandSelect.classList.add('loading');
-        
-        // Update nice select if it exists
-        if (typeof $.fn.niceSelect === 'function') {
-            $(brandSelect).niceSelect('update');
+// Show loading state
+brandSelect.innerHTML = '<option value="">Loading...</option>';
+brandSelect.disabled = true;
+brandSelect.classList.add('loading');
+// Update nice select if it exists
+if (typeof $.fn.niceSelect === 'function') {
+$(brandSelect).niceSelect('update');
         }
-
-        try {
-            const response = await fetch(`{% url 'wallet:get_brands_by_client' %}?client_id=${clientId}`);
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.error || 'Failed to fetch brands');
+try {
+const response = await fetch(`{% url 'wallet:get_brands_by_client' %}?client_id=${clientId}`);
+const data = await response.json();
+if (!response.ok) {
+throw new Error(data.error || 'Failed to fetch brands');
             }
-
-            // Clear and populate brands
-            brandSelect.innerHTML = '<option value="">Select Brand (Optional)</option>';
-            if (data.brands && data.brands.length > 0) {
-                data.brands.forEach(brand => {
-                    const option = document.createElement('option');
-                    option.value = brand.id;
-                    option.textContent = brand.name;
-                    brandSelect.appendChild(option);
+// Clear and populate brands
+brandSelect.innerHTML = '<option value="">Select Brand (Optional)</option>';
+if (data.brands && data.brands.length > 0) {
+data.brands.forEach(brand => {
+const option = document.createElement('option');
+option.value = brand.id;
+option.textContent = brand.name;
+brandSelect.appendChild(option);
                 });
-                console.log(`Loaded ${data.brands.length} brands for client ${clientId}`);
+console.log(`Loaded ${data.brands.length} brands for client ${clientId}`);
             } else {
-                console.log('No brands found for client ID:', clientId);
+console.log('No brands found for client ID:', clientId);
             }
-
-            // Enable dropdown
-            brandSelect.disabled = false;
-            brandSelect.classList.remove('loading');
-            
-            // Update nice select if it exists
-            if (typeof $.fn.niceSelect === 'function') {
-                $(brandSelect).niceSelect('update');
+// Enable dropdown
+brandSelect.disabled = false;
+brandSelect.classList.remove('loading');
+// Update nice select if it exists
+if (typeof $.fn.niceSelect === 'function') {
+$(brandSelect).niceSelect('update');
             }
-
         } catch (error) {
-            console.error('Error loading brands:', error);
-            brandSelect.innerHTML = '<option value="">Error loading brands</option>';
-            brandSelect.disabled = true;
-            brandSelect.classList.remove('loading');
-            
-            if (typeof $.fn.niceSelect === 'function') {
-                $(brandSelect).niceSelect('update');
+console.error('Error loading brands:', error);
+brandSelect.innerHTML = '<option value="">Error loading brands</option>';
+brandSelect.disabled = true;
+brandSelect.classList.remove('loading');
+if (typeof $.fn.niceSelect === 'function') {
+$(brandSelect).niceSelect('update');
             }
-            alert('Failed to load brands. Please try again.');
+alert('Failed to load brands. Please try again.');
         }
     }
-
-    function getTypeFromElementId(elementId) {
-        if (elementId.startsWith('event_')) return 'event';
-        if (elementId.startsWith('operation_')) return 'operation';
-        if (elementId.startsWith('activation_')) return 'activation';
-        return '';
+function getTypeFromElementId(elementId) {
+if (elementId.startsWith('event_')) return 'event';
+if (elementId.startsWith('operation_')) return 'operation';
+if (elementId.startsWith('activation_')) return 'activation';
+return '';
     }
-
-    function validateForm() {
-        const requestType = requestTypeSelect.value;
-        let isValid = true;
-        let errorMessage = '';
-
-        if (!requestType) {
-            errorMessage = 'Please select a request type';
-            isValid = false;
+function validateForm() {
+const requestType = requestTypeSelect.value;
+let isValid = true;
+let errorMessage = '';
+if (!requestType) {
+errorMessage = 'Please select a request type';
+isValid = false;
         } else {
-            // Validate required fields for the selected type
-            const requiredFields = document.querySelectorAll(`#${requestType}RequestFields [required]`);
-            
-            for (let field of requiredFields) {
-                const value = field.type === 'file' ? field.files.length > 0 : field.value.trim();
-                
-                if (!value) {
-                    const label = field.closest('.mb-3').querySelector('label').textContent.replace('*', '').trim();
-                    errorMessage = `${label} is required`;
-                    isValid = false;
-                    field.classList.add('is-invalid');
-                    break;
+// Validate required fields for the selected type
+const requiredFields = document.querySelectorAll(`#${requestType}RequestFields [required]`);
+for (let field of requiredFields) {
+const value = field.type === 'file' ? field.files.length > 0 : field.value.trim();
+if (!value) {
+const label = field.closest('.mb-3').querySelector('label').textContent.replace('*', '').trim();
+errorMessage = `${label} is required`;
+isValid = false;
+field.classList.add('is-invalid');
+break;
                 } else {
-                    field.classList.remove('is-invalid');
-                    field.classList.add('is-valid');
+field.classList.remove('is-invalid');
+field.classList.add('is-valid');
                 }
             }
-
-            // Additional validation for specific fields
-            if (isValid) {
-                if (requestType === 'event') {
-                    const startDate = document.getElementById('event_start_date').value;
-                    const endDate = document.getElementById('event_end_date').value;
-                    const budget = document.getElementById('event_budget').value;
-
-                    if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
-                        errorMessage = 'End date must be after start date';
-                        isValid = false;
-                        document.getElementById('event_end_date').classList.add('is-invalid');
+// Additional validation for specific fields
+if (isValid) {
+if (requestType === 'event') {
+const startDate = document.getElementById('event_start_date').value;
+const endDate = document.getElementById('event_end_date').value;
+const budget = document.getElementById('event_budget').value;
+if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+errorMessage = 'End date must be after start date';
+isValid = false;
+document.getElementById('event_end_date').classList.add('is-invalid');
                     } else if (budget && parseFloat(budget) < 0) {
-                        errorMessage = 'Budget cannot be negative';
-                        isValid = false;
-                        document.getElementById('event_budget').classList.add('is-invalid');
+errorMessage = 'Budget cannot be negative';
+isValid = false;
+document.getElementById('event_budget').classList.add('is-invalid');
                     }
                 } else if (requestType === 'operation') {
-                    const budget = document.getElementById('operation_budget').value;
-                    if (budget && parseFloat(budget) < 0) {
-                        errorMessage = 'Budget cannot be negative';
-                        isValid = false;
-                        document.getElementById('operation_budget').classList.add('is-invalid');
+const budget = document.getElementById('operation_budget').value;
+if (budget && parseFloat(budget) < 0) {
+errorMessage = 'Budget cannot be negative';
+isValid = false;
+document.getElementById('operation_budget').classList.add('is-invalid');
                     }
                 } else if (requestType === 'activation') {
-                    const budget = document.getElementById('activation_budget').value;
-                    if (budget && parseFloat(budget) < 0) {
-                        errorMessage = 'Budget cannot be negative';
-                        isValid = false;
-                        document.getElementById('activation_budget').classList.add('is-invalid');
+const budget = document.getElementById('activation_budget').value;
+if (budget && parseFloat(budget) < 0) {
+errorMessage = 'Budget cannot be negative';
+isValid = false;
+document.getElementById('activation_budget').classList.add('is-invalid');
                     }
                 }
             }
         }
-
-        if (!isValid) {
-            alert(errorMessage);
+if (!isValid) {
+alert(errorMessage);
         }
-
-        return isValid;
+return isValid;
     }
 });
 </script>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-
 {% endblock %}

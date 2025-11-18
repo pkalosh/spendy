@@ -3,707 +3,673 @@
 {% load humanize %}
 {% block content %}
 <style>
-    :root {
-        --primary-color: #3b82f6;
-        --secondary-color: #1e40af;
-        --success-color: #10b981;
-        --warning-color: #f59e0b;
-        --danger-color: #ef4444;
-        --info-color: #06b6d4;
-        --light-bg: #f8fafc;
-        --dark-text: #1f2937;
-        --muted-text: #6b7280;
-        --border-color: #e5e7eb;
-        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-        --border-radius: 12px;
-        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    body {
-        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    }
-
-    .dashboard-section {
-        min-height: 100vh;
-        background: transparent;
-    }
-
-    .custom-dropdown-menu {
-        z-index: 1051;
-        border: none;
-        box-shadow: var(--shadow-lg);
-        border-radius: 8px;
-        backdrop-filter: blur(10px);
-        background: rgba(255, 255, 255, 0.95);
-    }
-
-    .modal-content {
-        border: none;
-        border-radius: var(--border-radius);
-        box-shadow: var(--shadow-lg);
-    }
-
-    /* Enhanced Wallet Cards */
-    .wallet-card {
-        transition: var(--transition);
-        border: 1px solid var(--border-color);
-        background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .wallet-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 4px;
-        height: 100%;
-        background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
-        z-index: 1;
-    }
-    
-    .wallet-card:hover {
-        transform: translateY(-4px) scale(1.02);
-        box-shadow: var(--shadow-lg);
-        border-color: var(--primary-color);
-    }
-
-    /* Header Section */
-    .dashboard-header {
-        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-        border-radius: var(--border-radius);
-        padding: 2rem;
-        margin-bottom: 2rem;
-        margin-top: 4rem;
-        box-shadow: var(--shadow-sm);
-        border: 1px solid var(--border-color);
-    }
-
-    .welcome-title {
-        font-size: 1.75rem;
-        font-weight: 700;
-        color: var(--dark-text);
-        margin-bottom: 0.5rem;
-    }
-
-    .welcome-subtitle {
-        color: var(--muted-text);
-        font-size: 1rem;
-    }
-
-    /* Statistics Cards */
-    .stats-card {
-        border: none;
-        border-radius: var(--border-radius);
-        transition: var(--transition);
-        position: relative;
-        overflow: hidden;
-        height: 100%;
-    }
-
-    .stats-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: linear-gradient(90deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 100%);
-    }
-
-    .stats-card:hover {
-        transform: translateY(-3px);
-        box-shadow: var(--shadow-lg);
-    }
-
-    .stats-card .card-body {
-        padding: 1.75rem;
-    }
-
-    .stats-icon {
-        font-size: 2.5rem;
-        margin-bottom: 1rem;
-        opacity: 0.8;
-    }
-
-    .stats-number {
-        font-size: 2.25rem;
-        font-weight: 800;
-        margin-bottom: 0.5rem;
-    }
-
-    .stats-label {
-        font-weight: 600;
-        font-size: 1rem;
-        margin-bottom: 0.25rem;
-    }
-
-    .stats-description {
-        font-size: 0.875rem;
-        opacity: 0.7;
-    }
-
-    /* Progress Bar Enhancement */
-    .progress {
-        height: 8px;
-        border-radius: 10px;
-        background: rgba(0,0,0,0.1);
-        overflow: hidden;
-    }
-
-    .progress-bar {
-        border-radius: 10px;
-        transition: var(--transition);
-        background: linear-gradient(90deg, var(--success-color), #34d399);
-    }
-
-    /* Table Enhancements */
-    .transactions-card {
-        border: none;
-        border-radius: var(--border-radius);
-        box-shadow: var(--shadow-sm);
-        background: white;
-    }
-
-    .table {
-        margin-bottom: 0;
-    }
-
-    .table thead th {
-        border-bottom: 2px solid var(--border-color);
-        font-weight: 600;
-        color: var(--dark-text);
-        padding: 1rem 0.75rem;
-        background: var(--light-bg);
-    }
-
-    .table tbody td {
-        padding: 1rem 0.75rem;
-        border-bottom: 1px solid #f1f5f9;
-        vertical-align: middle;
-    }
-
-    .table tbody tr:hover {
-        background: var(--light-bg);
-        transition: var(--transition);
-    }
-
-    /* Status Badges */
-    .status-badge {
-        padding: 0.375rem 0.75rem;
-        border-radius: 20px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.025em;
-    }
-
-    .status-completed {
-        background: rgba(16, 185, 129, 0.1);
-        color: var(--success-color);
-    }
-
-    .status-pending {
-        background: rgba(245, 158, 11, 0.1);
-        color: var(--warning-color);
-    }
-
-    .status-declined {
-        background: rgba(239, 68, 68, 0.1);
-        color: var(--danger-color);
-    }
-
-    /* Action Button */
-    .action-btn {
-        border: none;
-        background: transparent;
-        color: var(--muted-text);
-        padding: 0.5rem;
-        border-radius: 50%;
-        transition: var(--transition);
-        width: 2.5rem;
-        height: 2.5rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .action-btn:hover {
-        background: var(--light-bg);
-        color: var(--primary-color);
-    }
-
-    /* Pagination */
-    .pagination .page-link {
-        border: 1px solid var(--border-color);
-        color: var(--dark-text);
-        padding: 0.5rem 0.75rem;
-        margin: 0 0.125rem;
-        border-radius: 6px;
-        transition: var(--transition);
-    }
-
-    .pagination .page-link:hover {
-        background: var(--primary-color);
-        color: white;
-        border-color: var(--primary-color);
-    }
-
-    .pagination .page-item.active .page-link {
-        background: var(--primary-color);
-        border-color: var(--primary-color);
-    }
-
-    /* Empty States */
-    .empty-state {
-        text-align: center;
-        padding: 3rem 2rem;
-        border-radius: var(--border-radius);
-        background: linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 100%);
-        border: 1px solid rgba(6, 182, 212, 0.2);
-    }
-
-    .empty-state-icon {
-        font-size: 3rem;
-        color: var(--info-color);
-        margin-bottom: 1rem;
-        opacity: 0.7;
-    }
-
-    /* Responsive Design */
-    @media (max-width: 768px) {
-        .dashboard-header {
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        .welcome-title {
-            font-size: 1.5rem;
-        }
-        
-        .stats-card .card-body {
-            padding: 1.25rem;
-        }
-        
-        .stats-number {
-            font-size: 1.75rem;
-        }
-        
-        .stats-icon {
-            font-size: 2rem;
-        }
-        
-        .wallet-card {
-            margin-bottom: 1rem;
-        }
-        
-        .table-responsive {
-            border-radius: var(--border-radius);
-        }
-    }
-
-    @media (max-width: 576px) {
-        .dashboard-header {
-            padding: 1rem;
-        }
-        
-        .welcome-title {
-            font-size: 1.25rem;
-        }
-        
-        .stats-card .card-body {
-            padding: 1rem;
-        }
-        
-        .table thead {
-            display: none;
-        }
-        
-        .table tbody tr {
-            display: block;
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius);
-            margin-bottom: 1rem;
-            padding: 1rem;
-        }
-        
-        .table tbody td {
-            display: block;
-            border: none;
-            padding: 0.25rem 0;
-            text-align: left;
-        }
-        
-        .table tbody td:before {
-            content: attr(data-label) ": ";
-            font-weight: 600;
-            color: var(--dark-text);
-        }
-    }
-
-    /* Utility Classes */
-    .gradient-primary {
-        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-    }
-
-    .gradient-success {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    }
-
-    .gradient-warning {
-        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-    }
-
-    .gradient-danger {
-        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-    }
-
-    .text-gradient {
-        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
+:root {
+--primary-color: #98e23f;
+--secondary-color: #7ab82c;
+--success-color: #10b981;
+--warning-color: #f59e0b;
+--danger-color: #ef4444;
+--info-color: #06b6d4;
+--light-bg: #f8fafc;
+--dark-text: #1f2937;
+--muted-text: #6b7280;
+--border-color: #e5e7eb;
+--shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+--shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+--shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+--border-radius: 12px;
+--transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+body {
+background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+.dashboard-section {
+min-height: 100vh;
+background: transparent;
+}
+.custom-dropdown-menu {
+z-index: 1051;
+border: none;
+box-shadow: var(--shadow-lg);
+border-radius: 8px;
+backdrop-filter: blur(10px);
+background: rgba(255, 255, 255, 0.95);
+}
+.modal-content {
+border: none;
+border-radius: var(--border-radius);
+box-shadow: var(--shadow-lg);
+}
+/* Header Section */
+.dashboard-header {
+background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+border-radius: var(--border-radius);
+padding: 2rem;
+margin-bottom: 2rem;
+margin-top: 4rem;
+box-shadow: var(--shadow-sm);
+border: 1px solid var(--border-color);
+position: relative;
+overflow: hidden;
+}
+.dashboard-header::before {
+content: '';
+position: absolute;
+top: 0;
+left: 0;
+width: 4px;
+height: 100%;
+background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
+z-index: 1;
+}
+.welcome-title {
+font-size: 1.75rem;
+font-weight: 700;
+color: var(--dark-text);
+margin-bottom: 0.5rem;
+position: relative;
+z-index: 2;
+}
+.welcome-subtitle {
+color: var(--muted-text);
+font-size: 1rem;
+position: relative;
+z-index: 2;
+}
+.balance-display {
+background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+color: white;
+padding: 1.5rem 2rem;
+border-radius: var(--border-radius);
+text-align: center;
+box-shadow: var(--shadow-sm);
+transition: var(--transition);
+min-height: 80px;
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+gap: 0.5rem;
+}
+.balance-display:hover {
+transform: translateY(-2px);
+box-shadow: var(--shadow-md);
+}
+.balance-amount {
+font-size: 1.0rem;
+font-weight: 450;
+display: block;
+margin-bottom: 0.25rem;
+}
+.balance-label {
+font-size: 1rem;
+opacity: 0.9;
+}
+/* Section Titles */
+.section-title {
+position: relative;
+display: inline-block;
+font-size: 1.25rem;
+font-weight: 700;
+color: var(--dark-text);
+margin-bottom: 0.5rem;
+}
+.section-title::after {
+content: '';
+position: absolute;
+bottom: -0.25rem;
+left: 0;
+width: 100%;
+height: 3px;
+background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+border-radius: 2px;
+opacity: 0;
+transition: var(--transition);
+}
+.section-title:hover::after {
+opacity: 1;
+}
+.section-subtitle {
+color: var(--muted-text);
+font-size: 0.875rem;
+margin-bottom: 0;
+}
+/* Statistics Cards */
+.stats-card {
+border: none;
+border-radius: var(--border-radius);
+transition: var(--transition);
+position: relative;
+overflow: hidden;
+height: 100%;
+border: 1px solid var(--border-color);
+}
+.stats-card::before {
+content: '';
+position: absolute;
+top: 0;
+left: 0;
+right: 0;
+height: 4px;
+background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+opacity: 0.8;
+}
+.stats-card:hover {
+transform: translateY(-3px);
+box-shadow: var(--shadow-lg);
+border-color: var(--primary-color);
+}
+.stats-card .card-body {
+padding: 1.75rem;
+position: relative;
+z-index: 2;
+}
+.stats-icon {
+font-size: 2.5rem;
+margin-bottom: 1rem;
+opacity: 0.8;
+transition: var(--transition);
+}
+.stats-card:hover .stats-icon {
+color: var(--primary-color) !important;
+transform: scale(1.1);
+}
+.stats-number {
+font-size: 2.25rem;
+font-weight: 800;
+margin-bottom: 0.5rem;
+color: var(--dark-text);
+}
+.stats-label {
+font-weight: 600;
+font-size: 1rem;
+margin-bottom: 0.25rem;
+color: var(--dark-text);
+}
+.stats-description {
+font-size: 0.875rem;
+opacity: 0.7;
+color: var(--muted-text);
+}
+/* Progress Bar Enhancement */
+.progress {
+height: 8px;
+border-radius: 10px;
+background: rgba(0,0,0,0.1);
+overflow: hidden;
+}
+.progress-bar {
+border-radius: 10px;
+transition: var(--transition);
+background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+}
+/* Table Enhancements */
+.transactions-card {
+border: none;
+border-radius: var(--border-radius);
+box-shadow: var(--shadow-sm);
+background: white;
+position: relative;
+overflow: hidden;
+border: 1px solid var(--border-color);
+}
+.transactions-card::before {
+content: '';
+position: absolute;
+top: 0;
+left: 0;
+width: 4px;
+height: 100%;
+background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
+z-index: 1;
+}
+.table {
+margin-bottom: 0;
+position: relative;
+z-index: 2;
+}
+.table thead th {
+border-bottom: 2px solid var(--border-color);
+font-weight: 600;
+color: var(--dark-text);
+padding: 1rem 0.75rem;
+background: var(--light-bg);
+}
+.table tbody td {
+padding: 1rem 0.75rem;
+border-bottom: 1px solid #f1f5f9;
+vertical-align: middle;
+}
+.table tbody tr:hover {
+background: var(--light-bg);
+transition: var(--transition);
+transform: scale(1.01);
+}
+/* Status Badges */
+.status-badge {
+padding: 0.375rem 0.75rem;
+border-radius: 20px;
+font-size: 0.75rem;
+font-weight: 600;
+text-transform: uppercase;
+letter-spacing: 0.025em;
+}
+.status-completed {
+background: rgba(16, 185, 129, 0.1);
+color: var(--success-color);
+}
+.status-pending {
+background: rgba(245, 158, 11, 0.1);
+color: var(--warning-color);
+}
+.status-declined {
+background: rgba(239, 68, 68, 0.1);
+color: var(--danger-color);
+}
+/* Action Button */
+.action-btn {
+border: none;
+background: transparent;
+color: var(--muted-text);
+padding: 0.5rem;
+border-radius: 50%;
+transition: var(--transition);
+width: 2.5rem;
+height: 2.5rem;
+display: flex;
+align-items: center;
+justify-content: center;
+}
+.action-btn:hover {
+background: rgba(152, 226, 63, 0.1);
+color: var(--primary-color);
+transform: rotate(90deg);
+}
+/* CTA Buttons */
+.btn-cta {
+background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+border: none;
+color: white;
+padding: 0.75rem 1.5rem;
+border-radius: var(--border-radius);
+font-weight: 600;
+transition: var(--transition);
+text-decoration: none;
+display: inline-flex;
+align-items: center;
+}
+.btn-cta:hover {
+transform: translateY(-2px);
+box-shadow: var(--shadow-md);
+color: white;
+text-decoration: none;
+}
+.btn-outline-cta {
+border: 1px solid var(--primary-color);
+color: var(--primary-color);
+background: transparent;
+padding: 0.5rem 1rem;
+border-radius: var(--border-radius);
+font-weight: 600;
+transition: var(--transition);
+}
+.btn-outline-cta:hover {
+background: var(--primary-color);
+color: white;
+transform: translateY(-1px);
+box-shadow: var(--shadow-sm);
+}
+/* Pagination */
+.pagination .page-link {
+border: 1px solid var(--border-color);
+color: var(--dark-text);
+padding: 0.5rem 0.75rem;
+margin: 0 0.125rem;
+border-radius: 6px;
+transition: var(--transition);
+}
+.pagination .page-link:hover {
+background: var(--primary-color);
+color: white;
+border-color: var(--primary-color);
+transform: translateY(-1px);
+}
+.pagination .page-item.active .page-link {
+background: var(--primary-color);
+border-color: var(--primary-color);
+box-shadow: var(--shadow-sm);
+}
+/* Empty States */
+.empty-state {
+text-align: center;
+padding: 3rem 2rem;
+border-radius: var(--border-radius);
+background: linear-gradient(135deg, rgba(152, 226, 63, 0.05) 0%, rgba(122, 184, 44, 0.05) 100%);
+border: 1px solid rgba(152, 226, 63, 0.2);
+}
+.empty-state-icon {
+font-size: 3rem;
+color: var(--primary-color);
+margin-bottom: 1rem;
+opacity: 0.7;
+transition: var(--transition);
+}
+.empty-state:hover .empty-state-icon {
+transform: scale(1.1);
+}
+/* Responsive Design */
+@media (max-width: 768px) {
+.dashboard-header {
+padding: 1.5rem;
+margin-bottom: 1.5rem;
+  }
+.welcome-title {
+font-size: 1.5rem;
+  }
+.stats-card .card-body {
+padding: 1.25rem;
+  }
+.stats-number {
+font-size: 1.75rem;
+  }
+.stats-icon {
+font-size: 2rem;
+  }
+.table-responsive {
+border-radius: var(--border-radius);
+  }
+.balance-display {
+margin-top: 1rem;
+width: 100%;
+padding: 1.25rem 1.5rem;
+  }
+.balance-amount {
+font-size: 1.0rem;
+  }
+}
+@media (max-width: 576px) {
+.dashboard-header {
+padding: 1rem;
+  }
+.welcome-title {
+font-size: 1.25rem;
+  }
+.stats-card .card-body {
+padding: 1rem;
+  }
+.table thead {
+display: none;
+  }
+.table tbody tr {
+display: block;
+border: 1px solid var(--border-color);
+border-radius: var(--border-radius);
+margin-bottom: 1rem;
+padding: 1rem;
+background: white;
+box-shadow: var(--shadow-sm);
+  }
+.table tbody td {
+display: block;
+border: none;
+padding: 0.25rem 0;
+text-align: left;
+  }
+.table tbody td:before {
+content: attr(data-label) ": ";
+font-weight: 600;
+color: var(--dark-text);
+  }
+}
+/* Utility Classes */
+.gradient-primary {
+background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+}
+.gradient-success {
+background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+.gradient-warning {
+background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+.gradient-danger {
+background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+.text-gradient {
+background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+background-clip: text;
+}
 </style>
-
 <section class="dashboard-section body-collapse">
-    <div class="overlay pt-4">
-        <div class="container-fluid px-3 px-md-4">
-            
-            <!-- Enhanced Header -->
-            <div class="dashboard-header">
-                <div class="row align-items-center">
-                    <div class="col-lg-8">
-                        <h1 class="welcome-title">
-                            <span class="text-gradient">{{ kyc.company_name|title }}</span> Welcome to Spendy! 
-                        </h1>
-                        <p class="welcome-subtitle mb-0">Manage your expenses efficiently with our modern dashboard.</p>
-                    </div>
-                    <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
-                        <div class="d-flex flex-wrap gap-2 justify-content-lg-end">
-                            <span class="badge bg-light text-dark px-3 py-2">
-                                <i class="fas fa-calendar-alt me-2"></i>{{ "now"|date:"M d, Y" }}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<div class="overlay pt-4">
+<div class="container-fluid px-3 px-md-4">
+<!-- Enhanced Header -->
+<div class="dashboard-header">
+<div class="row align-items-center">
+<div class="col-lg-8">
+<h1 class="welcome-title">
+<span class="text-gradient">{{ kyc.company_name|title }}</span> Welcome to Spendy!
+</h1>
+<p class="welcome-subtitle mb-0">Manage your expenses efficiently with our modern dashboard.</p>
+</div>
+<div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+<div class="d-flex flex-wrap gap-2 justify-content-lg-end">
 
-            {% if form.errors %}
-                <div class="alert alert-danger border-0 rounded-3 mb-4" style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
-                    <strong>{{ form.errors }}</strong>
-                </div>
+<div class="balance-display">
+<i class="fas fa-wallet"></i>
+<span class="balance-label">Account Balance</span>
+
+<span class="balance-amount">KES {{ primary_wallets.balance|default:0|intcomma }}</span>
+</div>
+<a href="" class="stretched-link" aria-label="View primary wallet details"></a>
+</div>
+</div>
+</div>
+</div>
+      {% if form.errors %}
+<div class="alert alert-danger border-0 rounded-3 mb-4" style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);">
+<i class="fas fa-exclamation-triangle me-2"></i>
+<strong>{{ form.errors }}</strong>
+</div>
+      {% endif %}
+<!-- Enhanced Statistics Cards -->
+<div class="mb-5">
+<div class="d-flex justify-content-between align-items-center mb-4">
+<div>
+<h4 class="section-title mb-1">Request Overview</h4>
+<p class="section-subtitle">Track your expense request status</p>
+</div>
+</div>
+<div class="row g-3 g-md-4">
+<div class="col-12 col-sm-6 col-lg-3">
+<div class="stats-card" style="background: linear-gradient(135deg, #e1f5fe 0%, #b3e5fc 100%);">
+<div class="card-body text-center position-relative">
+<i class="fas fa-chart-line stats-icon text-info"></i>
+<div class="stats-number text-dark">{{ total_requests|default:0 }}</div>
+<p class="stats-label text-dark mb-1">Total Requests</p>
+<small class="stats-description">All time requests</small>
+<a href="{% url 'expense:expense_approvals' %}" class="stretched-link" aria-label="View total requests"></a>
+</div>
+</div>
+</div>
+<div class="col-12 col-sm-6 col-lg-3">
+<div class="stats-card" style="background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);">
+<div class="card-body text-center position-relative">
+<i class="fas fa-clock stats-icon text-warning"></i>
+<div class="stats-number text-dark">{{ pending_requests|default:0 }}</div>
+<p class="stats-label text-dark mb-1">Pending</p>
+<small class="stats-description">Awaiting processing</small>
+<a href="{% url 'expense:expense_approvals' %}" class="stretched-link" aria-label="View pending requests"></a>
+</div>
+</div>
+</div>
+<div class="col-12 col-sm-6 col-lg-3">
+<div class="stats-card" style="background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);">
+<div class="card-body text-center position-relative">
+<i class="fas fa-check-circle stats-icon text-success"></i>
+<div class="stats-number text-dark">{{ completed_requests|default:0 }}</div>
+<p class="stats-label text-dark mb-1">Completed</p>
+<small class="stats-description">Successfully processed</small>
+<a href="{% url 'expense:expense_approvals' %}" class="stretched-link" aria-label="View completed requests"></a>
+</div>
+</div>
+</div>
+<div class="col-12 col-sm-6 col-lg-3">
+<div class="stats-card" style="background: linear-gradient(135deg, #fce4ec 0%, #f8bbd9 100%);">
+<div class="card-body text-center position-relative">
+<i class="fas fa-times-circle stats-icon text-danger"></i>
+<div class="stats-number text-dark">{{ declined_requests|default:0 }}</div>
+<p class="stats-label text-dark mb-1">Declined</p>
+<small class="stats-description">Declined requests</small>
+<a href="{% url 'expense:expense_approvals' %}" class="stretched-link" aria-label="View declined requests"></a>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Enhanced Transactions Section -->
+<div class="row">
+<div class="col-12">
+<div class="transactions-card p-3 p-md-4 rounded-3">
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-4">
+<div>
+<h4 class="section-title mb-1">Recent Payments</h4>
+<p class="section-subtitle">Latest transaction activity</p>
+</div>
+<a href="{% url 'wallet:transactions' %}" class="btn-outline-cta mt-2 mt-sm-0 d-flex align-items-center">
+<span>View All</span>
+<i class="fas fa-arrow-right ms-2"></i>
+</a>
+</div>
+<div class="table-responsive">
+<table class="table">
+<thead>
+<tr>
+<th>Initiated By</th>
+<th>Recipient</th>
+<th>Mpesa Code</th>
+<th>Date & Time</th>
+<th>Status</th>
+<th>Amount</th>
+<th width="60">Actions</th>
+</tr>
+</thead>
+<tbody>
+                  {% for s in transactions %}
+<tr>
+<td data-label="User">
+<div>
+<div class="fw-semibold text-dark">{{ s.sender|title }}</div>
+<small class="text-muted">{{ s.transaction_type|title }}</small>
+</div>
+</td>
+<td data-label="User">
+<div>
+<div class="fw-semibold text-dark">{{ s.receiver|title }}</div>
+</div>
+</td>
+<td data-label="Transaction Code">
+<div>
+<div class="fw-semibold text-dark">{{ s.mpesa_code }}</div>
+</div>
+</td>
+<td data-label="Date">
+<div>
+<div class="fw-medium">{{ s.date|date:"h:i A" }}</div>
+<small class="text-muted">{{ s.date|date:"M d, Y" }}</small>
+</div>
+</td>
+<td data-label="Status">
+<span class="status-badge {% if s.status == 'completed' %}status-completed {% elif s.status == 'pending' %}status-pending {% else %}status-declined{% endif %}">
+                        {{ s.status|title }}
+</span>
+</td>
+<td data-label="Amount" class="fw-bold text-danger">-KES {{ s.amount|intcomma }}</td>
+<td data-label="Actions">
+<div class="dropdown">
+<button class="action-btn" type="button" id="dropdownMenuButton{{ s.id }}" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Transaction actions">
+<i class="fas fa-ellipsis-v"></i>
+</button>
+<ul class="dropdown-menu custom-dropdown-menu" aria-labelledby="dropdownMenuButton{{ s.id }}">
+<li>
+<a class="dropdown-item d-flex align-items-center" href="#" data-bs-toggle="modal" data-bs-target="#viewTransactionModal{{ s.id }}">
+<i class="fas fa-eye me-2 text-primary"></i> View Details
+</a>
+</li>
+</ul>
+</div>
+</td>
+</tr>
+<!-- Include transaction modals -->
+                  {% include 'partials/transaction_modals.html' with transaction=s %}
+                  {% endfor %}
+</tbody>
+</table>
+</div>
+<!-- Enhanced Pagination -->
+            {% if transactions.paginator.num_pages > 1 %}
+<nav aria-label="Transactions pagination" class="mt-4">
+<ul class="pagination justify-content-center mb-0">
+                {% if transactions.has_previous %}
+<li class="page-item">
+<a class="page-link" href="?page={{ transactions.previous_page_number }}" aria-label="Previous page">
+<i class="fas fa-chevron-left"></i>
+</a>
+</li>
+                {% else %}
+<li class="page-item disabled">
+<span class="page-link">
+<i class="fas fa-chevron-left"></i>
+</span>
+</li>
+                {% endif %}
+                {% for num in transactions.paginator.page_range %}
+                {% if transactions.number == num %}
+<li class="page-item active">
+<span class="page-link">{{ num }}</span>
+</li>
+                {% elif num > transactions.number|add:'-3' and num < transactions.number|add:'3' %}
+<li class="page-item">
+<a class="page-link" href="?page={{ num }}">{{ num }}</a>
+</li>
+                {% endif %}
+                {% endfor %}
+                {% if transactions.has_next %}
+<li class="page-item">
+<a class="page-link" href="?page={{ transactions.next_page_number }}" aria-label="Next page">
+<i class="fas fa-chevron-right"></i>
+</a>
+</li>
+                {% else %}
+<li class="page-item disabled">
+<span class="page-link">
+<i class="fas fa-chevron-right"></i>
+</span>
+</li>
+                {% endif %}
+</ul>
+</nav>
             {% endif %}
-
-            <!-- Enhanced Wallets Section -->
-            <div class="mb-5">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <div>
-                        <h4 class="mb-1 fw-bold text-dark">Your Wallets</h4>
-                        <p class="text-muted mb-0">Monitor your financial resources</p>
-                    </div>
-                </div>
-
-                <div class="row g-3 g-md-4">
-                    {% if primary_wallets %}
-                        {% for c in primary_wallets %}
-                            <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
-                                <div class="wallet-card p-3 p-md-4 rounded-3 shadow-sm h-100">
-                                    <div class="text-center">
-                                        <div class="d-flex align-items-center justify-content-center mb-3">
-                                            <i class="fas fa-wallet text-primary me-2" style="font-size: 1.25rem;"></i>
-                                            <h6 class="fw-semibold mb-0 text-dark">{{ c.wallet_name }}</h6>
-                                        </div>
-                                        <div class="h3 mb-3 text-primary fw-bold">{{ c.currency }} {{ c.balance|intcomma }}</div>
-                                        
-                                        {% if c.utilization is not None %}
-                                            <div class="mt-3">
-                                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                                    <small class="text-muted">Utilized</small>
-                                                    <small class="fw-semibold">{{ c.utilization }}%</small>
-                                                </div>
-                                                <div class="progress mb-2">
-                                                    <div class="progress-bar" role="progressbar" 
-                                                         style="width: {{ c.utilization }}%;" 
-                                                         aria-valuenow="{{ c.utilization }}" 
-                                                         aria-valuemin="0" 
-                                                         aria-valuemax="100"></div>
-                                                </div>
-                                                <small class="text-muted">
-                                                    {{ c.total_utilized|intcomma }} / {{ c.limit|intcomma }}
-                                                </small>
-                                            </div>
-                                        {% else %}
-                                            <div class="mt-3">
-                                                <small class="text-muted">No utilization data available</small>
-                                            </div>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-                        {% endfor %}
-                    {% endif %}
-
-                    {% if wallets %}
-                        {% for c in wallets %}
-                            <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
-                                <div class="wallet-card p-3 p-md-4 rounded-3 shadow-sm h-100">
-                                    <div class="text-center">
-                                        <div class="d-flex align-items-center justify-content-center mb-3">
-                                            <i class="fas fa-wallet text-primary me-2" style="font-size: 1.25rem;"></i>
-                                            <h6 class="fw-semibold mb-0 text-dark">{{ c.wallet_name }}</h6>
-                                        </div>
-                                        <div class="h3 mb-3 text-primary fw-bold">{{ c.currency }} {{ c.balance|intcomma }}</div>
-                                        
-                                        {% if c.utilization is not None %}
-                                            <div class="mt-3">
-                                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                                    <small class="text-muted">Utilized</small>
-                                                    <small class="fw-semibold">{{ c.utilization }}%</small>
-                                                </div>
-                                                <div class="progress mb-2">
-                                                    <div class="progress-bar" role="progressbar" 
-                                                         style="width: {{ c.utilization }}%;" 
-                                                         aria-valuenow="{{ c.utilization }}" 
-                                                         aria-valuemin="0" 
-                                                         aria-valuemax="100"></div>
-                                                </div>
-                                                <small class="text-muted">
-                                                    {{ c.total_utilized|intcomma }} / {{ c.limit|intcomma }}
-                                                </small>
-                                            </div>
-                                        {% else %}
-                                            <div class="mt-3">
-                                                <small class="text-muted">No utilization data available</small>
-                                            </div>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-                        {% endfor %}
-                    {% endif %}
-
-                    {% if not primary_wallets and not wallets %}
-                        <div class="col-12">
-                            <div class="empty-state">
-                                <i class="fas fa-wallet empty-state-icon"></i>
-                                <h5 class="mb-2 text-dark">No Wallets Found</h5>
-                                <p class="mb-0 text-muted">Create your first wallet to start managing expenses</p>
-                            </div>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-
-            <!-- Enhanced Statistics Cards -->
-            <div class="mb-5">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <div>
-                        <h4 class="mb-1 fw-bold text-dark">Request Overview</h4>
-                        <p class="text-muted mb-0">Track your expense request status</p>
-                    </div>
-                </div>
-                
-                <div class="row g-3 g-md-4">
-                    <div class="col-12 col-sm-6 col-lg-3">
-                        <div class="stats-card shadow-sm" style="background: linear-gradient(135deg, #e1f5fe 0%, #b3e5fc 100%);">
-                            <div class="card-body text-center position-relative">
-                                <i class="fas fa-chart-line stats-icon text-info"></i>
-                                <div class="stats-number text-dark">{{ total_requests|default:0 }}</div>
-                                <p class="stats-label text-dark mb-1">Total Requests</p>
-                                <small class="stats-description">All time requests</small>
-                                <a href="{% url 'expense:expense_approvals' %}" class="stretched-link" aria-label="View total requests"></a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-12 col-sm-6 col-lg-3">
-                        <div class="stats-card shadow-sm" style="background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);">
-                            <div class="card-body text-center position-relative">
-                                <i class="fas fa-clock stats-icon text-warning"></i>
-                                <div class="stats-number text-dark">{{ pending_requests|default:0 }}</div>
-                                <p class="stats-label text-dark mb-1">Pending</p>
-                                <small class="stats-description">Awaiting processing</small>
-                                <a href="{% url 'expense:expense_approvals' %}" class="stretched-link" aria-label="View pending requests"></a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-12 col-sm-6 col-lg-3">
-                        <div class="stats-card shadow-sm" style="background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);">
-                            <div class="card-body text-center position-relative">
-                                <i class="fas fa-check-circle stats-icon text-success"></i>
-                                <div class="stats-number text-dark">{{ completed_requests|default:0 }}</div>
-                                <p class="stats-label text-dark mb-1">Completed</p>
-                                <small class="stats-description">Successfully processed</small>
-                                <a href="{% url 'expense:expense_approvals' %}" class="stretched-link" aria-label="View completed requests"></a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-12 col-sm-6 col-lg-3">
-                        <div class="stats-card shadow-sm" style="background: linear-gradient(135deg, #fce4ec 0%, #f8bbd9 100%);">
-                            <div class="card-body text-center position-relative">
-                                <i class="fas fa-times-circle stats-icon text-danger"></i>
-                                <div class="stats-number text-dark">{{ declined_requests|default:0 }}</div>
-                                <p class="stats-label text-dark mb-1">Declined</p>
-                                <small class="stats-description">Declined requests</small>
-                                <a href="{% url 'expense:expense_approvals' %}" class="stretched-link" aria-label="View declined requests"></a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Enhanced Transactions Section -->
-            <div class="row">
-                <div class="col-12">
-                    <div class="transactions-card p-3 p-md-4 rounded-3">
-                        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-4">
-                            <div>
-                                <h4 class="mb-1 fw-bold text-dark">Recent Payments</h4>
-                                <p class="text-muted mb-0">Latest transaction activity</p>
-                            </div>
-                            <a href="{% url 'wallet:transactions' %}" 
-                               class="btn btn-outline-primary btn-sm mt-2 mt-sm-0 d-flex align-items-center">
-                                <span>View All</span>
-                                <i class="fas fa-arrow-right ms-2"></i>
-                            </a>
-                        </div>
-                        
-                        <div class="table-responsive">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Initiated By</th>
-                                        <th>Recipient</th>
-                                        <th>Mpesa Code</th>
-                                        <th>Date & Time</th>
-                                        <th>Status</th>
-                                        <th>Amount</th>
-                                        <th width="60">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for s in transactions %}
-                                    <tr>
-                                        <td data-label="User">
-                                            <div>
-                                                <div class="fw-semibold text-dark">{{ s.sender|title }}</div>
-                                                <small class="text-muted">{{ s.transaction_type|title }}</small>
-                                            </div>
-                                        </td>
-                                        <td data-label="User">
-                                            <div>
-                                                <div class="fw-semibold text-dark">{{ s.receiver|title }}</div>
-                                            </div>
-                                        </td>
-                                        <td data-label="Transaction Code">
-                                            <div>
-                                                <div class="fw-semibold text-dark">{{ s.mpesa_code }}</div>
-                                            </div>
-                                        </td>
-                                        <td data-label="Date">
-                                            <div>
-                                                <div class="fw-medium">{{ s.date|date:"h:i A" }}</div>
-                                                <small class="text-muted">{{ s.date|date:"M d, Y" }}</small>
-                                            </div>
-                                        </td>
-                                        <td data-label="Status">
-                                            <span class="status-badge {% if s.status == 'completed' %}status-completed
-                                                      {% elif s.status == 'pending' %}status-pending
-                                                      {% else %}status-declined{% endif %}">
-                                                {{ s.status|title }}
-                                            </span>
-                                        </td>
-                                        <td data-label="Amount" class="fw-bold text-danger">-KES {{ s.amount|intcomma }}</td>
-                                        <td data-label="Actions">
-                                            <div class="dropdown">
-                                                <button class="action-btn" type="button" 
-                                                        id="dropdownMenuButton{{ s.id }}" 
-                                                        data-bs-toggle="dropdown" 
-                                                        aria-expanded="false"
-                                                        aria-label="Transaction actions">
-                                                    <i class="fas fa-ellipsis-v"></i>
-                                                </button>
-                                                <ul class="dropdown-menu custom-dropdown-menu" 
-                                                    aria-labelledby="dropdownMenuButton{{ s.id }}">
-                                                    <li>
-                                                        <a class="dropdown-item d-flex align-items-center" 
-                                                           href="#" 
-                                                           data-bs-toggle="modal" 
-                                                           data-bs-target="#viewTransactionModal{{ s.id }}">
-                                                            <i class="fas fa-eye me-2 text-primary"></i>
-                                                            View Details
-                                                        </a>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <!-- Include transaction modals -->
-                                    {% include 'partials/transaction_modals.html' with transaction=s %}
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <!-- Enhanced Pagination -->
-                        {% if transactions.paginator.num_pages > 1 %}
-                        <nav aria-label="Transactions pagination" class="mt-4">
-                            <ul class="pagination justify-content-center mb-0">
-                                {% if transactions.has_previous %}
-                                    <li class="page-item">
-                                        <a class="page-link" href="?page={{ transactions.previous_page_number }}" aria-label="Previous page">
-                                            <i class="fas fa-chevron-left"></i>
-                                        </a>
-                                    </li>
-                                {% else %}
-                                    <li class="page-item disabled">
-                                        <span class="page-link">
-                                            <i class="fas fa-chevron-left"></i>
-                                        </span>
-                                    </li>
-                                {% endif %}
-
-                                {% for num in transactions.paginator.page_range %}
-                                    {% if transactions.number == num %}
-                                        <li class="page-item active">
-                                            <span class="page-link">{{ num }}</span>
-                                        </li>
-                                    {% elif num > transactions.number|add:'-3' and num < transactions.number|add:'3' %}
-                                        <li class="page-item">
-                                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
-                                        </li>
-                                    {% endif %}
-                                {% endfor %}
-
-                                {% if transactions.has_next %}
-                                    <li class="page-item">
-                                        <a class="page-link" href="?page={{ transactions.next_page_number }}" aria-label="Next page">
-                                            <i class="fas fa-chevron-right"></i>
-                                        </a>
-                                    </li>
-                                {% else %}
-                                    <li class="page-item disabled">
-                                        <span class="page-link">
-                                            <i class="fas fa-chevron-right"></i>
-                                        </span>
-                                    </li>
-                                {% endif %}
-                            </ul>
-                        </nav>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+</div>
+</div>
+</div>
+      {% if not transactions %}
+<div class="row">
+<div class="col-12">
+<div class="empty-state">
+<i class="fas fa-receipt empty-state-icon"></i>
+<h5 class="mb-2 text-dark">No Transactions Found</h5>
+<p class="mb-3 text-muted">Your recent payments will appear here once you start transacting.</p>
+<a href="{% url 'wallet:transactions' %}" class="btn-cta">
+<i class="fas fa-plus me-2"></i> Start a Transaction
+</a>
+</div>
+</div>
+</div>
+      {% endif %}
+</div>
+</div>
 </section>
-
 {% endblock content %}

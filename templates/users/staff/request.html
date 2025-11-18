@@ -2,6 +2,453 @@
 {% load static %}
 {% load humanize %}
 {% block content %}
+<style>
+:root {
+  --primary-color: #98e23f;
+  --secondary-color: #7ab82c;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --danger-color: #ef4444;
+  --info-color: #06b6d4;
+  --light-bg: #f8fafc;
+  --dark-text: #1f2937;
+  --muted-text: #6b7280;
+  --border-color: #e5e7eb;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --border-radius: 12px;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+body {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+.dashboard-section {
+  min-height: 100vh;
+  background: transparent;
+}
+/* Section Header */
+.section-header {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: var(--border-radius);
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  position: relative;
+  overflow: hidden;
+}
+.section-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
+  z-index: 1;
+}
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--dark-text);
+  margin-bottom: 0.5rem;
+  position: relative;
+  z-index: 2;
+}
+.section-title.text-gradient {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.section-subtitle {
+  color: var(--muted-text);
+  font-size: 0.875rem;
+  position: relative;
+  z-index: 2;
+}
+/* Nav Tabs */
+.nav-tabs {
+  border: none;
+  background: white;
+  border-radius: var(--border-radius);
+  padding: 0.5rem;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 1rem;
+}
+.nav-tabs .nav-link {
+  border: none;
+  color: var(--muted-text);
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  transition: var(--transition);
+  margin: 0 0.25rem;
+}
+.nav-tabs .nav-link:hover {
+  color: var(--primary-color);
+  background: rgba(152, 226, 63, 0.1);
+}
+.nav-tabs .nav-link.active {
+  background: var(--primary-color);
+  color: white;
+  box-shadow: var(--shadow-sm);
+}
+/* Filter Card */
+.card {
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+  background: white;
+}
+.card:hover {
+  box-shadow: var(--shadow-md);
+}
+/* Button Enhancements */
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  border: none;
+  color: white;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  transition: var(--transition);
+  box-shadow: var(--shadow-sm);
+  padding: 0.75rem 1.5rem;
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  color: white;
+}
+.btn-success {
+  background: linear-gradient(135deg, var(--success-color), #059669);
+  border: none;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  transition: var(--transition);
+  box-shadow: var(--shadow-sm);
+}
+.btn-success:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  color: white;
+}
+.btn-warning {
+  background: linear-gradient(135deg, var(--warning-color), #d97706);
+  border: none;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  transition: var(--transition);
+  box-shadow: var(--shadow-sm);
+  color: white;
+}
+.btn-warning:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  color: white;
+}
+.btn-danger {
+  background: linear-gradient(135deg, var(--danger-color), #dc2626);
+  border: none;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  transition: var(--transition);
+  box-shadow: var(--shadow-sm);
+  color: white;
+}
+.btn-danger:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  color: white;
+}
+.btn-outline-primary {
+  border: 1px solid var(--primary-color);
+  color: var(--primary-color);
+  background: transparent;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  transition: var(--transition);
+}
+.btn-outline-primary:hover {
+  background: var(--primary-color);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+.btn-outline-secondary {
+  border: 1px solid var(--border-color);
+  color: var(--muted-text);
+  background: transparent;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  transition: var(--transition);
+}
+.btn-outline-secondary:hover {
+  background: var(--light-bg);
+  color: var(--dark-text);
+  transform: translateY(-1px);
+}
+.btn-outline-info {
+  border: 1px solid var(--info-color);
+  color: var(--info-color);
+  background: transparent;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  transition: var(--transition);
+}
+.btn-outline-info:hover {
+  background: var(--info-color);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+/* Badge Enhancements */
+.badge {
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid;
+}
+.bg-primary {
+  background: rgba(59, 130, 246, 0.1) !important;
+  color: var(--primary-color) !important;
+  border-color: rgba(59, 130, 246, 0.2);
+}
+.bg-secondary {
+  background: rgba(107, 114, 128, 0.1) !important;
+  color: var(--muted-text) !important;
+  border-color: rgba(107, 114, 128, 0.2);
+}
+.bg-info {
+  background: rgba(6, 182, 212, 0.1) !important;
+  color: var(--info-color) !important;
+  border-color: rgba(6, 182, 212, 0.2);
+}
+.bg-success {
+  background: rgba(16, 185, 129, 0.1) !important;
+  color: var(--success-color) !important;
+  border-color: rgba(16, 185, 129, 0.2);
+}
+.bg-warning {
+  background: rgba(245, 158, 11, 0.1) !important;
+  color: var(--warning-color) !important;
+  border-color: rgba(245, 158, 11, 0.2);
+}
+.bg-danger {
+  background: rgba(239, 68, 68, 0.1) !important;
+  color: var(--danger-color) !important;
+  border-color: rgba(239, 68, 68, 0.2);
+}
+/* Table Enhancements */
+.table-responsive {
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  background: white;
+}
+.table {
+  margin-bottom: 0;
+}
+.table thead th {
+  border-bottom: 2px solid var(--border-color);
+  font-weight: 600;
+  color: var(--dark-text);
+  padding: 1rem 0.75rem;
+  background: var(--light-bg);
+}
+.table tbody td {
+  padding: 1rem 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+.table tbody tr:hover {
+  background: rgba(152, 226, 63, 0.05);
+  transition: var(--transition);
+  transform: scale(1.01);
+}
+.bg-light {
+  background: var(--light-bg) !important;
+}
+/* Modal Enhancements */
+.modal-content {
+  border: none;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-lg);
+}
+.modal-header {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: white;
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
+}
+.modal-body {
+  background: #f8fafc;
+}
+.modal-footer {
+  border-top: 1px solid var(--border-color);
+  background: #f8fafc;
+}
+/* Form Elements */
+.form-control, .form-select {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  transition: var(--transition);
+}
+.form-control:focus, .form-select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 0.2rem rgba(152, 226, 63, 0.25);
+}
+.is-invalid {
+  border-color: var(--danger-color);
+}
+.is-valid {
+  border-color: var(--success-color);
+}
+/* Required Asterisk */
+.required:after {
+  content: " *";
+  color: var(--danger-color);
+}
+/* Hidden Class */
+.hidden {
+  display: none !important;
+}
+/* Responsive Table Styles */
+.responsive-table {
+  font-size: 14px;
+}
+@media (max-width: 768px) {
+  .responsive-table {
+    font-size: 12px;
+  }
+  .responsive-table th,
+  .responsive-table td {
+    padding: 8px 4px !important;
+    vertical-align: middle;
+  }
+  .responsive-table thead {
+    display: none;
+  }
+  .responsive-table,
+  .responsive-table tbody,
+  .responsive-table tr,
+  .responsive-table td {
+    display: block;
+    width: 100%;
+  }
+  .responsive-table tr {
+    border: 1px solid var(--border-color);
+    margin-bottom: 15px;
+    border-radius: 8px;
+    background: white;
+    box-shadow: var(--shadow-sm);
+    padding: 10px;
+  }
+  .responsive-table td {
+    border: none !important;
+    position: relative;
+    padding-left: 35% !important;
+    text-align: left !important;
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+  }
+  .responsive-table td:last-child {
+    border-bottom: none !important;
+  }
+  .responsive-table td:before {
+    content: attr(data-label) ": ";
+    position: absolute;
+    left: 8px;
+    width: 30%;
+    text-align: left;
+    font-weight: bold;
+    color: var(--dark-text);
+    font-size: 12px;
+  }
+  .responsive-table td:first-child {
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+  }
+  .responsive-table td:last-child {
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+  }
+}
+@media (max-width: 576px) {
+  .responsive-table {
+    font-size: 11px;
+  }
+  .responsive-table td:before {
+    font-size: 11px;
+  }
+  .btn-sm {
+    font-size: 10px;
+    padding: 4px 8px;
+  }
+  .badge {
+    font-size: 10px;
+    padding: 4px 6px;
+  }
+  .modal-dialog {
+    margin: 10px !important;
+  }
+}
+@media (max-width: 992px) {
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+/* Responsive Design */
+@media (max-width: 768px) {
+  .section-header {
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .nav-tabs {
+    flex-direction: column;
+  }
+  .nav-tabs .nav-link {
+    margin: 0.25rem 0;
+  }
+  .btn-group-vertical {
+    flex-direction: row !important;
+  }
+  .btn-group-vertical .btn {
+    margin-right: 0.5rem;
+    margin-bottom: 0;
+  }
+  .table thead {
+    display: none;
+  }
+  .table tbody tr {
+    display: block;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: white;
+    box-shadow: var(--shadow-sm);
+  }
+  .table tbody td {
+    display: block;
+    border: none;
+    padding: 0.25rem 0;
+    text-align: left;
+  }
+  .table tbody td:before {
+    content: attr(data-label) ": ";
+    font-weight: 600;
+    color: var(--dark-text);
+  }
+}
+</style>
 <section class="dashboard-section body-collapse">
     <div class="overlay pt-120">
         <div class="container-fluid">
@@ -9,13 +456,14 @@
                 <div class="col-12">
                     <!-- Request Management Section -->
                     <div class="requests-area">
-                        <div class="d-flex justify-content-between align-items-center mb-4 pt-3 flex-wrap mt-3">
-                            <h4 class="text-2xl font-bold">Expense Requests</h4>
-                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#submitExpenseModal">
-                                New Request
-                            </button>
+                        <div class="section-header">
+                            <div class="d-flex justify-content-between align-items-center mb-4 pt-3 flex-wrap mt-3">
+                                <h4 class="section-title text-gradient mb-0">Expense Requests</h4>
+                                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#submitExpenseModal">
+                                    <i class="fas fa-plus me-2"></i>New Request
+                                </button>
+                            </div>
                         </div>
-
                         <!-- Type Selection Tabs -->
                         <ul class="nav nav-tabs mb-4" id="expenseTypeTabs" role="tablist">
                             <li class="nav-item" role="presentation">
@@ -31,7 +479,6 @@
                                 <button class="nav-link" id="activations-tab" data-bs-toggle="tab" data-bs-target="#activations-expenses" type="button" role="tab" aria-controls="activations-expenses" aria-selected="false">Activations</button>
                             </li>
                         </ul>
-
                         <!-- Filter Controls -->
                         <div class="card mb-4">
                             <div class="card-body">
@@ -50,13 +497,12 @@
                                 </div>
                             </div>
                         </div>
-
                         <!-- Tab Content -->
                         <div class="tab-content" id="expenseTabContent">
                             <!-- All Expenses Tab -->
                             <div class="tab-pane fade show active" id="all-expenses" role="tabpanel" aria-labelledby="all-tab">
                                 <div class="table-responsive">
-                                    <table class="table table-bordered table-hover" id="allRequestsTable">
+                                    <table class="table table-bordered table-hover responsive-table" id="allRequestsTable">
                                         <thead class="bg-light">
                                             <tr>
                                                 <th>Status</th>
@@ -73,41 +519,41 @@
                                         <tbody>
                                             {% for expense in pending_expenses %}
                                             <tr class="request-row pending-request">
-                                                <td><span class="badge bg-warning">Pending</span></td>
-                                                <td>{{ expense.request_type }}</td>
-                                                <td>{{ expense.expense_category }}</td>
-                                                <td>{{ expense.batch_disbursement_type|yesno:"Yes,No" }}</td>
-                                                <td>{{ expense.description }}</td>
-                                                <td>{{ expense.amount|intcomma }}</td>
-                                                <td>{{ expense.created_at|date:"M d, Y" }}</td>
-                                                <td>{{ expense.created_by.get_full_name }}</td>
-                                                <td>-</td>
+                                                <td data-label="Status"><span class="badge bg-warning">Pending</span></td>
+                                                <td data-label="Expense Type">{{ expense.request_type }}</td>
+                                                <td data-label="Expense Category">{{ expense.expense_category }}</td>
+                                                <td data-label="Batch">{{ expense.batch_disbursement_type|yesno:"Yes,No" }}</td>
+                                                <td data-label="Description">{{ expense.description }}</td>
+                                                <td data-label="Amount">{{ expense.amount|intcomma }}</td>
+                                                <td data-label="Date">{{ expense.created_at|date:"M d, Y" }}</td>
+                                                <td data-label="Requested By">{{ expense.created_by.get_full_name }}</td>
+                                                <td data-label="Reviewed By">-</td>
                                             </tr>
                                             {% endfor %}
                                             {% for expense in approved_expenses %}
                                             <tr class="request-row approved-request">
-                                                <td><span class="badge bg-success">Approved</span></td>
-                                                <td>{{ expense.request_type }}</td>
-                                                <td>{{ expense.expense_category }}</td>
-                                                <td>{{ expense.batch_disbursement_type|yesno:"Yes,No" }}</td>
-                                                <td>{{ expense.description }}</td>
-                                                <td>{{ expense.amount|intcomma }}</td>
-                                                <td>{{ expense.updated_at|date:"M d, Y" }}</td>
-                                                <td>{{ expense.created_by.get_full_name }}</td>
-                                                <td>{{ expense.approved_by.get_full_name|default:"-" }}</td>
+                                                <td data-label="Status"><span class="badge bg-success">Approved</span></td>
+                                                <td data-label="Expense Type">{{ expense.request_type }}</td>
+                                                <td data-label="Expense Category">{{ expense.expense_category }}</td>
+                                                <td data-label="Batch">{{ expense.batch_disbursement_type|yesno:"Yes,No" }}</td>
+                                                <td data-label="Description">{{ expense.description }}</td>
+                                                <td data-label="Amount">{{ expense.amount|intcomma }}</td>
+                                                <td data-label="Date">{{ expense.updated_at|date:"M d, Y" }}</td>
+                                                <td data-label="Requested By">{{ expense.created_by.get_full_name }}</td>
+                                                <td data-label="Reviewed By">{{ expense.approved_by.get_full_name|default:"-" }}</td>
                                             </tr>
                                             {% endfor %}
                                             {% for expense in declined_expenses %}
                                             <tr class="request-row declined-request">
-                                                <td><span class="badge bg-danger">Declined</span></td>
-                                                <td>{{ expense.request_type }}</td>
-                                                <td>{{ expense.expense_category }}</td>
-                                                <td>{{ expense.batch_disbursement_type|yesno:"Yes,No" }}</td>
-                                                <td>{{ expense.description }}</td>
-                                                <td>{{ expense.amount|intcomma }}</td>
-                                                <td>{{ expense.updated_at|date:"M d, Y" }}</td>
-                                                <td>{{ expense.created_by.get_full_name }}</td>
-                                                <td>{{ expense.approved_by.get_full_name|default:"-" }}</td>
+                                                <td data-label="Status"><span class="badge bg-danger">Declined</span></td>
+                                                <td data-label="Expense Type">{{ expense.request_type }}</td>
+                                                <td data-label="Expense Category">{{ expense.expense_category }}</td>
+                                                <td data-label="Batch">{{ expense.batch_disbursement_type|yesno:"Yes,No" }}</td>
+                                                <td data-label="Description">{{ expense.description }}</td>
+                                                <td data-label="Amount">{{ expense.amount|intcomma }}</td>
+                                                <td data-label="Date">{{ expense.updated_at|date:"M d, Y" }}</td>
+                                                <td data-label="Requested By">{{ expense.created_by.get_full_name }}</td>
+                                                <td data-label="Reviewed By">{{ expense.approved_by.get_full_name|default:"-" }}</td>
                                             </tr>
                                             {% endfor %}
                                             {% if not pending_expenses and not approved_expenses and not declined_expenses %}
@@ -119,11 +565,10 @@
                                     </table>
                                 </div>
                             </div>
-
                             <!-- Events Tab -->
                             <div class="tab-pane fade" id="events-expenses" role="tabpanel" aria-labelledby="events-tab">
                                 <div class="table-responsive">
-                                    <table class="table table-bordered table-hover" id="eventsRequestsTable">
+                                    <table class="table table-bordered table-hover responsive-table" id="eventsRequestsTable">
                                         <thead class="bg-light">
                                             <tr>
                                                 <th>Status</th>
@@ -141,45 +586,45 @@
                                             {% for expense in pending_expenses %}
                                             {% if expense.event %}
                                             <tr class="request-row pending-request">
-                                                <td><span class="badge bg-warning">Pending</span></td>
-                                                <td>{{ expense.event.name }}</td>
-                                                <td>{{ expense.expense_category }}</td>
-                                                <td>{{ expense.batch_disbursement_type|yesno:"Yes,No" }}</td>
-                                                <td>{{ expense.description }}</td>
-                                                <td>{{ expense.amount|intcomma }}</td>
-                                                <td>{{ expense.created_at|date:"M d, Y" }}</td>
-                                                <td>{{ expense.created_by.get_full_name }}</td>
-                                                <td>-</td>
+                                                <td data-label="Status"><span class="badge bg-warning">Pending</span></td>
+                                                <td data-label="Event Name">{{ expense.event.name }}</td>
+                                                <td data-label="Expense Category">{{ expense.expense_category }}</td>
+                                                <td data-label="Batch">{{ expense.batch_disbursement_type|yesno:"Yes,No" }}</td>
+                                                <td data-label="Description">{{ expense.description }}</td>
+                                                <td data-label="Amount">{{ expense.amount|intcomma }}</td>
+                                                <td data-label="Date">{{ expense.created_at|date:"M d, Y" }}</td>
+                                                <td data-label="Requested By">{{ expense.created_by.get_full_name }}</td>
+                                                <td data-label="Reviewed By">-</td>
                                             </tr>
                                             {% endif %}
                                             {% endfor %}
                                             {% for expense in approved_expenses %}
                                             {% if expense.event %}
                                             <tr class="request-row approved-request">
-                                                <td><span class="badge bg-success">Approved</span></td>
-                                                <td>{{ expense.event.name }}</td>
-                                                <td>{{ expense.expense_category }}</td>
-                                                <td>{{ expense.batch_disbursement_type|yesno:"Yes,No" }}</td>
-                                                <td>{{ expense.description }}</td>
-                                                <td>{{ expense.amount|intcomma }}</td>
-                                                <td>{{ expense.updated_at|date:"M d, Y" }}</td>
-                                                <td>{{ expense.created_by.get_full_name }}</td>
-                                                <td>{{ expense.approved_by.get_full_name|default:"-" }}</td>
+                                                <td data-label="Status"><span class="badge bg-success">Approved</span></td>
+                                                <td data-label="Event Name">{{ expense.event.name }}</td>
+                                                <td data-label="Expense Category">{{ expense.expense_category }}</td>
+                                                <td data-label="Batch">{{ expense.batch_disbursement_type|yesno:"Yes,No" }}</td>
+                                                <td data-label="Description">{{ expense.description }}</td>
+                                                <td data-label="Amount">{{ expense.amount|intcomma }}</td>
+                                                <td data-label="Date">{{ expense.updated_at|date:"M d, Y" }}</td>
+                                                <td data-label="Requested By">{{ expense.created_by.get_full_name }}</td>
+                                                <td data-label="Reviewed By">{{ expense.approved_by.get_full_name|default:"-" }}</td>
                                             </tr>
                                             {% endif %}
                                             {% endfor %}
                                             {% for expense in declined_expenses %}
                                             {% if expense.event %}
                                             <tr class="request-row declined-request">
-                                                <td><span class="badge bg-danger">Declined</span></td>
-                                                <td>{{ expense.event.name }}</td>
-                                                <td>{{ expense.expense_category }}</td>
-                                                <td>{{ expense.batch_disbursement_type|yesno:"Yes,No" }}</td>
-                                                <td>{{ expense.description }}</td>
-                                                <td>{{ expense.amount|intcomma }}</td>
-                                                <td>{{ expense.updated_at|date:"M d, Y" }}</td>
-                                                <td>{{ expense.created_by.get_full_name }}</td>
-                                                <td>{{ expense.approved_by.get_full_name|default:"-" }}</td>
+                                                <td data-label="Status"><span class="badge bg-danger">Declined</span></td>
+                                                <td data-label="Event Name">{{ expense.event.name }}</td>
+                                                <td data-label="Expense Category">{{ expense.expense_category }}</td>
+                                                <td data-label="Batch">{{ expense.batch_disbursement_type|yesno:"Yes,No" }}</td>
+                                                <td data-label="Description">{{ expense.description }}</td>
+                                                <td data-label="Amount">{{ expense.amount|intcomma }}</td>
+                                                <td data-label="Date">{{ expense.updated_at|date:"M d, Y" }}</td>
+                                                <td data-label="Requested By">{{ expense.created_by.get_full_name }}</td>
+                                                <td data-label="Reviewed By">{{ expense.approved_by.get_full_name|default:"-" }}</td>
                                             </tr>
                                             {% endif %}
                                             {% endfor %}
@@ -192,11 +637,10 @@
                                     </table>
                                 </div>
                             </div>
-
                             <!-- Operations Tab -->
                             <div class="tab-pane fade" id="operations-expenses" role="tabpanel" aria-labelledby="operations-tab">
                                 <div class="table-responsive">
-                                    <table class="table table-bordered table-hover" id="operationsRequestsTable">
+                                    <table class="table table-bordered table-hover responsive-table" id="operationsRequestsTable">
                                         <thead class="bg-light">
                                             <tr>
                                                 <th>Status</th>
@@ -214,45 +658,45 @@
                                             {% for expense in pending_expenses %}
                                             {% if expense.operation %}
                                             <tr class="request-row pending-request">
-                                                <td><span class="badge bg-warning">Pending</span></td>
-                                                <td>{{ expense.operation.name }}</td>
-                                                <td>{{ expense.expense_category }}</td>
-                                                <td>{{ expense.batch_disbursement_type|yesno:"Yes,No" }}</td>
-                                                <td>{{ expense.description }}</td>
-                                                <td>{{ expense.amount|intcomma }}</td>
-                                                <td>{{ expense.created_at|date:"M d, Y" }}</td>
-                                                <td>{{ expense.created_by.get_full_name }}</td>
-                                                <td>-</td>
+                                                <td data-label="Status"><span class="badge bg-warning">Pending</span></td>
+                                                <td data-label="Operation">{{ expense.operation.name }}</td>
+                                                <td data-label="Expense Category">{{ expense.expense_category }}</td>
+                                                <td data-label="Batch">{{ expense.batch_disbursement_type|yesno:"Yes,No" }}</td>
+                                                <td data-label="Description">{{ expense.description }}</td>
+                                                <td data-label="Amount">{{ expense.amount|intcomma }}</td>
+                                                <td data-label="Date">{{ expense.created_at|date:"M d, Y" }}</td>
+                                                <td data-label="Requested By">{{ expense.created_by.get_full_name }}</td>
+                                                <td data-label="Reviewed By">-</td>
                                             </tr>
                                             {% endif %}
                                             {% endfor %}
                                             {% for expense in approved_expenses %}
                                             {% if expense.operation %}
                                             <tr class="request-row approved-request">
-                                                <td><span class="badge bg-success">Approved</span></td>
-                                                <td>{{ expense.operation.name }}</td>
-                                                <td>{{ expense.expense_category }}</td>
-                                                <td>{{ expense.batch_disbursement_type|yesno:"Yes,No" }}</td>
-                                                <td>{{ expense.description }}</td>
-                                                <td>{{ expense.amount|intcomma }}</td>
-                                                <td>{{ expense.updated_at|date:"M d, Y" }}</td>
-                                                <td>{{ expense.created_by.get_full_name }}</td>
-                                                <td>{{ expense.approved_by.get_full_name|default:"-" }}</td>
+                                                <td data-label="Status"><span class="badge bg-success">Approved</span></td>
+                                                <td data-label="Operation">{{ expense.operation.name }}</td>
+                                                <td data-label="Expense Category">{{ expense.expense_category }}</td>
+                                                <td data-label="Batch">{{ expense.batch_disbursement_type|yesno:"Yes,No" }}</td>
+                                                <td data-label="Description">{{ expense.description }}</td>
+                                                <td data-label="Amount">{{ expense.amount|intcomma }}</td>
+                                                <td data-label="Date">{{ expense.updated_at|date:"M d, Y" }}</td>
+                                                <td data-label="Requested By">{{ expense.created_by.get_full_name }}</td>
+                                                <td data-label="Reviewed By">{{ expense.approved_by.get_full_name|default:"-" }}</td>
                                             </tr>
                                             {% endif %}
                                             {% endfor %}
                                             {% for expense in declined_expenses %}
                                             {% if expense.operation %}
                                             <tr class="request-row declined-request">
-                                                <td><span class="badge bg-danger">Declined</span></td>
-                                                <td>{{ expense.operation.name }}</td>
-                                                <td>{{ expense.expense_category }}</td>
-                                                <td>{{ expense.batch_disbursement_type|yesno:"Yes,No" }}</td>
-                                                <td>{{ expense.description }}</td>
-                                                <td>{{ expense.amount|intcomma }}</td>
-                                                <td>{{ expense.updated_at|date:"M d, Y" }}</td>
-                                                <td>{{ expense.created_by.get_full_name }}</td>
-                                                <td>{{ expense.approved_by.get_full_name|default:"-" }}</td>
+                                                <td data-label="Status"><span class="badge bg-danger">Declined</span></td>
+                                                <td data-label="Operation">{{ expense.operation.name }}</td>
+                                                <td data-label="Expense Category">{{ expense.expense_category }}</td>
+                                                <td data-label="Batch">{{ expense.batch_disbursement_type|yesno:"Yes,No" }}</td>
+                                                <td data-label="Description">{{ expense.description }}</td>
+                                                <td data-label="Amount">{{ expense.amount|intcomma }}</td>
+                                                <td data-label="Date">{{ expense.updated_at|date:"M d, Y" }}</td>
+                                                <td data-label="Requested By">{{ expense.created_by.get_full_name }}</td>
+                                                <td data-label="Reviewed By">{{ expense.approved_by.get_full_name|default:"-" }}</td>
                                             </tr>
                                             {% endif %}
                                             {% endfor %}
@@ -265,11 +709,10 @@
                                     </table>
                                 </div>
                             </div>
-
                             <!-- Activations Tab -->
                             <div class="tab-pane fade" id="activations-expenses" role="tabpanel" aria-labelledby="activations-tab">
                                 <div class="table-responsive">
-                                    <table class="table table-bordered table-hover" id="activationsRequestsTable">
+                                    <table class="table table-bordered table-hover responsive-table" id="activationsRequestsTable">
                                         <thead class="bg-light">
                                             <tr>
                                                 <th>Status</th>
@@ -287,45 +730,45 @@
                                             {% for expense in pending_expenses %}
                                             {% if expense.activation %}
                                             <tr class="request-row pending-request">
-                                                <td><span class="badge bg-warning">Pending</span></td>
-                                                <td>{{ expense.activation.name }}</td>
-                                                <td>{{ expense.expense_category }}</td>
-                                                <td>{{ expense.batch_disbursement_type|yesno:"Yes,No" }}</td>
-                                                <td>{{ expense.description }}</td>
-                                                <td>{{ expense.amount|intcomma }}</td>
-                                                <td>{{ expense.created_at|date:"M d, Y" }}</td>
-                                                <td>{{ expense.created_by.get_full_name }}</td>
-                                                <td>-</td>
+                                                <td data-label="Status"><span class="badge bg-warning">Pending</span></td>
+                                                <td data-label="Activation">{{ expense.activation.name }}</td>
+                                                <td data-label="Expense Category">{{ expense.expense_category }}</td>
+                                                <td data-label="Batch">{{ expense.batch_disbursement_type|yesno:"Yes,No" }}</td>
+                                                <td data-label="Description">{{ expense.description }}</td>
+                                                <td data-label="Amount">{{ expense.amount|intcomma }}</td>
+                                                <td data-label="Date">{{ expense.created_at|date:"M d, Y" }}</td>
+                                                <td data-label="Requested By">{{ expense.created_by.get_full_name }}</td>
+                                                <td data-label="Reviewed By">-</td>
                                             </tr>
                                             {% endif %}
                                             {% endfor %}
                                             {% for expense in approved_expenses %}
                                             {% if expense.activation %}
                                             <tr class="request-row approved-request">
-                                                <td><span class="badge bg-success">Approved</span></td>
-                                                <td>{{ expense.activation.name }}</td>
-                                                <td>{{ expense.expense_category }}</td>
-                                                <td>{{ expense.batch_disbursement_type|yesno:"Yes,No" }}</td>
-                                                <td>{{ expense.description }}</td>
-                                                <td>{{ expense.amount|intcomma }}</td>
-                                                <td>{{ expense.updated_at|date:"M d, Y" }}</td>
-                                                <td>{{ expense.created_by.get_full_name }}</td>
-                                                <td>{{ expense.approved_by.get_full_name|default:"-" }}</td>
+                                                <td data-label="Status"><span class="badge bg-success">Approved</span></td>
+                                                <td data-label="Activation">{{ expense.activation.name }}</td>
+                                                <td data-label="Expense Category">{{ expense.expense_category }}</td>
+                                                <td data-label="Batch">{{ expense.batch_disbursement_type|yesno:"Yes,No" }}</td>
+                                                <td data-label="Description">{{ expense.description }}</td>
+                                                <td data-label="Amount">{{ expense.amount|intcomma }}</td>
+                                                <td data-label="Date">{{ expense.updated_at|date:"M d, Y" }}</td>
+                                                <td data-label="Requested By">{{ expense.created_by.get_full_name }}</td>
+                                                <td data-label="Reviewed By">{{ expense.approved_by.get_full_name|default:"-" }}</td>
                                             </tr>
                                             {% endif %}
                                             {% endfor %}
                                             {% for expense in declined_expenses %}
                                             {% if expense.activation %}
                                             <tr class="request-row declined-request">
-                                                <td><span class="badge bg-danger">Declined</span></td>
-                                                <td>{{ expense.activation.name }}</td>
-                                                <td>{{ expense.expense_category }}</td>
-                                                <td>{{ expense.batch_disbursement_type|yesno:"Yes,No" }}</td>
-                                                <td>{{ expense.description }}</td>
-                                                <td>{{ expense.amount|intcomma }}</td>
-                                                <td>{{ expense.updated_at|date:"M d, Y" }}</td>
-                                                <td>{{ expense.created_by.get_full_name }}</td>
-                                                <td>{{ expense.approved_by.get_full_name|default:"-" }}</td>
+                                                <td data-label="Status"><span class="badge bg-danger">Declined</span></td>
+                                                <td data-label="Activation">{{ expense.activation.name }}</td>
+                                                <td data-label="Expense Category">{{ expense.expense_category }}</td>
+                                                <td data-label="Batch">{{ expense.batch_disbursement_type|yesno:"Yes,No" }}</td>
+                                                <td data-label="Description">{{ expense.description }}</td>
+                                                <td data-label="Amount">{{ expense.amount|intcomma }}</td>
+                                                <td data-label="Date">{{ expense.updated_at|date:"M d, Y" }}</td>
+                                                <td data-label="Requested By">{{ expense.created_by.get_full_name }}</td>
+                                                <td data-label="Reviewed By">{{ expense.approved_by.get_full_name|default:"-" }}</td>
                                             </tr>
                                             {% endif %}
                                             {% endfor %}
@@ -339,7 +782,6 @@
                                 </div>
                             </div>
                         </div>
-
                         <!-- Mobile view cards with tabs -->
                         <div class="d-md-none">
                             <div class="tab-content" id="expenseMobileTabContent">
@@ -374,7 +816,6 @@
                                         <!-- Approved and Declined expenses follow similar pattern -->
                                     </div>
                                 </div>
-
                                 <!-- Events Mobile Tab -->
                                 <div class="tab-pane fade" id="events-expenses-mobile" role="tabpanel" aria-labelledby="events-tab">
                                     <div class="request-cards">
@@ -407,7 +848,6 @@
                                         <!-- Approved and Declined event expenses follow similar pattern -->
                                     </div>
                                 </div>
-
                                 <!-- Operations Mobile Tab -->
                                 <div class="tab-pane fade" id="operations-expenses-mobile" role="tabpanel" aria-labelledby="operations-tab">
                                     <div class="request-cards">
@@ -440,7 +880,6 @@
                                         <!-- Approved and Declined operation expenses follow similar pattern -->
                                     </div>
                                 </div>
-
                                 <!-- Activations Mobile Tab -->
                                 <div class="tab-pane fade" id="activations-expenses-mobile" role="tabpanel" aria-labelledby="activations-tab">
                                     <div class="request-cards">
@@ -481,48 +920,42 @@
         </div>
     </div>
 </section>
-
 <!-- Submit Expense Modal -->
 <div class="modal fade" id="submitExpenseModal" tabindex="-1" aria-labelledby="submitExpenseModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
-            <div class="modal-header bg-light">
-                <h5 class="modal-title" id="submitExpenseModalLabel">New Expense Request</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header">
+                <h5 class="modal-title" id="submitExpenseModalLabel"><i class="fas fa-plus me-2"></i>New Expense Request</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <form id="expense-form" method="post" action="{% url 'expense:submit_expense' %}" enctype="multipart/form-data" class="bg-white p-4 shadow rounded">
                     {% csrf_token %}
                     <input type="hidden" id="form_type" name="form_type">
-
                     <!-- Request Type Dropdown -->
                     <div class="mb-3">
                         <label for="id_request_type" class="form-label fw-bold required">Request Type</label>
                         {{ expense_form.request_type }}
                         <div class="invalid-feedback">Please select a request type.</div>
                     </div>
-
                     <!-- Event Field -->
                     <div class="mb-3 expense-section hidden" id="event-field">
                         <label for="id_event" class="form-label fw-bold required">Event</label>
                         {{ expense_form.event }}
                         <div class="invalid-feedback">Please select an event.</div>
                     </div>
-
                     <!-- Operation Field -->
                     <div class="mb-3 expense-section hidden" id="operation-field">
                         <label for="id_operation" class="form-label fw-bold required">Operation</label>
                         {{ expense_form.operation }}
                         <div class="invalid-feedback">Please select an operation.</div>
                     </div>
-
                     <!-- Activation Field -->
                     <div class="mb-3 expense-section hidden" id="activation-field">
                         <label for="id_activation" class="form-label fw-bold required">Activation</label>
                         {{ expense_form.activation }}
                         <div class="invalid-feedback">Please select an activation.</div>
                     </div>
-
                     <!-- Batch Disbursement Type Checkbox -->
                     <div class="mb-3">
                         <label for="id_batch_disbursement_type" class="form-label fw-bold">Batch Disbursement</label>
@@ -532,7 +965,6 @@
                             <div class="invalid-feedback">Please check the box if this is a batch disbursement.</div>
                         </div>
                     </div>
-
                     <!-- Batch Disbursement Fields (hidden by default) -->
                     <div class="mb-3 batch-section hidden" id="batch-fields">
                         <label class="form-label fw-bold">Batch Disbursement Details</label>
@@ -545,7 +977,7 @@
                             {{ expense_form.batch_file }}
                             <div class="invalid-feedback">Please upload a valid CSV file.</div>
                         </div>
-                        
+                       
                         <!-- CSV Preview Section (Full Block - Ensure This Is Here) -->
                         <div class="mb-3" id="batch-preview" style="display: none;">
                             <label class="form-label fw-bold">Preview Recipients</label>
@@ -566,26 +998,23 @@
                             </div>
                             <div id="previewSummary" class="alert alert-info mt-2" style="display: none;">
                                 <strong>Summary:</strong> <span id="totalCount">0</span> recipients | Total Amount: KES <span id="totalAmount">0</span>
-                                <div id="validationErrors" class="mt-2 small text-danger"></div>  <!-- Critical: This fixes the null error -->
+                                <div id="validationErrors" class="mt-2 small text-danger"></div> <!-- Critical: This fixes the null error -->
                             </div>
                         </div>
-                        
+                       
                         <!-- Hidden field for batch data (JSON serialized) -->
                         <textarea name="batch_data" id="batchData" class="d-none" readonly></textarea>
                     </div>
-
                     <!-- Expense Category Field -->
                     <div class="mb-3">
                         <label for="id_expense_category" class="form-label fw-bold required">Expense Category</label>
                         {{ expense_form.expense_category }}
                         <div class="invalid-feedback">Please select an expense category.</div>
                     </div>
-
                     <!-- Wallet Field -->
                     <div class="mb-3 hidden">
                         {{ expense_form.wallet }}
                     </div>
-
                     <!-- Common Fields -->
                     <div id="common-fields">
                         <div class="mb-3">
@@ -602,7 +1031,6 @@
                             <div class="invalid-feedback">Please provide a description.</div>
                         </div>
                     </div>
-
                     <!-- Submit Button -->
                     <button type="submit" class="btn btn-primary w-100 mt-3" id="expenseSubmitBtn">Submit Request</button>
                 </form>
@@ -610,7 +1038,6 @@
         </div>
     </div>
 </div>
-
 <!-- View Request Modal -->
 {% for expense in pending_expenses %}
 <div class="modal fade" id="viewRequestModal{{ expense.id }}" tabindex="-1" aria-labelledby="viewRequestModalLabel{{ expense.id }}" aria-hidden="true">
@@ -651,7 +1078,6 @@
     </div>
 </div>
 {% endfor %}
-
 <!-- JavaScript -->
 <!-- JavaScript -->
 <script>

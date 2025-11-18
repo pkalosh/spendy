@@ -377,7 +377,7 @@ label {
 }
 
 .pt-120 {
-    padding-top: 120px;
+    padding-top: 80px;
 }
 
 @media (max-width: 991px) {
@@ -2815,7 +2815,7 @@ label {
 .dashboard-section.account::before {
     content: "";
     position: absolute;
-    background: #5732C6;
+    /* background: #5732C6; */
     top: 0;
     left: 0;
     height: 270px;

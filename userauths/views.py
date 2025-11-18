@@ -134,13 +134,13 @@ def RegisterView(request):
                 raise ValueError("Admin role not found. Please contact administrator.")  # Re-raise to trigger transaction rollback
 
             # Authenticate and login (do this before email to ensure session is set)
-            user = authenticate(request, email=email, password=password)
-            if user:
-                login(request, user)
-            else:
-                # Fallback login with new_user (rare, but ensures login)
-                login(request, new_user)
-            logger.info(f"User {new_user.id} authenticated and logged in")
+            # user = authenticate(request, email=email, password=password)
+            # if user:
+            #     login(request, user)
+            # else:
+            #     # Fallback login with new_user (rare, but ensures login)
+            #     login(request, new_user)
+            # logger.info(f"User {new_user.id} authenticated and logged in")
 
             # Send welcome email via Mailjet API (non-blocking)
             try:
@@ -153,13 +153,22 @@ def RegisterView(request):
                     version='v3.1'  # Required for Send API
                 )
 
+                # Robust sender parsing: Handle 'Name <email>' or just 'email'
+                sender_email_full = getattr(settings, 'MAILJET_SENDER_EMAIL', 'patokalosh@gmail.com')  # Fallback if not set
+                if '<' in sender_email_full and '>' in sender_email_full:
+                    sender_email = sender_email_full.split('<')[1].split('>')[0]
+                    sender_name = sender_email_full.split('<')[0].strip()
+                else:
+                    sender_email = sender_email_full
+                    sender_name = getattr(settings, 'MAILJET_SENDER_NAME', 'Spendy Team')  # Fallback name
+
                 # Prepare message data
                 message_data = {
                     'Messages': [
                         {
                             "From": {
-                                "Email": settings.MAILJET_SENDER_EMAIL.split('<')[1].split('>')[0],  # Extract email from 'Name <email>'
-                                "Name": settings.MAILJET_SENDER_NAME
+                                "Email": sender_email,
+                                "Name": sender_name
                             },
                             "To": [
                                 {
@@ -215,7 +224,7 @@ The Spendy Team
 
             messages.success(request, f"Hey {first_name}, your account was created successfully.")
             logger.info(f"Registration successful for user {new_user.id}; redirecting to wallet")
-            return redirect("wallet:wallet")
+            return redirect("userauths:sign-in")
             
         except ValueError as ve:  # For Role error
             logger.error(f"ValueError during registration: {ve}")

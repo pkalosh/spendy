@@ -2,372 +2,659 @@
 {% load static %}
 {% load humanize %}
 {% block content %}
+<style>
+:root {
+  --primary-color: #98e23f;
+  --secondary-color: #7ab82c;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --danger-color: #ef4444;
+  --info-color: #06b6d4;
+  --light-bg: #f8fafc;
+  --dark-text: #1f2937;
+  --muted-text: #6b7280;
+  --border-color: #e5e7eb;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --border-radius: 12px;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+body {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+.dashboard-section {
+  min-height: 100vh;
+  background: transparent;
+}
+/* Section Header */
+.section-header {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: var(--border-radius);
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  position: relative;
+  overflow: hidden;
+}
+.section-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
+  z-index: 1;
+}
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--dark-text);
+  margin-bottom: 0.5rem;
+  position: relative;
+  z-index: 2;
+}
+.section-title.text-gradient {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.section-subtitle {
+  color: var(--muted-text);
+  font-size: 0.875rem;
+  position: relative;
+  z-index: 2;
+}
+/* Button Enhancements */
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  border: none;
+  color: white;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  transition: var(--transition);
+  box-shadow: var(--shadow-sm);
+  padding: 0.75rem 1.5rem;
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  color: white;
+}
+.btn-success {
+  background: linear-gradient(135deg, var(--success-color), #059669);
+  border: none;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  transition: var(--transition);
+  box-shadow: var(--shadow-sm);
+}
+.btn-success:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  color: white;
+}
+.btn-outline-primary {
+  border: 1px solid var(--primary-color);
+  color: var(--primary-color);
+  background: transparent;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  transition: var(--transition);
+}
+.btn-outline-primary:hover {
+  background: var(--primary-color);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+.btn-outline-secondary {
+  border: 1px solid var(--border-color);
+  color: var(--muted-text);
+  background: transparent;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  transition: var(--transition);
+}
+.btn-outline-secondary:hover {
+  background: var(--light-bg);
+  color: var(--dark-text);
+  transform: translateY(-1px);
+}
+/* Badge Enhancements */
+.badge {
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid;
+}
+.bg-info {
+  background: rgba(6, 182, 212, 0.1) !important;
+  color: var(--info-color) !important;
+  border-color: rgba(6, 182, 212, 0.2);
+}
+.bg-success {
+  background: rgba(16, 185, 129, 0.1) !important;
+  color: var(--success-color) !important;
+  border-color: rgba(16, 185, 129, 0.2);
+}
+.bg-warning {
+  background: rgba(245, 158, 11, 0.1) !important;
+  color: var(--warning-color) !important;
+  border-color: rgba(245, 158, 11, 0.2);
+}
+.bg-danger {
+  background: rgba(239, 68, 68, 0.1) !important;
+  color: var(--danger-color) !important;
+  border-color: rgba(239, 68, 68, 0.2);
+}
+/* Filter Card */
+.card {
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+.card:hover {
+  box-shadow: var(--shadow-md);
+}
+/* Table Enhancements */
+.table-responsive {
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  background: white;
+}
+.table {
+  margin-bottom: 0;
+}
+.table thead th {
+  border-bottom: 2px solid var(--border-color);
+  font-weight: 600;
+  color: var(--dark-text);
+  padding: 1rem 0.75rem;
+  background: var(--light-bg);
+}
+.table tbody td {
+  padding: 1rem 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+.table tbody tr:hover {
+  background: rgba(152, 226, 63, 0.05);
+  transition: var(--transition);
+  transform: scale(1.01);
+}
+.text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Mobile Cards */
+.card.mb-3 {
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  transition: var(--transition);
+  box-shadow: var(--shadow-sm);
+}
+.card.mb-3:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+/* Pagination */
+.pagination .page-link {
+  border: 1px solid var(--border-color);
+  color: var(--dark-text);
+  padding: 0.5rem 0.75rem;
+  margin: 0 0.125rem;
+  border-radius: 6px;
+  transition: var(--transition);
+}
+.pagination .page-link:hover {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+  transform: translateY(-1px);
+}
+.pagination .page-item.active .page-link {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-sm);
+}
+/* Modal Enhancements */
+.modal-content {
+  border: none;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-lg);
+}
+.modal-header {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: white;
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
+}
+.modal-body {
+  background: #f8fafc;
+}
+.modal-footer {
+  border-top: 1px solid var(--border-color);
+}
+/* Toast */
+.toast {
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-lg);
+}
+/* Form Elements */
+.form-control, .form-select {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  transition: var(--transition);
+}
+.form-control:focus, .form-select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 0.2rem rgba(152, 226, 63, 0.25);
+}
+/* Empty States */
+.text-center {
+  text-align: center;
+  padding: 3rem 2rem;
+  border-radius: var(--border-radius);
+  background: linear-gradient(135deg, rgba(152, 226, 63, 0.05) 0%, rgba(122, 184, 44, 0.05) 100%);
+  border: 1px solid rgba(152, 226, 63, 0.2);
+}
+/* Responsive Design */
+@media (max-width: 768px) {
+  .section-header {
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .table thead {
+    display: none;
+  }
+  .table tbody tr {
+    display: block;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: white;
+    box-shadow: var(--shadow-sm);
+  }
+  .table tbody td {
+    display: block;
+    border: none;
+    padding: 0.25rem 0;
+    text-align: left;
+  }
+  .table tbody td:before {
+    content: attr(data-label) ": ";
+    font-weight: 600;
+    color: var(--dark-text);
+  }
+}
+</style>
 <section class="dashboard-section body-collapse">
-    <div class="overlay pt-120">
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-12">
-                    <!-- Transactions Section -->
-                    <div id="transactions" class="content-section mb-4">
-                        <div class="d-flex justify-content-between align-items-center flex-wrap mb-4 mt-4">
-                            <div>
-                                <h5>Transactions</h5>
-                                <p>View all payment transactions with filtering options.</p>
-                            </div>
-                            <div class="d-flex align-items-center gap-2">
-                                <!-- Export Buttons -->
-                                <div class="btn-group">
-                                    <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="fas fa-download"></i> Export
-                                    </button>
-                                    <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href="?{% if base_query_string %}{{ base_query_string }}&{% endif %}export=csv">Export as CSV</a></li>
-                                        <li><a class="dropdown-item" href="?{% if base_query_string %}{{ base_query_string }}&{% endif %}export=pdf">Export as PDF</a></li>
-                                    </ul>
-                                </div>
-                                <!-- Filter Toggle Button -->
-                                <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#filterSection" aria-expanded="false" aria-controls="filterSection">
-                                    <i class="fas fa-filter"></i> Filters
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Filter Section -->
-                        <div class="collapse mb-4" id="filterSection">
-                            <div class="card card-body">
-                                <form method="GET" id="filterForm">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <label for="user_filter" class="form-label">User</label>
-                                            <select name="user" id="user_filter" class="form-select">
-                                                <option value="">All Users</option>
+<div class="overlay pt-120">
+<div class="container-fluid">
+<div class="row">
+<div class="col-12">
+<!-- Transactions Section -->
+<div id="transactions" class="content-section mb-4">
+<div class="section-header">
+  <div class="d-flex justify-content-between align-items-center flex-wrap mb-4">
+    <div>
+      <h5 class="section-title text-gradient mb-0">Transactions</h5>
+      <p class="section-subtitle mb-0">View all payment transactions with filtering options.</p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <!-- Export Buttons -->
+      <div class="btn-group">
+        <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="fas fa-download"></i> Export
+        </button>
+        <ul class="dropdown-menu">
+          <li><a class="dropdown-item" href="?{% if base_query_string %}{{ base_query_string }}&{% endif %}export=csv">Export as CSV</a></li>
+          <li><a class="dropdown-item" href="?{% if base_query_string %}{{ base_query_string }}&{% endif %}export=pdf">Export as PDF</a></li>
+        </ul>
+      </div>
+      <!-- Filter Toggle Button -->
+      <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#filterSection" aria-expanded="false" aria-controls="filterSection">
+        <i class="fas fa-filter"></i> Filters
+      </button>
+    </div>
+  </div>
+</div>
+<!-- Filter Section -->
+<div class="collapse mb-4" id="filterSection">
+<div class="card">
+<div class="card-body">
+<form method="GET" id="filterForm">
+<div class="row">
+<div class="col-md-3">
+<label for="user_filter" class="form-label">User</label>
+<select name="user" id="user_filter" class="form-select">
+<option value="">All Users</option>
                                                 {% for user in users %}
-                                                    <option value="{{ user.id }}" {% if request.GET.user == user.id|stringformat:"s" %}selected{% endif %}>
+<option value="{{ user.id }}" {% if request.GET.user == user.id|stringformat:"s" %}selected{% endif %}>
                                                         {{ user.get_full_name|default:user.username }}
-                                                    </option>
+</option>
                                                 {% endfor %}
-                                            </select>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <label for="status_filter" class="form-label">Status</label>
-                                            <select name="status" id="status_filter" class="form-select">
-                                                <option value="">All Status</option>
-                                                <option value="completed" {% if request.GET.status == 'completed' %}selected{% endif %}>Completed</option>
-                                                <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pending</option>
-                                                <option value="failed" {% if request.GET.status == 'failed' %}selected{% endif %}>Failed</option>
-                                                <option value="cancelled" {% if request.GET.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-2">
-                                            <label for="date_from" class="form-label">From Date</label>
-                                            <input type="date" name="date_from" id="date_from" class="form-control" value="{{ request.GET.date_from }}">
-                                        </div>
-                                        <div class="col-md-2">
-                                            <label for="date_to" class="form-label">To Date</label>
-                                            <input type="date" name="date_to" id="date_to" class="form-control" value="{{ request.GET.date_to }}">
-                                        </div>
-                                        <div class="col-md-2 d-flex align-items-end">
-                                            <button type="submit" class="btn btn-primary me-2">Apply</button>
-                                            <a href="{% url 'wallet:transactions' %}" class="btn btn-secondary">Clear</a>
-                                        </div>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-
-                        <!-- Desktop Table View -->
-                        <div class="table-responsive  d-md-block">
-                            <table class="table table-bordered table-hover">
-                                <thead class="bg-light">
-                                    <tr>
-                                        <th>Initiated By</th>
-                                        <th>Recipient</th>
-                                        <th>Amount</th>
-                                        <th>Mpesa Code</th>
-                                        <th>Type</th>
-                                        <th>Status</th>
-                                        <th>Date & Time</th>
-                                        <th>Description</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
+</select>
+</div>
+<div class="col-md-3">
+<label for="status_filter" class="form-label">Status</label>
+<select name="status" id="status_filter" class="form-select">
+<option value="">All Status</option>
+<option value="completed" {% if request.GET.status == 'completed' %}selected{% endif %}>Completed</option>
+<option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pending</option>
+<option value="failed" {% if request.GET.status == 'failed' %}selected{% endif %}>Failed</option>
+<option value="cancelled" {% if request.GET.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+</select>
+</div>
+<div class="col-md-2">
+<label for="date_from" class="form-label">From Date</label>
+<input type="date" name="date_from" id="date_from" class="form-control" value="{{ request.GET.date_from }}">
+</div>
+<div class="col-md-2">
+<label for="date_to" class="form-label">To Date</label>
+<input type="date" name="date_to" id="date_to" class="form-control" value="{{ request.GET.date_to }}">
+</div>
+<div class="col-md-2 d-flex align-items-end">
+<button type="submit" class="btn btn-primary me-2">Apply</button>
+<a href="{% url 'wallet:transactions' %}" class="btn btn-outline-secondary">Clear</a>
+</div>
+</div>
+</form>
+</div>
+</div>
+</div>
+<!-- Desktop Table View -->
+<div class="table-responsive d-md-block">
+<table class="table table-bordered table-hover">
+<thead class="bg-light">
+<tr>
+<th>Initiated By</th>
+<th>Recipient</th>
+<th>Amount</th>
+<th>Mpesa Code</th>
+<th>Type</th>
+<th>Status</th>
+<th>Date & Time</th>
+<th>Description</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
                                     {% for txn in transactions %}
-                                        <tr>
-                                            <td>{{ txn.user.get_full_name|default:txn.user.username }}</td>
-                                            <td>{{ txn.receiver.get_full_name|default:"-" }}</td>
-                                            <td>{{ txn.sender_wallet.currency|default:"KES" }} {{ txn.amount|floatformat:2|intcomma }}</td>
-                                            <td>{{ txn.mpesa_code }}</td>
-                                            <td>
-                                                <span class="badge bg-info">{{ txn.transaction_type|title }}</span>
-                                            </td>
-                                            <td>
+<tr>
+<td data-label="Initiated By">{{ txn.user.get_full_name|default:txn.user.username }}</td>
+<td data-label="Recipient">{{ txn.receiver.get_full_name|default:"-" }}</td>
+<td data-label="Amount">{{ txn.sender_wallet.currency|default:"KES" }} {{ txn.amount|floatformat:2|intcomma }}</td>
+<td data-label="Mpesa Code">{{ txn.mpesa_code }}</td>
+<td data-label="Type">
+<span class="badge bg-info">{{ txn.transaction_type|title }}</span>
+</td>
+<td data-label="Status">
                                                 {% if txn.status == 'completed' %}
-                                                    <span class="badge bg-success">{{ txn.status|title }}</span>
+<span class="badge bg-success">{{ txn.status|title }}</span>
                                                 {% elif txn.status == 'failed' or txn.status == 'cancelled' %}
-                                                    <span class="badge bg-danger">{{ txn.status|title }}</span>
+<span class="badge bg-danger">{{ txn.status|title }}</span>
                                                 {% else %}
-                                                    <span class="badge bg-warning">{{ txn.status|title }}</span>
+<span class="badge bg-warning">{{ txn.status|title }}</span>
                                                 {% endif %}
-                                            </td>
-                                            <td>{{ txn.date|date:"M d, Y H:i" }}</td>
-                                            <td>
-                                                <span class="text-truncate d-inline-block" style="max-width: 150px;" title="{{ txn.description }}">
+</td>
+<td data-label="Date & Time">{{ txn.date|date:"M d, Y H:i" }}</td>
+<td data-label="Description">
+<span class="text-truncate d-inline-block" style="max-width: 150px;" title="{{ txn.description }}">
                                                     {{ txn.description|default:"-" }}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <div class="btn-group btn-group-sm" role="group">
-                                                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#viewTransactionModal{{ txn.id }}">View</button>
-                                                    <button class="btn btn-outline-secondary" onclick="copyPaymentDetails('{{ txn.id }}')">
-                                                        <i class="fas fa-copy"></i>
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
+</span>
+</td>
+<td data-label="Action">
+<div class="btn-group btn-group-sm" role="group">
+<button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#viewTransactionModal{{ txn.id }}">View</button>
+<button class="btn btn-outline-secondary" onclick="copyPaymentDetails('{{ txn.id }}')">
+<i class="fas fa-copy"></i>
+</button>
+</div>
+</td>
+</tr>
                                     {% empty %}
-                                        <tr>
-                                            <td colspan="9" class="text-center">No transactions found matching your criteria.</td>
-                                        </tr>
+<tr>
+<td colspan="9" class="text-center">No transactions found matching your criteria.</td>
+</tr>
                                     {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                        
-                        <!-- Mobile-only transaction cards -->
-                       <div class="d-md-none">
-                        <p style="color: red;">Debug: Mobile view active, {{ transactions|length }} transactions found</p>
+</tbody>
+</table>
+</div>
+<!-- Mobile-only transaction cards -->
+<div class="d-md-none">
                         {% for txn in transactions %}
-                            <div class="card mb-3">
-                                <div class="card-body">
-                                    <p>Debug: Transaction ID {{ txn.id }}</p>
-                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <h6 class="card-subtitle text-muted mb-0">{{ txn.transaction_id }}</h6>
-                                        <button class="btn btn-sm btn-outline-secondary" onclick="copyPaymentDetails('{{ txn.id }}')">
-                                            <i class="fas fa-copy"></i>
-                                        </button>
-                                    </div>
-                                    <p class="card-text">
-                                        <strong>Initiated By:</strong> {{ txn.user.get_full_name|default:txn.user.username }}<br>
-                                        <strong>Recipient:</strong> {{ txn.receiver.get_full_name|default:"-" }}<br>
-                                        <strong>Amount:</strong> {{ txn.sender_wallet.currency|default:"KES" }} {{ txn.amount|floatformat:2|intcomma }}<br>
-                                        <strong>Type:</strong> <span class="badge bg-info">{{ txn.transaction_type|default:"N/A"|title }}</span><br>
-                                        <strong>Status:</strong> 
+<div class="card mb-3">
+<div class="card-body">
+<div class="d-flex justify-content-between align-items-start mb-2">
+<h6 class="card-subtitle text-muted mb-0">{{ txn.transaction_id }}</h6>
+<button class="btn btn-sm btn-outline-secondary" onclick="copyPaymentDetails('{{ txn.id }}')">
+<i class="fas fa-copy"></i>
+</button>
+</div>
+<p class="card-text">
+<strong>Initiated By:</strong> {{ txn.user.get_full_name|default:txn.user.username }}<br>
+<strong>Recipient:</strong> {{ txn.receiver.get_full_name|default:"-" }}<br>
+<strong>Amount:</strong> {{ txn.sender_wallet.currency|default:"KES" }} {{ txn.amount|floatformat:2|intcomma }}<br>
+<strong>Type:</strong> <span class="badge bg-info">{{ txn.transaction_type|default:"N/A"|title }}</span><br>
+<strong>Status:</strong>
                                         {% if txn.status == 'completed' %}
-                                            <span class="badge bg-success">{{ txn.status| Grown</span>
+<span class="badge bg-success">{{ txn.status|title }}</span>
                                         {% elif txn.status == 'failed' or txn.status == 'cancelled' %}
-                                            <span class="badge bg-danger">{{ txn.status|title }}</span>
+<span class="badge bg-danger">{{ txn.status|title }}</span>
                                         {% else %}
-                                            <span class="badge bg-warning">{{ txn.status|title }}</span>
+<span class="badge bg-warning">{{ txn.status|title }}</span>
                                         {% endif %}<br>
-                                        <strong>Date:</strong> {{ txn.date|date:"M d, Y H:i" }}
-                                    </p>
-                                    <div class="d-flex">
-                                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#viewTransactionModal{{ txn.id }}">View Details</button>
-                                    </div>
-                                </div>
-                            </div>
+<strong>Date:</strong> {{ txn.date|date:"M d, Y H:i" }}
+</p>
+<div class="d-flex">
+<button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#viewTransactionModal{{ txn.id }}">View Details</button>
+</div>
+</div>
+</div>
                         {% empty %}
-                            <div class="alert alert-info">No transactions found matching your criteria.</div>
+<div class="alert alert-info text-center">No transactions found matching your criteria.</div>
                         {% endfor %}
-                    </div>
-
-                        <!-- Pagination -->
+</div>
+<!-- Pagination -->
                         {% if transactions.has_other_pages %}
-                        <nav aria-label="Transaction pagination" class="mt-4">
-                            <ul class="pagination justify-content-center">
+<nav aria-label="Transaction pagination" class="mt-4">
+<ul class="pagination justify-content-center">
                                 {% if transactions.has_previous %}
-                                    <li class="page-item">
-                                        <a class="page-link" href="?{% if base_query_string %}{{ base_query_string }}&{% endif %}page={{ transactions.previous_page_number }}">Previous</a>
-                                    </li>
+<li class="page-item">
+<a class="page-link" href="?{% if base_query_string %}{{ base_query_string }}&{% endif %}page={{ transactions.previous_page_number }}">Previous</a>
+</li>
                                 {% else %}
-                                     <li class="page-item disabled">
-                                        <span class="page-link">Previous</span>
-                                    </li>
+<li class="page-item disabled">
+<span class="page-link">Previous</span>
+</li>
                                 {% endif %}
-                                
                                 {% for num in transactions.paginator.page_range %}
                                     {% if transactions.number == num %}
-                                        <li class="page-item active" aria-current="page">
-                                            <span class="page-link">{{ num }}</span>
-                                        </li>
+<li class="page-item active" aria-current="page">
+<span class="page-link">{{ num }}</span>
+</li>
                                     {% elif num > transactions.number|add:'-3' and num < transactions.number|add:'3' %}
-                                        <li class="page-item">
-                                            <a class="page-link" href="?{% if base_query_string %}{{ base_query_string }}&{% endif %}page={{ num }}">{{ num }}</a>
-                                        </li>
+<li class="page-item">
+<a class="page-link" href="?{% if base_query_string %}{{ base_query_string }}&{% endif %}page={{ num }}">{{ num }}</a>
+</li>
                                     {% endif %}
                                 {% endfor %}
-                                
                                 {% if transactions.has_next %}
-                                    <li class="page-item">
-                                        <a class="page-link" href="?{% if base_query_string %}{{ base_query_string }}&{% endif %}page={{ transactions.next_page_number }}">Next</a>
-                                    </li>
+<li class="page-item">
+<a class="page-link" href="?{% if base_query_string %}{{ base_query_string }}&{% endif %}page={{ transactions.next_page_number }}">Next</a>
+</li>
                                 {% else %}
-                                    <li class="page-item disabled">
-                                        <span class="page-link">Next</span>
-                                    </li>
+<li class="page-item disabled">
+<span class="page-link">Next</span>
+</li>
                                 {% endif %}
-                            </ul>
-                        </nav>
+</ul>
+</nav>
                         {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+</div>
+</div>
+</div>
+</div>
+</div>
 </section>
-
 <!-- Modals for each transaction -->
 {% for txn in transactions %}
 <div class="modal fade" id="viewTransactionModal{{ txn.id }}" tabindex="-1" aria-labelledby="viewTransactionModalLabel{{ txn.id }}" aria-hidden="true">
-    <div class="modal-dialog modal-lg" style="margin-top: 80px;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="viewTransactionModalLabel{{ txn.id }}">Transaction Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <strong>Reference Code:</strong> {{ txn.transaction_id }}
-                    </div>
-                    <div class="col-md-6">
-                        <strong>Amount:</strong> {{ txn.sender_wallet.currency|default:"KES" }} {{ txn.amount|floatformat:2|intcomma }}
-                    </div>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <strong>Initiated By:</strong> {{ txn.user.get_full_name|default:txn.user.username }}
-                    </div>
-                    <div class="col-md-6">
-                        <strong>Recipient:</strong> {{ txn.reciever.get_full_name|default:"-" }}
-                    </div>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <strong>Sender Wallet:</strong> {{ txn.sender_wallet.wallet_id }}
-                    </div>
-                    <div class="col-md-6">
-                        <strong>Receiver Wallet:</strong> {{ txn.reciever_wallet.wallet_id|default:"-" }}
-                    </div>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <strong>Status:</strong> 
+<div class="modal-dialog modal-lg" style="margin-top: 80px;">
+<div class="modal-content">
+<div class="modal-header">
+<h5 class="modal-title" id="viewTransactionModalLabel{{ txn.id }}">Transaction Details</h5>
+<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+<div class="modal-body">
+<div class="row mb-3">
+<div class="col-md-6">
+<strong>Reference Code:</strong> {{ txn.transaction_id }}
+</div>
+<div class="col-md-6">
+<strong>Amount:</strong> {{ txn.sender_wallet.currency|default:"KES" }} {{ txn.amount|floatformat:2|intcomma }}
+</div>
+</div>
+<div class="row mb-3">
+<div class="col-md-6">
+<strong>Initiated By:</strong> {{ txn.user.get_full_name|default:txn.user.username }}
+</div>
+<div class="col-md-6">
+<strong>Recipient:</strong> {{ txn.receiver.get_full_name|default:"-" }}
+</div>
+</div>
+<div class="row mb-3">
+<div class="col-md-6">
+<strong>Sender Wallet:</strong> {{ txn.sender_wallet.wallet_id }}
+</div>
+<div class="col-md-6">
+<strong>Receiver Wallet:</strong> {{ txn.receiver_wallet.wallet_id|default:"-" }}
+</div>
+</div>
+<div class="row mb-3">
+<div class="col-md-6">
+<strong>Status:</strong>
                         {% if txn.status == 'completed' %}
-                            <span class="badge bg-success">{{ txn.status|title }}</span>
+<span class="badge bg-success">{{ txn.status|title }}</span>
                         {% elif txn.status == 'failed' or txn.status == 'cancelled' %}
-                            <span class="badge bg-danger">{{ txn.status|title }}</span>
+<span class="badge bg-danger">{{ txn.status|title }}</span>
                         {% else %}
-                            <span class="badge bg-warning">{{ txn.status|title }}</span>
+<span class="badge bg-warning">{{ txn.status|title }}</span>
                         {% endif %}
-                    </div>
-                    <div class="col-md-6">
-                        <strong>Transaction Type:</strong> 
+</div>
+<div class="col-md-6">
+<strong>Transaction Type:</strong>
                         {{ txn.transaction_type|default:"N/A"|title }}
-                    </div>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-md-12">
-                        <strong>Description:</strong><br>
-                        <div class="p-2 bg-light rounded">
+</div>
+</div>
+<div class="row mb-3">
+<div class="col-md-12">
+<strong>Description:</strong><br>
+<div class="p-2 bg-light rounded">
                             {{ txn.description|default:"No description provided." }}
-                        </div>
-                    </div>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <strong>Date Created:</strong> {{ txn.date|date:"Y-m-d H:i:s" }}
-                    </div>
-                    <div class="col-md-6">
-                        <strong>Last Updated:</strong> {{ txn.updated|date:"Y-m-d H:i:s" }}
-                    </div>
-                </div>
-                <!-- Payment Details for Copying -->
-                <div class="row">
-                    <div class="col-12">
-                        <div class="card bg-light">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <strong>Payment Proof Details</strong>
-                                <button class="btn btn-sm btn-outline-primary" onclick="copyPaymentDetails('{{ txn.id }}')">
-                                    <i class="fas fa-copy"></i> Copy Details
-                                </button>
-                            </div>
-                            <div class="card-body" id="paymentDetails{{ txn.id }}">
-                                <div class="payment-details">
+</div>
+</div>
+</div>
+<div class="row mb-3">
+<div class="col-md-6">
+<strong>Date Created:</strong> {{ txn.date|date:"Y-m-d H:i:s" }}
+</div>
+<div class="col-md-6">
+<strong>Last Updated:</strong> {{ txn.updated|date:"Y-m-d H:i:s" }}
+</div>
+</div>
+<!-- Payment Details for Copying -->
+<div class="row">
+<div class="col-12">
+<div class="card bg-light">
+<div class="card-header d-flex justify-content-between align-items-center">
+<strong>Payment Proof Details</strong>
+<button class="btn btn-sm btn-outline-primary" onclick="copyPaymentDetails('{{ txn.id }}')">
+<i class="fas fa-copy"></i> Copy Details
+</button>
+</div>
+<div class="card-body" id="paymentDetails{{ txn.id }}">
+<div class="payment-details">
                                     Reference: {{ txn.transaction_id }}<br>
                                     Amount: {{ txn.sender_wallet.currency|default:"KES" }} {{ txn.amount|floatformat:2|intcomma }}<br>
                                     From: {{ txn.user.get_full_name|default:txn.user.username }}<br>
-                                    To: {{ txn.reciever.get_full_name|default:"N/A" }}<br>
+                                    To: {{ txn.receiver.get_full_name|default:"N/A" }}<br>
                                     Date: {{ txn.date|date:"Y-m-d H:i:s" }}<br>
                                     Status: {{ txn.status|title }}<br>
                                     Type: {{ txn.transaction_type|default:"N/A"|title }}<br>
                                     Description: {{ txn.description|default:"No description provided." }}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
 </div>
 {% endfor %}
-
-
 <!-- Toast notification for copy success -->
 <div class="toast-container position-fixed bottom-0 end-0 p-3">
-    <div id="copyToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="toast-header">
-            <strong class="me-auto">Success</strong>
-            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-        <div class="toast-body">
-            Payment details copied to clipboard!
-        </div>
-    </div>
+<div id="copyToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+<div class="toast-header">
+<strong class="me-auto">Success</strong>
+<button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
 </div>
-
+<div class="toast-body">
+            Payment details copied to clipboard!
+</div>
+</div>
+</div>
 <style>
-    .payment-details {
-        font-family: monospace;
-        font-size: 0.9em;
-        line-height: 1.6;
+.payment-details {
+font-family: monospace;
+font-size: 0.9em;
+line-height: 1.6;
     }
 </style>
-
 <script>
 function copyPaymentDetails(transactionId) {
-    const paymentDetailsElement = document.getElementById('paymentDetails' + transactionId);
-    if (!paymentDetailsElement) return;
-
-    const paymentText = paymentDetailsElement.querySelector('.payment-details').innerText;
-    
-    // Use the modern clipboard API if available, with a fallback
-    if (navigator.clipboard) {
-        navigator.clipboard.writeText(paymentText).then(() => {
-            const toast = new bootstrap.Toast(document.getElementById('copyToast'));
-            toast.show();
+const paymentDetailsElement = document.getElementById('paymentDetails' + transactionId);
+if (!paymentDetailsElement) return;
+const paymentText = paymentDetailsElement.querySelector('.payment-details').innerText;
+// Use the modern clipboard API if available, with a fallback
+if (navigator.clipboard) {
+navigator.clipboard.writeText(paymentText).then(() => {
+const toast = new bootstrap.Toast(document.getElementById('copyToast'));
+toast.show();
         }).catch(err => {
-            console.error('Failed to copy text: ', err);
+console.error('Failed to copy text: ', err);
         });
     } else {
-        // Fallback for older browsers
-        const textarea = document.createElement('textarea');
-        textarea.value = paymentText;
-        textarea.style.position = 'fixed'; // Prevent scrolling to bottom of page in MS Edge.
-        document.body.appendChild(textarea);
-        textarea.select();
-        try {
-            document.execCommand('copy');
-            const toast = new bootstrap.Toast(document.getElementById('copyToast'));
-            toast.show();
+// Fallback for older browsers
+const textarea = document.createElement('textarea');
+textarea.value = paymentText;
+textarea.style.position = 'fixed'; // Prevent scrolling to bottom of page in MS Edge.
+document.body.appendChild(textarea);
+textarea.select();
+try {
+document.execCommand('copy');
+const toast = new bootstrap.Toast(document.getElementById('copyToast'));
+toast.show();
         } catch (err) {
-            console.error('Fallback: Oops, unable to copy', err);
+console.error('Fallback: Oops, unable to copy', err);
         }
-        document.body.removeChild(textarea);
+document.body.removeChild(textarea);
     }
 }
 </script>
-
 {% endblock %}

@@ -3,16 +3,426 @@
 {% load humanize %}
 {% load custom_filters %}
 {% block content %}
-
+<style>
+:root {
+  --primary-color: #98e23f;
+  --secondary-color: #7ab82c;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --danger-color: #ef4444;
+  --info-color: #06b6d4;
+  --light-bg: #f8fafc;
+  --dark-text: #1f2937;
+  --muted-text: #6b7280;
+  --border-color: #e5e7eb;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --border-radius: 12px;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+body {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+.dashboard-section {
+  min-height: 100vh;
+  background: transparent;
+}
+/* Section Header */
+.section-header {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: var(--border-radius);
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  position: relative;
+  overflow: hidden;
+}
+.section-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
+  z-index: 1;
+}
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--dark-text);
+  margin-bottom: 0.5rem;
+  position: relative;
+  z-index: 2;
+}
+.section-title.text-gradient {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.section-subtitle {
+  color: var(--muted-text);
+  font-size: 0.875rem;
+  position: relative;
+  z-index: 2;
+}
+/* Nav Tabs */
+.nav-tabs {
+  border: none;
+  background: white;
+  border-radius: var(--border-radius);
+  padding: 0.5rem;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 1rem;
+}
+.nav-tabs .nav-link {
+  border: none;
+  color: var(--muted-text);
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  transition: var(--transition);
+  margin: 0 0.25rem;
+}
+.nav-tabs .nav-link:hover {
+  color: var(--primary-color);
+  background: rgba(152, 226, 63, 0.1);
+}
+.nav-tabs .nav-link.active {
+  background: var(--primary-color);
+  color: white;
+  box-shadow: var(--shadow-sm);
+}
+.nav-tabs .badge {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: none;
+}
+/* Filter Card */
+.card {
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+  background: white;
+}
+.card:hover {
+  box-shadow: var(--shadow-md);
+}
+/* Button Enhancements */
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  border: none;
+  color: white;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  transition: var(--transition);
+  box-shadow: var(--shadow-sm);
+  padding: 0.75rem 1.5rem;
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  color: white;
+}
+.btn-success {
+  background: linear-gradient(135deg, var(--success-color), #059669);
+  border: none;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  transition: var(--transition);
+  box-shadow: var(--shadow-sm);
+}
+.btn-success:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  color: white;
+}
+.btn-warning {
+  background: linear-gradient(135deg, var(--warning-color), #d97706);
+  border: none;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  transition: var(--transition);
+  box-shadow: var(--shadow-sm);
+  color: white;
+}
+.btn-warning:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  color: white;
+}
+.btn-danger {
+  background: linear-gradient(135deg, var(--danger-color), #dc2626);
+  border: none;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  transition: var(--transition);
+  box-shadow: var(--shadow-sm);
+  color: white;
+}
+.btn-danger:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  color: white;
+}
+.btn-outline-primary {
+  border: 1px solid var(--primary-color);
+  color: var(--primary-color);
+  background: transparent;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  transition: var(--transition);
+}
+.btn-outline-primary:hover {
+  background: var(--primary-color);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+.btn-outline-secondary {
+  border: 1px solid var(--border-color);
+  color: var(--muted-text);
+  background: transparent;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  transition: var(--transition);
+}
+.btn-outline-secondary:hover {
+  background: var(--light-bg);
+  color: var(--dark-text);
+  transform: translateY(-1px);
+}
+.btn-outline-info {
+  border: 1px solid var(--info-color);
+  color: var(--info-color);
+  background: transparent;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  transition: var(--transition);
+}
+.btn-outline-info:hover {
+  background: var(--info-color);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+/* Badge Enhancements */
+.badge {
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid;
+}
+.bg-primary {
+  background: rgba(59, 130, 246, 0.1) !important;
+  color: var(--primary-color) !important;
+  border-color: rgba(59, 130, 246, 0.2);
+}
+.bg-secondary {
+  background: rgba(107, 114, 128, 0.1) !important;
+  color: var(--muted-text) !important;
+  border-color: rgba(107, 114, 128, 0.2);
+}
+.bg-info {
+  background: rgba(6, 182, 212, 0.1) !important;
+  color: var(--info-color) !important;
+  border-color: rgba(6, 182, 212, 0.2);
+}
+.bg-success {
+  background: rgba(16, 185, 129, 0.1) !important;
+  color: var(--success-color) !important;
+  border-color: rgba(16, 185, 129, 0.2);
+}
+.bg-warning {
+  background: rgba(245, 158, 11, 0.1) !important;
+  color: var(--warning-color) !important;
+  border-color: rgba(245, 158, 11, 0.2);
+}
+.bg-danger {
+  background: rgba(239, 68, 68, 0.1) !important;
+  color: var(--danger-color) !important;
+  border-color: rgba(239, 68, 68, 0.2);
+}
+/* Table Enhancements */
+.table-responsive {
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  background: white;
+}
+.table {
+  margin-bottom: 0;
+}
+.table thead th {
+  border-bottom: 2px solid var(--border-color);
+  font-weight: 600;
+  color: var(--dark-text);
+  padding: 1rem 0.75rem;
+  background: var(--light-bg);
+}
+.table tbody td {
+  padding: 1rem 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+.table tbody tr:hover {
+  background: rgba(152, 226, 63, 0.05);
+  transition: var(--transition);
+  transform: scale(1.01);
+}
+.table-dark {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: white;
+}
+.table-dark th {
+  color: white;
+  background: transparent;
+}
+/* Modal Enhancements */
+.modal-content {
+  border: none;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-lg);
+}
+.modal-header {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: white;
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
+}
+.modal-body {
+  background: #f8fafc;
+}
+.modal-footer {
+  border-top: 1px solid var(--border-color);
+}
+/* Form Elements */
+.form-control, .form-select {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  transition: var(--transition);
+}
+.form-control:focus, .form-select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 0.2rem rgba(152, 226, 63, 0.25);
+}
+.is-invalid {
+  border-color: var(--danger-color);
+}
+.is-valid {
+  border-color: var(--success-color);
+}
+/* Empty States */
+.empty-state {
+  text-align: center;
+  padding: 3rem 2rem;
+  border-radius: var(--border-radius);
+  background: linear-gradient(135deg, rgba(152, 226, 63, 0.05) 0%, rgba(122, 184, 44, 0.05) 100%);
+  border: 1px solid rgba(152, 226, 63, 0.2);
+}
+.empty-state i {
+  color: var(--primary-color);
+  opacity: 0.7;
+  transition: var(--transition);
+}
+.empty-state:hover i {
+  transform: scale(1.1);
+}
+/* Pagination */
+.pagination .page-link {
+  border: 1px solid var(--border-color);
+  color: var(--dark-text);
+  padding: 0.5rem 0.75rem;
+  margin: 0 0.125rem;
+  border-radius: 6px;
+  transition: var(--transition);
+}
+.pagination .page-link:hover {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+  transform: translateY(-1px);
+}
+.pagination .page-item.active .page-link {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-sm);
+}
+/* Dropdown Menu */
+.dropdown-menu {
+  border: none;
+  box-shadow: var(--shadow-lg);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.95);
+}
+.dropdown-item {
+  transition: var(--transition);
+}
+.dropdown-item:hover {
+  background: rgba(152, 226, 63, 0.1);
+  color: var(--primary-color);
+}
+/* Responsive Design */
+@media (max-width: 768px) {
+  .section-header {
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .nav-tabs {
+    flex-direction: column;
+  }
+  .nav-tabs .nav-link {
+    margin: 0.25rem 0;
+  }
+  .btn-group-vertical {
+    flex-direction: row !important;
+  }
+  .btn-group-vertical .btn {
+    margin-right: 0.5rem;
+  }
+  .table thead {
+    display: none;
+  }
+  .table tbody tr {
+    display: block;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: white;
+    box-shadow: var(--shadow-sm);
+  }
+  .table tbody td {
+    display: block;
+    border: none;
+    padding: 0.25rem 0;
+    text-align: left;
+  }
+  .table tbody td:before {
+    content: attr(data-label) ": ";
+    font-weight: 600;
+    color: var(--dark-text);
+  }
+}
+</style>
 <section class="dashboard-section body-collapse">
   <div class="overlay pt-4 pt-md-5">
     <div class="container-fluid">
       <div class="row mt-4">
         <div class="col-12">
-          <h4 class="mb-3 mt-4">Expense Approvals</h4>
-          <p class="mb-3">Review and approve Activation/Event/Operational expense requests.</p>
+          <div class="section-header">
+            <h4 class="section-title text-gradient mb-3">Expense Approvals</h4>
+            <p class="section-subtitle mb-0">Review and approve Activation/Event/Operational expense requests.</p>
+          </div>
         </div>
-
         <!-- Tabs Navigation -->
         <ul class="nav nav-tabs mb-4" id="approvalTabs" role="tablist">
           <li class="nav-item" role="presentation">
@@ -56,7 +466,6 @@
             </button>
           </li>
         </ul>
-
         <!-- Filter Controls -->
         <div class="card mb-4">
           <div class="card-body">
@@ -118,7 +527,6 @@
             </form>
           </div>
         </div>
-
         <!-- Tabs Content -->
         <div class="tab-content" id="approvalTabsContent">
           <!-- Activation Requests Tab -->
@@ -144,7 +552,7 @@
                       data-expense-id="{{ expense.id }}"
                       data-search="{{ expense.created_by.get_full_name|lower }} {{ expense.activation.name|lower }} {{ expense.expense_category.name|lower }} {{ expense.description|lower }}"
                       data-batch-disbursement="{{ expense.batch_disbursement_type }}">
-                    <td>
+                    <td data-label="Requested By">
                       <div class="d-flex align-items-center">
                         <div>
                           <strong>{{ expense.created_by.get_full_name }}</strong>
@@ -153,21 +561,21 @@
                         </div>
                       </div>
                     </td>
-                    <td>
+                    <td data-label="Type">
                       <span class="badge bg-primary">Activation</span>
                     </td>
-                    <td>
+                    <td data-label="Name">
                       <strong>{{ expense.activation.name }}</strong>
                       <br>
                       <small class="text-muted">{{ expense.activation.category.name }}</small>
                     </td>
-                    <td>
+                    <td data-label="Category">
                       <span class="badge bg-info">{{ expense.expense_category.name }}</span>
                     </td>
-                    <td>
+                    <td data-label="Amount">
                       <strong>KSH {{ expense.amount|floatformat:2|intcomma }}</strong>
                     </td>
-                    <td>
+                    <td data-label="Description">
                       <div class="description-cell">
                         {{ expense.description|truncatewords:10 }}
                         {% if expense.description|length > 50 %}
@@ -179,10 +587,10 @@
                         {% endif %}
                       </div>
                     </td>
-                    <td>
+                    <td data-label="Date Requested">
                       <small>{{ expense.created_at|date:"M d, Y" }}<br>{{ expense.created_at|time:"g:i A" }}</small>
                     </td>
-                    <td>
+                    <td data-label="Action">
                       <div class="btn-group-vertical" role="group">
                         <button class="btn btn-success btn-sm approve-btn"
                                 data-bs-toggle="modal" data-bs-target="#approveModal"
@@ -228,7 +636,6 @@
                 </tbody>
               </table>
             </div>
-
             <!-- Activation Pagination -->
             {% if activation_requests.has_other_pages %}
             <nav aria-label="Activation requests pagination">
@@ -254,7 +661,6 @@
             </nav>
             {% endif %}
           </div>
-
           <!-- Event Requests Tab -->
           <div class="tab-pane fade {% if active_tab == 'event' %}show active{% endif %}"
                id="event" role="tabpanel" aria-labelledby="event-tab">
@@ -279,7 +685,7 @@
                       data-expense-id="{{ expense.id }}"
                       data-search="{{ expense.created_by.get_full_name|lower }} {{ expense.event.name|lower }} {{ expense.expense_category.name|lower }} {{ expense.description|lower }}"
                       data-batch-disbursement="{{ expense.batch_disbursement_type }}">
-                    <td>
+                    <td data-label="Requested By">
                       <div class="d-flex align-items-center">
                         <div>
                           <strong>{{ expense.created_by.get_full_name }}</strong>
@@ -288,18 +694,18 @@
                         </div>
                       </div>
                     </td>
-                    <td>
+                    <td data-label="Event Name">
                       <strong>{{ expense.event.name }}</strong>
                       <br>
                       <small class="text-muted">{{ expense.event.date|date:"M d, Y" }}</small>
                     </td>
-                    <td>
+                    <td data-label="Category">
                       <span class="badge bg-info">{{ expense.expense_category.name }}</span>
                     </td>
-                    <td>
+                    <td data-label="Amount">
                       <strong>KSH {{ expense.amount|floatformat:2|intcomma }}</strong>
                     </td>
-                    <td>
+                    <td data-label="Description">
                       <div class="description-cell">
                         {{ expense.description|truncatewords:10 }}
                         {% if expense.description|length > 50 %}
@@ -311,11 +717,11 @@
                         {% endif %}
                       </div>
                     </td>
-                    <td>{{ expense.event.location|default:"—" }}</td>
-                    <td>
+                    <td data-label="Location">{{ expense.event.location|default:"—" }}</td>
+                    <td data-label="Date Requested">
                       <small>{{ expense.created_at|date:"M d, Y" }}<br>{{ expense.created_at|time:"g:i A" }}</small>
                     </td>
-                    <td>
+                    <td data-label="Status">
                       {% if expense.approved %}
                         <span class="badge bg-success">Approved</span>
                         {% if expense.approved_by %}
@@ -333,7 +739,7 @@
                         <span class="badge bg-warning text-dark">Pending</span>
                       {% endif %}
                     </td>
-                    <td>
+                    <td data-label="Action">
                       {% if not expense.approved and not expense.declined %}
                       <div class="btn-group-vertical" role="group">
                         <button class="btn btn-success btn-sm approve-btn"
@@ -393,7 +799,6 @@
                 </tbody>
               </table>
             </div>
-
             <!-- Event Pagination -->
             {% if event_requests.has_other_pages %}
             <nav aria-label="Event requests pagination">
@@ -419,7 +824,6 @@
             </nav>
             {% endif %}
           </div>
-
           <!-- Operation Requests Tab -->
           <div class="tab-pane fade {% if active_tab == 'operation' %}show active{% endif %}"
                id="operation" role="tabpanel" aria-labelledby="operation-tab">
@@ -443,7 +847,7 @@
                       data-expense-id="{{ expense.id }}"
                       data-search="{{ expense.created_by.get_full_name|lower }} {{ expense.operation.name|default:'general operation'|lower }} {{ expense.expense_category.name|lower }} {{ expense.description|lower }}"
                       data-batch-disbursement="{{ expense.batch_disbursement_type }}">
-                    <td>
+                    <td data-label="Requested By">
                       <div class="d-flex align-items-center">
                         <div>
                           <strong>{{ expense.created_by.get_full_name }}</strong>
@@ -452,20 +856,20 @@
                         </div>
                       </div>
                     </td>
-                    <td>
+                    <td data-label="Operation">
                       {% if expense.operation %}
                       <strong>{{ expense.operation.name }}</strong>
                       {% else %}
                       <span class="text-muted">General Operation</span>
                       {% endif %}
                     </td>
-                    <td>
+                    <td data-label="Category">
                       <span class="badge bg-secondary">{{ expense.expense_category.name }}</span>
                     </td>
-                    <td>
+                    <td data-label="Amount">
                       <strong>KSH {{ expense.amount|floatformat:2|intcomma }}</strong>
                     </td>
-                    <td>
+                    <td data-label="Description">
                       <div class="description-cell">
                         {{ expense.description|truncatewords:10 }}
                         {% if expense.description|length > 50 %}
@@ -477,10 +881,10 @@
                         {% endif %}
                       </div>
                     </td>
-                    <td>
+                    <td data-label="Date Requested">
                       <small>{{ expense.created_at|date:"M d, Y" }}<br>{{ expense.created_at|time:"g:i A" }}</small>
                     </td>
-                    <td>
+                    <td data-label="Status">
                       {% if expense.approved %}
                         <span class="badge bg-success">Approved</span>
                         {% if expense.approved_by %}
@@ -498,7 +902,7 @@
                         <span class="badge bg-warning text-dark">Pending</span>
                       {% endif %}
                     </td>
-                    <td>
+                    <td data-label="Action">
                       {% if not expense.approved and not expense.declined %}
                       <div class="btn-group-vertical" role="group">
                         <button class="btn btn-success btn-sm approve-btn"
@@ -558,7 +962,6 @@
                 </tbody>
               </table>
             </div>
-
             <!-- Operation Pagination -->
             {% if operation_requests.has_other_pages %}
             <nav aria-label="Operation requests pagination">
@@ -584,7 +987,6 @@
             </nav>
             {% endif %}
           </div>
-
           <!-- Request History Tab -->
           <div class="tab-pane fade {% if active_tab == 'history' %}show active{% endif %}"
                id="history" role="tabpanel" aria-labelledby="history-tab">
@@ -610,7 +1012,7 @@
                       data-expense-id="{{ expense.id }}"
                       data-search="{{ expense.created_by.get_full_name|lower }} {% if expense.event %}{{ expense.event.name|lower }}{% elif expense.activation %}{{ expense.activation.name|lower }}{% else %}{{ expense.operation.name|default:'general operation'|lower }}{% endif %} {{ expense.expense_category.name|lower }} {{ expense.description|lower }}"
                       data-batch-disbursement="{{ expense.batch_disbursement_type }}">
-                    <td>
+                    <td data-label="Requested By">
                       <div class="d-flex align-items-center">
                         <div>
                           <strong>{{ expense.created_by.get_full_name }}</strong>
@@ -619,7 +1021,7 @@
                         </div>
                       </div>
                     </td>
-                    <td>
+                    <td data-label="Type">
                       {% if expense.event %}
                         <span class="badge bg-info">Event</span>
                       {% elif expense.activation %}
@@ -628,7 +1030,7 @@
                         <span class="badge bg-secondary">Operation</span>
                       {% endif %}
                     </td>
-                    <td>
+                    <td data-label="Name">
                       {% if expense.event %}
                         <strong>{{ expense.event.name }}</strong>
                       {% elif expense.activation %}
@@ -639,9 +1041,9 @@
                         <strong>{{ expense.operation.name|default:"General Operation" }}</strong>
                       {% endif %}
                     </td>
-                    <td>{{ expense.expense_category.name }}</td>
-                    <td><strong>KSH {{ expense.amount|floatformat:2|intcomma }}</strong></td>
-                    <td>
+                    <td data-label="Category">{{ expense.expense_category.name }}</td>
+                    <td data-label="Amount"><strong>KSH {{ expense.amount|floatformat:2|intcomma }}</strong></td>
+                    <td data-label="Description">
                       {{ expense.description|truncatewords:8 }}
                       {% if expense.description|length > 40 %}
                       <br>
@@ -651,7 +1053,7 @@
                       </small>
                       {% endif %}
                     </td>
-                    <td>
+                    <td data-label="Status">
                       {% if expense.approved %}
                         <span class="badge bg-success">Approved</span>
                       {% elif expense.declined %}
@@ -667,14 +1069,14 @@
                         <span class="badge bg-warning text-dark">Pending</span>
                       {% endif %}
                     </td>
-                    <td>
+                    <td data-label="Processed By">
                       {% if expense.approved_by %}
                       {{ expense.approved_by.get_full_name }}
                       {% else %}
                       <span class="text-muted">—</span>
                       {% endif %}
                     </td>
-                    <td>
+                    <td data-label="Date Processed">
                       <small>{{ expense.updated_at|date:"M d, Y" }}<br>{{ expense.updated_at|time:"g:i A" }}</small>
                     </td>
                     <!-- <td>
@@ -711,7 +1113,6 @@
                 </tbody>
               </table>
             </div>
-
             <!-- History Pagination -->
             {% if past_requests.has_other_pages %}
             <nav aria-label="Request history pagination">
@@ -742,7 +1143,6 @@
     </div>
   </div>
 </section>
-
 <!-- Approve Confirmation Modal -->
 <div class="modal fade" id="approveModal" tabindex="-1" aria-labelledby="approveModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-xl">
@@ -751,7 +1151,7 @@
         <h5 class="modal-title" id="approveModalLabel">
           <i class="fas fa-check-circle text-success"></i> Confirm Approval
         </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <form id="approveForm" method="POST">
         <div class="modal-body">
@@ -811,7 +1211,6 @@
     </div>
   </div>
 </div>
-
 <!-- Reject Reason Modal -->
 <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
   <div class="modal-dialog">
@@ -820,7 +1219,7 @@
         <h5 class="modal-title" id="rejectModalLabel">
           <i class="fas fa-times-circle text-danger"></i> Reject Request
         </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <form id="rejectForm" method="POST">
         <div class="modal-body">
@@ -868,7 +1267,6 @@
     </div>
   </div>
 </div>
-
 <!-- Undo Confirmation Modal -->
 <div class="modal fade" id="undoModal" tabindex="-1" aria-labelledby="undoModalLabel" aria-hidden="true">
   <div class="modal-dialog">
@@ -877,7 +1275,7 @@
         <h5 class="modal-title" id="undoModalLabel">
           <i class="fas fa-undo text-warning"></i> Confirm Undo Action
         </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <form id="undoForm" method="POST">
         <div class="modal-body">
@@ -922,7 +1320,6 @@
     </div>
   </div>
 </div>
-
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     // Initialize Bootstrap Tooltips
@@ -930,7 +1327,6 @@
     tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
-
     /**
      * Retrieves the CSRF token from a meta tag or a hidden input.
      */
@@ -945,14 +1341,12 @@
         }
         return null;
     }
-
     /**
      * Displays a custom message box instead of alert/confirm.
      */
     function showMessageBox(title, message, type = 'info') {
         const modalId = 'messageBoxModal';
         let modalElement = document.getElementById(modalId);
-
         if (!modalElement) {
             modalElement = document.createElement('div');
             modalElement.id = modalId;
@@ -976,27 +1370,21 @@
             `;
             document.body.appendChild(modalElement);
         }
-
         const modalTitle = modalElement.querySelector('.modal-title');
         const modalBody = modalElement.querySelector('.modal-body');
-
         modalTitle.textContent = title;
         if (type) {
             modalTitle.className = `modal-title text-${type}`;
         }
         modalBody.innerHTML = message;
-
         const bsModal = new bootstrap.Modal(modalElement);
         bsModal.show();
     }
-
     // Get references to relevant DOM elements
     const filterForm = document.getElementById('filterForm');
     const statusFilterButtons = document.querySelectorAll('.btn-group button[data-filter]');
     const searchInput = document.getElementById('searchInput');
-
     // --- Event Listeners ---
-
     // Tab switching listener (intercept Bootstrap tab show and submit form)
     document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tabElement => {
         tabElement.addEventListener('show.bs.tab', function(event) {
@@ -1009,7 +1397,6 @@
             filterForm.submit();
         });
     });
-
     // Status filter button listener (submit form on click)
     statusFilterButtons.forEach(button => {
         button.addEventListener('click', function() {
@@ -1018,7 +1405,6 @@
             filterForm.submit();
         });
     });
-
     // Search input listener (submit form after typing timeout)
     let searchTimeout;
     searchInput.addEventListener('keyup', function() {
@@ -1027,40 +1413,31 @@
             filterForm.submit();
         }, 500);
     });
-
     // --- Modal Functionality ---
-
     // Helper function to reload page with current URL parameters
     function reloadWithCurrentParams() {
         window.location.reload();
     }
-
     // Function to load CSV preview
     async function loadCsvPreview(expenseId) {
         const modal = document.getElementById('approveModal');
         if (!modal) return;
-
         const previewSection = modal.querySelector('#csv-preview-section');
         const loadingEl = modal.querySelector('#csv-preview-loading');
         const contentEl = modal.querySelector('#csv-preview-content');
         const errorEl = modal.querySelector('#csv-preview-error');
-
         if (!previewSection || !loadingEl || !contentEl || !errorEl) {
             console.error('CSV preview elements not found in modal');
             return;
         }
-
         // Reset
         contentEl.innerHTML = '';
         errorEl.classList.add('d-none');
         loadingEl.classList.remove('d-none');
-
         try {
             const response = await fetch(`/expense/${expenseId}/csv-preview/`);
             const data = await response.json();
-
             loadingEl.classList.add('d-none');
-
             if (response.ok && data.success) {
                 contentEl.innerHTML = data.html;
                 previewSection.classList.remove('d-none');
@@ -1076,7 +1453,6 @@
             previewSection.classList.remove('d-none');
         }
     }
-
     // Approve Modal
     const approveModal = document.getElementById('approveModal');
     if (approveModal) {
@@ -1089,25 +1465,20 @@
             const description = button.dataset.description;
             const itemName = button.dataset.itemName;
             const isBatchDisbursement = button.dataset.batchDisbursement === 'True';
-
             const approveRequester = approveModal.querySelector('#approve-requester');
             const approveItemName = approveModal.querySelector('#approve-item-name');
             const approveType = approveModal.querySelector('#approve-type');
             const approveAmount = approveModal.querySelector('#approve-amount');
             const approveDescription = approveModal.querySelector('#approve-description');
-
             if (approveRequester) approveRequester.textContent = requester;
             if (approveItemName) approveItemName.textContent = itemName;
             if (approveType) approveType.textContent = expenseType.charAt(0).toUpperCase() + expenseType.slice(1) + ' Expense';
             if (approveAmount) approveAmount.textContent = amount;
             if (approveDescription) approveDescription.textContent = description;
-
             const approveForm = approveModal.querySelector('#approveForm');
             if (approveForm) approveForm.action = `/expense/${expenseId}/approve/`;
-
             const previewSection = approveModal.querySelector('#csv-preview-section');
             const noCsvEl = approveModal.querySelector('#no-csv-message');
-
             if (previewSection && noCsvEl) {
                 if (isBatchDisbursement) {
                     noCsvEl.classList.add('d-none');
@@ -1119,12 +1490,10 @@
                 }
             }
         });
-
         const approveForm = document.getElementById('approveForm');
         if (approveForm) {
             approveForm.addEventListener('submit', async function(event) {
                 event.preventDefault();
-
                 const form = event.target;
                 const expenseIdMatch = form.action.match(/expense\/([0-9a-f-]+)\/approve\//);
                 if (!expenseIdMatch) return;
@@ -1134,10 +1503,8 @@
                 const expenseType = form.querySelector('#approve-type');
                 if (!expenseType) return;
                 const expenseTypeStr = expenseType.textContent.toLowerCase().replace(' expense', '');
-
                 const modalInstance = bootstrap.Modal.getInstance(approveModal);
                 if (modalInstance) modalInstance.hide();
-
                 try {
                     const response = await fetch(form.action, {
                         method: 'POST',
@@ -1146,9 +1513,7 @@
                         },
                         body: new FormData(form)
                     });
-
                     const data = await response.json();
-
                     if (response.ok) {
                         showMessageBox('Success', data.message, 'success');
                         updateTableRowStatus(expenseId, expenseTypeStr, 'approved', data.approved_by_name);
@@ -1166,7 +1531,6 @@
             });
         }
     }
-
     // Reject Modal
     const rejectModal = document.getElementById('rejectModal');
     if (rejectModal) {
@@ -1178,34 +1542,28 @@
             const amount = button.dataset.amount;
             const description = button.dataset.description;
             const itemName = button.dataset.itemName;
-
             const rejectRequester = rejectModal.querySelector('#reject-requester');
             const rejectItemName = rejectModal.querySelector('#reject-item-name');
             const rejectType = rejectModal.querySelector('#reject-type');
             const rejectAmount = rejectModal.querySelector('#reject-amount');
             const rejectDescription = rejectModal.querySelector('#reject-description');
-
             if (rejectRequester) rejectRequester.textContent = requester;
             if (rejectItemName) rejectItemName.textContent = itemName;
             if (rejectType) rejectType.textContent = expenseType.charAt(0).toUpperCase() + expenseType.slice(1) + ' Expense';
             if (rejectAmount) rejectAmount.textContent = amount;
             if (rejectDescription) rejectDescription.textContent = description;
-
             const rejectForm = rejectModal.querySelector('#rejectForm');
             if (rejectForm) rejectForm.action = `/expense/${expenseId}/decline/`;
-
             const declineReasonInput = rejectModal.querySelector('#declineReason');
             if (declineReasonInput) {
                 declineReasonInput.value = '';
                 declineReasonInput.classList.remove('is-invalid');
             }
         });
-
         const rejectForm = document.getElementById('rejectForm');
         if (rejectForm) {
             rejectForm.addEventListener('submit', async function(event) {
                 event.preventDefault();
-
                 const form = event.target;
                 const expenseIdMatch = form.action.match(/expense\/([0-9a-f-]+)\/decline\//);
                 if (!expenseIdMatch) return;
@@ -1218,21 +1576,17 @@
                 const rejectType = form.querySelector('#reject-type');
                 if (!rejectType) return;
                 const expenseTypeStr = rejectType.textContent.toLowerCase().replace(' expense', '');
-
                 if (!declineReason) {
                     if (declineReasonInput) declineReasonInput.classList.add('is-invalid');
                     return;
                 } else {
                     if (declineReasonInput) declineReasonInput.classList.remove('is-invalid');
                 }
-
                 const modalInstance = bootstrap.Modal.getInstance(rejectModal);
                 if (modalInstance) modalInstance.hide();
-
                 try {
                     const formData = new FormData(form);
                     formData.set('reason', declineReason);
-
                     const response = await fetch(form.action, {
                         method: 'POST',
                         headers: {
@@ -1240,9 +1594,7 @@
                         },
                         body: formData
                     });
-
                     const data = await response.json();
-
                     if (response.ok) {
                         showMessageBox('Success', data.message, 'success');
                         updateTableRowStatus(expenseId, expenseTypeStr, 'rejected', null, declineReason);
@@ -1260,7 +1612,6 @@
             });
         }
     }
-
     // Undo Modal
     const undoModal = document.getElementById('undoModal');
     if (undoModal) {
@@ -1273,30 +1624,25 @@
             const description = button.dataset.description;
             const itemName = button.dataset.itemName;
             const status = button.dataset.status;
-
             const undoRequester = undoModal.querySelector('#undo-requester');
             const undoItemName = undoModal.querySelector('#undo-item-name');
             const undoType = undoModal.querySelector('#undo-type');
             const undoAmount = undoModal.querySelector('#undo-amount');
             const undoDescription = undoModal.querySelector('#undo-description');
             const undoStatus = undoModal.querySelector('#undo-status');
-
             if (undoRequester) undoRequester.textContent = requester;
             if (undoItemName) undoItemName.textContent = itemName;
             if (undoType) undoType.textContent = expenseType.charAt(0).toUpperCase() + expenseType.slice(1) + ' Expense';
             if (undoAmount) undoAmount.textContent = amount;
             if (undoDescription) undoDescription.textContent = description;
             if (undoStatus) undoStatus.textContent = status.charAt(0).toUpperCase() + status.slice(1);
-
             const undoForm = undoModal.querySelector('#undoForm');
             if (undoForm) undoForm.action = `/expense/${expenseId}/undo/`;
         });
-
         const undoForm = document.getElementById('undoForm');
         if (undoForm) {
             undoForm.addEventListener('submit', async function(event) {
                 event.preventDefault();
-
                 const form = event.target;
                 const expenseIdMatch = form.action.match(/expense\/([0-9a-f-]+)\/undo\//);
                 if (!expenseIdMatch) return;
@@ -1306,10 +1652,8 @@
                 const undoType = form.querySelector('#undo-type');
                 if (!undoType) return;
                 const expenseTypeStr = undoType.textContent.toLowerCase().replace(' expense', '');
-
                 const modalInstance = bootstrap.Modal.getInstance(undoModal);
                 if (modalInstance) modalInstance.hide();
-
                 try {
                     const response = await fetch(form.action, {
                         method: 'POST',
@@ -1318,9 +1662,7 @@
                         },
                         body: new FormData(form)
                     });
-
                     const data = await response.json();
-
                     if (response.ok) {
                         showMessageBox('Success', data.message, 'success');
                         updateTableRowStatus(expenseId, expenseTypeStr, 'pending', '');
@@ -1338,7 +1680,6 @@
             });
         }
     }
-
     /**
      * Updates the status of a specific table row after approval/rejection/undo.
      */
@@ -1353,12 +1694,9 @@
         }
         const table = document.getElementById(tableId);
         if (!table) return;
-
         const row = table.querySelector(`tr[data-expense-id="${expenseId}"]`);
         if (!row) return;
-
         row.dataset.status = newStatus;
-
         let statusCellIndex = -1;
         if (tableId === 'eventTable') {
             statusCellIndex = 7;
@@ -1367,7 +1705,6 @@
         } else if (tableId === 'activationTable') {
             statusCellIndex = -1; // No status column
         }
-
         let actionCellIndex = 7; // Default
         if (tableId === 'historyTable') {
             actionCellIndex = 9;
@@ -1378,7 +1715,6 @@
         } else if (tableId === 'activationTable') {
             actionCellIndex = 7;
         }
-
         if (statusCellIndex !== -1) {
             const statusCell = row.cells[statusCellIndex];
             if (statusCell) {
@@ -1400,7 +1736,6 @@
                 statusCell.innerHTML = statusHtml;
             }
         }
-
         const actionCell = row.cells[actionCellIndex];
         if (actionCell) {
             let actionHtml = '';
@@ -1417,7 +1752,6 @@
                 const itemNameEl = row.cells[itemNameCellIndex].querySelector('strong');
                 const itemName = itemNameEl ? itemNameEl.textContent.trim() : (tableId === 'operationTable' ? 'General Operation' : '—');
                 const batchDisbursement = row.dataset.batchDisbursement || 'False';
-
                 actionHtml = `
                     <div class="btn-group-vertical" role="group">
                         <button class="btn btn-success btn-sm approve-btn"
@@ -1454,7 +1788,6 @@
                 if (tableId === 'activationTable') itemNameCellIndex = 2;
                 const itemNameEl = row.cells[itemNameCellIndex].querySelector('strong');
                 const itemName = itemNameEl ? itemNameEl.textContent.trim() : (tableId === 'operationTable' ? 'General Operation' : '—');
-
                 actionHtml = `
                     <button class="btn btn-warning btn-sm undo-btn"
                             data-bs-toggle="modal" data-bs-target="#undoModal"
@@ -1470,14 +1803,12 @@
             }
             actionCell.innerHTML = actionHtml;
         }
-
         // Hide row if new status doesn't match current filter (to maintain consistency until reload)
         const currentStatus = new URLSearchParams(window.location.search).get('status') || 'all';
         if (currentStatus !== 'all' && newStatus !== currentStatus) {
             row.style.display = 'none';
         }
     }
-
     // --- Export Functionality ---
     document.querySelectorAll('#exportDropdown .dropdown-item').forEach(item => {
         item.addEventListener('click', function(event) {
@@ -1488,7 +1819,6 @@
             window.location.href = exportUrl;
         });
     });
-
     // --- Full Description and Decline Reason Viewers ---
     document.addEventListener('click', function(event) {
         if (event.target.classList.contains('view-full-description')) {
