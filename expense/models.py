@@ -2,6 +2,7 @@ from django.db import models
 from django.utils import timezone
 from django.conf import settings
 import uuid
+from userauths.models import User
 class ExpenseGroup(models.TextChoices):
     EVENT = 'event', 'Event'
     OPERATION = 'operation', 'Operation'
@@ -168,3 +169,96 @@ class BatchPayments(models.Model):
 
     class Meta:
         verbose_name_plural = "Batch Payments"
+
+class AssetType(models.TextChoices):
+    COMPANY = 'Company', 'Company'
+    EVENT = 'Event', 'Event',
+    OTHER = 'Other', 'Other'
+
+
+class SupplierType(models.TextChoices):
+    FLOWERS = 'Flowers', 'Flowers'
+    FURNITURES = 'Furnitures', 'Furnitures'
+    CARS = 'Cars', 'Cars'
+    CLOTHES = 'Clothes', 'Clothes'
+    JEWELRY = 'Jewelry', 'Jewelry'
+    DECORATIONS = 'Decorations', 'Decorations'
+    TABLE_CHARGES = 'Table Charges', 'Table Charges'
+    OTHER = 'Other', 'Other'
+
+class InventoryItem(models.Model):
+    name = models.CharField(max_length=255)
+    organization = models.ForeignKey('wallet.CompanyKYC', on_delete=models.CASCADE, related_name='inventory_items')
+    asset_type = models.CharField(max_length=50, choices=AssetType.choices)
+    description = models.TextField(blank=True, null=True)
+    date_captured = models.DateField(auto_now_add=True)
+    cost = models.DecimalField(max_digits=12, decimal_places=2)
+    lease_cost = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    captured_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='captured_items')
+    state = models.CharField(max_length=50, choices=[('Available', 'Available'), ('Checked Out', 'Checked Out')], default='Available')
+    is_active = models.BooleanField(default=True)
+    def __str__(self):
+        return self.name
+
+class InventoryTransaction(models.Model):
+    item = models.ForeignKey(InventoryItem, on_delete=models.CASCADE, related_name='transactions')
+    transaction_type = models.CharField(max_length=50, choices=[('Check Out', 'Check Out'), ('Check In', 'Check In')])
+    transaction_date = models.DateTimeField(auto_now_add=True)
+    checked_out_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    check_out_date = models.DateTimeField(null=True, blank=True)
+    check_in_date = models.DateTimeField(null=True, blank=True)
+    check_in_remarks = models.TextField(blank=True, null=True)
+    check_in_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='check_in_transactions')
+    check_out_remarks = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.item.name} transaction"
+
+class Supplier(models.Model):
+    name = models.CharField(max_length=255)
+    date_captured = models.DateField(auto_now_add=True)
+    captured_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='suppliers')
+    service_category = models.CharField(max_length=255, choices=SupplierType.choices, default=SupplierType.OTHER)
+    address = models.TextField(blank=True, null=True)
+    city = models.CharField(max_length=100, blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    organization = models.ForeignKey('wallet.CompanyKYC', on_delete=models.CASCADE, related_name='suppliers')
+    email = models.EmailField(blank=True, null=True)
+    mobile_number = models.CharField(max_length=15, blank=True, null=True)
+
+    def __str__(self):
+        return self.name
+
+class SupplierInvoice(models.Model):
+    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, related_name='invoices')
+    invoice_number = models.CharField(max_length=50)
+    date_issued = models.DateField()
+    total_amount = models.DecimalField(max_digits=12, decimal_places=2)
+    due_date = models.DateField(blank=True, null=True)
+    paid = models.BooleanField(default=False)
+    payment_date = models.DateField(null=True, blank=True)
+    payment_method = models.CharField(max_length=50, choices=[('Bank Transfer', 'Bank Transfer'), ('Cash', 'Cash'), ('Cheque', 'Cheque')], default='Bank Transfer')
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='supplier_invoices', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    remarks = models.TextField(blank=True, null=True)
+    class Meta:
+        verbose_name_plural = "Supplier Invoices"
+        ordering = ['-date_issued']
+    def save(self, *args, **kwargs):
+        if not self.invoice_number:
+            self.invoice_number = f"INV-{self.supplier.id}-{timezone.now().strftime('%Y%m%d%H%M%S')}"
+        super().save(*args, **kwargs)
+    def __str__(self):
+        return f"Invoice {self.invoice_number} - {self.supplier.name}"
+
+class InvoiceItem(models.Model):
+    invoice = models.ForeignKey(SupplierInvoice, on_delete=models.CASCADE)
+    name = models.CharField(max_length=255, blank=True, null=True)
+    quantity = models.PositiveIntegerField(default=1)
+    unit_price = models.DecimalField(max_digits=12, decimal_places=2)
+    state_of_item = models.CharField(max_length=255, blank=True, null=True)
+
+
+    def __str__(self):
+        return f"{self.quantity} x {self.item.name}"

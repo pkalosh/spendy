@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Expense, BatchPayments,ExpenseCategory,Activation,ActivationCategory, CategoryBase, Event, Operation, EventCategory, OperationCategory,ExpenseRequestType
+from .models import Expense,InventoryItem, InventoryTransaction,InvoiceItem,SupplierInvoice,Supplier, BatchPayments,ExpenseCategory,Activation,ActivationCategory, CategoryBase, Event, Operation, EventCategory, OperationCategory,ExpenseRequestType
 
 
 admin.site.register(Expense)
@@ -12,3 +12,8 @@ admin.site.register(ExpenseRequestType)
 admin.site.register(Activation)
 admin.site.register(ActivationCategory)
 admin.site.register(BatchPayments)
+admin.site.register(InventoryItem)
+admin.site.register(InventoryTransaction)
+admin.site.register(InvoiceItem)
+admin.site.register(SupplierInvoice)
+admin.site.register(Supplier)
