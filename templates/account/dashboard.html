@@ -583,48 +583,54 @@ background-clip: text;
 <section class="dashboard-section body-collapse">
 <div class="overlay pt-4">
 <div class="container-fluid px-3 px-md-4">
-<!-- Enhanced Header -->
+<!-- Enhanced Header -->               
 <div class="dashboard-header mb-4">
-    <div class="row g-4 align-items-center">
-
-        <!-- Left: Wallet Balance Card -->
-        <div class="col-lg-4">
-            <div class="bank-card">
-                <div class="card-label">Spendy Wallet</div>
-
-                <span class="card-label">Account Balance</span>
-
-                <span class="card-balance">
+    <!-- Welcome note at the top, full width row -->    
+    <!-- Below: Row with two sections/cards -->
+    <div class="row g-4 mb-4">
+        <!-- First: Wallet Balance (simple display without card styling) -->
+        <div class="col-lg-6">
+            <div class="balance-display p-3 bg-light rounded border">
+                <h3 class="text-success mb-1"> {{ kyc.company_name|title }} Spendy Wallet</h3>
+                <p class="text-muted mb-1">Account Balance</p>
+                <h4 class="text-success mb-1">
                     KES {{ primary_wallets.balance|default:0|intcomma }}
-                </span>
-
-                <span class="card-extra">
-                    {{ kyc.company_name|title }}
-                </span>
-
-                <a href="{% url 'wallet:transactions' %}" class="stretched-link"></a>
+                </h4>
             </div>
         </div>
-
-        <!-- Right: Welcome Text -->
-        <div class="col-lg-8">
-            <div class="text-lg-end text-center">
-                <h1 class="welcome-title mb-2">
-                    <span class="text-gradient">{{ kyc.company_name|title }}</span>
-                </h1>
-
-                <p class="welcome-subtitle mb-0">
-                    Welcome to Spendy!  
-                </p>
-
-                <p class="welcome-subtitle mt-1">
-                    Manage your expenses efficiently with our modern dashboard.
-                </p>
+        
+        <!-- Second: Total Money In/Out with small donut charts -->
+        <div class="col-lg-6">
+            <div class="row g-3 h-100">
+                <!-- Money In Donut -->
+                <div class="col-6">
+                    <div class="d-flex flex-column h-100 p-3 bg-light rounded border text-center">
+                        <h5 class="text-primary mb-2">Total Money In</h5>
+                        <div class="donut-chart-placeholder mx-auto mb-2" style="width: 80px; height: 80px;">
+                            <!-- Placeholder for small donut chart (e.g., Chart.js canvas) -->
+                            <canvas id="money-in-donut" width="80" height="80"></canvas>
+                        </div>
+                        <p class="mb-0 text-success fw-bold">KES 5,000</p>
+                    </div>
+                </div>
+                <!-- Money Out Donut -->
+                <div class="col-6">
+                    <div class="d-flex flex-column h-100 p-3 bg-light rounded border text-center">
+                        <h5 class="text-primary mb-2">Total Money Out</h5>
+                        <div class="donut-chart-placeholder mx-auto mb-2" style="width: 80px; height: 80px;">
+                            <!-- Placeholder for small donut chart (e.g., Chart.js canvas) -->
+                            <canvas id="money-out-donut" width="80" height="80"></canvas>
+                        </div>
+                        <p class="mb-0 text-danger fw-bold">KES 3,200</p>
+                    </div>
+                </div>
             </div>
         </div>
-
     </div>
+  
 </div>
+
+
 
       {% if form.errors %}
 <div class="alert alert-danger border-0 rounded-3 mb-4" style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);">
