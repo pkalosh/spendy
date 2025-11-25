@@ -1,0 +1,124 @@
+{% extends "partials/dashboard-base.html" %}
+{% load static %}
+{% block content %}
+<section class="dashboard-section body-collapse">
+  <div class="overlay pt-120">
+    <div class="container-fluid">
+      <div class="section-header">
+        <div class="row align-items-center">
+          <div class="col-lg-8">
+            <h4 class="section-title text-gradient mb-0">Suppliers</h4>
+            <p class="section-subtitle mb-0">Create and manage suppliers.</p>
+          </div>
+          <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newSupplierModal">
+              <i class="fas fa-plus me-2"></i>New Supplier
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-responsive mt-4">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Name</th>
+              <th>Category</th>
+              <th>Captured</th>
+              <th>Mobile</th>
+              <th>Email</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for sup in suppliers %}
+            <tr>
+              <td>{{ forloop.counter }}</td>
+              <td>{{ sup.name }}</td>
+              <td>{{ sup.get_service_category_display }}</td>
+              <td>{{ sup.date_captured }}</td>
+              <td>{{ sup.mobile_number }}</td>
+              <td>{{ sup.email }}</td>
+              <td>
+                <a class="btn btn-sm btn-outline-primary" href="{% url 'inventory:supplier_invoices' sup.id %}">Invoices</a>
+                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editSupplierModal-{{ sup.id }}">Edit</button>
+                <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteSupplierModal-{{ sup.id }}">Delete</button>
+              </td>
+            </tr>
+
+            {# EDIT SUPPLIER MODAL #}
+            <div class="modal fade" id="editSupplierModal-{{ sup.id }}" tabindex="-1" aria-hidden="true">
+              <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                  <form method="post" action="{% url 'inventory:supplier-edit' sup.id %}">
+                    {% csrf_token %}
+                    <div class="modal-header">
+                      <h5 class="modal-title">Edit Supplier — {{ sup.name }}</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                      {{ supplier_edit_forms[sup.id].as_p }}
+                    </div>
+                    <div class="modal-footer">
+                      <button type="submit" class="btn btn-primary">Save</button>
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+            {# DELETE SUPPLIER MODAL #}
+            <div class="modal fade" id="deleteSupplierModal-{{ sup.id }}" tabindex="-1" aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <form method="post" action="{% url 'inventory:supplier-delete' sup.id %}">
+                    {% csrf_token %}
+                    <div class="modal-header">
+                      <h5 class="modal-title">Delete Supplier — {{ sup.name }}</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                      Are you sure you want to remove this supplier?
+                    </div>
+                    <div class="modal-footer">
+                      <button type="submit" class="btn btn-danger">Yes, remove</button>
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+{# NEW SUPPLIER MODAL #}
+<div class="modal fade" id="newSupplierModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <form method="post" action="{% url 'inventory:supplier-create' %}">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title">New Supplier</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          {{ new_form.as_p }}
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Create Supplier</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock content %}

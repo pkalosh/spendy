@@ -10,8 +10,20 @@ from django.db import transaction
 from django.views.decorators.http import require_POST,require_GET
 from django.urls import reverse
 from django.utils.decorators import method_decorator
-from .models import Expense, Event,BatchPayments, Operation, ExpenseGroup, CategoryBase, ExpenseCategory, EventCategory, OperationCategory,ExpenseRequestType, Activation, ActivationCategory
-from .forms import ExpenseRequestForm, ExpenseApprovalForm, PaymentForm, EventExpenseForm, OperationExpenseForm,ActivationExpenseForm
+from .models import Expense, Event,BatchPayments, Operation,InventoryItem, InventoryTransaction, Supplier, SupplierInvoice, InvoiceItem, ExpenseGroup, CategoryBase, ExpenseCategory, EventCategory, OperationCategory,ExpenseRequestType, Activation, ActivationCategory
+from .forms import (
+        ExpenseRequestForm,
+        ExpenseApprovalForm,
+        PaymentForm, 
+        EventExpenseForm, 
+        OperationExpenseForm,
+        ActivationExpenseForm,
+        InventoryItemForm,
+        InventoryTransactionForm,
+        SupplierForm,
+        SupplierInvoiceForm,
+        InvoiceItemForm,
+        )
 from wallet.models import Transaction, CompanyKYC, Wallet,TransactionFee,Client,StaffProfile
 from django.core.exceptions import ValidationError
 from decimal import Decimal, InvalidOperation
@@ -2171,3 +2183,228 @@ def filter_expenses_by_status(expenses, status_filter):
         # return expenses.filter(status__iexact__in=['declined', 'rejected'])
     
     return expenses
+
+
+
+@login_required
+def inventory_list(request):
+    org = None
+    # If organization scope is needed: pass organization in context / filter by organization
+    items = InventoryItem.objects.filter(is_active=True).select_related("captured_by", "organization")
+    # For each item create edit form instance (server-rendered modal)
+    item_edit_forms = {item.id: InventoryItemForm(instance=item) for item in items}
+
+    new_form = InventoryItemForm(initial={"captured_by": request.user})
+    # Transaction forms per item
+    checkout_forms = {item.id: InventoryTransactionForm(initial={"item": item, "transaction_type": "Check Out"}) for item in items}
+    checkin_forms = {item.id: InventoryTransactionForm(initial={"item": item, "transaction_type": "Check In"}) for item in items}
+
+    context = {
+        "items": items,
+        "new_form": new_form,
+        "item_edit_forms": item_edit_forms,
+        "checkout_forms": checkout_forms,
+        "checkin_forms": checkin_forms,
+    }
+    return render(request, "inventory/inventory_list.html", context)
+
+
+@login_required
+def inventory_create(request):
+    if request.method == "POST":
+        form = InventoryItemForm(request.POST)
+        if form.is_valid():
+            item = form.save(commit=False)
+            if not item.captured_by:
+                item.captured_by = request.user
+            item.save()
+            messages.success(request, "Inventory item created.")
+        else:
+            messages.error(request, "Error creating inventory item.")
+    return redirect("inventory:list")
+
+
+@login_required
+def inventory_edit(request, pk):
+    item = get_object_or_404(InventoryItem, pk=pk)
+    if request.method == "POST":
+        form = InventoryItemForm(request.POST, instance=item)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Inventory item updated.")
+        else:
+            messages.error(request, "Error updating inventory item.")
+    return redirect("inventory:list")
+
+
+@login_required
+def inventory_delete(request, pk):
+    item = get_object_or_404(InventoryItem, pk=pk)
+    if request.method == "POST":
+        item.is_active = False
+        item.save()
+        messages.success(request, "Inventory item deleted.")
+    return redirect("inventory:list")
+
+
+@login_required
+def inventory_check_out(request, pk):
+    item = get_object_or_404(InventoryItem, pk=pk)
+    if request.method == "POST":
+        form = InventoryTransactionForm(request.POST)
+        if form.is_valid():
+            trx = form.save(commit=False)
+            trx.item = item
+            trx.transaction_type = "Check Out"
+            if not trx.check_out_date:
+                trx.check_out_date = timezone.now()
+            trx.save()
+            item.state = "Checked Out"
+            item.save()
+            messages.success(request, f"{item.name} checked out.")
+        else:
+            messages.error(request, "Error checking out item.")
+    return redirect("inventory:list")
+
+
+@login_required
+def inventory_check_in(request, pk):
+    item = get_object_or_404(InventoryItem, pk=pk)
+    if request.method == "POST":
+        form = InventoryTransactionForm(request.POST)
+        if form.is_valid():
+            trx = form.save(commit=False)
+            trx.item = item
+            trx.transaction_type = "Check In"
+            if not trx.check_in_date:
+                trx.check_in_date = timezone.now()
+            trx.save()
+            item.state = "Available"
+            item.save()
+            messages.success(request, f"{item.name} checked in.")
+        else:
+            messages.error(request, "Error checking in item.")
+    return redirect("inventory:list")
+
+@login_required
+def suppliers_list(request):
+    suppliers = Supplier.objects.filter(organization__isnull=False)  # adjust filter as needed
+    supplier_edit_forms = {s.id: SupplierForm(instance=s) for s in suppliers}
+    new_form = SupplierForm(initial={"captured_by": request.user})
+    context = {
+        "suppliers": suppliers,
+        "new_form": new_form,
+        "supplier_edit_forms": supplier_edit_forms,
+    }
+    return render(request, "inventory/suppliers_list.html", context)
+
+
+@login_required
+def supplier_create(request):
+    if request.method == "POST":
+        form = SupplierForm(request.POST)
+        if form.is_valid():
+            sup = form.save(commit=False)
+            if not sup.captured_by:
+                sup.captured_by = request.user
+            sup.save()
+            messages.success(request, "Supplier created.")
+        else:
+            messages.error(request, "Error creating supplier.")
+    return redirect("inventory:suppliers")
+
+
+@login_required
+def supplier_edit(request, pk):
+    sup = get_object_or_404(Supplier, pk=pk)
+    if request.method == "POST":
+        form = SupplierForm(request.POST, instance=sup)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Supplier updated.")
+        else:
+            messages.error(request, "Error updating supplier.")
+    return redirect("inventory:suppliers")
+
+
+@login_required
+def supplier_delete(request, pk):
+    sup = get_object_or_404(Supplier, pk=pk)
+    if request.method == "POST":
+        sup.is_active = False
+        sup.save()
+        messages.success(request, "Supplier removed.")
+    return redirect("inventory:suppliers")
+
+
+# Supplier invoices
+
+@login_required
+def supplier_invoices(request, supplier_id):
+    supplier = get_object_or_404(Supplier, pk=supplier_id)
+    invoices = SupplierInvoice.objects.filter(supplier=supplier).order_by("-date_issued")
+    invoice_forms = {inv.id: SupplierInvoiceForm(instance=inv) for inv in invoices}
+    new_invoice_form = SupplierInvoiceForm(initial={"supplier": supplier, "created_by": request.user})
+    # invoice items listing via InvoiceItem model
+    context = {
+        "supplier": supplier,
+        "invoices": invoices,
+        "invoice_forms": invoice_forms,
+        "new_invoice_form": new_invoice_form,
+    }
+    return render(request, "inventory/supplier_invoices.html", context)
+
+
+@login_required
+def supplier_invoice_create(request, supplier_id):
+    supplier = get_object_or_404(Supplier, pk=supplier_id)
+    if request.method == "POST":
+        form = SupplierInvoiceForm(request.POST)
+        if form.is_valid():
+            inv = form.save(commit=False)
+            inv.supplier = supplier
+            if not inv.created_by:
+                inv.created_by = request.user
+            inv.save()
+            messages.success(request, "Invoice created.")
+        else:
+            messages.error(request, "Error creating invoice.")
+    return redirect("inventory:supplier_invoices", supplier_id=supplier.id)
+
+
+@login_required
+def supplier_invoice_edit(request, supplier_id, invoice_id):
+    inv = get_object_or_404(SupplierInvoice, pk=invoice_id, supplier_id=supplier_id)
+    if request.method == "POST":
+        form = SupplierInvoiceForm(request.POST, instance=inv)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Invoice updated.")
+        else:
+            messages.error(request, "Error updating invoice.")
+    return redirect("inventory:supplier_invoices", supplier_id=supplier_id)
+
+
+@login_required
+def supplier_invoice_delete(request, supplier_id, invoice_id):
+    inv = get_object_or_404(SupplierInvoice, pk=invoice_id, supplier_id=supplier_id)
+    if request.method == "POST":
+        inv.delete()
+        messages.success(request, "Invoice deleted.")
+    return redirect("inventory:supplier_invoices", supplier_id=supplier_id)
+
+
+# Optional: invoice item create/edit/delete endpoints
+@login_required
+def invoice_item_create(request, supplier_id, invoice_id):
+    inv = get_object_or_404(SupplierInvoice, pk=invoice_id, supplier_id=supplier_id)
+    if request.method == "POST":
+        form = InvoiceItemForm(request.POST)
+        if form.is_valid():
+            item = form.save(commit=False)
+            item.invoice = inv
+            item.save()
+            messages.success(request, "Invoice item added.")
+        else:
+            messages.error(request, "Error adding invoice item.")
+    return redirect("inventory:supplier_invoices", supplier_id=supplier_id)

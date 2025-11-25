@@ -1,5 +1,5 @@
 from django import forms
-from .models import Expense, Event, Operation, ExpenseRequestType, ExpenseCategory, EventCategory, OperationCategory, Activation, ActivationCategory
+from .models import Expense, Event, Operation, ExpenseRequestType, ExpenseCategory, EventCategory, OperationCategory, Activation, ActivationCategory,InventoryItem, Supplier, SupplierInvoice,InvoiceItem, InventoryTransaction
 from wallet.models import Wallet
 class EventExpenseForm(forms.ModelForm):
     class Meta:
@@ -213,3 +213,82 @@ class PaymentForm(forms.Form):
         return cleaned_data
 
 
+class InventoryItemForm(forms.ModelForm):
+    class Meta:
+        model = InventoryItem
+        fields = [
+            "name",
+            "organization",
+            "asset_type",
+            "description",
+            "cost",
+            "lease_cost",
+            "captured_by",
+            "state",
+            "is_active",
+        ]
+        widgets = {
+            "date_captured": forms.DateInput(attrs={"type": "date"}),
+        }
+
+
+class InventoryTransactionForm(forms.ModelForm):
+    class Meta:
+        model = InventoryTransaction
+        fields = [
+            "item",
+            "transaction_type",
+            "checked_out_by",
+            "check_out_date",
+            "check_in_date",
+            "check_out_remarks",
+            "check_in_remarks",
+            "check_in_by",
+        ]
+        widgets = {
+            "check_out_date": forms.DateTimeInput(attrs={"type": "datetime-local"}),
+            "check_in_date": forms.DateTimeInput(attrs={"type": "datetime-local"}),
+        }
+
+
+class SupplierForm(forms.ModelForm):
+    class Meta:
+        model = Supplier
+        fields = [
+            "name",
+            "service_category",
+            "address",
+            "city",
+            "organization",
+            "email",
+            "mobile_number",
+            "captured_by",
+            "is_active",
+        ]
+
+
+class SupplierInvoiceForm(forms.ModelForm):
+    class Meta:
+        model = SupplierInvoice
+        fields = [
+            "supplier",
+            "invoice_number",
+            "date_issued",
+            "due_date",
+            "total_amount",
+            "paid",
+            "payment_date",
+            "payment_method",
+            "remarks",
+        ]
+        widgets = {
+            "date_issued": forms.DateInput(attrs={"type": "date"}),
+            "due_date": forms.DateInput(attrs={"type": "date"}),
+            "payment_date": forms.DateInput(attrs={"type": "date"}),
+        }
+
+
+class InvoiceItemForm(forms.ModelForm):
+    class Meta:
+        model = InvoiceItem
+        fields = ["invoice", "name", "quantity", "unit_price", "state_of_item"]

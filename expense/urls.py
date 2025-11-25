@@ -34,4 +34,27 @@ urlpatterns = [
     path('analytics/data/', views.analytics_data, name='analytics_data'),
     path('download-batch-template/', views.download_batch_template, name='download_batch_template'),
     # path('csv-preview/', views.preview_expense_csv, name='preview_expense_csv'),
+
+    # Inventory
+    path("inventory/", views.inventory_list, name="list"),
+    path("create/", views.inventory_create, name="create"),
+    path("<int:pk>/edit/", views.inventory_edit, name="edit"),
+    path("<int:pk>/delete/", views.inventory_delete, name="delete"),
+    path("<int:pk>/checkout/", views.inventory_check_out, name="checkout"),
+    path("<int:pk>/checkin/", views.inventory_check_in, name="checkin"),
+
+    # Suppliers
+    path("suppliers/", views.suppliers_list, name="suppliers"),
+    path("suppliers/create/", views.supplier_create, name="supplier-create"),
+    path("suppliers/<int:pk>/edit/", views.supplier_edit, name="supplier-edit"),
+    path("suppliers/<int:pk>/delete/", views.supplier_delete, name="supplier-delete"),
+
+    # Supplier invoices
+    path("suppliers/<int:supplier_id>/invoices/", views.supplier_invoices, name="supplier_invoices"),
+    path("suppliers/<int:supplier_id>/invoices/create/", views.supplier_invoice_create, name="invoice-create"),
+    path("suppliers/<int:supplier_id>/invoices/<int:invoice_id>/edit/", views.supplier_invoice_edit, name="invoice-edit"),
+    path("suppliers/<int:supplier_id>/invoices/<int:invoice_id>/delete/", views.supplier_invoice_delete, name="invoice-delete"),
+    path("suppliers/<int:supplier_id>/invoices/<int:invoice_id>/items/create/", views.invoice_item_create, name="invoice-item-create"),
+
+
 ]

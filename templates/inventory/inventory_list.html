@@ -1,0 +1,187 @@
+{% extends "partials/dashboard-base.html" %}
+{% load static %}
+{% load humanize %}
+{% block content %}
+<section class="dashboard-section body-collapse">
+  <div class="overlay pt-120">
+    <div class="container-fluid">
+      <div class="section-header">
+        <div class="row align-items-center">
+          <div class="col-lg-8">
+            <h4 class="section-title text-gradient mb-0">Inventory</h4>
+            <p class="section-subtitle mb-0">Create and track Inventory Items.</p>
+          </div>
+          <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newItemModal">
+              <i class="fas fa-plus me-2"></i>New Item
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-responsive mt-4">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Name</th>
+              <th>Asset Type</th>
+              <th>Captured</th>
+              <th>Cost</th>
+              <th>Lease Cost</th>
+              <th>State</th>
+              <th>Captured By</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in items %}
+            <tr>
+              <td>{{ forloop.counter }}</td>
+              <td>{{ item.name }}</td>
+              <td>{{ item.get_asset_type_display }}</td>
+              <td>{{ item.date_captured }}</td>
+              <td>{{ item.cost|intcomma }}</td>
+              <td>{{ item.lease_cost|default:"-" }}</td>
+              <td>{{ item.state }}</td>
+              <td>{{ item.captured_by }}</td>
+              <td>
+                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editItemModal-{{ item.id }}">
+                  Edit
+                </button>
+                <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteItemModal-{{ item.id }}">
+                  Delete
+                </button>
+
+                {% if item.state == "Available" %}
+                  <button class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#checkoutModal-{{ item.id }}">
+                    Check Out
+                  </button>
+                {% else %}
+                  <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#checkinModal-{{ item.id }}">
+                    Check In
+                  </button>
+                {% endif %}
+              </td>
+            </tr>
+
+            {# EDIT MODAL #}
+            <div class="modal fade" id="editItemModal-{{ item.id }}" tabindex="-1" aria-hidden="true">
+              <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                  <form method="post" action="{% url 'inventory:edit' item.id %}">
+                    {% csrf_token %}
+                    <div class="modal-header">
+                      <h5 class="modal-title">Edit Item — {{ item.name }}</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                      {{ item_edit_forms[item.id].as_p }}
+                    </div>
+                    <div class="modal-footer">
+                      <button type="submit" class="btn btn-primary">Save changes</button>
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+            {# DELETE MODAL #}
+            <div class="modal fade" id="deleteItemModal-{{ item.id }}" tabindex="-1" aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <form method="post" action="{% url 'inventory:delete' item.id %}">
+                    {% csrf_token %}
+                    <div class="modal-header">
+                      <h5 class="modal-title">Delete Item — {{ item.name }}</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                      Are you sure you want to remove this item from inventory?
+                    </div>
+                    <div class="modal-footer">
+                      <button type="submit" class="btn btn-danger">Yes, remove</button>
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+            {# CHECKOUT MODAL #}
+            <div class="modal fade" id="checkoutModal-{{ item.id }}" tabindex="-1" aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <form method="post" action="{% url 'inventory:checkout' item.id %}">
+                    {% csrf_token %}
+                    <div class="modal-header">
+                      <h5 class="modal-title">Check Out — {{ item.name }}</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                      {{ checkout_forms[item.id].as_p }}
+                      <p><small>Default check out date/time will be set if left blank.</small></p>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="submit" class="btn btn-success">Check Out</button>
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+            {# CHECKIN MODAL #}
+            <div class="modal fade" id="checkinModal-{{ item.id }}" tabindex="-1" aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <form method="post" action="{% url 'inventory:checkin' item.id %}">
+                    {% csrf_token %}
+                    <div class="modal-header">
+                      <h5 class="modal-title">Check In — {{ item.name }}</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                      {{ checkin_forms[item.id].as_p }}
+                    </div>
+                    <div class="modal-footer">
+                      <button type="submit" class="btn btn-warning">Check In</button>
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+{# NEW ITEM MODAL #}
+<div class="modal fade" id="newItemModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <form method="post" action="{% url 'inventory:create' %}">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title">New Inventory Item</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          {{ new_form.as_p }}
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Create Item</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock content %}

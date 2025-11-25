@@ -1,0 +1,123 @@
+{% extends "partials/dashboard-base.html" %}
+{% load static %}
+{% block content %}
+<section class="dashboard-section body-collapse">
+  <div class="overlay pt-120">
+    <div class="container-fluid">
+      <div class="section-header">
+        <div class="row align-items-center">
+          <div class="col-lg-8">
+            <h4 class="section-title text-gradient mb-0">Invoices — {{ supplier.name }}</h4>
+            <p class="section-subtitle mb-0">Manage supplier invoices.</p>
+          </div>
+          <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newInvoiceModal">
+              <i class="fas fa-plus me-2"></i>New Invoice
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-responsive mt-4">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Invoice #</th>
+              <th>Date</th>
+              <th>Total</th>
+              <th>Due</th>
+              <th>Paid</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for inv in invoices %}
+            <tr>
+              <td>{{ forloop.counter }}</td>
+              <td>{{ inv.invoice_number }}</td>
+              <td>{{ inv.date_issued }}</td>
+              <td>{{ inv.total_amount|intcomma }}</td>
+              <td>{{ inv.due_date|default:"-" }}</td>
+              <td>{% if inv.paid %}Yes ({{ inv.payment_date }}){% else %}No{% endif %}</td>
+              <td>
+                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editInvoiceModal-{{ inv.id }}">Edit</button>
+                <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteInvoiceModal-{{ inv.id }}">Delete</button>
+              </td>
+            </tr>
+
+            {# EDIT INVOICE MODAL #}
+            <div class="modal fade" id="editInvoiceModal-{{ inv.id }}" tabindex="-1" aria-hidden="true">
+              <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                  <form method="post" action="{% url 'inventory:invoice-edit' supplier.id inv.id %}">
+                    {% csrf_token %}
+                    <div class="modal-header">
+                      <h5 class="modal-title">Edit Invoice — {{ inv.invoice_number }}</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                      {{ invoice_forms[inv.id].as_p }}
+                    </div>
+                    <div class="modal-footer">
+                      <button type="submit" class="btn btn-primary">Save</button>
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+            {# DELETE INVOICE MODAL #}
+            <div class="modal fade" id="deleteInvoiceModal-{{ inv.id }}" tabindex="-1" aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <form method="post" action="{% url 'inventory:invoice-delete' supplier.id inv.id %}">
+                    {% csrf_token %}
+                    <div class="modal-header">
+                      <h5 class="modal-title">Delete Invoice — {{ inv.invoice_number }}</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                      Are you sure you want to delete this invoice?
+                    </div>
+                    <div class="modal-footer">
+                      <button type="submit" class="btn btn-danger">Delete</button>
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+{# NEW INVOICE MODAL #}
+<div class="modal fade" id="newInvoiceModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <form method="post" action="{% url 'inventory:invoice-create' supplier.id %}">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title">New Invoice — {{ supplier.name }}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          {{ new_invoice_form.as_p }}
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Create Invoice</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock content %}
