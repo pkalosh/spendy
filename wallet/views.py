@@ -1884,7 +1884,7 @@ def staff_dashboard(request):
         
     except StaffProfile.DoesNotExist as e:
         if request.user.is_admin:
-            return redirect("wallet:staff-dashboard")
+            return redirect("wallet:dashboard")
         # Log the error
         print(f"Staff profile error: {e}")
         # Add error message to be displayed on the page

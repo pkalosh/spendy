@@ -17,6 +17,7 @@ from userauths.forms import UserRegisterForm, ContactMessageForm,DemoForm
 from django.core.mail import send_mail
 import re
 import logging
+from wallet.sms_service import SMSService  # New: SMS service for admin notifications
 
 from mailjet_rest import Client  # New: Mailjet API client
 
@@ -178,33 +179,33 @@ def RegisterView(request):
                             ],
                             "Subject": 'Welcome to Spendy — where event expense management gets simple',
                             "TextPart": f"""
-Hi {first_name},
-Welcome to Spendy! We're excited to help you take control of your event and operational expenses.
-Ready to get started? Set up your first wallet in under 2 minutes: https://spendy.africa/sign-in/
-With Spendy, you can:
-- Create dedicated wallets for events and operations
-- Manage and approve expenses in real time
-- Track budgets and spending effortlessly
-- Generate reports that keep your team informed
-We built Spendy for event professionals like you who value transparency, teamwork, and smarter financial decisions.
-Need help? Our support team is here for you at info@spendy.africa
-Best regards,
-The Spendy Team
-                            """.strip(),
-                            "HTMLPart": f"""
-<h3>Hi {first_name},</h3>
-<p>Welcome to Spendy! We're excited to help you take control of your event and operational expenses.</p>
-<p><strong>Ready to get started?</strong> Set up your first wallet in under 2 minutes: <a href="https://spendy.africa/sign-in/">https://spendy.africa/sign-in/</a></p>
-<p>With Spendy, you can:</p>
-<ul>
-<li>Create dedicated wallets for events and operations</li>
-<li>Manage and approve expenses in real time</li>
-<li>Track budgets and spending effortlessly</li>
-<li>Generate reports that keep your team informed</li>
-</ul>
-<p>We built Spendy for event professionals like you who value transparency, teamwork, and smarter financial decisions.</p>
-<p>Need help? Our support team is here for you at <a href="mailto:info@spendy.africa">info@spendy.africa</a></p>
-<p>Best regards,<br>The Spendy Team</p>
+                                Hi {first_name},
+                                Welcome to Spendy! We're excited to help you take control of your event and operational expenses.
+                                Ready to get started? Set up your first wallet in under 2 minutes: https://spendy.africa/sign-in/
+                                With Spendy, you can:
+                                - Create dedicated wallets for events and operations
+                                - Manage and approve expenses in real time
+                                - Track budgets and spending effortlessly
+                                - Generate reports that keep your team informed
+                                We built Spendy for event professionals like you who value transparency, teamwork, and smarter financial decisions.
+                                Need help? Our support team is here for you at info@spendy.africa
+                                Best regards,
+                                The Spendy Team
+                                                            """.strip(),
+                                                            "HTMLPart": f"""
+                                <h3>Hi {first_name},</h3>
+                                <p>Welcome to Spendy! We're excited to help you take control of your event and operational expenses.</p>
+                                <p><strong>Ready to get started?</strong> Set up your first wallet in under 2 minutes: <a href="https://spendy.africa/sign-in/">https://spendy.africa/sign-in/</a></p>
+                                <p>With Spendy, you can:</p>
+                                <ul>
+                                <li>Create dedicated wallets for events and operations</li>
+                                <li>Manage and approve expenses in real time</li>
+                                <li>Track budgets and spending effortlessly</li>
+                                <li>Generate reports that keep your team informed</li>
+                                </ul>
+                                <p>We built Spendy for event professionals like you who value transparency, teamwork, and smarter financial decisions.</p>
+                                <p>Need help? Our support team is here for you at <a href="mailto:info@spendy.africa">info@spendy.africa</a></p>
+                                <p>Best regards,<br>The Spendy Team</p>
                             """,  # Simple HTML version for better rendering
                         }
                     ]
@@ -221,6 +222,13 @@ The Spendy Team
                 logger.error(f"Mailjet API email failed for {new_user.email}: {email_err}", exc_info=True)
                 # Don't rollback transaction for email failure
                 messages.info(request, "Account created! (Welcome email delivery delayed—check spam folder.)")
+
+
+            #send email to admin
+            #send sms to admin
+            # sms_to _admin = M
+
+
 
             messages.success(request, f"Hey {first_name}, your account was created successfully.")
             logger.info(f"Registration successful for user {new_user.id}; redirecting to wallet")
@@ -247,38 +255,54 @@ The Spendy Team
     # GET: Render template
     return render(request, "users/sign-up.html")
 def LoginView(request):
+
     if request.method == "POST":
         email = request.POST.get("email")
         password = request.POST.get("password")
-        print(email, password)
 
-        try:
-            user = User.objects.get(email=email)
-            user = authenticate(request, email=email, password=password)
+        user = authenticate(request, email=email, password=password)
 
-            if user is not None:
-                login(request, user)
-                messages.success(request, "Welcome Back!")
-
-                # Now check roles
-                if user.is_admin and hasattr(user, 'staffprofile') and user.staffprofile.role.is_admin:
-                    return redirect("wallet:dashboard")
-                elif user.is_staff or (hasattr(user, 'staffprofile') and user.staffprofile.role in ["staff", "org_staff"]):
-                    return redirect("wallet:staff-dashboard")
-                else:
-                    messages.warning(request, "Unauthorized role.")
-                    return redirect("userauths:sign-in")
-            else:
-                messages.warning(request, "Username or password does not exist")
-                return redirect("userauths:sign-in")
-
-        except User.DoesNotExist:
-            messages.warning(request, "User does not exist")
+        if user is None:
+            messages.warning(request, "Invalid email or password")
             return redirect("userauths:sign-in")
 
+        login(request, user)
+        messages.success(request, "Welcome Back!")
+
+        # Role-based redirects
+        role = getattr(user.staffprofile, "role", None)
+
+        if role:
+            if role.is_admin:
+                return redirect("wallet:dashboard")
+
+            # org_staff == approver
+            if role.is_approver:
+                return redirect("wallet:staff-dashboard")
+
+            # normal staff
+            return redirect("wallet:staff-dashboard")
+
+        # No role
+        messages.warning(request, "Unauthorized role.")
+        return redirect("userauths:sign-in")
+
+
+    # If already authenticated
     if request.user.is_authenticated:
-        messages.warning(request, "You are already logged In")
-        return redirect("wallet:dashboard")
+        role = getattr(request.user.staffprofile, "role", None)
+
+        if role:
+            if role.is_admin:
+                return redirect("wallet:dashboard")
+
+            if role.is_approver:
+                return redirect("wallet:staff-dashboard")
+
+            return redirect("wallet:staff-dashboard")
+
+        messages.warning(request, "Unauthorized role.")
+        return redirect("userauths:sign-in")
 
     return render(request, "users/sign-in.html")
 
