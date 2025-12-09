@@ -7,200 +7,224 @@
 <section class="dashboard-section body-collapse">
     <div class="overlay pt-120">
         <div class="container-fluid">
-            <!-- First Row: Expense Details -->
-            <div class="row mb-3">
-                <div class="col-12">
-                    <h4 class="mb-3">Expense Details</h4>
-                </div>
-                <div class="col-md-4">
-                    <div class="card shadow-sm">
-                        <div class="card-header bg-secondary text-black d-flex justify-content-between align-items-center">
-                            <span>Item Details</span>
+            <!-- Hero Stats Row: Executive Overview with Big Numbers -->
+            <div class="row mb-4 g-3">
+                {% if item_type == 'event' or item_type == 'operation' or item_type == 'activation' %}
+                    <div class="col-md-3 col-sm-6">
+                        <div class="card h-100 shadow-sm border-0" style="background-color: white;">
+                            <div class="card-body text-center p-4">
+                                <i class="fas fa-clock fa-2x mb-2 text-success" style="color: #98e23f;"></i>
+                                <h2 class="display-6 mb-1 text-dark fw-bold">{{ expense_summary.pending|intcomma }}</h2>
+                                <p class="mb-0 text-black-50 fw-semibold">Pending Expenses</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="card h-100 shadow-sm border-0" style="background-color: white;">
+                            <div class="card-body text-center p-4">
+                                <i class="fas fa-check fa-2x mb-2 text-success" style="color: #98e23f;"></i>
+                                <h2 class="display-6 mb-1 text-dark fw-bold">{{ expense_summary.approved|intcomma }}</h2>
+                                <p class="mb-0 text-black-50 fw-semibold">Approved Expenses</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="card h-100 shadow-sm border-0" style="background-color: white;">
+                            <div class="card-body text-center p-4">
+                                <i class="fas fa-times fa-2x mb-2 text-success" style="color: #98e23f;"></i>
+                                <h2 class="display-6 mb-1 text-dark fw-bold">{{ expense_summary.declined|intcomma }}</h2>
+                                <p class="mb-0 text-black-50 fw-semibold">Declined Expenses</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="card h-100 shadow-sm border-0" style="background-color: white;">
+                            <div class="card-body text-center p-4">
+                                <i class="fas fa-chart-line fa-2x mb-2 text-success" style="color: #98e23f;"></i>
+                                <h2 class="display-6 mb-1 text-dark fw-bold">{{ total_amount|intcomma }}</h2>
+                                <p class="mb-0 text-black-50 fw-semibold">Grand Total</p>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    {% if summaries %}
+                        {% for summary in summaries %}
+                            <div class="col-md-3 col-sm-6">
+                                <div class="card h-100 shadow-sm border-0" style="background-color: white;">
+                                    <div class="card-body text-center p-4">
+                                        <i class="fas fa-info-circle fa-2x mb-2 text-success" style="color: #98e23f;"></i>
+                                        <h2 class="display-6 mb-1 text-dark fw-bold">{{ summary.amount|intcomma }}</h2>
+                                        <p class="mb-0 text-black-50 fw-semibold">{{ summary.status }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                        {% if summaries|length < 4 %}
+                            <div class="col-md-3 col-sm-6">
+                                <div class="card h-100 shadow-sm border-0" style="background-color: white;">
+                                    <div class="card-body text-center p-4">
+                                        <i class="fas fa-chart-line fa-2x mb-2 text-success" style="color: #98e23f;"></i>
+                                        <h2 class="display-6 mb-1 text-dark fw-bold">{{ total_amount|intcomma }}</h2>
+                                        <p class="mb-0 text-black-50 fw-semibold">Grand Total</p>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="col-12">
+                            <div class="alert alert-info text-center">No summary data available.</div>
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+
+            <!-- Main Content Row: Item Details and Categories -->
+            <div class="row mb-4 g-4">
+                <div class="col-lg-8">
+                    <div class="card shadow-sm h-100 border-0">
+                        <div class="card-header d-flex justify-content-between align-items-center" style="background-color: white; color: black; font-weight: 600; border-bottom: 2px solid #98e23f;">
+                            <span>{% if item_type == 'event' or item_type == 'operation' or item_type == 'activation' %}
+                                {% if item_type == 'event' %}Event{% elif item_type == 'operation' %}Operation{% else %}Activation{% endif %} Details
+                            {% else %}
+                                Expense Details
+                            {% endif %}</span>
                             {% if item_type == 'event' or item_type == 'operation' or item_type == 'activation' %}
                                 <div class="dropdown">
-                                    <button class="btn btn-sm btn-outline-light" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <button class="btn btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="background-color: #98e23f; border: 1px solid #98e23f; color: white;">
                                         <i class="fas fa-ellipsis-v"></i>
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end">
                                         <li>
                                             <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editItemModal">
-                                                <i class="fas fa-edit me-2"></i>Edit {% if item_type == 'event' %}Event{% elif item_type == 'operation' %}Operation{% else %}Activation{% endif %}
+                                                <i class="fas fa-edit me-2"></i>Edit Item
                                             </a>
                                         </li>
                                     </ul>
                                 </div>
                             {% endif %}
                         </div>
-                        <div class="card-body">
-                            <div class="row g-3">
+                        <div class="card-body p-4">
+                            <div class="row g-4">
                                 {% if item_type == 'event' %}
-                                    <div class="col-12 border-bottom">
-                                        <h5>{{ item.name }}</h5>
-                                    </div>
-                                    <div class="col-12 border-bottom">
-                                        <small class="text-muted d-block">Category</small>
-                                        <div>{{ item.category }}</div>
-                                    </div>
-                                    <div class="col-12 border-bottom">
-                                        <small class="text-muted d-block">Created By</small>
-                                        <div>{{ item.created_by.first_name }} {{ item.created_by.last_name }}</div>
-                                    </div>
-                                    <div class="col-12 border-bottom">
-                                        <small class="text-muted d-block">Budget</small>
-                                        <div>{{ item.budget|intcomma }} {% if item.budget_file %}<a href="{{ item.budget_file.url }}" target="_blank" class="btn btn-sm btn-primary">Download Budget File</a>{% endif %}</div>
-                                    </div>
-                                    <div class="col-12 border-bottom">
-                                        <small class="text-muted d-block">Start Date</small>
-                                        <div>{{ item.start_date }}</div>
-                                    </div>
-                                    <div class="col-12 border-bottom">
-                                        <small class="text-muted d-block">End Date</small>
-                                        <div>{{ item.end_date }}</div>
-                                    </div>
                                     <div class="col-12">
-                                        <small class="text-muted d-block">Created On</small>
-                                        <div>{{ item.created_at }}</div>
+                                        <h5 class="mb-3 text-dark fw-bold">{{ item.name }}</h5>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted d-block fw-semibold">Category</small>
+                                        <p class="mb-0">{{ item.category }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted d-block fw-semibold">Created By</small>
+                                        <p class="mb-0">{{ item.created_by.first_name }} {{ item.created_by.last_name }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted d-block fw-semibold">Budget</small>
+                                        <p class="mb-0">{{ item.budget|intcomma }} {% if item.budget_file %}<a href="{{ item.budget_file.url }}" target="_blank" class="btn btn-sm ms-2" style="background-color: #98e23f; color: white;">Download Budget File</a>{% endif %}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted d-block fw-semibold">Start Date</small>
+                                        <p class="mb-0">{{ item.start_date }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted d-block fw-semibold">End Date</small>
+                                        <p class="mb-0">{{ item.end_date }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted d-block fw-semibold">Created On</small>
+                                        <p class="mb-0">{{ item.created_at }}</p>
                                     </div>
                                 {% elif item_type == 'operation' %}
-                                    <div class="col-12 border-bottom">
-                                        <h5>{{ item.name }}</h5>
-                                    </div>
-                                    <div class="col-12 border-bottom">
-                                        <small class="text-muted d-block">Category</small>
-                                        <div>{{ item.category }}</div>
-                                    </div>
-                                    <div class="col-12 border-bottom">
-                                        <small class="text-muted d-block">Created By</small>
-                                        <div>{{ item.created_by.first_name }} {{ item.created_by.last_name }}</div>
-                                    </div>
-                                    <div class="col-12 border-bottom">
-                                        <small class="text-muted d-block">Budget</small>
-                                        <div>{{ item.budget|intcomma }} {% if item.budget_file %}<a href="{{ item.budget_file.url }}" target="_blank" class="btn btn-sm btn-primary">Download Budget File</a>{% endif %}</div>
-                                    </div>
                                     <div class="col-12">
-                                        <small class="text-muted d-block">Created On</small>
-                                        <div>{{ item.created_at }}</div>
+                                        <h5 class="mb-3 text-dark fw-bold">{{ item.name }}</h5>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted d-block fw-semibold">Category</small>
+                                        <p class="mb-0">{{ item.category }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted d-block fw-semibold">Created By</small>
+                                        <p class="mb-0">{{ item.created_by.first_name }} {{ item.created_by.last_name }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted d-block fw-semibold">Budget</small>
+                                        <p class="mb-0">{{ item.budget|intcomma }} {% if item.budget_file %}<a href="{{ item.budget_file.url }}" target="_blank" class="btn btn-sm ms-2" style="background-color: #98e23f; color: white;">Download Budget File</a>{% endif %}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted d-block fw-semibold">Created On</small>
+                                        <p class="mb-0">{{ item.created_at }}</p>
                                     </div>
                                 {% elif item_type == 'activation' %}
-                                    <div class="col-12 border-bottom">
-                                        <h5>{{ item.name }}</h5>
-                                    </div>
-                                    <div class="col-12 border-bottom">
-                                        <small class="text-muted d-block">Category</small>
-                                        <div>{{ item.category }}</div>
-                                    </div>
-                                    <div class="col-12 border-bottom">
-                                        <small class="text-muted d-block">Client</small>
-                                        <div>{{ item.client }}</div>
-                                    </div>
-                                    <div class="col-12 border-bottom">
-                                        <small class="text-muted d-block">Budget</small>
-                                        <div>{{ item.budget|intcomma }}{% if item.budget_file %}<a href="{{ item.budget_file.url }}" target="_blank" class="btn btn-sm btn-primary">Download Budget File</a>{% endif %}</div>
-                                    </div>
-                                    <div class="col-12 border-bottom">
-                                        <small class="text-muted d-block">Project Lead</small>
-                                        <div>{{ item.project_lead }}</div>
-                                    </div>
                                     <div class="col-12">
-                                        <small class="text-muted d-block">Created On</small>
-                                        <div>{{ item.created_at }}</div>
+                                        <h5 class="mb-3 text-dark fw-bold">{{ item.name }}</h5>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted d-block fw-semibold">Category</small>
+                                        <p class="mb-0">{{ item.category }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted d-block fw-semibold">Client</small>
+                                        <p class="mb-0">{{ item.client }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted d-block fw-semibold">Budget</small>
+                                        <p class="mb-0">{{ item.budget|intcomma }}{% if item.budget_file %}<a href="{{ item.budget_file.url }}" target="_blank" class="btn btn-sm ms-2" style="background-color: #98e23f; color: white;">Download Budget File</a>{% endif %}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted d-block fw-semibold">Project Lead</small>
+                                        <p class="mb-0">{{ item.project_lead }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted d-block fw-semibold">Created On</small>
+                                        <p class="mb-0">{{ item.created_at }}</p>
                                     </div>
                                 {% else %}
-                                    <div class="col-12 border-bottom">
-                                        <small class="text-muted d-block">Name</small>
-                                        <div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted d-block fw-semibold">Name</small>
+                                        <p class="mb-0">
                                             {% if event %}{{ event.name }}{% elif operation %}{{ operation.name }}{% elif activation %}{{ activation.name }}{% else %}{{ expense.name }}{% endif %}
-                                        </div>
+                                        </p>
                                     </div>
-                                    <div class="col-12 border-bottom">
-                                        <small class="text-muted d-block">Created By</small>
-                                        <div>{{ expense.created_by.first_name }} {{ expense.created_by.last_name }}</div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted d-block fw-semibold">Created By</small>
+                                        <p class="mb-0">{{ expense.created_by.first_name }} {{ expense.created_by.last_name }}</p>
                                     </div>
-                                    <div class="col-12 border-bottom">
-                                        <small class="text-muted d-block">Expense Category</small>
-                                        <div>{{ expense.expense_category }}</div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted d-block fw-semibold">Expense Category</small>
+                                        <p class="mb-0">{{ expense.expense_category }}</p>
                                     </div>
-                                    <div class="col-12 border-bottom">
-                                        <small class="text-muted d-block">Start Date</small>
-                                        <div>{{ expense.start_date|default:"-" }}</div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted d-block fw-semibold">Start Date</small>
+                                        <p class="mb-0">{{ expense.start_date|default:"-" }}</p>
                                     </div>
-                                    <div class="col-12 border-bottom">
-                                        <small class="text-muted d-block">End Date</small>
-                                        <div>{{ expense.end_date|default:"-" }}</div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted d-block fw-semibold">End Date</small>
+                                        <p class="mb-0">{{ expense.end_date|default:"-" }}</p>
                                     </div>
-                                    <div class="col-12">
-                                        <small class="text-muted d-block">Created On</small>
-                                        <div>{{ expense.created_at }}</div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted d-block fw-semibold">Created On</small>
+                                        <p class="mb-0">{{ expense.created_at }}</p>
                                     </div>
                                 {% endif %}
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="card shadow-sm">
-                        <div class="card-header bg-secondary text-black">
-                            Summary
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-borderless">
-                                    <thead>
-                                        <tr>
-                                            <th>STATUS</th>
-                                            <th>TOTAL AMOUNT</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% if item_type == 'event' or item_type == 'operation' or item_type == 'activation' %}
-                                            <tr>
-                                                <td>Pending</td>
-                                                <td>{{ expense_summary.pending|intcomma }}</td>
-                                            </tr>
-                                            <tr>
-                                                <td>Approved</td>
-                                                <td>{{ expense_summary.approved|intcomma }}</td>
-                                            </tr>
-                                            <tr>
-                                                <td>Declined</td>
-                                                <td>{{ expense_summary.declined|intcomma }}</td>
-                                            </tr>
-                                        {% else %}
-                                            {% if summaries %}
-                                                {% for summary in summaries %}
-                                                    <tr>
-                                                        <td>{{ summary.status }}</td>
-                                                        <td>{{ summary.amount|intcomma }}</td>
-                                                    </tr>
-                                                {% endfor %}
-                                            {% else %}
-                                                <tr>
-                                                    <td colspan="2">No results found.</td>
-                                                </tr>
-                                            {% endif %}
-                                        {% endif %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card shadow-sm">
-                        <div class="card-header bg-secondary text-black">
+                <div class="col-lg-4">
+                    <div class="card shadow-sm h-100 border-0">
+                        <div class="card-header" style="background-color: white; color: black; font-weight: 600; border-bottom: 2px solid #98e23f;">
                             {% if item_type == 'event' or item_type == 'operation' or item_type == 'activation' %}
-                                Total Approved Expenses
+                                Total Approved Expenses by Category
                             {% else %}
-                                Expense Requests
+                                Expense Requests by Category
                             {% endif %}
                         </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-borderless">
+                        <div class="card-body p-4">
+                            <div class="table-responsive d-print-block d-sm-table d-md-table" style="overflow-x: auto; white-space: nowrap;">
+                                <table class="table table-borderless mb-0 w-100">
                                     <thead>
                                         <tr>
-                                            <th>CATEGORY</th>
-                                            <th>TOTAL AMOUNT</th>
+                                            <th style="width: 60%;">Category</th>
+                                            <th style="width: 40%; text-align: right;">Amount</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -209,12 +233,12 @@
                                                 {% for category in expense_categories %}
                                                     <tr>
                                                         <td>{{ category.expense_category__name }}</td>
-                                                        <td>{{ category.total|intcomma }}</td>
+                                                        <td class="fw-bold text-end">{{ category.total|intcomma }}</td>
                                                     </tr>
                                                 {% endfor %}
                                             {% else %}
                                                 <tr>
-                                                    <td colspan="2">No approved expenses found.</td>
+                                                    <td colspan="2" class="text-center text-muted">No approved expenses found.</td>
                                                 </tr>
                                             {% endif %}
                                         {% else %}
@@ -222,29 +246,29 @@
                                                 {% for request in expense_requests %}
                                                     <tr>
                                                         <td>{{ request.category }}</td>
-                                                        <td>{{ request.amount|intcomma }}</td>
+                                                        <td class="fw-bold text-end">{{ request.amount|intcomma }}</td>
                                                     </tr>
                                                 {% endfor %}
                                             {% else %}
                                                 <tr>
-                                                    <td colspan="2">No results found.</td>
+                                                    <td colspan="2" class="text-center text-muted">No results found.</td>
                                                 </tr>
                                             {% endif %}
                                         {% endif %}
                                     </tbody>
-                                    <tfoot class="table-dark">
+                                    <tfoot class="table-light">
                                         {% if item_type == 'event' or item_type == 'operation' or item_type == 'activation' %}
                                             {% if expense_categories %}
                                                 <tr>
-                                                    <th>GRAND TOTAL</th>
-                                                    <th>{{ total_amount|intcomma }}</th>
+                                                    <th>Grand Total</th>
+                                                    <th class="fw-bold text-success text-end">{{ total_amount|intcomma }}</th>
                                                 </tr>
                                             {% endif %}
                                         {% else %}
                                             {% if expense_requests %}
                                                 <tr>
-                                                    <th>GRAND TOTAL</th>
-                                                    <th>{{ total_amount|intcomma }}</th>
+                                                    <th>Grand Total</th>
+                                                    <th class="fw-bold text-success text-end">{{ total_amount|intcomma }}</th>
                                                 </tr>
                                             {% endif %}
                                         {% endif %}
@@ -255,7 +279,8 @@
                     </div>
                 </div>
             </div>
-            <!-- Second Row: Accordion for Expense List and Transactions -->
+
+            <!-- Accordion Section: Expenses and Payments -->
             <div class="row mb-4">
                 <div class="col-12">
                     <div class="accordion" id="expenseAccordion">
@@ -269,55 +294,59 @@
                                 {% include "partials/expense_list_partial.html" with expenses=expenses_list query_string=expense_query list_name=expense_list_name list_desc=expense_list_desc %}
                             {% endwith %}
                         {% endif %}
-                        <!-- Transaction List Accordion Item -->
+
+                        <!-- Payments Accordion Item -->
                         {% if item_type == 'event' or item_type == 'operation' or item_type == 'activation' or expense_transactions %}
                             <div class="accordion-item">
                                 <h2 class="accordion-header">
-                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#transactionList" aria-expanded="false" aria-controls="transactionList">
-                                        Payments
+                                    <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#transactionList" aria-expanded="false" aria-controls="transactionList" style="background-color: #f8f9fa; color: #384353;">
+                                        Payments & Transactions
                                     </button>
                                 </h2>
                                 <div id="transactionList" class="accordion-collapse collapse" data-bs-parent="#expenseAccordion">
                                     <div class="accordion-body">
-                                        <div class="card shadow-sm">
-                                            <div class="card-header bg-secondary text-black d-flex justify-content-between align-items-center">
+                                        <div class="card shadow-sm border-0">
+                                            <div class="card-header d-flex justify-content-between align-items-center" style="background-color: white; color: black; border-bottom: 2px solid #98e23f;">
                                                 <span>{% if item_type == 'event' %}{% if event %}Event{% endif %}{% elif item_type == 'operation' %}{% if operation %}Operation{% endif %}{% elif item_type == 'activation' %}{% if activation %}Activation{% endif %}{% else %}Expense{% endif %} Payments</span>
-                                                <button class="btn btn-outline-light" type="button" data-bs-toggle="collapse" data-bs-target="#transactionFilterSection" aria-expanded="false" aria-controls="transactionFilterSection">
+                                                <button class="btn btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#transactionFilterSection" aria-expanded="false" aria-controls="transactionFilterSection" style="background-color: #98e23f; border: 1px solid #98e23f; color: white;">
                                                     <i class="fas fa-filter"></i> Filters
                                                 </button>
                                             </div>
                                             <div class="card-body">
                                                 <!-- Transaction Filter Section -->
                                                 <div class="collapse mb-4" id="transactionFilterSection">
-                                                    <div class="card card-body">
-                                                        <form method="GET" id="transactionFilterForm">
-                                                            <div class="row">
-                                                                <div class="col-md-3">
-                                                                    <label for="txn_status_filter" class="form-label">Status</label>
-                                                                    <select name="txn_status" id="txn_status_filter" class="form-select">
-                                                                        <option value="">All Status</option>
-                                                                        <option value="completed" {% if request.GET.txn_status == 'completed' %}selected{% endif %}>Completed</option>
-                                                                        <option value="pending" {% if request.GET.txn_status == 'pending' %}selected{% endif %}>Pending</option>
-                                                                        <option value="failed" {% if request.GET.txn_status == 'failed' %}selected{% endif %}>Failed</option>
-                                                                        <option value="cancelled" {% if request.GET.txn_status == 'cancelled' %}selected{% endif %}>Cancelled</option>
-                                                                    </select>
+                                                    <div class="card border-0">
+                                                        <div class="card-body">
+                                                            <form method="GET" id="transactionFilterForm">
+                                                                <div class="row g-3">
+                                                                    <div class="col-md-3">
+                                                                        <label for="txn_status_filter" class="form-label">Status</label>
+                                                                        <select name="txn_status" id="txn_status_filter" class="form-select">
+                                                                            <option value="">All Status</option>
+                                                                            <option value="completed" {% if request.GET.txn_status == 'completed' %}selected{% endif %}>Completed</option>
+                                                                            <option value="pending" {% if request.GET.txn_status == 'pending' %}selected{% endif %}>Pending</option>
+                                                                            <option value="failed" {% if request.GET.txn_status == 'failed' %}selected{% endif %}>Failed</option>
+                                                                            <option value="cancelled" {% if request.GET.txn_status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                                                                        </select>
+                                                                    </div>
+                                                                    <div class="col-md-2">
+                                                                        <label for="txn_date_from" class="form-label">From Date</label>
+                                                                        <input type="date" name="txn_date_from" id="txn_date_from" class="form-control" value="{{ request.GET.txn_date_from }}">
+                                                                    </div>
+                                                                    <div class="col-md-2">
+                                                                        <label for="txn_date_to" class="form-label">To Date</label>
+                                                                        <input type="date" name="txn_date_to" id="txn_date_to" class="form-control" value="{{ request.GET.txn_date_to }}">
+                                                                    </div>
+                                                                    <div class="col-md-2 d-flex align-items-end">
+                                                                        <button type="submit" class="btn me-2" style="background-color: #98e23f; color: white;">Apply</button>
+                                                                        <a href="" class="btn" style="background-color: #6c757d; color: white;">Clear</a>
+                                                                    </div>
                                                                 </div>
-                                                                <div class="col-md-2">
-                                                                    <label for="txn_date_from" class="form-label">From Date</label>
-                                                                    <input type="date" name="txn_date_from" id="txn_date_from" class="form-control" value="{{ request.GET.txn_date_from }}">
-                                                                </div>
-                                                                <div class="col-md-2">
-                                                                    <label for="txn_date_to" class="form-label">To Date</label>
-                                                                    <input type="date" name="txn_date_to" id="txn_date_to" class="form-control" value="{{ request.GET.txn_date_to }}">
-                                                                </div>
-                                                                <div class="col-md-2 d-flex align-items-end">
-                                                                    <button type="submit" class="btn btn-primary me-2">Apply</button>
-                                                                    <a href="" class="btn btn-secondary">Clear</a>
-                                                                </div>
-                                                            </div>
-                                                        </form>
+                                                            </form>
+                                                        </div>
                                                     </div>
                                                 </div>
+
                                                 <!-- Desktop Transaction Table -->
                                                 <div class="table-responsive d-none d-md-block">
                                                     <table id="transactions-table" class="table table-hover">
@@ -352,7 +381,7 @@
                                                                             {% elif txn.transaction_type == 'paybill' %}
                                                                                 <span class="badge bg-secondary">Paybill</span>
                                                                             {% else %}
-                                                                                <span class="badge bg-light text-dark">{{ txn.transaction_type|title|default:"-" }}</span>
+                                                                                <span class="badge bg-dark text-white">{{ txn.transaction_type|title|default:"-" }}</span>
                                                                             {% endif %}
                                                                         </td>
                                                                         <td>
@@ -361,7 +390,7 @@
                                                                             {% elif txn.status == 'failed' or txn.status == 'cancelled' %}
                                                                                 <span class="badge bg-danger">{{ txn.status|title }}</span>
                                                                             {% else %}
-                                                                                <span class="badge bg-warning">{{ txn.status|title|default:"Pending" }}</span>
+                                                                                <span class="badge bg-warning text-dark">{{ txn.status|title|default:"Pending" }}</span>
                                                                             {% endif %}
                                                                         </td>
                                                                         <td>{{ txn.date|date:"M d, Y H:i"|default:txn.created_at|date:"M d, Y H:i" }}</td>
@@ -371,7 +400,7 @@
                                                                             </span>
                                                                         </td>
                                                                         <td>
-                                                                            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#txnModal{{ txn.id }}">View</button>
+                                                                            <button class="btn btn-sm" data-bs-toggle="modal" data-bs-target="#txnModal{{ txn.id }}" style="background-color: #98e23f; color: white;">View</button>
                                                                         </td>
                                                                     </tr>
                                                                 {% endfor %}
@@ -383,10 +412,11 @@
                                                         </tbody>
                                                     </table>
                                                 </div>
+
                                                 <!-- Mobile Transaction Cards -->
                                                 <div class="d-md-none">
                                                     {% for txn in expense_transactions %}
-                                                        <div class="card mb-3">
+                                                        <div class="card mb-3 border-0 shadow-sm">
                                                             <div class="card-body">
                                                                 <h6 class="card-subtitle text-muted mb-2">{{ txn.transaction_code|default:"-" }}</h6>
                                                                 <p class="card-text">
@@ -402,7 +432,7 @@
                                                                     {% elif txn.transaction_type == 'paybill' %}
                                                                         <span class="badge bg-secondary">Paybill</span>
                                                                     {% else %}
-                                                                        <span class="badge bg-light text-dark">{{ txn.transaction_type|title|default:"-" }}</span>
+                                                                        <span class="badge bg-dark text-white">{{ txn.transaction_type|title|default:"-" }}</span>
                                                                     {% endif %}<br>
                                                                     <strong>Status:</strong>
                                                                     {% if txn.status == 'completed' %}
@@ -410,18 +440,19 @@
                                                                     {% elif txn.status == 'failed' or txn.status == 'cancelled' %}
                                                                         <span class="badge bg-danger">{{ txn.status|title }}</span>
                                                                     {% else %}
-                                                                        <span class="badge bg-warning">{{ txn.status|title|default:"Pending" }}</span>
+                                                                        <span class="badge bg-warning text-dark">{{ txn.status|title|default:"Pending" }}</span>
                                                                     {% endif %}<br>
                                                                     <strong>Date:</strong> {{ txn.date|date:"M d, Y H:i"|default:txn.created_at|date:"M d, Y H:i" }}<br>
                                                                     <strong>Description:</strong> {{ txn.description|default:"-" }}
                                                                 </p>
-                                                                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#txnModal{{ txn.id }}">View Details</button>
+                                                                <button class="btn btn-sm" data-bs-toggle="modal" data-bs-target="#txnModal{{ txn.id }}" style="background-color: #98e23f; color: white;">View Details</button>
                                                             </div>
                                                         </div>
                                                     {% empty %}
                                                         <div class="alert alert-info">No transactions found.</div>
                                                     {% endfor %}
                                                 </div>
+
                                                 <!-- Transaction Pagination -->
                                                 {% if expense_transactions.has_other_pages %}
                                                     <nav aria-label="Transaction pagination" class="mt-4">
@@ -458,9 +489,10 @@
                                                         </ul>
                                                     </nav>
                                                 {% endif %}
+
                                                 <!-- Supplied Items Section under Payments -->
                                                 {% if supplied_items %}
-                                                    <h5 class="mt-5 mb-3">Supplied Items</h5>
+                                                    <h5 class="mt-5 mb-3 fw-semibold" style="color: #98e23f;">Supplied Items</h5>
                                                     <!-- Desktop Supplied Items Table -->
                                                     <div class="table-responsive d-none d-md-block">
                                                         <table id="supplied-items-table" class="table table-hover">
@@ -487,7 +519,7 @@
                                                                         <td>{{ supplied.total_amount|intcomma }}</td>
                                                                         <td>{{ supplied.obj.invoice.date_issued|date:"M d, Y" }}</td>
                                                                         <td>
-                                                                            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#suppliedModal{{ supplied.obj.id }}">View</button>
+                                                                            <button class="btn btn-sm" data-bs-toggle="modal" data-bs-target="#suppliedModal{{ supplied.obj.id }}" style="background-color: #98e23f; color: white;">View</button>
                                                                         </td>
                                                                     </tr>
                                                                 {% endfor %}
@@ -497,7 +529,7 @@
                                                     <!-- Mobile Supplied Items Cards -->
                                                     <div class="d-md-none">
                                                         {% for supplied in supplied_items %}
-                                                            <div class="card mb-3">
+                                                            <div class="card mb-3 border-0 shadow-sm">
                                                                 <div class="card-body">
                                                                     <h6 class="card-subtitle text-muted mb-2">{{ supplied.obj.name|default:"-" }}</h6>
                                                                     <p class="card-text">
@@ -507,7 +539,7 @@
                                                                         <strong>Total Amount:</strong> {{ supplied.total_amount|intcomma }}<br>
                                                                         <strong>Date Supplied:</strong> {{ supplied.obj.invoice.date_issued|date:"M d, Y" }}
                                                                     </p>
-                                                                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#suppliedModal{{ supplied.obj.id }}">View Details</button>
+                                                                    <button class="btn btn-sm" data-bs-toggle="modal" data-bs-target="#suppliedModal{{ supplied.obj.id }}" style="background-color: #98e23f; color: white;">View Details</button>
                                                                 </div>
                                                             </div>
                                                         {% empty %}
@@ -553,7 +585,7 @@
                                                 {% endif %}
                                                 <!-- Checked Out Items Section under Payments -->
                                                 {% if check_out_items %}
-                                                    <h5 class="mt-5 mb-3">Checked Out Inventory Items</h5>
+                                                    <h5 class="mt-5 mb-3 fw-semibold" style="color: #98e23f;">Checked Out Inventory Items</h5>
                                                     <!-- Desktop Checked Out Items Table -->
                                                     <div class="table-responsive d-none d-md-block">
                                                         <table id="checked-out-items-table" class="table table-hover">
@@ -580,7 +612,7 @@
                                                                         <td>{{ checked.unit_price|intcomma }}</td>
                                                                         <td>{{ checked.obj.transaction_date|date:"M d, Y" }}</td>
                                                                         <td>
-                                                                            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#checkedModal{{ checked.obj.id }}">View</button>
+                                                                            <button class="btn btn-sm" data-bs-toggle="modal" data-bs-target="#checkedModal{{ checked.obj.id }}" style="background-color: #98e23f; color: white;">View</button>
                                                                         </td>
                                                                     </tr>
                                                                 {% endfor %}
@@ -590,7 +622,7 @@
                                                     <!-- Mobile Checked Out Items Cards -->
                                                     <div class="d-md-none">
                                                         {% for checked in check_out_items %}
-                                                            <div class="card mb-3">
+                                                            <div class="card mb-3 border-0 shadow-sm">
                                                                 <div class="card-body">
                                                                     <h6 class="card-subtitle text-muted mb-2">{{ checked.obj.item.name|default:"-" }}</h6>
                                                                     <p class="card-text">
@@ -600,7 +632,7 @@
                                                                         <strong>Total Amount:</strong> {{ checked.unit_price|intcomma }}<br>
                                                                         <strong>Date Checked Out:</strong> {{ checked.obj.transaction_date|date:"M d, Y" }}
                                                                     </p>
-                                                                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#checkedModal{{ checked.obj.id }}">View Details</button>
+                                                                    <button class="btn btn-sm" data-bs-toggle="modal" data-bs-target="#checkedModal{{ checked.obj.id }}" style="background-color: #98e23f; color: white;">View Details</button>
                                                                 </div>
                                                             </div>
                                                         {% empty %}
@@ -627,7 +659,7 @@
                                                                         </li>
                                                                     {% elif num > check_out_items.number|add:'-3' and num < check_out_items.number|add:'3' %}
                                                                         <li class="page-item">
-                                                                            <a class="page-link" href="?{% if check_out_query_string %}{{ check_out_query_string }}&{% endif %}check_out_page={{ num }}">{{ num }}</a>
+                                                                        <a class="page-link" href="?{% if check_out_query_string %}{{ check_out_query_string }}&{% endif %}check_out_page={{ num }}">{{ num }}</a>
                                                                         </li>
                                                                     {% endif %}
                                                                 {% endfor %}
@@ -661,40 +693,40 @@
     {% for expense in expenses %}
         <div class="modal fade" id="expenseModal{{ expense.id }}" tabindex="-1" aria-labelledby="expenseModalLabel{{ expense.id }}" aria-hidden="true">
             <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header bg-light text-black">
-                        <h5 class="modal-title" id="expenseModalLabel{{ expense.id }}">Expense Details</h5>
+                <div class="modal-content border-0">
+                    <div class="modal-header bg-light">
+                        <h5 class="modal-title text-dark" id="expenseModalLabel{{ expense.id }}">Expense Details</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <strong>Category:</strong> {{ expense.expense_category }}<br>
-                                <strong>Amount:</strong> {{ expense.amount|intcomma }}<br>
-                                <strong>Created By:</strong> {{ expense.created_by.first_name }} {{ expense.created_by.last_name }}<br>
+                                <strong class="text-dark">Category:</strong> {{ expense.expense_category }}<br>
+                                <strong class="text-dark">Amount:</strong> {{ expense.amount|intcomma }}<br>
+                                <strong class="text-dark">Created By:</strong> {{ expense.created_by.first_name }} {{ expense.created_by.last_name }}<br>
                             </div>
                             <div class="col-md-6">
-                                <strong>Status:</strong>
+                                <strong class="text-dark">Status:</strong>
                                 {% if expense.approved %}
                                     <span class="badge bg-success">Approved</span>
                                 {% elif expense.declined %}
                                     <span class="badge bg-danger">Declined</span>
                                 {% else %}
-                                    <span class="badge bg-warning">Pending</span>
+                                    <span class="badge bg-warning text-dark">Pending</span>
                                 {% endif %}<br>
-                                <strong>Date Created:</strong> {{ expense.created_at|date:"Y-m-d H:i:s" }}<br>
-                                <strong>Last Updated:</strong> {{ expense.updated_at|date:"Y-m-d H:i:s" }}<br>
+                                <strong class="text-dark">Date Created:</strong> {{ expense.created_at|date:"Y-m-d H:i:s" }}<br>
+                                <strong class="text-dark">Last Updated:</strong> {{ expense.updated_at|date:"Y-m-d H:i:s" }}<br>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-12">
-                                <strong>Description:</strong><br>
+                                <strong class="text-dark">Description:</strong><br>
                                 <div class="p-2 bg-light rounded">{{ expense.description|default:"No description provided." }}</div>
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn" data-bs-dismiss="modal" style="background-color: #6c757d; color: white;">Close</button>
                     </div>
                 </div>
             </div>
@@ -704,40 +736,40 @@
     {% for expense in related_expenses %}
         <div class="modal fade" id="expenseModal{{ expense.id }}" tabindex="-1" aria-labelledby="expenseModalLabel{{ expense.id }}" aria-hidden="true">
             <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header bg-light text-black">
-                        <h5 class="modal-title" id="expenseModalLabel{{ expense.id }}">Expense Details</h5>
+                <div class="modal-content border-0">
+                    <div class="modal-header bg-light">
+                        <h5 class="modal-title text-dark" id="expenseModalLabel{{ expense.id }}">Expense Details</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <strong>Category:</strong> {{ expense.expense_category }}<br>
-                                <strong>Amount:</strong> {{ expense.amount|intcomma }}<br>
-                                <strong>Created By:</strong> {{ expense.created_by.first_name }} {{ expense.created_by.last_name }}<br>
+                                <strong class="text-dark">Category:</strong> {{ expense.expense_category }}<br>
+                                <strong class="text-dark">Amount:</strong> {{ expense.amount|intcomma }}<br>
+                                <strong class="text-dark">Created By:</strong> {{ expense.created_by.first_name }} {{ expense.created_by.last_name }}<br>
                             </div>
                             <div class="col-md-6">
-                                <strong>Status:</strong>
+                                <strong class="text-dark">Status:</strong>
                                 {% if expense.approved %}
                                     <span class="badge bg-success">Approved</span>
                                 {% elif expense.declined %}
                                     <span class="badge bg-danger">Declined</span>
                                 {% else %}
-                                    <span class="badge bg-warning">Pending</span>
+                                    <span class="badge bg-warning text-dark">Pending</span>
                                 {% endif %}<br>
-                                <strong>Date Created:</strong> {{ expense.created_at|date:"Y-m-d H:i:s" }}<br>
-                                <strong>Last Updated:</strong> {{ expense.updated_at|date:"Y-m-d H:i:s" }}<br>
+                                <strong class="text-dark">Date Created:</strong> {{ expense.created_at|date:"Y-m-d H:i:s" }}<br>
+                                <strong class="text-dark">Last Updated:</strong> {{ expense.updated_at|date:"Y-m-d H:i:s" }}<br>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-12">
-                                <strong>Description:</strong><br>
+                                <strong class="text-dark">Description:</strong><br>
                                 <div class="p-2 bg-light rounded">{{ expense.description|default:"No description provided." }}</div>
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn" data-bs-dismiss="modal" style="background-color: #6c757d; color: white;">Close</button>
                     </div>
                 </div>
             </div>
@@ -748,46 +780,46 @@
 {% for txn in expense_transactions %}
     <div class="modal fade" id="txnModal{{ txn.id }}" tabindex="-1" aria-labelledby="txnModalLabel{{ txn.id }}" aria-hidden="true">
         <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header bg-light text-black">
-                    <h5 class="modal-title" id="txnModalLabel{{ txn.id }}">Transaction Details</h5>
+            <div class="modal-content border-0">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title text-dark" id="txnModalLabel{{ txn.id }}">Transaction Details</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <strong>Reference Code:</strong> {{ txn.transaction_code|default:txn.mpesa_code|default:"-" }}<br>
-                            <strong>Amount:</strong> {{ txn.sender_wallet.currency|default:"KES" }} {{ txn.amount|floatformat:2|intcomma }}<br>
-                            <strong>Initiated By:</strong> {{ txn.user.get_full_name|default:txn.user.username }}<br>
+                            <strong class="text-dark">Reference Code:</strong> {{ txn.transaction_code|default:txn.mpesa_code|default:"-" }}<br>
+                            <strong class="text-dark">Amount:</strong> {{ txn.sender_wallet.currency|default:"KES" }} {{ txn.amount|floatformat:2|intcomma }}<br>
+                            <strong class="text-dark">Initiated By:</strong> {{ txn.user.get_full_name|default:txn.user.username }}<br>
                         </div>
                         <div class="col-md-6">
-                            <strong>Recipient:</strong> {{ txn.receiver.get_full_name|default:"-" }}<br>
-                            <strong>Expense:</strong> {{ txn.expense|default:"-" }}<br>
-                            <strong>Type:</strong> {{ txn.transaction_type|title|default:"-" }}<br>
+                            <strong class="text-dark">Recipient:</strong> {{ txn.receiver.get_full_name|default:"-" }}<br>
+                            <strong class="text-dark">Expense:</strong> {{ txn.expense|default:"-" }}<br>
+                            <strong class="text-dark">Type:</strong> {{ txn.transaction_type|title|default:"-" }}<br>
                         </div>
                     </div>
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <strong>Status:</strong>
+                            <strong class="text-dark">Status:</strong>
                             {% if txn.status == 'completed' %}
                                 <span class="badge bg-success">{{ txn.status|title }}</span>
                             {% elif txn.status == 'failed' or txn.status == 'cancelled' %}
                                 <span class="badge bg-danger">{{ txn.status|title }}</span>
                             {% else %}
-                                <span class="badge bg-warning">{{ txn.status|title|default:"Pending" }}</span>
+                                <span class="badge bg-warning text-dark">{{ txn.status|title|default:"Pending" }}</span>
                             {% endif %}<br>
-                            <strong>Date:</strong> {{ txn.date|date:"Y-m-d H:i:s"|default:txn.created_at|date:"Y-m-d H:i:s" }}<br>
+                            <strong class="text-dark">Date:</strong> {{ txn.date|date:"Y-m-d H:i:s"|default:txn.created_at|date:"Y-m-d H:i:s" }}<br>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-12">
-                            <strong>Description:</strong><br>
+                            <strong class="text-dark">Description:</strong><br>
                             <div class="p-2 bg-light rounded">{{ txn.description|default:"No description provided." }}</div>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn" data-bs-dismiss="modal" style="background-color: #6c757d; color: white;">Close</button>
                 </div>
             </div>
         </div>
@@ -797,38 +829,38 @@
 {% for supplied in supplied_items %}
     <div class="modal fade" id="suppliedModal{{ supplied.obj.id }}" tabindex="-1" aria-labelledby="suppliedModalLabel{{ supplied.obj.id }}" aria-hidden="true">
         <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header bg-light text-black">
-                    <h5 class="modal-title" id="suppliedModalLabel{{ supplied.obj.id }}">Supplied Item Details</h5>
+            <div class="modal-content border-0">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title text-dark" id="suppliedModalLabel{{ supplied.obj.id }}">Supplied Item Details</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <strong>Item Name:</strong> {{ supplied.obj.name|default:"-" }}<br>
-                            <strong>Supplier:</strong> {{ supplied.obj.invoice.supplier.name|default:"-" }}<br>
-                            <strong>Quantity:</strong> {{ supplied.obj.quantity }}<br>
-                            <strong>Unit Price:</strong> {{ supplied.obj.unit_price|intcomma }}<br>
+                            <strong class="text-dark">Item Name:</strong> {{ supplied.obj.name|default:"-" }}<br>
+                            <strong class="text-dark">Supplier:</strong> {{ supplied.obj.invoice.supplier.name|default:"-" }}<br>
+                            <strong class="text-dark">Quantity:</strong> {{ supplied.obj.quantity }}<br>
+                            <strong class="text-dark">Unit Price:</strong> {{ supplied.obj.unit_price|intcomma }}<br>
                         </div>
                         <div class="col-md-6">
-                            <strong>Total Amount:</strong> {{ supplied.total_amount|intcomma }}<br>
-                            <strong>Date Supplied:</strong> {{ supplied.obj.invoice.date_issued}}<br>
+                            <strong class="text-dark">Total Amount:</strong> {{ supplied.total_amount|intcomma }}<br>
+                            <strong class="text-dark">Date Supplied:</strong> {{ supplied.obj.invoice.date_issued }}<br>
                             {% if supplied.obj.invoice.updated_at %}
-                                <strong>Last Updated:</strong> {{ supplied.obj.invoice.updated_at}}<br>
+                                <strong class="text-dark">Last Updated:</strong> {{ supplied.obj.invoice.updated_at }}<br>
                             {% endif %}
                         </div>
                     </div>
                     {% if supplied.obj.invoice.remarks %}
                         <div class="row">
                             <div class="col-12">
-                                <strong>Remarks:</strong><br>
+                                <strong class="text-dark">Remarks:</strong><br>
                                 <div class="p-2 bg-light rounded">{{ supplied.obj.invoice.remarks }}</div>
                             </div>
                         </div>
                     {% endif %}
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn" data-bs-dismiss="modal" style="background-color: #6c757d; color: white;">Close</button>
                 </div>
             </div>
         </div>
@@ -838,38 +870,38 @@
 {% for checked in check_out_items %}
     <div class="modal fade" id="checkedModal{{ checked.obj.id }}" tabindex="-1" aria-labelledby="checkedModalLabel{{ checked.obj.id }}" aria-hidden="true">
         <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header bg-light text-black">
-                    <h5 class="modal-title" id="checkedModalLabel{{ checked.obj.id }}">Checked Out Item Details</h5>
+            <div class="modal-content border-0">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title text-dark" id="checkedModalLabel{{ checked.obj.id }}">Checked Out Item Details</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <strong>Item Name:</strong> {{ checked.obj.item.name|default:"-" }}<br>
-                            <strong>Checked Out By:</strong> {{ checked.obj.checked_out_by.get_full_name|default:"-" }}<br>
-                            <strong>Quantity:</strong> 1<br>
-                            <strong>Unit Price:</strong> {{ checked.unit_price|intcomma }}<br>
+                            <strong class="text-dark">Item Name:</strong> {{ checked.obj.item.name|default:"-" }}<br>
+                            <strong class="text-dark">Checked Out By:</strong> {{ checked.obj.checked_out_by.get_full_name|default:"-" }}<br>
+                            <strong class="text-dark">Quantity:</strong> 1<br>
+                            <strong class="text-dark">Unit Price:</strong> {{ checked.unit_price|intcomma }}<br>
                         </div>
                         <div class="col-md-6">
-                            <strong>Total Amount:</strong> {{ checked.unit_price|intcomma }}<br>
-                            <strong>Date Checked Out:</strong> {{ checked.obj.transaction_date|date:"Y-m-d H:i:s" }}<br>
+                            <strong class="text-dark">Total Amount:</strong> {{ checked.unit_price|intcomma }}<br>
+                            <strong class="text-dark">Date Checked Out:</strong> {{ checked.obj.transaction_date|date:"Y-m-d H:i:s" }}<br>
                             {% if checked.obj.updated_at %}
-                                <strong>Last Updated:</strong> {{ checked.obj.updated_at|date:"Y-m-d H:i:s" }}<br>
+                                <strong class="text-dark">Last Updated:</strong> {{ checked.obj.updated_at|date:"Y-m-d H:i:s" }}<br>
                             {% endif %}
                         </div>
                     </div>
                     {% if checked.obj.check_out_remarks %}
                         <div class="row">
                             <div class="col-12">
-                                <strong>Remarks:</strong><br>
+                                <strong class="text-dark">Remarks:</strong><br>
                                 <div class="p-2 bg-light rounded">{{ checked.obj.check_out_remarks }}</div>
                             </div>
                         </div>
                     {% endif %}
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn" data-bs-dismiss="modal" style="background-color: #6c757d; color: white;">Close</button>
                 </div>
             </div>
         </div>
@@ -878,15 +910,15 @@
 <!-- Edit Item Modal -->
 {% if item_type == 'event' or item_type == 'operation' or item_type == 'activation' %}
     <div class="modal fade" id="editItemModal" tabindex="-1" aria-labelledby="editItemModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header bg-light text-black">
-                    <h5 class="modal-title" id="editItemModalLabel">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content border-0">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title text-dark" id="editItemModalLabel">
                         Edit {% if item_type == 'event' %}Event{% elif item_type == 'operation' %}Operation{% else %}Activation{% endif %} Details
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form method="post" action="{% url 'expense:edit_item' item.id item_type %}">
+                <form method="post" action="{% url 'expense:edit_item' item.id item_type %}" enctype="multipart/form-data">
                     <div class="modal-body">
                         {% csrf_token %}
                         <div class="row">
@@ -906,8 +938,8 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                        <button type="button" class="btn" data-bs-dismiss="modal" style="background-color: #6c757d; color: white;">Cancel</button>
+                        <button type="submit" class="btn" style="background-color: #98e23f; color: white;">Save Changes</button>
                     </div>
                 </form>
             </div>
@@ -918,18 +950,18 @@
 {% if not item_type and approval_form %}
     <div class="modal fade" id="approvalModal" tabindex="-1">
         <div class="modal-dialog">
-            <div class="modal-content">
+            <div class="modal-content border-0">
                 <form method="post" action="{% url 'expense:approve' expense.id %}">
                     {% csrf_token %}
-                    <div class="modal-header bg-light text-black">
-                        <h5 class="modal-title">Approve Expense</h5>
+                    <div class="modal-header bg-light">
+                        <h5 class="modal-title text-dark">Approve Expense</h5>
                     </div>
                     <div class="modal-body">
                         {{ approval_form.as_p }}
                     </div>
                     <div class="modal-footer">
-                        <button type="submit" class="btn btn-success">Approve</button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn" style="background-color: #28a745; color: white;">Approve</button>
+                        <button type="button" class="btn" data-bs-dismiss="modal" style="background-color: #6c757d; color: white;">Cancel</button>
                     </div>
                 </form>
             </div>
@@ -939,18 +971,18 @@
 {% if not item_type and payment_form %}
     <div class="modal fade" id="paymentModal" tabindex="-1">
         <div class="modal-dialog">
-            <div class="modal-content">
+            <div class="modal-content border-0">
                 <form method="post" action="{% url 'expense:pay' expense.id %}">
                     {% csrf_token %}
-                    <div class="modal-header bg-light text-black">
-                        <h5 class="modal-title">Make Payment</h5>
+                    <div class="modal-header bg-light">
+                        <h5 class="modal-title text-dark">Make Payment</h5>
                     </div>
                     <div class="modal-body">
                         {{ payment_form.as_p }}
                     </div>
                     <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary">Pay</button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn" style="background-color: #98e23f; color: white;">Pay</button>
+                        <button type="button" class="btn" data-bs-dismiss="modal" style="background-color: #6c757d; color: white;">Cancel</button>
                     </div>
                 </form>
             </div>
@@ -965,73 +997,141 @@
             $('#expenses-table').DataTable({
                 "order": [[ 4, "desc" ]],
                 "pageLength": 10,
-                "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]]
+                "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+                "responsive": true
             });
         }
         if ($('#transactions-table').length && $('#transactions-table').is(':visible')) {
             $('#transactions-table').DataTable({
-                "order": [[ 4, "desc" ]],
+                "order": [[ 7, "desc" ]],
                 "pageLength": 10,
-                "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]]
+                "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+                "responsive": true
             });
         }
         if ($('#supplied-items-table').length && $('#supplied-items-table').is(':visible')) {
             $('#supplied-items-table').DataTable({
-                "order": [[ 4, "desc" ]],
+                "order": [[ 6, "desc" ]],
                 "pageLength": 10,
-                "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]]
+                "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+                "responsive": true
             });
         }
         if ($('#checked-out-items-table').length && $('#checked-out-items-table').is(':visible')) {
             $('#checked-out-items-table').DataTable({
-                "order": [[ 4, "desc" ]],
+                "order": [[ 6, "desc" ]],
                 "pageLength": 10,
-                "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]]
+                "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+                "responsive": true
+            });
+        }
+        // Ensure modals work properly
+        var editModal = document.getElementById('editItemModal');
+        if (editModal) {
+            editModal.addEventListener('show.bs.modal', function (event) {
+                // Optionally load form data via AJAX if needed
             });
         }
     });
 </script>
 <style>
-    .table-borderless td {
-        border-bottom: 1px solid #e9ecef;
+    :root {
+        --primary-green: #98e23f;
+        --smoke-gray: #f8f9fa;
     }
-    .card-header {
-        background-color: #5c6b7e !important;
+    .btn-primary, .btn[type="submit"] {
+        background-color: var(--primary-green) !important;
+        border-color: var(--primary-green) !important;
         color: white !important;
     }
+    .btn-primary:hover {
+        background-color: #7fd32e !important;
+        border-color: #7fd32e !important;
+    }
+    .card {
+        border: none;
+        border-radius: 12px;
+        transition: box-shadow 0.3s ease;
+    }
+    .card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+    }
     .table th {
-        font-weight: normal;
-        color: #666;
+        font-weight: 500;
+        color: #495057;
+        border-top: none;
+        padding: 1rem 0.75rem;
     }
-    .badge {
-        padding: 5px 10px;
-        border-radius: 4px;
-    }
-    .text-muted {
-        margin-bottom: 15px;
-    }
-    .badge.bg-success {
-        background-color: #28a745 !important;
-    }
-    .badge.bg-danger {
-        background-color: #dc3545 !important;
-    }
-    .badge.bg-warning {
-        background-color: #ffc107 !important;
-        color: #212529;
-    }
-    h4 {
-        color: #384353;
-        font-weight: 600;
+    .table td {
+        vertical-align: middle;
+        padding: 1rem 0.75rem;
     }
     .accordion-button {
-        background-color: #f8f9fa;
+        background-color: var(--smoke-gray);
         color: #384353;
         font-weight: 600;
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
     }
     .accordion-button:not(.collapsed) {
-        background-color: #5c6b7e;
+        background-color: var(--primary-green);
         color: white;
+        border-radius: 8px;
+    }
+    .accordion-button:focus {
+        box-shadow: none;
+        border-color: rgba(0,0,0,.125);
+    }
+    .h4 {
+        color: #384353;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+    }
+    .text-muted {
+        color: #6c757d !important;
+    }
+    .badge {
+        font-size: 0.75em;
+        padding: 0.5em 0.75em;
+        border-radius: 6px;
+    }
+    .table-borderless td, .table-borderless th {
+        border: none;
+    }
+    .border-bottom {
+        border-bottom: 1px solid #e9ecef !important;
+        padding-bottom: 1rem !important;
+        margin-bottom: 0 !important;
+    }
+    /* Responsiveness for tables */
+    @media (max-width: 768px) {
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .card-body .row > div {
+            margin-bottom: 1rem;
+        }
+    }
+    @media (min-width: 769px) and (max-width: 1200px) {
+        .table-responsive {
+            overflow-x: visible;
+        }
+        .w-100 {
+            width: 100% !important;
+        }
+    }
+    @media (min-width: 1201px) {
+        .table-responsive {
+            overflow-x: visible;
+        }
+    }
+    /* Fix for horizontal scroll on small tables */
+    .table-responsive table {
+        min-width: auto;
+    }
+    .text-black-50 {
+        color: #6c757d !important;
     }
 </style>
 {% endblock %}

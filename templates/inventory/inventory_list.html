@@ -1,196 +1,248 @@
-
 {% extends "partials/dashboard-base.html" %}
-{% load inventory_extras %} 
-
+{% load inventory_extras %}
 {% load static %}
 {% load humanize %}
-
 {% block content %}
 <section class="dashboard-section body-collapse">
-    <div class="overlay pt-120">
-        <div class="container-fluid">
-            <div class="section-header">
-                <div class="row align-items-center">
-                    <div class="col-lg-8">
-                        <h4 class="section-title text-gradient mb-0">Inventory</h4>
-                        <p class="section-subtitle mb-0">Create and track inventory items.</p>
-                    </div>
-                    <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
-                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newItemModal">
-                            <i class="fas fa-plus me-2"></i>New Item
-                        </button>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="table-responsive mt-4">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Name</th>
-                            <th>Asset Type</th>
-                            <th>Captured</th>
-                            <th>Cost</th>
-                            <th>Lease Cost</th>
-                            <th>State</th>
-                            <th>Captured By</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+<div class="overlay pt-120">
+<div class="container-fluid">
+<div class="section-header" style="background-color: #98e23f; color: white; padding: 1.5rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+<div class="row align-items-center">
+<div class="col-lg-8">
+<h4 class="section-title text-white mb-0">Inventory</h4>
+<p class="section-subtitle mb-0 opacity-75">Create and track inventory items.</p>
+</div>
+<div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+<button class="btn btn-light" data-bs-toggle="modal" data-bs-target="#newItemModal">
+<i class="fas fa-plus me-2"></i>New Item
+</button>
+</div>
+</div>
+</div>
+<div class="table-responsive mt-4">
+<table class="table table-striped">
+<thead>
+<tr>
+<th>#</th>
+<th>Name</th>
+<th>Asset Type</th>
+<th>Captured</th>
+<th>Cost</th>
+<th>Lease Cost</th>
+<th>State</th>
+<th>Captured By</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody>
                         {% for item in items %}
-                        <tr>
-                            <td>{{ forloop.counter }}</td>
-                            <td>{{ item.name }}</td>
-                            <td>{{ item.get_asset_type_display }}</td>
-                            <td>{{ item.date_captured|date:"Y-m-d" }}</td>
-                            <td>${{ item.cost|intcomma }}</td>
-                            <td>${{ item.lease_cost|default:"-"|intcomma }}</td>
-                            <td>
-                                <span class="badge bg-{{ item.state|lower }}">{{ item.state }}</span>
-                            </td>
-                            <td>{{ item.captured_by.get_full_name|default:item.captured_by.username }}</td>
-                            <td>
-                                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editItemModal-{{ item.id }}">Edit</button>
-                                <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteItemModal-{{ item.id }}">Delete</button>
+<tr>
+<td>{{ forloop.counter }}</td>
+<td>{{ item.name }}</td>
+<td>{{ item.get_asset_type_display }}</td>
+<td>{{ item.date_captured|date:"Y-m-d" }}</td>
+<td>${{ item.cost|intcomma }}</td>
+<td>{{ item.lease_cost|default:"-"|intcomma }}</td>
+<td>
+<span class="badge bg-{{ item.state|lower }}">{{ item.state }}</span>
+</td>
+<td>{{ item.captured_by.get_full_name|default:item.captured_by.username }}</td>
+<td>
+<button class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#editItemModal-{{ item.id }}">Edit</button>
+<button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteItemModal-{{ item.id }}">Delete</button>
                                 {% if item.state == "Available" %}
-                                <button class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#checkoutModal-{{ item.id }}">Check Out</button>
+<button class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#checkoutModal-{{ item.id }}">Check Out</button>
                                 {% else %}
-                                <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#checkinModal-{{ item.id }}">Check In</button>
+<button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#checkinModal-{{ item.id }}">Check In</button>
                                 {% endif %}
-                            </td>
-                        </tr>
+</td>
+</tr>
                         {% empty %}
-                        <tr>
-                            <td colspan="9" class="text-center">No inventory items found.</td>
-                        </tr>
+<tr>
+<td colspan="9" class="text-center">No inventory items found.</td>
+</tr>
                         {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+</tbody>
+</table>
+</div>
+</div>
+</div>
 </section>
-
 <!-- Per-Item Modals -->
 {% for item in items %}
 <!-- EDIT MODAL -->
 <div class="modal fade" id="editItemModal-{{ item.id }}" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <form method="post" action="{% url 'expense:edit-item' item.id %}">
+<div class="modal-dialog modal-lg">
+<div class="modal-content">
+<form method="post" action="{% url 'expense:edit-item' item.id %}">
                 {% csrf_token %}
-                <div class="modal-header bg-light">
-                    <h5 class="modal-title">Edit Item — {{ item.name }}</h5>
-                    <button class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    {{ item.edit_form.as_p }}
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-primary">Save changes</button>
-                    <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                </div>
-            </form>
-        </div>
-    </div>
+<div class="modal-header bg-light">
+<h5 class="modal-title">Edit Item — {{ item.name }}</h5>
+<button class="btn-close" data-bs-dismiss="modal"></button>
 </div>
-
-<!-- DELETE MODAL -->
-<div class="modal fade" id="deleteItemModal-{{ item.id }}" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form method="post" action="{% url 'expense:delete-item' item.id %}">
-                {% csrf_token %}
-                <div class="modal-header bg-light">
-                    <h5 class="modal-title">Delete Item — {{ item.name }}</h5>
-                    <button class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    Are you sure you want to remove this item?
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-danger">Yes, remove</button>
-                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- CHECKOUT MODAL -->
-<div class="modal fade" id="checkoutModal-{{ item.id }}" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form method="post" action="{% url 'expense:check-out' item.id %}">
-                {% csrf_token %}
-                <div class="modal-header bg-light">
-                    <h5 class="modal-title">Check Out — {{ item.name }}</h5>
-                    <button class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    {% if item.state == "Available" %}
-                        {{ item.checkout_form.as_p }}
-                    {% else %}
-                        <p class="text-muted">Item is not available for checkout.</p>
-                    {% endif %}
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-success">Check Out</button>
-                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- CHECKIN MODAL -->
-<div class="modal fade" id="checkinModal-{{ item.id }}" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form method="post" action="{% url 'expense:check-in' item.id %}">
-                {% csrf_token %}
-                <div class="modal-header bg-light">
-                    <h5 class="modal-title">Check In — {{ item.name }}</h5>
-                    <button class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    {% if item.state != "Available" %}
-                        {{ item.checkin_form.as_p }}
-                    {% else %}
-                        <p class="text-muted">Item is already available.</p>
-                    {% endif %}
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-warning">Check In</button>
-                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                </div>
-            </form>
-        </div>
-    </div>
+<div class="modal-body">
+<div class="row g-3">
+{% for field in item.edit_form %}
+<div class="col-12 col-md-6">
+<label class="form-label fw-bold" for="{{ field.id_for_label }}">{{ field.label }}</label>
+{{ field }}
+{% if field.errors %}<div class="text-danger small">{{ field.errors }}</div>{% endif %}
+{% if field.help_text %}<small class="text-muted">{{ field.help_text }}</small>{% endif %}
 </div>
 {% endfor %}
-
+</div>
+</div>
+<div class="modal-footer">
+<button class="btn btn-primary">Save changes</button>
+<button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+</div>
+</form>
+</div>
+</div>
+</div>
+<!-- DELETE MODAL -->
+<div class="modal fade" id="deleteItemModal-{{ item.id }}" tabindex="-1" aria-hidden="true">
+<div class="modal-dialog">
+<div class="modal-content">
+<form method="post" action="{% url 'expense:delete-item' item.id %}">
+                {% csrf_token %}
+<div class="modal-header bg-light">
+<h5 class="modal-title">Delete Item — {{ item.name }}</h5>
+<button class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+<div class="modal-body">
+<div class="row g-3">
+<div class="col-12">
+<p class="mb-0">Are you sure you want to remove this item? This action cannot be undone.</p>
+</div>
+</div>
+</div>
+<div class="modal-footer">
+<button class="btn btn-danger">Yes, remove</button>
+<button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+</div>
+</form>
+</div>
+</div>
+</div>
+<!-- CHECKOUT MODAL -->
+<div class="modal fade" id="checkoutModal-{{ item.id }}" tabindex="-1" aria-hidden="true">
+<div class="modal-dialog">
+<div class="modal-content">
+<form method="post" action="{% url 'expense:check-out' item.id %}">
+                {% csrf_token %}
+<div class="modal-header bg-light">
+<h5 class="modal-title">Check Out — {{ item.name }}</h5>
+<button class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+<div class="modal-body">
+                    {% if item.state == "Available" %}
+<div class="row g-3">
+{% for field in item.checkout_form %}
+<div class="col-12">
+<label class="form-label fw-bold" for="{{ field.id_for_label }}">{{ field.label }}</label>
+{{ field }}
+{% if field.errors %}<div class="text-danger small">{{ field.errors }}</div>{% endif %}
+{% if field.help_text %}<small class="text-muted">{{ field.help_text }}</small>{% endif %}
+</div>
+{% endfor %}
+</div>
+                    {% else %}
+<p class="text-muted">Item is not available for checkout.</p>
+                    {% endif %}
+</div>
+<div class="modal-footer">
+<button class="btn btn-success">Check Out</button>
+<button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+</div>
+</form>
+</div>
+</div>
+</div>
+<!-- CHECKIN MODAL -->
+<div class="modal fade" id="checkinModal-{{ item.id }}" tabindex="-1" aria-hidden="true">
+<div class="modal-dialog">
+<div class="modal-content">
+<form method="post" action="{% url 'expense:check-in' item.id %}">
+                {% csrf_token %}
+<div class="modal-header bg-light">
+<h5 class="modal-title">Check In — {{ item.name }}</h5>
+<button class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+<div class="modal-body">
+                    {% if item.state != "Available" %}
+<div class="row g-3">
+{% for field in item.checkin_form %}
+<div class="col-12">
+<label class="form-label fw-bold" for="{{ field.id_for_label }}">{{ field.label }}</label>
+{{ field }}
+{% if field.errors %}<div class="text-danger small">{{ field.errors }}</div>{% endif %}
+{% if field.help_text %}<small class="text-muted">{{ field.help_text }}</small>{% endif %}
+</div>
+{% endfor %}
+</div>
+                    {% else %}
+<p class="text-muted">Item is already available.</p>
+                    {% endif %}
+</div>
+<div class="modal-footer">
+<button class="btn btn-warning">Check In</button>
+<button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+</div>
+</form>
+</div>
+</div>
+</div>
+{% endfor %}
 <!-- NEW ITEM MODAL -->
 <div class="modal fade" id="newItemModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <form method="post" action="{% url 'expense:create-item' %}">
+<div class="modal-dialog modal-lg">
+<div class="modal-content">
+<form method="post" action="{% url 'expense:create-item' %}">
                 {% csrf_token %}
-                <div class="modal-header bg-light">
-                    <h5 class="modal-title">New Inventory Item</h5>
-                    <button class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    {{ new_form.as_p }}
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-primary">Create Item</button>
-                    <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                </div>
-            </form>
-        </div>
-    </div>
+<div class="modal-header bg-light">
+<h5 class="modal-title">New Inventory Item</h5>
+<button class="btn-close" data-bs-dismiss="modal"></button>
 </div>
+<div class="modal-body">
+<div class="row g-3">
+{% for field in new_form %}
+<div class="col-12 col-md-6">
+<label class="form-label fw-bold" for="{{ field.id_for_label }}">{{ field.label }}</label>
+{{ field }}
+{% if field.errors %}<div class="text-danger small">{{ field.errors }}</div>{% endif %}
+{% if field.help_text %}<small class="text-muted">{{ field.help_text }}</small>{% endif %}
+</div>
+{% endfor %}
+</div>
+</div>
+<div class="modal-footer">
+<button class="btn btn-primary">Create Item</button>
+<button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+</div>
+</form>
+</div>
+</div>
+</div>
+<style>
+.section-header {
+background: linear-gradient(135deg, #98e23f 0%, #7bb732 100%);
+}
+.btn-light:hover {
+background-color: #fff;
+border-color: #fff;
+color: #000;
+}
+.modal-body input, .modal-body select, .modal-body textarea {
+    border-radius: 0.375rem;
+    border: 1px solid #ced4da;
+    padding: 0.375rem 0.75rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+.modal-body input:focus, .modal-body select:focus, .modal-body textarea:focus {
+    border-color: #98e23f;
+    box-shadow: 0 0 0 0.2rem rgba(152, 226, 63, 0.25);
+    outline: 0;
+}
+</style>
 {% endblock content %}
