@@ -1646,7 +1646,6 @@ def expenses(request):
         'activation_form': activation_form,
         'event_categories': EventCategory.objects.filter(company=company,is_active=True),
         'activation_categories': ActivationCategory.objects.filter(company=company,is_active=True),
-        'operation_categories': OperationCategory.objects.filter(company=company,is_active=True),
         'clients': Client.objects.filter(company=company,is_active=True),
     }
     return render(request, "expenses/expense.html", context)

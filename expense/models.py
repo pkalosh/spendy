@@ -73,7 +73,7 @@ class Event(models.Model):
 class Operation(models.Model):
     id = models.UUIDField(primary_key=True, unique=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255)
-    category = models.ForeignKey(OperationCategory, on_delete=models.CASCADE, related_name='operations')
+    category = models.ForeignKey(OperationCategory, on_delete=models.CASCADE, related_name='operations',blank=True, null=True)
     client = models.ForeignKey('wallet.Client', on_delete=models.SET_NULL, null=True, blank=True)
     company = models.ForeignKey('wallet.CompanyKYC', on_delete=models.SET_NULL, null=True, blank=True)
     budget = models.DecimalField(max_digits=10, decimal_places=2,blank=True, null=True)
@@ -89,7 +89,7 @@ class Operation(models.Model):
     updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='updated_operations',blank=True, null=True)
 
     def __str__(self):
-        return f"{self.name} ({self.category.name})"
+        return f"{self.name}"
 
 class Activation(models.Model):
     id = models.UUIDField(primary_key=True, unique=True, default=uuid.uuid4, editable=False)
@@ -261,4 +261,8 @@ class InvoiceItem(models.Model):
 
 
     def __str__(self):
-        return f"{self.quantity} x {self.item.name}"
+        return f"{self.quantity} x {self.name}"
+    
+    @property
+    def total(self):
+        return self.quantity * self.unit_price

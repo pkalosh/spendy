@@ -36,12 +36,12 @@ urlpatterns = [
     # path('csv-preview/', views.preview_expense_csv, name='preview_expense_csv'),
 
     # Inventory
-    path("inventory/", views.inventory_list, name="list"),
-    path("create/", views.inventory_create, name="create"),
-    path("<int:pk>/edit/", views.inventory_edit, name="edit"),
-    path("<int:pk>/delete/", views.inventory_delete, name="delete"),
-    path("<int:pk>/checkout/", views.inventory_check_out, name="checkout"),
-    path("<int:pk>/checkin/", views.inventory_check_in, name="checkin"),
+    path("inventory/", views.inventory_list, name="list-items"),
+    path("create/", views.inventory_create, name="create-item"),
+    path("<int:pk>/edit/", views.inventory_edit, name="edit-item"),
+    path("<int:pk>/delete/", views.inventory_delete, name="delete-item"),
+    path("<int:pk>/checkout/", views.inventory_check_out, name="check-out"),
+    path("<int:pk>/checkin/", views.inventory_check_in, name="check-in"),
 
     # Suppliers
     path("suppliers/", views.suppliers_list, name="suppliers"),
@@ -55,6 +55,6 @@ urlpatterns = [
     path("suppliers/<int:supplier_id>/invoices/<int:invoice_id>/edit/", views.supplier_invoice_edit, name="invoice-edit"),
     path("suppliers/<int:supplier_id>/invoices/<int:invoice_id>/delete/", views.supplier_invoice_delete, name="invoice-delete"),
     path("suppliers/<int:supplier_id>/invoices/<int:invoice_id>/items/create/", views.invoice_item_create, name="invoice-item-create"),
-
-
+    path('suppliers/<int:supplier_id>/invoices/<int:invoice_id>/items/<int:item_id>/edit/', views.invoice_item_edit, name='invoice-item-edit'),
+    path('suppliers/<int:supplier_id>/invoices/<int:invoice_id>/items/<int:item_id>/delete/', views.invoice_item_delete, name='invoice-item-delete'),
 ]

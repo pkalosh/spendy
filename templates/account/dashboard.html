@@ -2,9 +2,9 @@
 {% load static %}
 {% load humanize %}
 {% block content %}
-
+<!-- Include Chart.js for modern charts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-  
 :root {
 --primary-color: #98e23f;
 --secondary-color: #7ab82c;
@@ -19,8 +19,10 @@
 --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
 --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
 --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
---border-radius: 12px;
+--border-radius: 16px; /* Increased for modern rounded look */
 --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+--glass-bg: rgba(255, 255, 255, 0.8);
+--glass-border: rgba(255, 255, 255, 0.2);
 }
 body {
 background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
@@ -31,27 +33,33 @@ min-height: 100vh;
 background: transparent;
 }
 .custom-dropdown-menu {
-z-index: 1051;
+z-index: 1055; /* Increased z-index for visibility over modals/tables */
 border: none;
 box-shadow: var(--shadow-lg);
-border-radius: 8px;
-backdrop-filter: blur(10px);
-background: rgba(255, 255, 255, 0.95);
+border-radius: 12px;
+backdrop-filter: blur(20px); /* Enhanced blur for modern glassmorphism */
+background: var(--glass-bg);
+border: 1px solid var(--glass-border);
+min-width: 200px;
 }
 .modal-content {
 border: none;
 border-radius: var(--border-radius);
 box-shadow: var(--shadow-lg);
+backdrop-filter: blur(20px);
+background: var(--glass-bg);
+border: 1px solid var(--glass-border);
 }
-/* Header Section */
+/* Header Section - Modern Glassmorphism */
 .dashboard-header {
-background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+background: var(--glass-bg);
+backdrop-filter: blur(20px);
 border-radius: var(--border-radius);
 padding: 2rem;
 margin-bottom: 2rem;
 margin-top: 4rem;
-box-shadow: var(--shadow-sm);
-border: 1px solid var(--border-color);
+box-shadow: var(--shadow-md);
+border: 1px solid var(--glass-border);
 position: relative;
 overflow: hidden;
 }
@@ -66,86 +74,113 @@ background: linear-gradient(to bottom, var(--primary-color), var(--secondary-col
 z-index: 1;
 }
 .welcome-title {
-font-size: 1.75rem;
-font-weight: 700;
-color: var(--dark-text);
+font-size: 2rem; /* Larger for modern impact */
+font-weight: 800;
+background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+background-clip: text;
 margin-bottom: 0.5rem;
 position: relative;
 z-index: 2;
 }
 .welcome-subtitle {
 color: var(--muted-text);
-font-size: 1rem;
+font-size: 1.125rem;
 position: relative;
 z-index: 2;
 }
+/* Modern Balance Display - Glass Card */
 .balance-display {
-background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-color: white;
-padding: 1.5rem 2rem;
+background: var(--glass-bg);
+backdrop-filter: blur(20px);
+border: 1px solid var(--glass-border);
+color: var(--dark-text);
+padding: 2rem;
 border-radius: var(--border-radius);
 text-align: center;
-box-shadow: var(--shadow-sm);
+box-shadow: var(--shadow-md);
 transition: var(--transition);
-min-height: 80px;
+min-height: 120px;
 display: flex;
 flex-direction: column;
 justify-content: center;
 align-items: center;
-gap: 0.5rem;
+gap: 0.75rem;
+position: relative;
+overflow: hidden;
+}
+.balance-display::before {
+content: '';
+position: absolute;
+top: 0;
+left: 0;
+right: 0;
+height: 2px;
+background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
 }
 .balance-display:hover {
-transform: translateY(-2px);
-box-shadow: var(--shadow-md);
+transform: translateY(-4px);
+box-shadow: var(--shadow-lg);
+border-color: rgba(152, 226, 63, 0.3);
 }
 .balance-amount {
-font-size: 1.0rem;
-font-weight: 450;
+font-size: 2.5rem; /* Larger balance */
+font-weight: 800;
+color: var(--primary-color);
 display: block;
 margin-bottom: 0.25rem;
 }
 .balance-label {
 font-size: 1rem;
-opacity: 0.9;
+opacity: 0.8;
+font-weight: 500;
 }
-/* Section Titles */
+/* Donut Chart Containers - Modern Mini Charts */
+.donut-chart-container {
+position: relative;
+width: 100px;
+height: 100px;
+margin: 0 auto;
+}
+.donut-chart-container canvas {
+border-radius: 50%;
+box-shadow: var(--shadow-sm);
+}
+/* Section Titles - Modern with Icons */
 .section-title {
 position: relative;
-display: inline-block;
-font-size: 1.25rem;
+display: inline-flex;
+align-items: center;
+font-size: 1.5rem;
 font-weight: 700;
 color: var(--dark-text);
-margin-bottom: 0.5rem;
+margin-bottom: 1rem;
+gap: 0.5rem;
 }
-.section-title::after {
-content: '';
-position: absolute;
-bottom: -0.25rem;
-left: 0;
-width: 100%;
-height: 3px;
-background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
-border-radius: 2px;
-opacity: 0;
-transition: var(--transition);
-}
-.section-title:hover::after {
-opacity: 1;
+.section-title i {
+background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+background-clip: text;
+font-size: 1.25rem;
 }
 .section-subtitle {
 color: var(--muted-text);
-font-size: 0.875rem;
+font-size: 0.95rem;
 margin-bottom: 0;
+font-weight: 400;
 }
-/* Statistics Cards */
+/* Statistics Cards - Modern Glass with Icons - Centered Content */
 .stats-card {
-border: none;
+border: 1px solid var(--glass-border);
 border-radius: var(--border-radius);
 transition: var(--transition);
 position: relative;
 overflow: hidden;
-height: 100%;
-border: 1px solid var(--border-color);
+height: 140px; /* Slightly taller */
+background: var(--glass-bg);
+backdrop-filter: blur(20px);
 }
 .stats-card::before {
 content: '';
@@ -155,121 +190,63 @@ left: 0;
 right: 0;
 height: 4px;
 background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
-opacity: 0.8;
+opacity: 0.9;
 }
 .stats-card:hover {
-transform: translateY(-3px);
+transform: translateY(-6px);
 box-shadow: var(--shadow-lg);
-border-color: var(--primary-color);
+border-color: rgba(152, 226, 63, 0.3);
 }
 .stats-card .card-body {
-padding: 1.75rem;
+padding: 0.5rem;
 position: relative;
 z-index: 2;
+height: 100%;
+display: flex;
+flex-direction: column;
+justify-content: space-between;
+align-items: center; /* Center horizontally */
+text-align: center; /* Center text */
 }
 .stats-icon {
 font-size: 2.5rem;
-margin-bottom: 1rem;
+margin-bottom: 0.75rem;
 opacity: 0.8;
 transition: var(--transition);
+/* Removed align-self: flex-start; now centered by parent */
 }
 .stats-card:hover .stats-icon {
 color: var(--primary-color) !important;
-transform: scale(1.1);
+transform: scale(1.1) rotate(5deg);
 }
 .stats-number {
-font-size: 2.25rem;
+font-size: 2.5rem;
 font-weight: 800;
-margin-bottom: 0.5rem;
+margin-bottom: 0.25rem;
 color: var(--dark-text);
+line-height: 1;
 }
 .stats-label {
 font-weight: 600;
-font-size: 1rem;
-margin-bottom: 0.25rem;
+font-size: 0.95rem;
+margin-bottom: 0.5rem;
 color: var(--dark-text);
 }
 .stats-description {
-font-size: 0.875rem;
+font-size: 0.8rem;
 opacity: 0.7;
 color: var(--muted-text);
+margin-top: auto;
 }
-
-/* ============================
-   🔧 REQUEST CARDS FIXES
-   ============================ */
-
-/* 1. Reduce card height */
-.stats-card {
-    height: 130px !important;
-    background: #ffffff !important; /* same background for all */
-}
-
-/* 2. Card body spacing reduced */
-.stats-card .card-body {
-    padding: 1rem !important;
-}
-
-/* 3. Icons use green */
-.stats-icon {
-    color: #10b981 !important;
-    font-size: 2rem !important;
-    margin-bottom: 0.5rem !important;
-}
-
-/* 4. Text color black */
-.stats-number,
-.stats-label,
-.stats-description {
-    color: #000 !important;
-}
-
-/* 5. Remove gradients on cards */
-.stats-card {
-    background: #ffffff !important;
-}
-
-/* 6. Smoke-white card header background */
-.stats-card::before {
-    background: #ffffff !important;
-    opacity: 1 !important;
-}
-
-/* ============================
-   🔧 TABLE FONT FIXES
-   ============================ */
-
-.table tbody td {
-    font-weight: normal !important;   /* remove bold */
-    color: #333 !important;
-}
-
-.table tbody tr:hover {
-    transform: none !important; /* remove zoom on hover */
-}
-
-
-/* Progress Bar Enhancement */
-.progress {
-height: 8px;
-border-radius: 10px;
-background: rgba(0,0,0,0.1);
-overflow: hidden;
-}
-.progress-bar {
-border-radius: 10px;
-transition: var(--transition);
-background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
-}
-/* Table Enhancements */
+/* Transactions Card - Modern Glass */
 .transactions-card {
-border: none;
+border: 1px solid var(--glass-border);
 border-radius: var(--border-radius);
 box-shadow: var(--shadow-sm);
-background: white;
+background: var(--glass-bg);
+backdrop-filter: blur(20px);
 position: relative;
-overflow: hidden;
-border: 1px solid var(--border-color);
+overflow: visible; /* Changed to visible to prevent dropdown clipping */
 }
 .transactions-card::before {
 content: '';
@@ -290,288 +267,246 @@ z-index: 2;
 border-bottom: 2px solid var(--border-color);
 font-weight: 600;
 color: var(--dark-text);
-padding: 1rem 0.75rem;
-background: var(--light-bg);
+padding: 1.25rem 1rem;
+background: rgba(248, 250, 252, 0.5);
+border-radius: var(--border-radius) var(--border-radius) 0 0;
 }
 .table tbody td {
-padding: 1rem 0.75rem;
-border-bottom: 1px solid #f1f5f9;
+padding: 1.25rem 1rem;
+border-bottom: 1px solid rgba(229, 231, 235, 0.5);
 vertical-align: middle;
+transition: var(--transition);
+position: relative; /* Ensure dropdown positions correctly */
 }
 .table tbody tr:hover {
-background: var(--light-bg);
-transition: var(--transition);
-transform: scale(1.01);
+background: rgba(152, 226, 63, 0.05);
+transform: scale(1.02);
+box-shadow: var(--shadow-sm);
 }
-/* Status Badges */
+/* Status Badges - Modern Pills */
 .status-badge {
-padding: 0.375rem 0.75rem;
-border-radius: 20px;
-font-size: 0.75rem;
+padding: 0.5rem 1rem;
+border-radius: 25px;
+font-size: 0.8rem;
 font-weight: 600;
 text-transform: uppercase;
-letter-spacing: 0.025em;
+letter-spacing: 0.05em;
+box-shadow: var(--shadow-sm);
+transition: var(--transition);
 }
 .status-completed {
-background: rgba(16, 185, 129, 0.1);
-color: var(--success-color);
+background: linear-gradient(135deg, var(--success-color), #059669);
+color: white;
 }
 .status-pending {
-background: rgba(245, 158, 11, 0.1);
-color: var(--warning-color);
+background: linear-gradient(135deg, var(--warning-color), #d97706);
+color: white;
 }
 .status-declined {
-background: rgba(239, 68, 68, 0.1);
-color: var(--danger-color);
+background: linear-gradient(135deg, var(--danger-color), #dc2626);
+color: white;
 }
-/* Action Button */
+.status-badge:hover {
+transform: translateY(-1px);
+box-shadow: var(--shadow-md);
+}
+/* Action Button - Modern Dots - Enhanced Visibility */
 .action-btn {
 border: none;
-background: transparent;
+background: rgba(255, 255, 255, 0.5);
 color: var(--muted-text);
-padding: 0.5rem;
+padding: 0.75rem;
 border-radius: 50%;
 transition: var(--transition);
-width: 2.5rem;
-height: 2.5rem;
+width: 3rem;
+height: 3rem;
 display: flex;
 align-items: center;
 justify-content: center;
+backdrop-filter: blur(10px);
+position: relative;
+z-index: 10; /* Ensure button is above table */
 }
 .action-btn:hover {
-background: rgba(152, 226, 63, 0.1);
+background: rgba(152, 226, 63, 0.2);
 color: var(--primary-color);
-transform: rotate(90deg);
+transform: rotate(90deg) scale(1.1);
+box-shadow: var(--shadow-sm);
+z-index: 15; /* Higher on hover */
 }
-
-
-/* ===============================
-   BANK CARD STYLE BALANCE DISPLAY
-   =============================== */
-.bank-card {
-    position: relative;
-    width: 100%;
-    padding: 25px 30px;
-    border-radius: 18px;
-    background: linear-gradient(135deg, #2C3E50 0%, #4CAF50 100%);
-    color: #fff;
-    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    transition: var(--transition);
+.dropdown-menu {
+z-index: 1060; /* High z-index for dropdown visibility */
+overflow: visible; /* Prevent clipping */
 }
-
-.bank-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 18px 30px rgba(0, 0, 0, 0.20);
-}
-
-/* Decorative wave background */
-.bank-card::after {
-    content: "";
-    position: absolute;
-    top: -20px;
-    right: -60px;
-    width: 180px;
-    height: 180px;
-    background: rgba(255, 255, 255, 0.12);
-    border-radius: 50%;
-    z-index: 1;
-}
-.bank-card::before {
-    content: "";
-    position: absolute;
-    bottom: -30px;
-    left: -40px;
-    width: 150px;
-    height: 150px;
-    background: rgba(255, 255, 255, 0.07);
-    border-radius: 50%;
-    z-index: 1;
-}
-
-/* Text */
-.bank-card .card-label {
-    font-size: 0.95rem;
-    opacity: 0.85;
-    letter-spacing: 0.8px;
-    z-index: 3;
-}
-
-.bank-card .card-balance {
-    font-size: 2rem;
-    font-weight: 700;
-    z-index: 3;
-}
-
-.bank-card .card-extra {
-    font-size: 0.85rem;
-    opacity: 0.85;
-    margin-top: 5px;
-    z-index: 3;
-}
-
-/* Optional chip icon */
-.bank-card .chip {
-    width: 42px;
-    height: 32px;
-    border-radius: 6px;
-    background: linear-gradient(135deg, #d7d7d7, #b8b8b8);
-    margin-bottom: 10px;
-    z-index: 3;
-}
-
-
-/* CTA Buttons */
+/* CTA Buttons - Modern Gradient with Black Text */
 .btn-cta {
 background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
 border: none;
-color: white;
-padding: 0.75rem 1.5rem;
+color: #000; /* Black text */
+padding: 0.875rem 1.75rem;
 border-radius: var(--border-radius);
 font-weight: 600;
 transition: var(--transition);
 text-decoration: none;
 display: inline-flex;
 align-items: center;
+gap: 0.5rem;
+box-shadow: var(--shadow-sm);
 }
 .btn-cta:hover {
 transform: translateY(-2px);
 box-shadow: var(--shadow-md);
-color: white;
+color: #000; /* Black text on hover */
 text-decoration: none;
 }
 .btn-outline-cta {
 border: 1px solid var(--primary-color);
-color: var(--primary-color);
+color: #000; /* Black text */
 background: transparent;
-padding: 0.5rem 1rem;
+padding: 0.75rem 1.5rem;
 border-radius: var(--border-radius);
 font-weight: 600;
 transition: var(--transition);
+display: inline-flex;
+align-items: center;
+gap: 0.5rem;
 }
 .btn-outline-cta:hover {
 background: var(--primary-color);
-color: white;
+color: #000; /* Black text on hover */
 transform: translateY(-1px);
 box-shadow: var(--shadow-sm);
 }
-/* Pagination */
+/* Pagination - Modern Dots */
 .pagination .page-link {
 border: 1px solid var(--border-color);
 color: var(--dark-text);
-padding: 0.5rem 0.75rem;
-margin: 0 0.125rem;
-border-radius: 6px;
+padding: 0.75rem 1rem;
+margin: 0 0.25rem;
+border-radius: 50%;
+width: 45px;
+height: 45px;
+display: flex;
+align-items: center;
+justify-content: center;
 transition: var(--transition);
+font-weight: 600;
 }
 .pagination .page-link:hover {
 background: var(--primary-color);
-color: white;
+color: #000; /* Black text */
 border-color: var(--primary-color);
-transform: translateY(-1px);
+transform: translateY(-2px) scale(1.05);
 }
 .pagination .page-item.active .page-link {
-background: var(--primary-color);
+background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
 border-color: var(--primary-color);
 box-shadow: var(--shadow-sm);
+color: #000; /* Black text */
+transform: scale(1.05);
 }
-/* Empty States */
+/* Empty States - Modern Illustration Style */
 .empty-state {
 text-align: center;
-padding: 3rem 2rem;
+padding: 4rem 2rem;
 border-radius: var(--border-radius);
 background: linear-gradient(135deg, rgba(152, 226, 63, 0.05) 0%, rgba(122, 184, 44, 0.05) 100%);
 border: 1px solid rgba(152, 226, 63, 0.2);
+box-shadow: var(--shadow-sm);
 }
 .empty-state-icon {
-font-size: 3rem;
+font-size: 4rem;
 color: var(--primary-color);
-margin-bottom: 1rem;
-opacity: 0.7;
+margin-bottom: 1.5rem;
+opacity: 0.6;
 transition: var(--transition);
+display: block;
 }
 .empty-state:hover .empty-state-icon {
-transform: scale(1.1);
+transform: scale(1.1) rotate(10deg);
 }
-/* Responsive Design */
+/* Responsive - Enhanced Mobile */
 @media (max-width: 768px) {
 .dashboard-header {
 padding: 1.5rem;
 margin-bottom: 1.5rem;
-  }
+    }
 .welcome-title {
-font-size: 1.5rem;
-  }
+font-size: 1.75rem;
+    }
 .stats-card .card-body {
 padding: 1.25rem;
-  }
+    }
 .stats-number {
-font-size: 1.75rem;
-  }
-.stats-icon {
 font-size: 2rem;
-  }
+    }
+.stats-icon {
+font-size: 2.25rem;
+    }
 .table-responsive {
 border-radius: var(--border-radius);
-  }
+box-shadow: var(--shadow-sm);
+    }
 .balance-display {
 margin-top: 1rem;
 width: 100%;
-padding: 1.25rem 1.5rem;
-  }
+padding: 1.5rem;
+    }
 .balance-amount {
-font-size: 1.0rem;
-  }
+font-size: 2rem;
+    }
+.donut-chart-container {
+width: 80px;
+height: 80px;
+    }
 }
 @media (max-width: 576px) {
 .dashboard-header {
 padding: 1rem;
-  }
+    }
 .welcome-title {
-font-size: 1.25rem;
-  }
+font-size: 1.5rem;
+    }
 .stats-card .card-body {
 padding: 1rem;
-  }
+    }
 .table thead {
 display: none;
-  }
+    }
 .table tbody tr {
 display: block;
 border: 1px solid var(--border-color);
 border-radius: var(--border-radius);
 margin-bottom: 1rem;
-padding: 1rem;
-background: white;
+padding: 1.25rem;
+background: var(--glass-bg);
+backdrop-filter: blur(10px);
 box-shadow: var(--shadow-sm);
-  }
+position: relative;
+    }
 .table tbody td {
 display: block;
 border: none;
-padding: 0.25rem 0;
+padding: 0.75rem 0;
 text-align: left;
-  }
+position: relative;
+    }
 .table tbody td:before {
 content: attr(data-label) ": ";
-font-weight: 600;
+font-weight: 700;
 color: var(--dark-text);
-  }
+display: block;
+margin-bottom: 0.25rem;
+    }
+/* Two items per row on mobile for forms/tables where applicable */
+.row.g-3 > div {
+flex: 0 0 100%;
+max-width: 100%;
+    }
 }
-/* Utility Classes */
+/* Utility Classes - Enhanced */
 .gradient-primary {
 background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-}
-.gradient-success {
-background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-}
-.gradient-warning {
-background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-}
-.gradient-danger {
-background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
 }
 .text-gradient {
 background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
@@ -583,111 +518,119 @@ background-clip: text;
 <section class="dashboard-section body-collapse">
 <div class="overlay pt-4">
 <div class="container-fluid px-3 px-md-4">
-<!-- Enhanced Header -->               
+<!-- Enhanced Header with Modern Layout -->
 <div class="dashboard-header mb-4">
-    <!-- Welcome note at the top, full width row -->    
-    <!-- Below: Row with two sections/cards -->
-    <div class="row g-4 mb-4">
-        <!-- First: Wallet Balance (simple display without card styling) -->
-        <div class="col-lg-6">
-            <div class="balance-display p-3 bg-light rounded border">
-                <h3 class="text-success mb-1"> {{ kyc.company_name|title }} Spendy Wallet</h3>
-                <p class="text-muted mb-1">Account Balance</p>
-                <h4 class="text-success mb-1">
-                    KES {{ primary_wallets.balance|default:0|intcomma }}
-                </h4>
-            </div>
-        </div>
-        
-        <!-- Second: Total Money In/Out with small donut charts -->
-        <div class="col-lg-6">
-            <div class="row g-3 h-100">
-                <!-- Money In Donut -->
-                <div class="col-6">
-                    <div class="d-flex flex-column h-100 p-3 bg-light rounded border text-center">
-                        <h5 class="text-primary mb-2">Total Money In</h5>
-                        <div class="donut-chart-placeholder mx-auto mb-2" style="width: 80px; height: 80px;">
-                            <!-- Placeholder for small donut chart (e.g., Chart.js canvas) -->
-                            <canvas id="money-in-donut" width="80" height="80"></canvas>
-                        </div>
-                        <p class="mb-0 text-success fw-bold">KES 5,000</p>
-                    </div>
-                </div>
-                <!-- Money Out Donut -->
-                <div class="col-6">
-                    <div class="d-flex flex-column h-100 p-3 bg-light rounded border text-center">
-                        <h5 class="text-primary mb-2">Total Money Out</h5>
-                        <div class="donut-chart-placeholder mx-auto mb-2" style="width: 80px; height: 80px;">
-                            <!-- Placeholder for small donut chart (e.g., Chart.js canvas) -->
-                            <canvas id="money-out-donut" width="80" height="80"></canvas>
-                        </div>
-                        <p class="mb-0 text-danger fw-bold">KES 3,200</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-  
+<div class="row g-4">
+<!-- Welcome and Quick Actions -->
+<div class="col-12 col-lg-6">
+<h1 class="welcome-title"><i class="fas fa-wallet me-2"></i>Welcome back, {{ user.first_name|title }}!</h1>
+<p class="welcome-subtitle">Here's what's happening with your finances today.</p>
 </div>
-
-
-
-      {% if form.errors %}
-<div class="alert alert-danger border-0 rounded-3 mb-4" style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);">
+<!-- Quick Actions Buttons -->
+<div class="col-12 col-lg-6 text-lg-end mt-3 mt-lg-0">
+<a href="{% url 'expense:submit_expense' %}" class="btn-cta me-2 me-lg-3 mb-2 mb-lg-0">
+<i class="fas fa-plus"></i> New Request
+</a>
+<a href="" class="btn-outline-cta">
+<i class="fas fa-exchange-alt"></i> Transfer
+</a>
+</div>
+</div>
+<!-- Balance and Charts Row - Two Items Per Row -->
+<div class="row g-4 mt-4">
+<!-- Wallet Balance -->
+<div class="col-12 col-md-6">
+<div class="balance-display">
+<h5 class="mb-1 text-primary">{{ kyc.company_name|title }} Spendy Wallet</h5>
+<p class="text-muted mb-0 small">Available Balance</p>
+<div class="balance-amount">
+                                KES {{ primary_wallets.balance|default:0|intcomma }}
+</div>
+<small class="text-success"><i class="fas fa-arrow-up me-1"></i> +2.5% this month</small>
+</div>
+</div>
+<!-- Money In/Out Charts - Two Mini Donuts -->
+<div class="col-12 col-md-6">
+<div class="row g-3 h-100 align-items-center justify-content-center">
+<!-- Money In -->
+<div class="col-6 text-center">
+<h6 class="text-primary mb-2 fw-semibold">Total In</h6>
+<div class="donut-chart-container">
+<canvas id="moneyInChart"></canvas>
+</div>
+<p class="mb-0 text-success fw-bold mt-2">KES {{ total_in|default:0|intcomma }}</p>
+<small class="text-muted">This month</small>
+</div>
+<!-- Money Out -->
+<div class="col-6 text-center">
+<h6 class="text-danger mb-2 fw-semibold">Total Out</h6>
+<div class="donut-chart-container">
+<canvas id="moneyOutChart"></canvas>
+</div>
+<p class="mb-0 text-danger fw-bold mt-2">KES {{ total_out|default:0|intcomma }}</p>
+<small class="text-muted">This month</small>
+</div>
+</div>
+</div>
+</div>
+</div>
+            {% if form.errors %}
+<div class="alert alert-danger border-0 rounded-3 mb-4" style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); box-shadow: var(--shadow-sm);">
 <i class="fas fa-exclamation-triangle me-2"></i>
 <strong>{{ form.errors }}</strong>
 </div>
-      {% endif %}
-<!-- Enhanced Statistics Cards -->
+            {% endif %}
+<!-- Enhanced Statistics Cards - Two Per Row on Desktop -->
 <div class="mb-5">
 <div class="d-flex justify-content-between align-items-center mb-4">
 <div>
-<h4 class="section-title mb-1">Request Overview</h4>
-<p class="section-subtitle">Track your expense request status</p>
+<h2 class="section-title"><i class="fas fa-chart-pie me-2"></i>Request Overview</h2>
+<p class="section-subtitle">Track your expense request status at a glance</p>
+</div>
+<a href="{% url 'expense:expense_approvals' %}" class="btn-outline-cta">
+<i class="fas fa-eye me-1"></i>View Details
+</a>
+</div>
+<div class="row g-4">
+<!-- Row 1: Total & Pending -->
+<div class="col-12 col-md-6 col-lg-3">
+<div class="stats-card gradient-primary text-black">
+<div class="card-body text-center">
+<i class="fas fa-chart-line stats-icon"></i>
+<div class="stats-number">{{ total_requests|default:0 }}</div>
+<p class="stats-label mb-3">Total Requests</p>
+<small class="stats-description opacity-90">All time</small>
 </div>
 </div>
-<div class="row g-3 g-md-4">
-<div class="col-12 col-sm-6 col-lg-3">
-<div class="stats-card" style="background: linear-gradient(135deg, #e1f5fe 0%, #b3e5fc 100%);">
-<div class="card-body text-center position-relative">
-<i class="fas fa-chart-line stats-icon text-info"></i>
-<div class="stats-number text-dark">{{ total_requests|default:0 }}</div>
-<p class="stats-label text-dark mb-1">Total Requests</p>
-<small class="stats-description">All time requests</small>
-<a href="{% url 'expense:expense_approvals' %}" class="stretched-link" aria-label="View total requests"></a>
 </div>
-</div>
-</div>
-<div class="col-12 col-sm-6 col-lg-3">
+<div class="col-12 col-md-6 col-lg-3">
 <div class="stats-card" style="background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);">
-<div class="card-body text-center position-relative">
+<div class="card-body text-center">
 <i class="fas fa-clock stats-icon text-warning"></i>
-<div class="stats-number text-dark">{{ pending_requests|default:0 }}</div>
-<p class="stats-label text-dark mb-1">Pending</p>
-<small class="stats-description">Awaiting processing</small>
-<a href="{% url 'expense:expense_approvals' %}" class="stretched-link" aria-label="View pending requests"></a>
+<div class="stats-number">{{ pending_requests|default:0 }}</div>
+<p class="stats-label mb-3">Pending</p>
+<small class="stats-description">Awaiting approval</small>
 </div>
 </div>
 </div>
-<div class="col-12 col-sm-6 col-lg-3">
+<!-- Row 2: Completed & Declined -->
+<div class="col-12 col-md-6 col-lg-3">
 <div class="stats-card" style="background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);">
-<div class="card-body text-center position-relative">
+<div class="card-body text-center">
 <i class="fas fa-check-circle stats-icon text-success"></i>
-<div class="stats-number text-dark">{{ completed_requests|default:0 }}</div>
-<p class="stats-label text-dark mb-1">Completed</p>
-<small class="stats-description">Successfully processed</small>
-<a href="{% url 'expense:expense_approvals' %}" class="stretched-link" aria-label="View completed requests"></a>
+<div class="stats-number">{{ completed_requests|default:0 }}</div>
+<p class="stats-label mb-3">Completed</p>
+<small class="stats-description">Processed successfully</small>
 </div>
 </div>
 </div>
-<div class="col-12 col-sm-6 col-lg-3">
+<div class="col-12 col-md-6 col-lg-3">
 <div class="stats-card" style="background: linear-gradient(135deg, #fce4ec 0%, #f8bbd9 100%);">
-<div class="card-body text-center position-relative">
+<div class="card-body text-center">
 <i class="fas fa-times-circle stats-icon text-danger"></i>
-<div class="stats-number text-dark">{{ declined_requests|default:0 }}</div>
-<p class="stats-label text-dark mb-1">Declined</p>
-<small class="stats-description">Declined requests</small>
-<a href="{% url 'expense:expense_approvals' %}" class="stretched-link" aria-label="View declined requests"></a>
+<div class="stats-number">{{ declined_requests|default:0 }}</div>
+<p class="stats-label mb-3">Declined</p>
+<small class="stats-description">Rejected items</small>
 </div>
 </div>
 </div>
@@ -696,24 +639,24 @@ background-clip: text;
 <!-- Enhanced Transactions Section -->
 <div class="row">
 <div class="col-12">
-<div class="transactions-card p-3 p-md-4 rounded-3">
+<div class="transactions-card p-4">
 <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-4">
 <div>
-<h4 class="section-title mb-1">Recent Payments</h4>
-<p class="section-subtitle">Latest transaction activity</p>
+<h2 class="section-title"><i class="fas fa-history me-2"></i>Recent Payments</h2>
+<p class="section-subtitle">Your latest transaction activity</p>
 </div>
-<a href="{% url 'wallet:transactions' %}" class="btn-outline-cta mt-2 mt-sm-0 d-flex align-items-center">
-<span>View All</span>
+<a href="{% url 'wallet:transactions' %}" class="btn-cta mt-2 mt-sm-0">
+<span>View All Transactions</span>
 <i class="fas fa-arrow-right ms-2"></i>
 </a>
 </div>
-        <div class="table-responsive">
-          <table class="table table-hover align-middle">
+<div class="table-responsive">
+<table class="table table-hover align-middle">
 <thead>
 <tr>
 <th>Initiated By</th>
 <th>Recipient</th>
-<th>Mpesa Code</th>
+<th>M-Pesa Code</th>
 <th>Date & Time</th>
 <th>Status</th>
 <th>Amount</th>
@@ -721,119 +664,159 @@ background-clip: text;
 </tr>
 </thead>
 <tbody>
-                  {% for s in transactions %}
+                                    {% for s in transactions %}
 <tr>
-<td data-label="User">
+<td data-label="Initiated By">
 <div>
-<div class="">{{ s.sender|title }}</div>
+<div class="fw-semibold">{{ s.sender|title }}</div>
 <small class="text-muted">{{ s.transaction_type|title }}</small>
 </div>
 </td>
-<td data-label="User">
-<div>
-<div class="">{{ s.receiver|title }}</div>
-</div>
+<td data-label="Recipient">
+<div class="fw-semibold">{{ s.receiver|title }}</div>
 </td>
-<td data-label="Transaction Code">
-<div>
-<div class="">{{ s.mpesa_code }}</div>
-</div>
+<td data-label="M-Pesa Code">
+<div class="fw-medium">{{ s.mpesa_code }}</div>
 </td>
-<td data-label="Date">
-<div>
+<td data-label="Date & Time">
 <div class="fw-medium">{{ s.date|date:"h:i A" }}</div>
 <small class="text-muted">{{ s.date|date:"M d, Y" }}</small>
-</div>
 </td>
 <td data-label="Status">
 <span class="status-badge {% if s.status == 'completed' %}status-completed {% elif s.status == 'pending' %}status-pending {% else %}status-declined{% endif %}">
-                        {{ s.status|title }}
+                                                {{ s.status|title }}
 </span>
 </td>
-<td data-label="Amount" class="fw-bold text-danger">-KES {{ s.amount|intcomma }}</td>
+<td data-label="Amount" class="fw-bold text-danger">
+                                            -KES {{ s.amount|intcomma }}
+</td>
 <td data-label="Actions">
 <div class="dropdown">
-<button class="action-btn" type="button" id="dropdownMenuButton{{ s.id }}" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Transaction actions">
+<button class="action-btn" type="button" id="dropdownMenuButton{{ s.id }}" data-bs-toggle="dropdown" aria-expanded="false">
 <i class="fas fa-ellipsis-v"></i>
 </button>
 <ul class="dropdown-menu custom-dropdown-menu" aria-labelledby="dropdownMenuButton{{ s.id }}">
 <li>
 <a class="dropdown-item d-flex align-items-center" href="#" data-bs-toggle="modal" data-bs-target="#viewTransactionModal{{ s.id }}">
-<i class="fas fa-eye me-2 text-primary"></i> View Details
+<i class="fas fa-eye me-2 text-info"></i>View Details
+</a>
+</li>
+<li><hr class="dropdown-divider"></li>
+<li>
+<a class="dropdown-item d-flex align-items-center text-danger" href="#">
+<i class="fas fa-download me-2"></i>Download Receipt
 </a>
 </li>
 </ul>
 </div>
 </td>
 </tr>
-<!-- Include transaction modals -->
-                  {% include 'partials/transaction_modals.html' with transaction=s %}
-                  {% endfor %}
+                                    {% include 'partials/transaction_modals.html' with transaction=s %}
+                                    {% endfor %}
 </tbody>
 </table>
 </div>
-<!-- Enhanced Pagination -->
-            {% if transactions.paginator.num_pages > 1 %}
+<!-- Modern Pagination -->
+                        {% if transactions.paginator.num_pages > 1 %}
 <nav aria-label="Transactions pagination" class="mt-4">
 <ul class="pagination justify-content-center mb-0">
-                {% if transactions.has_previous %}
+                                {% if transactions.has_previous %}
 <li class="page-item">
-<a class="page-link" href="?page={{ transactions.previous_page_number }}" aria-label="Previous page">
+<a class="page-link" href="?page={{ transactions.previous_page_number }}" aria-label="Previous">
 <i class="fas fa-chevron-left"></i>
 </a>
 </li>
-                {% else %}
+                                {% else %}
 <li class="page-item disabled">
-<span class="page-link">
-<i class="fas fa-chevron-left"></i>
-</span>
+<span class="page-link"><i class="fas fa-chevron-left"></i></span>
 </li>
-                {% endif %}
-                {% for num in transactions.paginator.page_range %}
-                {% if transactions.number == num %}
+                                {% endif %}
+                                {% for num in transactions.paginator.page_range %}
+                                {% if transactions.number == num %}
 <li class="page-item active">
 <span class="page-link">{{ num }}</span>
 </li>
-                {% elif num > transactions.number|add:'-3' and num < transactions.number|add:'3' %}
+                                {% elif num > transactions.number|add:'-3' and num < transactions.number|add:'3' %}
 <li class="page-item">
 <a class="page-link" href="?page={{ num }}">{{ num }}</a>
 </li>
-                {% endif %}
-                {% endfor %}
-                {% if transactions.has_next %}
+                                {% endif %}
+                                {% endfor %}
+                                {% if transactions.has_next %}
 <li class="page-item">
-<a class="page-link" href="?page={{ transactions.next_page_number }}" aria-label="Next page">
+<a class="page-link" href="?page={{ transactions.next_page_number }}" aria-label="Next">
 <i class="fas fa-chevron-right"></i>
 </a>
 </li>
-                {% else %}
+                                {% else %}
 <li class="page-item disabled">
-<span class="page-link">
-<i class="fas fa-chevron-right"></i>
-</span>
+<span class="page-link"><i class="fas fa-chevron-right"></i></span>
 </li>
-                {% endif %}
+                                {% endif %}
 </ul>
 </nav>
-            {% endif %}
+                        {% endif %}
 </div>
 </div>
 </div>
-      {% if not transactions %}
+            {% if not transactions %}
 <div class="row">
 <div class="col-12">
 <div class="empty-state">
-<i class="fas fa-receipt empty-state-icon"></i>
-<h5 class="mb-2 text-dark">No Transactions Found</h5>
-<p class="mb-3 text-muted">Your recent payments will appear here once you start transacting.</p>
-<a href="{% url 'wallet:transactions' %}" class="btn-cta">
-<i class="fas fa-plus me-2"></i> Start a Transaction
+<i class="fas fa-receipt-line empty-state-icon"></i>
+<h5 class="mb-3 text-dark">No Transactions Yet</h5>
+<p class="text-muted mb-4">Your payment history will appear here once you make your first transaction.</p>
+<a href="" class="btn-cta">
+<i class="fas fa-arrow-right me-2"></i>Make First Payment
 </a>
 </div>
 </div>
 </div>
-      {% endif %}
+            {% endif %}
 </div>
 </div>
 </section>
+<script>
+// Initialize Modern Donut Charts
+document.addEventListener('DOMContentLoaded', function() {
+// Money In Chart
+const moneyInCtx = document.getElementById('moneyInChart').getContext('2d');
+new Chart(moneyInCtx, {
+type: 'doughnut',
+data: {
+datasets: [{
+data: [{{ total_in|default:0 }}, 1000], // Example data
+backgroundColor: ['#98e23f', '#e5e7eb'],
+borderWidth: 0,
+cutout: '70%'
+                }]
+            },
+options: {
+responsive: true,
+maintainAspectRatio: false,
+plugins: { legend: { display: false } },
+animation: { duration: 2000, easing: 'easeOutBounce' }
+            }
+        });
+// Money Out Chart
+const moneyOutCtx = document.getElementById('moneyOutChart').getContext('2d');
+new Chart(moneyOutCtx, {
+type: 'doughnut',
+data: {
+datasets: [{
+data: [{{ total_out|default:0 }}, 1000], // Example data
+backgroundColor: ['#ef4444', '#e5e7eb'],
+borderWidth: 0,
+cutout: '70%'
+                }]
+            },
+options: {
+responsive: true,
+maintainAspectRatio: false,
+plugins: { legend: { display: false } },
+animation: { duration: 2000, easing: 'easeOutBounce' }
+            }
+        });
+    });
+</script>
 {% endblock content %}

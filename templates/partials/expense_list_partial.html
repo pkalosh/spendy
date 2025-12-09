@@ -1,0 +1,229 @@
+{% load humanize %}
+{% load custom_filters %}
+
+<div class="accordion-item">
+    <h2 class="accordion-header">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#{{ list_name|slugify }}List" aria-expanded="false" aria-controls="{{ list_name|slugify }}List">
+            {{ list_name }} ({{ list_desc }})
+        </button>
+    </h2>
+    <div id="{{ list_name|slugify }}List" class="accordion-collapse collapse" data-bs-parent="#expenseAccordion">
+        <div class="accordion-body">
+            <div class="card shadow-sm">
+                <div class="card-header bg-secondary text-black d-flex justify-content-between align-items-center">
+                    <span>{{ list_name }}</span>
+                    <button class="btn btn-outline-light btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#expenseFilterSection{{ list_name|slugify }}" aria-expanded="false" aria-controls="expenseFilterSection{{ list_name|slugify }}">
+                        <i class="fas fa-filter"></i> Filters
+                    </button>
+                </div>
+                <div class="card-body">
+                    <!-- Expense Filter Section -->
+                    <div class="collapse mb-4" id="expenseFilterSection{{ list_name|slugify }}">
+                        <div class="card card-body">
+                            <form method="GET" id="expenseFilterForm{{ list_name|slugify }}">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <label for="expense_user_filter" class="form-label">Created By</label>
+                                        <select name="expense_user" id="expense_user_filter" class="form-select">
+                                            <option value="">All Users</option>
+                                            {% for staff in user %}
+                                                <option value="{{ staff.user.id }}" {% if request.GET.expense_user == staff.user.id|stringformat:"s" %}selected{% endif %}>
+                                                    {{ staff.first_name }} {{ staff.last_name }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="expense_category_filter" class="form-label">Category</label>
+                                        <select name="expense_category" id="expense_category_filter" class="form-select">
+                                            <option value="">All Categories</option>
+                                            {% for category in expense_category_choices %}
+                                                <option value="{{ category.id }}" {% if request.GET.expense_category == category.id|stringformat:"s" %}selected{% endif %}>
+                                                    {{ category.name }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="expense_status_filter" class="form-label">Status</label>
+                                        <select name="expense_status" id="expense_status_filter" class="form-select">
+                                            <option value="">All Status</option>
+                                            <option value="pending" {% if request.GET.expense_status == 'pending' %}selected{% endif %}>Pending</option>
+                                            <option value="approved" {% if request.GET.expense_status == 'approved' %}selected{% endif %}>Approved</option>
+                                            <option value="declined" {% if request.GET.expense_status == 'declined' %}selected{% endif %}>Declined</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3 d-flex align-items-end">
+                                        <button type="submit" class="btn btn-primary me-2">Apply</button>
+                                        <a href="{{ request.path }}" class="btn btn-secondary">Clear</a>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <!-- Desktop Expense Table -->
+                    <div class="table-responsive d-none d-md-block">
+                        <table id="expenses-table-{{ list_name|slugify }}" class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Category</th>
+                                    <th>Description</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Created By</th>
+                                    <th>Created On</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if expenses %}
+                                    {% for expense in expenses %}
+                                        <tr>
+                                            <td>{{ expense.id }}</td>
+                                            <td>{{ expense.expense_category.name|default:expense.expense_category|default:"-" }}</td>
+                                            <td>
+                                                <span class="text-truncate d-inline-block" style="max-width: 150px;" title="{{ expense.description }}">
+                                                    {{ expense.description|default:"-"|truncatewords:5 }}
+                                                </span>
+                                            </td>
+                                            <td>{{ expense.amount|floatformat:2|intcomma }}</td>
+                                            <td>
+                                                {% if expense.approved %}
+                                                    <span class="badge bg-success">Approved</span>
+                                                {% elif expense.declined %}
+                                                    <span class="badge bg-danger">Declined</span>
+                                                {% else %}
+                                                    <span class="badge bg-warning text-dark">Pending</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ expense.created_by.get_full_name|default:expense.created_by.username|default:"-" }}</td>
+                                            <td>{{ expense.created_at|date:"M d, Y H:i" }}</td>
+                                            <td>
+                                                {% if is_admin %}
+                                                    {% if not expense.approved and not expense.declined %}
+                                                        <button class="btn btn-sm btn-success me-1" data-bs-toggle="modal" data-bs-target="#approvalModal{{ expense.id }}">Approve</button>
+                                                    {% endif %}
+                                                    {% if expense.approved and not expense.declined %}
+                                                        <button class="btn btn-sm btn-primary me-1" data-bs-toggle="modal" data-bs-target="#paymentModal{{ expense.id }}">Pay</button>
+                                                    {% endif %}
+                                                {% endif %}
+                                                <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#expenseModal{{ expense.id }}">View</button>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="8" class="text-center">No {{ list_desc|lower }} found.</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Mobile Expense Cards -->
+                    <div class="d-md-none">
+                        {% for expense in expenses %}
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h6 class="card-subtitle mb-2 text-muted">{{ expense.id }} - {{ expense.expense_category.name|default:expense.expense_category|default:"-" }}</h6>
+                                    <p class="card-text">
+                                        <strong>Description:</strong> {{ expense.description|default:"No description"|truncatewords:10 }}<br>
+                                        <strong>Amount:</strong> {{ expense.amount|floatformat:2|intcomma }}<br>
+                                        <strong>Status:</strong>
+                                        {% if expense.approved %}
+                                            <span class="badge bg-success">Approved</span>
+                                        {% elif expense.declined %}
+                                            <span class="badge bg-danger">Declined</span>
+                                        {% else %}
+                                            <span class="badge bg-warning text-dark">Pending</span>
+                                        {% endif %}<br>
+                                        <strong>Created By:</strong> {{ expense.created_by.get_full_name|default:expense.created_by.username|default:"-" }}<br>
+                                        <strong>Created On:</strong> {{ expense.created_at|date:"M d, Y H:i" }}
+                                    </p>
+                                    <div class="btn-group" role="group">
+                                        {% if is_admin %}
+                                            {% if not expense.approved and not expense.declined %}
+                                                <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#approvalModal{{ expense.id }}">Approve</button>
+                                            {% endif %}
+                                            {% if expense.approved and not expense.declined %}
+                                                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#paymentModal{{ expense.id }}">Pay</button>
+                                            {% endif %}
+                                        {% endif %}
+                                        <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#expenseModal{{ expense.id }}">View Details</button>
+                                    </div>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div class="alert alert-info text-center">No {{ list_desc|lower }} found.</div>
+                        {% endfor %}
+                    </div>
+                    <!-- Expense Pagination -->
+                    {% if expenses.has_other_pages %}
+                        <nav aria-label="{{ list_name }} pagination" class="mt-4">
+                            <ul class="pagination justify-content-center">
+                                {% if expenses.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?{% if query_string %}{{ query_string }}&{% endif %}page={{ expenses.previous_page_number }}">Previous</a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">Previous</span>
+                                    </li>
+                                {% endif %}
+                                {% for num in expenses.paginator.page_range %}
+                                    {% if expenses.number == num %}
+                                        <li class="page-item active" aria-current="page">
+                                            <span class="page-link">{{ num }}</span>
+                                        </li>
+                                    {% elif num > expenses.number|add:'-3' and num < expenses.number|add:'3' %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?{% if query_string %}{{ query_string }}&{% endif %}page={{ num }}">{{ num }}</a>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+                                {% if expenses.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?{% if query_string %}{{ query_string }}&{% endif %}page={{ expenses.next_page_number }}">Next</a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">Next</span>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Approval Modals for Expenses (per page) -->
+{% if is_admin %}
+    {% for expense in expenses %}
+        {% if not expense.approved and not expense.declined %}
+            <div class="modal fade" id="approvalModal{{ expense.id }}" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <form method="post" action="{% url 'expense:approve_expense' expense.id %}">
+                            {% csrf_token %}
+                            <div class="modal-header bg-light">
+                                <h5 class="modal-title">Approve {{ list_name|lower }} Expense</h5>
+                            </div>
+                            <div class="modal-body">
+                                <p>Approve expense: {{ expense.description|default:"-" }} ({{ expense.amount|floatformat:2|intcomma }})?</p>
+                                <!-- Add form fields if needed, e.g., remarks -->
+                            </div>
+                            <div class="modal-footer">
+                                <button type="submit" class="btn btn-success">Approve</button>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    {% endfor %}
+{% endif %}
+

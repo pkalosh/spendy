@@ -2,7 +2,7 @@
 <div class="modal fade" id="viewTransactionModal{{ transaction.id }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header bg-light">
                 <h5 class="modal-title">Transaction Details</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
@@ -26,7 +26,7 @@
         <form class="approve-transaction-form" data-id="{{ transaction.id }}">
             {% csrf_token %}
             <div class="modal-content">
-                <div class="modal-header">
+                <div class="modal-header light">
                     <h5 class="modal-title text-success">Approve Transaction</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
@@ -48,7 +48,7 @@
         <form class="reject-transaction-form" data-id="{{ transaction.id }}">
             {% csrf_token %}
             <div class="modal-content">
-                <div class="modal-header">
+                <div class="modal-header bg-light">
                     <h5 class="modal-title text-danger">Reject Transaction</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>

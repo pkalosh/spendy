@@ -1,189 +1,297 @@
 {% extends "partials/dashboard-base.html" %}
 {% load static %}
 {% block content %}
-    <!-- Dashboard Section start -->
-    <head>
-
-    </head>
 <section class="dashboard-section body-collapse account">
     <div class="overlay pt-120">
-        <div class="container-fruid">
+        <div class="container-fluid">
             <div class="main-content">
-                <div class="row">
-                    <div class="col-xxl-3 col-xl-4 col-md-6">
-                        <div class="owner-details">
-                            <div class="profile-area">
-                                <div class="profile-img">
-                                    <img src="{{ kyc.logo.url }}" style="border-radius: 50%; width: 100px; height: 100px; " alt="image">
+                <!-- Modern Profile Hero Section -->
+                <div class="row mb-5">
+                    <div class="col-12">
+                        <div class="profile-hero position-relative overflow-hidden rounded-4 shadow-lg" style="background: linear-gradient(135deg, #98e23f 0%, #7bb732 100%); min-height: 300px; color: white;">
+                            <div class="row align-items-end h-100">
+                                <div class="col-md-4 text-center text-md-start">
+                                    <div class="profile-avatar position-relative mx-auto mx-md-0" style="width: 150px; height: 150px; margin-top: -75px; z-index: 2;">
+                                        <img src="{% if kyc.logo %}{{ kyc.logo.url }}{% else %}{% static 'assets1/images/default.jpg' %}{% endif %}" 
+                                             class="img-fluid rounded-circle w-100 h-100 object-fit-cover border border-4 border-white shadow-sm" 
+                                             alt="Company Logo">
+                                        <div class="avatar-overlay position-absolute bottom-0 end-0 p-2">
+                                            <i class="fas fa-camera text-black-50"></i>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="name-area">
-                                    <h6>{{kyc.company_name|title}}</h6>
-                                    <p class="text-danger">{{ kyc.status|title }}</p>
+                                <div class="col-md-8">
+                                    <div class="profile-info ps-md-4">
+                                        <h2 class="fw-bold mb-1">{{ kyc.company_name|title }}</h2>
+                                        <p class="mb-2 opacity-75">{{ kyc.organization_type }}</p>
+                                        <div class="d-flex flex-wrap gap-2 mb-3">
+                                            <span class="badge bg-light text-dark px-3 py-2 rounded-pill">
+                                                <i class="fas fa-map-marker-alt me-1"></i>{{ kyc.country }}, {{ kyc.county }}
+                                            </span>
+                                            <span class="badge bg-light text-dark px-3 py-2 rounded-pill">
+                                                <i class="fas fa-phone me-1"></i>{{ kyc.mobile }}
+                                            </span>
+                                            {% if kyc.status == 'approved' %}
+                                                <span class="badge bg-success px-3 py-2 rounded-pill">
+                                                    <i class="fas fa-check-circle me-1"></i>Verified
+                                                </span>
+                                            {% elif kyc.status == 'pending' %}
+                                                <span class="badge bg-warning text-dark px-3 py-2 rounded-pill">
+                                                    <i class="fas fa-clock me-1"></i>Pending Review
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-danger px-3 py-2 rounded-pill">
+                                                    <i class="fas fa-times-circle me-1"></i>Declined
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="d-flex gap-2">
+                                            <a href="{% url 'userauths:sign-out' %}" class="btn btn-outline-light btn-sm">
+                                                <i class="fas fa-sign-out-alt me-1"></i>Logout
+                                            </a>
+                                            <button class="btn btn-light btn-sm" onclick="toggleEdit()">
+                                                <i class="fas fa-edit me-1"></i>Edit Profile
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="owner-info">
-                                <ul>
-                                    <li>
-                                        <p>Primary wallet Number:</p>
-                                        <span class="mdr">{{ account.wallet_number }}</span>
-                                    </li>
-                                    <li>
-                                        <p>Joined:</p>
-                                        <span class="mdr">{{kyc.date|date:"d M, Y"}}</span>
-                                    </li>
-                                    <li>
-                                        <p>Confirm status:</p>
-                                        <span class="mdr">100%</span>
-                                    </li>
-                                </ul>
-                            </div>
-                            <div class="owner-action">
-                                <a href="{% url 'userauths:sign-out' %}">
-                                    <img src="{% static 'assets1/images/icon/logout.png' %}" alt="image">
-                                    Logout
-                                </a>
-                                <a href="javascript:void(0)" class="delete">
-                                    <img src="{% static 'assets1/images/icon/delete-2.png' %}" alt="image">
-                                    Close Account
-                                </a>
+                            <!-- Stats Row -->
+                            <div class="row position-absolute bottom-0 start-0 end-0 bg-white bg-opacity-10 py-3 px-4">
+                                <div class="col-md-3 text-center">
+                                    <div class="fw-bold fs-4">{{ account.wallet_number|slice:":3" }}***</div>
+                                    <small class="opacity-75">Wallet Number</small>
+                                </div>
+                                <div class="col-md-3 text-center">
+                                    <div class="fw-bold fs-4">{{ kyc.date|date:"d M, Y" }}</div>
+                                    <small class="opacity-75">Joined</small>
+                                </div>
+                                <div class="col-md-3 text-center">
+                                    <div class="fw-bold fs-4 text-success">100%</div>
+                                    <small class="opacity-75">Verification</small>
+                                </div>
+                                <div class="col-md-3 text-center">
+                                    <a href="#" class="text-black text-decoration-none" data-bs-toggle="modal" data-bs-target="#closeAccountModal">
+                                        <i class="fas fa-user-times fs-4"></i>
+                                    </a>
+                                    <small class="d-block opacity-75">Close Account</small>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-xxl-9 col-xl-8">
-                        <div class="tab-main">
-                            <ul class="nav nav-tabs" role="tablist">
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link active text-center" id="account-tab" data-bs-toggle="tab"
-                                        data-bs-target="#account" type="button" role="tab" aria-controls="account"
-                                        aria-selected="true">KYC Registration Form</button>
-                                </li>
-                                
-                            </ul>
+                </div>
 
-                       
-                            <div class="tab-content mt-40">
-                                <div class="tab-pane fade show active" id="account" role="tabpanel" aria-labelledby="account-tab">
-                            
-                                    <!-- Always show KYC summary if it exists -->
-                                    {% if all_fields == True %}
-                                        <div class="mb-4">
-                                            <h5 class="mb-3">✅ KYC Details Submitted</h5>
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <p><strong>Status:</strong> 
-                                                        {% if kyc.status %}
-                                                            <span class="badge 
-                                                                {% if kyc.status == 'approved' %} bg-success 
-                                                                {% elif kyc.status == 'pending' %} bg-warning text-dark 
-                                                                {% else %} bg-danger {% endif %}">
-                                                                {{ kyc.status|capfirst }}
-                                                            </span>
-                                                        {% else %}
-                                                            <span class="badge bg-secondary">Not Available</span>
-                                                        {% endif %}
-                                                    </p>
-                                                    <p><strong>Company Name:</strong> {{ kyc.company_name }}</p>
-                                                    <p><strong>Organization Type:</strong> {{ kyc.organization_type }}</p>
-
-                                                    <p><strong>KRA PIN:</strong> 
-                                                        {% if kyc.kra_pin %}
-                                                            <a href="{{ kyc.kra_pin.url }}" target="_blank" class="btn btn-sm btn-outline-primary">View Document</a>
-                                                        {% else %}
-                                                            <span class="text-muted">Not Uploaded</span>
-                                                        {% endif %}
-                                                    </p>
-                                                    <p><strong>Country:</strong> {{ kyc.country }}</p>
-                                                    <p><strong>County:</strong> {{ kyc.county }}</p>
-                                                    <p><strong>City:</strong> {{ kyc.city }}</p>
-                                                    <p><strong>Address:</strong> {{ kyc.address }}</p>
-                                                    <p><strong>Mobile:</strong> {{ kyc.mobile }}</p>
-                                                    <p><strong>Fax:</strong> {{ kyc.fax }}</p>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <p><strong>Certificate of Incorporation:</strong> 
-                                                        {% if kyc.registration_certificate %}
-                                                            <a href="{{ kyc.registration_certificate.url }}" target="_blank" class="btn btn-sm btn-outline-primary">View Document</a>
-                                                        {% else %}
-                                                            <span class="text-muted">Not Uploaded</span>
-                                                        {% endif %}
-                                                    </p>
-                                                    <p><strong>Logo:</strong><br>
-                                                        {% if kyc.logo %}
-                                                            <img src="{{ kyc.logo.url }}" alt="Logo" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover;">
-                                                        {% else %}
-                                                            <span class="text-muted">Not Uploaded</span>
-                                                        {% endif %}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div class="mt-3">
-                                                <button class="btn btn-sm btn-outline-secondary">Update KYC (Restricted)</button>
-                                            </div>
-                                        </div>
-                                    {% endif %}
-                            
-                                    <!-- Show form only if KYC not submitted -->
-                                    {% if all_fields == False %}
-                                        <form method="POST" enctype="multipart/form-data">
-                                            {% csrf_token %}
-                                            <div class="upload-avatar">
-                                                <div class="avatar-left d-flex align-items-center">
-                                                    <div class="profile-img">
-                                                        <img src="{% static 'assets1/images/default.jpg' %}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover;" alt="image">
-                                                    </div>
-                                                    <div class="instraction">
-                                                        <h6>Your Avatar</h6>
-                                                    </div>
-                                                </div>
-                                                <div class="avatar-right">
-                                                    {{ form.logo }}
-                                                </div>
-                                            </div>
-                            
-                                            <div class="row justify-content-center">
-                                                <div class="col-md-6">
-                                                    <div class="single-input"><label>Company Name</label>{{ form.company_name }}</div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="single-input"><label>Organization Type</label>{{ form.organization_type }}</div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="single-input"><label>KRA PIN</label>{{ form.kra_pin }}</div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="single-input"><label>Certificate</label>{{ form.registration_certificate }}</div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="single-input"><label>Country</label>{{ form.country }}</div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="single-input"><label>County</label>{{ form.county }}</div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="single-input"><label>City</label>{{ form.city }}</div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="single-input"><label>Address</label>{{ form.address }}</div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="single-input"><label>Mobile</label>{{ form.mobile }}</div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="single-input"><label>Fax</label>{{ form.fax }}</div>
-                                                </div>
-                                                <div class="col-md-12 mt-4">
-                                                    <div class="btn-border">
-                                                        <button class="cmn-btn" type="submit">Submit KYC</button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </form>
-                                    {% endif %}
+                <div class="row">
+                    <!-- Sidebar: Quick Actions & Stats -->
+                    <div class="col-12 col-lg-3">
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-header" style="background-color: #98e23f; color: white;">
+                                <h6 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Quick Stats</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="list-group list-group-flush">
+                                    <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                        <span>Total Transactions</span>
+                                        <span class="badge" style="background-color: #98e23f; color: white;" class="rounded-pill">124</span>
+                                    </a>
+                                    <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                        <span>Pending Approvals</span>
+                                        <span class="badge bg-warning rounded-pill">3</span>
+                                    </a>
+                                    <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                        <span>Balance</span>
+                                        <span class="text-success fw-bold">KES 45,678</span>
+                                    </a>
                                 </div>
                             </div>
-                            
- 
+                        </div>
+                        <div class="card shadow-sm">
+                            <div class="card-header" style="background-color: #98e23f; color: white;">
+                                <h6 class="mb-0"><i class="fas fa-cog me-2"></i>Actions</h6>
+                            </div>
+                            <div class="card-body">
+                                <a href="#" class="btn btn-outline-primary btn-sm w-100 mb-2">Update Password</a>
+                                <a href="#" class="btn btn-outline-secondary btn-sm w-100">Download Reports</a>
+                            </div>
+                        </div>
+                    </div>
 
+                    <!-- Main Content: Profile Tabs -->
+                    <div class="col-12 col-lg-9">
+                        <div class="card shadow-sm">
+                            <div class="card-header" style="background-color: #98e23f; color: white;">
+                                <ul class="nav nav-tabs card-header-tabs border-0" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link active" id="kyc-details-tab" data-bs-toggle="tab"
+                                                data-bs-target="#kyc-details" type="button" role="tab" aria-controls="kyc-details"
+                                                aria-selected="true">
+                                            <i class="fas fa-id-card me-1"></i>KYC Details
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="activity-tab" data-bs-toggle="tab"
+                                                data-bs-target="#activity" type="button" role="tab" aria-controls="activity"
+                                                aria-selected="false">
+                                            <i class="fas fa-history me-1"></i>Recent Activity
+                                        </button>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="card-body">
+                                <div class="tab-content" id="profileTabContent">
+                                    <!-- KYC Details Tab (Combined Overview + KYC) -->
+                                    <div class="tab-pane fade show active" id="kyc-details" role="tabpanel" aria-labelledby="kyc-details-tab">
+                                        {% if all_fields == True %}
+                                            <div class="alert alert-success d-flex align-items-center mb-4">
+                                                <i class="fas fa-check-circle me-2"></i>
+                                                <strong>KYC Verified!</strong> Your details have been submitted and reviewed.
+                                            </div>
+                                            <h5 class="mb-3">Account Summary</h5>
+                                            <div class="row g-4 mb-4">
+                                                <div class="col-md-6">
+                                                    <div class="card h-100 border-0 shadow-sm">
+                                                        <div class="card-body">
+                                                            <h6 class="card-title text-muted mb-3">Contact Information</h6>
+                                                            <p class="mb-1"><i class="fas fa-map-marker-alt me-2 text-muted"></i>{{ kyc.address }}, {{ kyc.city }}</p>
+                                                            <p class="mb-1"><i class="fas fa-envelope me-2 text-muted"></i>{{ user.email }}</p>
+                                                            <p class="mb-0"><i class="fas fa-fax me-2 text-muted"></i>{{ kyc.fax }}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="card h-100 border-0 shadow-sm">
+                                                        <div class="card-body">
+                                                            <h6 class="card-title text-muted mb-3">Business Details</h6>
+                                                            <p class="mb-1"><i class="fas fa-building me-2 text-muted"></i>{{ kyc.organization_type }}</p>
+                                                            <p class="mb-1"><i class="fas fa-id-badge me-2 text-muted"></i>KRA PIN: {{ kyc.kra_pin.name|default:"Not Provided" }}</p>
+                                                            <p class="mb-0"><i class="fas fa-calendar-check me-2 text-muted"></i>Verified: {{ kyc.date|date:"M d, Y" }}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <h5 class="mb-3">KYC Documents</h5>
+                                            <div class="row g-3">
+                                                <div class="col-md-6">
+                                                    <div class="card border-start border-5" style="border-color: #98e23f !important;">
+                                                        <div class="card-body">
+                                                            <h6 class="card-title">Documents</h6>
+                                                            <ul class="list-unstyled">
+                                                                <li class="mb-2">
+                                                                    <strong>KRA PIN:</strong>
+                                                                    {% if kyc.kra_pin %}
+                                                                        <a href="{{ kyc.kra_pin.url }}" target="_blank" class="btn btn-sm" style="background-color: #98e23f; color: white; border-color: #98e23f;">View</a>
+                                                                    {% else %}
+                                                                        <span class="text-muted">Pending</span>
+                                                                    {% endif %}
+                                                                </li>
+                                                                <li>
+                                                                    <strong>Certificate:</strong>
+                                                                    {% if kyc.registration_certificate %}
+                                                                        <a href="{{ kyc.registration_certificate.url }}" target="_blank" class="btn btn-sm" style="background-color: #98e23f; color: white; border-color: #98e23f;">View</a>
+                                                                    {% else %}
+                                                                        <span class="text-muted">Pending</span>
+                                                                    {% endif %}
+                                                                </li>
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="card border-start border-5" style="border-color: #98e23f !important;">
+                                                        <div class="card-body text-center">
+                                                            <img src="{{ kyc.logo.url }}" alt="Logo" class="img-fluid rounded mb-3" style="max-width: 100px; max-height: 100px;">
+                                                            <p class="mb-0 text-muted">Company Logo</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="mt-4 text-center">
+                                                <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#updateKycModal">
+                                                    <i class="fas fa-edit me-2"></i>Request Update
+                                                </button>
+                                            </div>
+                                        {% else %}
+                                            <!-- KYC Form -->
+                                            <h5 class="mb-3">Complete KYC Registration</h5>
+                                            <form method="POST" enctype="multipart/form-data">
+                                                {% csrf_token %}
+                                                <div class="row g-3">
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fw-bold">{{ form.company_name.label }}</label>
+                                                        {{ form.company_name }}
+                                                        {% if form.company_name.errors %}<div class="text-danger small">{{ form.company_name.errors }}</div>{% endif %}
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fw-bold">{{ form.organization_type.label }}</label>
+                                                        {{ form.organization_type }}
+                                                        {% if form.organization_type.errors %}<div class="text-danger small">{{ form.organization_type.errors }}</div>{% endif %}
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fw-bold">{{ form.kra_pin.label }}</label>
+                                                        {{ form.kra_pin }}
+                                                        {% if form.kra_pin.errors %}<div class="text-danger small">{{ form.kra_pin.errors }}</div>{% endif %}
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fw-bold">{{ form.registration_certificate.label }}</label>
+                                                        {{ form.registration_certificate }}
+                                                        {% if form.registration_certificate.errors %}<div class="text-danger small">{{ form.registration_certificate.errors }}</div>{% endif %}
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fw-bold">{{ form.country.label }}</label>
+                                                        {{ form.country }}
+                                                        {% if form.country.errors %}<div class="text-danger small">{{ form.country.errors }}</div>{% endif %}
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fw-bold">{{ form.county.label }}</label>
+                                                        {{ form.county }}
+                                                        {% if form.county.errors %}<div class="text-danger small">{{ form.county.errors }}</div>{% endif %}
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fw-bold">{{ form.city.label }}</label>
+                                                        {{ form.city }}
+                                                        {% if form.city.errors %}<div class="text-danger small">{{ form.city.errors }}</div>{% endif %}
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fw-bold">{{ form.address.label }}</label>
+                                                        {{ form.address }}
+                                                        {% if form.address.errors %}<div class="text-danger small">{{ form.address.errors }}</div>{% endif %}
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fw-bold">{{ form.mobile.label }}</label>
+                                                        {{ form.mobile }}
+                                                        {% if form.mobile.errors %}<div class="text-danger small">{{ form.mobile.errors }}</div>{% endif %}
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fw-bold">{{ form.fax.label }}</label>
+                                                        {{ form.fax }}
+                                                        {% if form.fax.errors %}<div class="text-danger small">{{ form.fax.errors }}</div>{% endif %}
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <button class="btn w-100" type="submit" style="background-color: #98e23f; color: white; border-color: #98e23f;">
+                                                            <i class="fas fa-upload me-2"></i>Submit KYC
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Recent Activity Tab -->
+                                    <div class="tab-pane fade" id="activity" role="tabpanel" aria-labelledby="activity-tab">
+                                        <h5 class="mb-3">Recent Activity</h5>
+                                        <div class="list-group">
+                                            <a href="#" class="list-group-item list-group-item-action">
+                                                <div class="d-flex w-100 justify-content-between">
+                                                    <h6 class="mb-1">KYC Submitted</h6>
+                                                    <small>2 days ago</small>
+                                                </div>
+                                                <p class="mb-1">Your KYC details have been reviewed and approved.</p>
+                                            </a>
+                                            <!-- More activity items... -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -191,8 +299,122 @@
         </div>
     </div>
 </section>
-<!-- Dashboard Section end -->
 
+<!-- Modals -->
+<div class="modal fade" id="closeAccountModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title">Close Account</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to close your account? This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger">Close Account</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-<!-- My Card Popup start -->
-    {% endblock content %}
+<div class="modal fade" id="updateKycModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title">Request KYC Update</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Contact admin@company.com for KYC updates.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleEdit() {
+    // Implement edit toggle logic here
+    alert('Edit mode activated - implement form switching');
+}
+</script>
+
+<style>
+.profile-hero {
+    padding: 2rem;
+}
+.avatar-overlay {
+    background: rgba(0,0,0,0.5);
+    border-radius: 50% 0 0 0;
+}
+.card-header-tabs .nav-link {
+    color: #141516 !important;
+    border: none !important;
+    padding: 0.75rem 1rem;
+    background-color: #f8f9fa !important; /* btn-light bg */
+}
+.card-header-tabs .nav-link:not(.active) {
+    background-color: #f8f9fa !important; /* btn-light bg for inactive */
+}
+.card-header-tabs .nav-link.active {
+    background-color: rgba(255,255,255,0.1) !important;
+    border-bottom: 2px solid #141516 !important;
+    color: white !important;
+}
+.form-label {
+    color: #495057;
+    font-size: 0.875rem;
+}
+.form-control {
+    border-radius: 0.5rem;
+    border: 1px solid #e9ecef;
+    transition: border-color 0.15s ease-in-out;
+}
+.form-control:focus {
+    border-color: #98e23f;
+    box-shadow: 0 0 0 0.2rem rgba(152, 226, 63, 0.25);
+}
+.btn-primary, .btn-outline-primary {
+    --bs-btn-color: #000;
+    --bs-btn-bg: #98e23f;
+    --bs-btn-border-color: #98e23f;
+    --bs-btn-hover-color: #000;
+    --bs-btn-hover-bg: #7bb732;
+    --bs-btn-hover-border-color: #7bb732;
+    --bs-btn-focus-shadow-rgb: 152,226,63;
+    --bs-btn-active-bg: #6fa22b;
+    --bs-btn-active-border-color: #6fa22b;
+}
+.btn-outline-primary {
+    --bs-btn-color: #98e23f;
+    --bs-btn-border-color: #98e23f;
+    --bs-btn-hover-color: #000;
+    --bs-btn-hover-bg: #98e23f;
+    --bs-btn-hover-border-color: #98e23f;
+    --bs-btn-active-color: #000;
+    --bs-btn-active-bg: #98e23f;
+    --bs-btn-active-border-color: #98e23f;
+}
+@media (max-width: 768px) {
+    .profile-hero {
+        min-height: 250px;
+        text-align: center;
+    }
+    .profile-avatar {
+        margin-top: -50px !important;
+    }
+    .profile-info h2 {
+        font-size: 1.5rem;
+    }
+    .row.g-3 > .col-md-6,
+    .row.g-4 > .col-md-6 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+}
+</style>
+{% endblock %}

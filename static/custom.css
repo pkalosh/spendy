@@ -3,11 +3,11 @@
 
 /* Color Variables */
 :root {
-  --primary-plum: #98e23f;
+  --primary-plum: #000000;
   --accent-teal: #00B6A1;
   --dark-plum: #571A5F;
   --soft-teal: #B1F1E7;
-  --primary-text: #222222;
+  --primary-text: #000000;
   --secondary-text: #666666;
   --placeholder-text: #AAAAAA;
   --main-background: #FFFFFF;
@@ -215,7 +215,7 @@ h4 {
 }
 
 .modal-title {
-  color: var(--primary-plum);
+  color: #000000  ;
   font-weight: 600;
 }
 

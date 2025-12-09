@@ -30,7 +30,7 @@ class ActivationExpenseForm(forms.ModelForm):
 class OperationExpenseForm(forms.ModelForm):
     class Meta:
         model = Operation
-        fields = ['name', 'category', 'client', 'budget', 'budget_file', 'project_lead']
+        fields = ['name', 'client', 'budget', 'budget_file', 'project_lead']
         
     def __init__(self, *args, **kwargs):
         super(OperationExpenseForm, self).__init__(*args, **kwargs)
@@ -292,3 +292,5 @@ class InvoiceItemForm(forms.ModelForm):
     class Meta:
         model = InvoiceItem
         fields = ["invoice", "name", "quantity", "unit_price", "state_of_item"]
+
+

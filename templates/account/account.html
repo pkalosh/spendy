@@ -196,7 +196,7 @@ body {
 }
 .modal-header {
   background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-  color: white;
+  color: black;
   border-radius: var(--border-radius) var(--border-radius) 0 0;
 }
 .modal-footer {
@@ -332,7 +332,7 @@ body {
 <div class="modal fade" id="editWalletModal{{ wallet.id }}" tabindex="-1" aria-labelledby="editWalletModalLabel{{ wallet.id }}" aria-hidden="true">
 <div class="modal-dialog">
 <div class="modal-content">
-<div class="modal-header">
+<div class="modal-header text-black">
 <h5 class="modal-title" id="editWalletModalLabel{{ wallet.id }}">Edit Wallet</h5>
 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 </div>
@@ -367,7 +367,7 @@ value="{{ wallet.wallet_name }}" required>
 <div class="modal fade" id="deleteWalletModal{{wallet.id}}" tabindex="-1" aria-labelledby="deleteWalletModalLabel{{wallet.id}}" aria-hidden="true">
 <div class="modal-dialog modal-dialog-centered">
 <div class="modal-content">
-<div class="modal-header border-0">
+<div class="modal-header border-0 text-black">
 <h5 class="modal-title text-danger" id="deleteWalletModalLabel{{wallet.id}}">
 <i class="fas fa-exclamation-triangle me-2"></i>Delete Wallet
 </h5>
@@ -415,7 +415,7 @@ value="{{ wallet.wallet_name }}" required>
 <form method="POST" action="{% url 'wallet:fund-wallet' %}" id="fundWalletForm">
           {% csrf_token %}
 <div class="modal-content">
-<div class="modal-header">
+<div class="modal-header text-black">
 <h5 class="modal-title" id="fundWalletModalLabel{{wallet.id}}">Fund Wallet Via M-Pesa</h5>
 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 </div>
@@ -592,7 +592,7 @@ value="{{ wallet.wallet_name }}" required>
 <div class="modal fade" id="transactionModal" tabindex="-1" aria-labelledby="transactionModalLabel" aria-hidden="true">
 <div class="modal-dialog modal-lg">
 <div class="modal-content">
-<div class="modal-header text-white">
+<div class="modal-header text-black">
 <h5 class="modal-title" id="transactionModalLabel">
 <i class="fa fa-receipt me-2"></i>Transfer Details
 </h5>

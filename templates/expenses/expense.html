@@ -423,7 +423,7 @@ body {
 <div class="modal fade" id="submitExpenseModal" tabindex="-1" aria-labelledby="submitExpenseModalLabel" aria-hidden="true">
 <div class="modal-dialog modal-lg">
 <div class="modal-content">
-<div class="modal-header">
+<div class="modal-header bg-light text-black">
 <h5 class="modal-title">Create Event, Activation or Operation</h5>
 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
 </div>
@@ -509,15 +509,7 @@ body {
 <input type="text" id="operation_name" name="operation_name" class="form-control operation-field" maxlength="255">
 </div>
 <div class="row">
-<div class="col-md-6 mb-3">
-<label for="operation_category" class="form-label">Operation Category</label>
-<select id="operation_category" name="operation_category" class="form-select operation-field" data-nice-select="false">
-<option value="">Select Category</option>
-                    {% for category in operation_categories %}
-<option value="{{ category.id }}">{{ category.name }}</option>
-                    {% endfor %}
-</select>
-</div>
+
 <div class="col-md-6 mb-3">
 <label for="operation_client" class="form-label">Client <span class="text-muted">(Optional)</span></label>
 <select id="operation_client" name="operation_client" class="form-select operation-field client-select" data-nice-select="false">
@@ -743,7 +735,7 @@ const field = document.getElementById(fieldId);
 if (field) field.setAttribute('required', '');
                 });
             } else if (requestType === 'operation') {
-                ['operation_name', 'operation_category', 'operation_budget', 'operation_project_lead'].forEach(fieldId => {
+                ['operation_name', 'operation_budget', 'operation_project_lead'].forEach(fieldId => {
 const field = document.getElementById(fieldId);
 if (field) field.setAttribute('required', '');
                 });

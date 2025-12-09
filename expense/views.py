@@ -9,6 +9,7 @@ from django.http import JsonResponse, HttpResponseForbidden,HttpResponse,HttpRes
 from django.db import transaction
 from django.views.decorators.http import require_POST,require_GET
 from django.urls import reverse
+from django.db.models import Sum
 from django.utils.decorators import method_decorator
 from .models import Expense, Event,BatchPayments, Operation,InventoryItem, InventoryTransaction, Supplier, SupplierInvoice, InvoiceItem, ExpenseGroup, CategoryBase, ExpenseCategory, EventCategory, OperationCategory,ExpenseRequestType, Activation, ActivationCategory
 from .forms import (
@@ -377,14 +378,7 @@ def event_operation(request):
                     raise ValidationError("Operation name is required")
                     
                 # Get and validate category
-                try:
-                    category_id = request.POST.get('operation_category')
-                    if not category_id:
-                        raise ValidationError("Operation category is required")
-                    category = OperationCategory.objects.get(id=category_id)
-                except (OperationCategory.DoesNotExist, ValueError):
-                    raise ValidationError("Invalid operation category")
-
+                
                 # Get and validate client (optional)
                 client = None
                 client_id = request.POST.get('operation_client')
@@ -418,7 +412,6 @@ def event_operation(request):
                 # Create and save operation
                 operation = Operation(
                     name=name,
-                    category=category,
                     client=client,
                     company=company,
                     budget=budget,
@@ -546,14 +539,12 @@ def is_admin(user):
 def expense_detail(request, id, item_type=None):
     user = request.user
     company = getattr(user, 'company', None) or getattr(user, 'companykyc', None)
-
     # Initialize context variables
     context = {
         'is_admin': is_admin(user),
         'user': StaffProfile.objects.filter(company=company),
         'expense_category_choices': ExpenseCategory.objects.filter(company=company, is_active=True).order_by('name'),
     }
-
     # Handle query parameters for expense filters
     expense_filters = {}
     if request.GET.get('expense_user'):
@@ -569,7 +560,6 @@ def expense_detail(request, id, item_type=None):
             expense_filters['declined'] = False
         elif request.GET['expense_status'] == 'declined':
             expense_filters['declined'] = True
-
     # Handle query parameters for transaction filters
     txn_filters = {}
     if request.GET.get('txn_user'):
@@ -580,193 +570,73 @@ def expense_detail(request, id, item_type=None):
         txn_filters['date__gte'] = request.GET['txn_date_from']
     if request.GET.get('txn_date_to'):
         txn_filters['date__lte'] = request.GET['txn_date_to']
-
     # Determine if we're looking at an event, operation, activation, or specific expense
+    item = None
+    start_date = None
+    end_date = None
+    expenses = None
+    approved_expenses = None
+    item_form = None
+    expense_list_name = None
+    expense_list_desc = None
     if item_type == 'event':
         # Try UUID first since your model likely uses UUIDField as primary key
         try:
-            event = get_object_or_404(Event, id=id)
+            item = get_object_or_404(Event, id=id)
         except ValueError:
             # If UUID parsing fails, try string lookup
             try:
-                event = get_object_or_404(Event, pk=id)
+                item = get_object_or_404(Event, pk=id)
             except (Event.DoesNotExist, ValueError):
                 return HttpResponse(f"Event with ID {id} not found.", status=404)
-
-        if company and event.company != company:
+        if company and item.company != company:
             return HttpResponseForbidden("You don't have permission to view this event")
-
-        expenses = Expense.objects.filter(event=event, **expense_filters)
+        expenses = Expense.objects.filter(event=item, **expense_filters).order_by('-created_at')
         approved_expenses = expenses.filter(approved=True, declined=False)
-        event_form = EventExpenseForm(instance=event)
-
-        # Paginate expenses
-        expense_paginator = Paginator(expenses, 10)
-        expense_page_number = request.GET.get('page', 1)
-        expenses_page = expense_paginator.get_page(expense_page_number)
-
-        # Get transactions
-        approved_paid_expenses = expenses.filter(approved=True, declined=False, paid=True)
-        expense_transactions = []
-        for expense in approved_paid_expenses:
-            transactions = Transaction.objects.filter(expense=expense, **txn_filters)
-            expense_transactions.extend(transactions)
-
-        # Paginate transactions
-        txn_paginator = Paginator(expense_transactions, 10)
-        txn_page_number = request.GET.get('txn_page', 1)
-        txn_page = txn_paginator.get_page(txn_page_number)
-
-        expense_summary = {
-            'pending': expenses.filter(approved=False, declined=False).aggregate(Sum('amount'))['amount__sum'] or 0,
-            'approved': expenses.filter(approved=True, declined=False).aggregate(Sum('amount'))['amount__sum'] or 0,
-            'declined': expenses.filter(declined=True).aggregate(Sum('amount'))['amount__sum'] or 0,
-        }
-
-        expense_categories = approved_expenses.select_related('expense_category').values(
-            'expense_category__name'
-        ).annotate(total=Sum('amount')).order_by('-total')
-
-        total_amount = sum(cat['total'] for cat in expense_categories) if expense_categories else 0
-
-        context.update({
-            'item': event,
-            'item_type': 'event',
-            'expenses': expenses_page,
-            'approved_expenses': approved_expenses,
-            'expense_transactions': txn_page,
-            'expense_summary': expense_summary,
-            'expense_categories': expense_categories,
-            'total_amount': total_amount,
-            'event_form': event_form,
-            'expense_query_string': request.GET.urlencode().replace('page=', ''),
-            'txn_query_string': request.GET.urlencode().replace('txn_page=', ''),
-        })
-
+        item_form = EventExpenseForm(instance=item)
+        start_date = item.start_date
+        end_date = item.end_date
+        expense_list_name = "Event Expenses"
+        expense_list_desc = "Event Expense Requests"
     elif item_type == 'operation':
         # Try UUID first since your model likely uses UUIDField as primary key
         try:
-            operation = get_object_or_404(Operation, id=id)
+            item = get_object_or_404(Operation, id=id)
         except ValueError:
             # If UUID parsing fails, try string lookup
             try:
-                operation = get_object_or_404(Operation, pk=id)
+                item = get_object_or_404(Operation, pk=id)
             except (Operation.DoesNotExist, ValueError):
                 return HttpResponse(f"Operation with ID {id} not found.", status=404)
-
-        if company and operation.company != company:
+        if company and item.company != company:
             return HttpResponseForbidden("You don't have permission to view this operation")
-
-        expenses = Expense.objects.filter(operation=operation, **expense_filters)
+        expenses = Expense.objects.filter(operation=item, **expense_filters).order_by('-created_at')
         approved_expenses = expenses.filter(approved=True, declined=False)
-        operation_form = OperationExpenseForm(instance=operation)
-
-        # Paginate expenses
-        expense_paginator = Paginator(expenses, 10)
-        expense_page_number = request.GET.get('page', 1)
-        expenses_page = expense_paginator.get_page(expense_page_number)
-
-        # Get transactions
-        approved_paid_expenses = expenses.filter(approved=True, declined=False, paid=True)
-        expense_transactions = []
-        for expense in approved_paid_expenses:
-            transactions = Transaction.objects.filter(expense=expense, **txn_filters)
-            expense_transactions.extend(transactions)
-
-        # Paginate transactions
-        txn_paginator = Paginator(expense_transactions, 10)
-        txn_page_number = request.GET.get('txn_page', 1)
-        txn_page = txn_paginator.get_page(txn_page_number)
-
-        expense_summary = {
-            'pending': expenses.filter(approved=False, declined=False).aggregate(Sum('amount'))['amount__sum'] or 0,
-            'approved': expenses.filter(approved=True, declined=False).aggregate(Sum('amount'))['amount__sum'] or 0,
-            'declined': expenses.filter(declined=True).aggregate(Sum('amount'))['amount__sum'] or 0,
-        }
-
-        expense_categories = approved_expenses.select_related('expense_category').values(
-            'expense_category__name'
-        ).annotate(total=Sum('amount')).order_by('-total')
-
-        total_amount = sum(cat['total'] for cat in expense_categories) if expense_categories else 0
-
-        context.update({
-            'item': operation,
-            'item_type': 'operation',
-            'expenses': expenses_page,
-            'approved_expenses': approved_expenses,
-            'expense_transactions': txn_page,
-            'expense_summary': expense_summary,
-            'expense_categories': expense_categories,
-            'total_amount': total_amount,
-            'operation_form': operation_form,
-            'expense_query_string': request.GET.urlencode().replace('page=', ''),
-            'txn_query_string': request.GET.urlencode().replace('txn_page=', ''),
-        })
-
+        item_form = OperationExpenseForm(instance=item)
+        # start_date = item.start_date  # Assuming Operation has start_date
+        # end_date = item.end_date  # Assuming Operation has end_date
+        expense_list_name = "Operation Expenses"
+        expense_list_desc = "Operation Expense Requests"
     elif item_type == 'activation':
-        activation = None
         # Try UUID first since your model uses UUIDField as primary key
         try:
-            activation = get_object_or_404(Activation, id=id)
-            print(f"Found activation by UUID: {activation}")
+            item = get_object_or_404(Activation, id=id)
+            print(f"Found activation by UUID: {item}")
         except ValueError:
             # If UUID parsing fails, try string lookup
             try:
-                activation = get_object_or_404(Activation, pk=id)
+                item = get_object_or_404(Activation, pk=id)
             except (Activation.DoesNotExist, ValueError):
                 return HttpResponse(f"Activation with ID {id} not found.", status=404)
-
-        if company and activation.company != company:
+        if company and item.company != company:
             return HttpResponseForbidden("You don't have permission to view this activation")
-
-        expenses = Expense.objects.filter(activation=activation, **expense_filters)
+        expenses = Expense.objects.filter(activation=item, **expense_filters).order_by('-created_at')
         approved_expenses = expenses.filter(approved=True, declined=False)
-        activation_form = ActivationExpenseForm(instance=activation)
-
-        # Paginate expenses
-        expense_paginator = Paginator(expenses, 10)
-        expense_page_number = request.GET.get('page', 1)
-        expenses_page = expense_paginator.get_page(expense_page_number)
-
-        # Get transactions
-        approved_paid_expenses = expenses.filter(approved=True, declined=False, paid=True)
-        expense_transactions = []
-        for expense in approved_paid_expenses:
-            transactions = Transaction.objects.filter(expense=expense, **txn_filters)
-            expense_transactions.extend(transactions)
-
-        # Paginate transactions
-        txn_paginator = Paginator(expense_transactions, 10)
-        txn_page_number = request.GET.get('txn_page', 1)
-        txn_page = txn_paginator.get_page(txn_page_number)
-
-        expense_summary = {
-            'pending': expenses.filter(approved=False, declined=False).aggregate(Sum('amount'))['amount__sum'] or 0,
-            'approved': expenses.filter(approved=True, declined=False).aggregate(Sum('amount'))['amount__sum'] or 0,
-            'declined': expenses.filter(declined=True).aggregate(Sum('amount'))['amount__sum'] or 0,
-        }
-
-        expense_categories = approved_expenses.select_related('expense_category').values(
-            'expense_category__name'
-        ).annotate(total=Sum('amount')).order_by('-total')
-
-        total_amount = sum(cat['total'] for cat in expense_categories) if expense_categories else 0
-
-        context.update({
-            'item': activation,
-            'item_type': 'activation',
-            'expenses': expenses_page,
-            'approved_expenses': approved_expenses,
-            'expense_transactions': txn_page,
-            'expense_summary': expense_summary,
-            'expense_categories': expense_categories,
-            'total_amount': total_amount,
-            'activation_form': activation_form,
-            'expense_query_string': request.GET.urlencode().replace('page=', ''),
-            'txn_query_string': request.GET.urlencode().replace('txn_page=', ''),
-        })
-
+        item_form = ActivationExpenseForm(instance=item)
+        start_date = item.start_date  # Assuming Activation has start_date
+        end_date = item.end_date  # Assuming Activation has end_date
+        expense_list_name = "Activation Expenses"
+        expense_list_desc = "Activation Expense Requests"
     else:
         expense = None
         expense_queryset = Expense.objects.filter(id=id)
@@ -779,30 +649,30 @@ def expense_detail(request, id, item_type=None):
                     expense = expense_queryset.first()
         if not expense:
             return HttpResponse(f"Expense with ID {id} not found.", status=404)
-
         if not is_admin(user) and expense.created_by != user:
             return HttpResponseForbidden("You don't have permission to view this expense")
-
         event = expense.event if hasattr(expense, 'event') and expense.event else None
         operation = expense.operation if hasattr(expense, 'operation') and expense.operation else None
         activation = expense.activation if hasattr(expense, 'activation') and expense.activation else None
-        
+        item = event or operation or activation
+        if item:
+            start_date = item.start_date
+            end_date = item.end_date
+            expense_list_name = "Related Expenses"
+            expense_list_desc = "Related Expense Requests"
         related_expenses = Expense.objects.none()
         if event:
-            related_expenses = Expense.objects.filter(event=event, **expense_filters).exclude(id=expense.id)
+            related_expenses = Expense.objects.filter(event=event, **expense_filters).exclude(id=expense.id).order_by('-created_at')
         elif operation:
-            related_expenses = Expense.objects.filter(operation=operation, **expense_filters).exclude(id=expense.id)
+            related_expenses = Expense.objects.filter(operation=operation, **expense_filters).exclude(id=expense.id).order_by('-created_at')
         elif activation:
-            related_expenses = Expense.objects.filter(activation=activation, **expense_filters).exclude(id=expense.id)
-
+            related_expenses = Expense.objects.filter(activation=activation, **expense_filters).exclude(id=expense.id).order_by('-created_at')
         # Paginate related expenses
         expense_paginator = Paginator(related_expenses, 10)
         expense_page_number = request.GET.get('page', 1)
         expenses_page = expense_paginator.get_page(expense_page_number)
-
         approval_form = ExpenseApprovalForm(instance=expense) if is_admin(user) and not expense.approved and not expense.declined else None
         payment_form = PaymentForm(user=user, company=company, initial={'expense': expense}) if expense.approved and not expense.declined else None
-
         expense_requests = []
         if event:
             expense_categories = Expense.objects.filter(
@@ -819,10 +689,8 @@ def expense_detail(request, id, item_type=None):
                 activation=activation, approved=True, declined=False
             ).values('expense_category').annotate(amount=Sum('amount')).order_by('-amount')
             expense_requests = [{'category': cat['expense_category'], 'amount': cat['amount']} for cat in expense_categories]
-
         total_amount = sum(request['amount'] for request in expense_requests) if expense_requests else 0
         summaries = [{'status': 'Current Status', 'amount': expense.amount}]
-
         approved_requests = []
         if event:
             approved_requests = Expense.objects.filter(
@@ -836,7 +704,6 @@ def expense_detail(request, id, item_type=None):
             approved_requests = Expense.objects.filter(
                 activation=activation, approved=True, declined=False
             ).values('created_by__first_name', 'created_by__last_name', 'expense_category', 'amount')
-
         formatted_approved_requests = [
             {
                 'created_by': f"{req['created_by__first_name']} {req['created_by__last_name']}",
@@ -845,13 +712,11 @@ def expense_detail(request, id, item_type=None):
                 'amount': req['amount']
             } for req in approved_requests
         ]
-
         # Get transactions for the expense
-        expense_transactions = Transaction.objects.filter(expense=expense, **txn_filters)
+        expense_transactions = Transaction.objects.filter(expense=expense, **txn_filters).order_by('-created_at')
         txn_paginator = Paginator(expense_transactions, 10)
         txn_page_number = request.GET.get('txn_page', 1)
         txn_page = txn_paginator.get_page(txn_page_number)
-
         context.update({
             'expense': expense,
             'approval_form': approval_form,
@@ -868,9 +733,107 @@ def expense_detail(request, id, item_type=None):
             'expense_query_string': request.GET.urlencode().replace('page=', ''),
             'txn_query_string': request.GET.urlencode().replace('txn_page=', ''),
         })
-
+    # Common logic for item_type cases (event, operation, activation)
+    if item_type:
+        # Paginate expenses
+        expense_paginator = Paginator(expenses, 10)
+        expense_page_number = request.GET.get('page', 1)
+        expenses_page = expense_paginator.get_page(expense_page_number)
+        # Get transactions
+        approved_paid_expenses = expenses.filter(approved=True, declined=False, paid=True)
+        expense_transactions_list = []
+        for expense_item in approved_paid_expenses:
+            transactions = Transaction.objects.filter(expense=expense_item, **txn_filters).order_by('-created_at')
+            expense_transactions_list.extend(transactions)
+        # Paginate transactions
+        txn_paginator = Paginator(expense_transactions_list, 10)
+        txn_page_number = request.GET.get('txn_page', 1)
+        txn_page = txn_paginator.get_page(txn_page_number)
+        expense_summary = {
+            'pending': expenses.filter(approved=False, declined=False).aggregate(Sum('amount'))['amount__sum'] or 0,
+            'approved': expenses.filter(approved=True, declined=False).aggregate(Sum('amount'))['amount__sum'] or 0,
+            'declined': expenses.filter(declined=True).aggregate(Sum('amount'))['amount__sum'] or 0,
+        }
+        expense_categories = approved_expenses.select_related('expense_category').values(
+            'expense_category__name'
+        ).annotate(total=Sum('amount')).order_by('-total')
+        total_amount = sum(cat['total'] for cat in expense_categories) if expense_categories else 0
+        if item_type == 'event':
+            item_form_key = 'event_form'
+        elif item_type == 'operation':
+            item_form_key = 'operation_form'
+        else:  # activation
+            item_form_key = 'activation_form'
+        context.update({
+            'item': item,
+            'item_type': item_type,
+            'expenses': expenses_page,
+            'approved_expenses': approved_expenses,
+            'expense_transactions': txn_page,
+            'expense_summary': expense_summary,
+            'expense_categories': expense_categories,
+            'total_amount': total_amount,
+            item_form_key: item_form,
+            'expense_query_string': request.GET.urlencode().replace('page=', ''),
+            'txn_query_string': request.GET.urlencode().replace('txn_page=', ''),
+            'expense_list_name': expense_list_name,
+            'expense_list_desc': expense_list_desc,
+        })
+    # Common logic for supplied_items and check_out_items if item and dates exist
+    if item and start_date and end_date:
+        # Ensure dates are handled for timezone-aware queries
+        start_dt = start_date.date() if hasattr(start_date, 'date') else start_date
+        end_dt = end_date.date() if hasattr(end_date, 'date') else end_date
+        end_dt_next = end_dt + timedelta(days=1)
+        # Supplied Items: InvoiceItems from supplier invoices within date range
+        # Use gte and lte to avoid __range issues
+        supplied_qs = InvoiceItem.objects.filter(
+            invoice__date_issued__gte=start_dt,
+            invoice__date_issued__lt=end_dt_next,
+            invoice__supplier__organization=company
+        ).select_related('invoice__supplier').order_by('-invoice__date_issued')
+        supplied_items_list = [
+            {
+                'obj': supplied,
+                'total_amount': supplied.quantity * supplied.unit_price
+            }
+            for supplied in supplied_qs
+        ]
+        supplied_paginator = Paginator(supplied_items_list, 10)
+        supplied_page_number = request.GET.get('supplied_page', 1)
+        supplied_page = supplied_paginator.get_page(supplied_page_number)
+        supplied_query_string = request.GET.urlencode().replace('supplied_page=', '')
+        # Check-out Items: InventoryTransactions (Check Out) within date range
+        # Use gte and lt for DateTimeField
+        check_out_qs = InventoryTransaction.objects.filter(
+            item__organization=company,
+            transaction_type='Check Out',
+            transaction_date__gte=start_dt,
+            transaction_date__lt=end_dt_next
+        ).select_related('item', 'checked_out_by').order_by('-transaction_date')
+        check_out_items_list = [
+            {
+                'obj': txn,
+                'unit_price': txn.item.cost  # Assuming cost is the unit price
+            }
+            for txn in check_out_qs
+        ]
+        check_out_paginator = Paginator(check_out_items_list, 10)
+        check_out_page_number = request.GET.get('check_out_page', 1)
+        check_out_page = check_out_paginator.get_page(check_out_page_number)
+        check_out_query_string = request.GET.urlencode().replace('check_out_page=', '')
+        context.update({
+            'supplied_items': supplied_page,
+            'check_out_items': check_out_page,
+            'supplied_query_string': supplied_query_string,
+            'check_out_query_string': check_out_query_string,
+        })
+    if not item_type:
+        context.update({
+            'expense_list_name': expense_list_name,
+            'expense_list_desc': expense_list_desc,
+        })
     return render(request, 'expenses/expense_detail.html', context)
-
 @login_required
 def edit_item(request, id, item_type):
     """
@@ -2188,27 +2151,31 @@ def filter_expenses_by_status(expenses, status_filter):
 
 @login_required
 def inventory_list(request):
-    org = None
-    # If organization scope is needed: pass organization in context / filter by organization
-    items = InventoryItem.objects.filter(is_active=True).select_related("captured_by", "organization")
-    # For each item create edit form instance (server-rendered modal)
-    item_edit_forms = {item.id: InventoryItemForm(instance=item) for item in items}
-
+    items = (
+        InventoryItem.objects.filter(is_active=True)
+        .select_related("captured_by", "organization")
+    )
+    
+    # Enhance each item with its forms (list of dicts or namedtuples work too)
+    enhanced_items = []
+    for item in items:
+        edit_form = InventoryItemForm(instance=item)
+        checkout_form = InventoryTransactionForm(initial={"item": item, "transaction_type": "Check Out"})
+        checkin_form = InventoryTransactionForm(initial={"item": item, "transaction_type": "Check In"})
+        
+        # Attach forms as attributes (or use a dict: {'item': item, 'edit_form': edit_form, ...})
+        item.edit_form = edit_form
+        item.checkout_form = checkout_form
+        item.checkin_form = checkin_form
+        enhanced_items.append(item)
+    
     new_form = InventoryItemForm(initial={"captured_by": request.user})
-    # Transaction forms per item
-    checkout_forms = {item.id: InventoryTransactionForm(initial={"item": item, "transaction_type": "Check Out"}) for item in items}
-    checkin_forms = {item.id: InventoryTransactionForm(initial={"item": item, "transaction_type": "Check In"}) for item in items}
-
+    
     context = {
-        "items": items,
+        "items": enhanced_items,  # Now a list with forms attached
         "new_form": new_form,
-        "item_edit_forms": item_edit_forms,
-        "checkout_forms": checkout_forms,
-        "checkin_forms": checkin_forms,
     }
     return render(request, "inventory/inventory_list.html", context)
-
-
 @login_required
 def inventory_create(request):
     if request.method == "POST":
@@ -2221,70 +2188,84 @@ def inventory_create(request):
             messages.success(request, "Inventory item created.")
         else:
             messages.error(request, "Error creating inventory item.")
-    return redirect("inventory:list")
+    return redirect("expense:list-items")
 
 
 @login_required
 def inventory_edit(request, pk):
     item = get_object_or_404(InventoryItem, pk=pk)
+
     if request.method == "POST":
         form = InventoryItemForm(request.POST, instance=item)
         if form.is_valid():
             form.save()
-            messages.success(request, "Inventory item updated.")
-        else:
-            messages.error(request, "Error updating inventory item.")
-    return redirect("inventory:list")
+            messages.success(request, "Item updated successfully.")
+            return redirect("expense:list-items")
+
+    messages.error(request, "Could not update item.")
+    return redirect("expense:list-items")
 
 
 @login_required
 def inventory_delete(request, pk):
     item = get_object_or_404(InventoryItem, pk=pk)
+
     if request.method == "POST":
         item.is_active = False
         item.save()
-        messages.success(request, "Inventory item deleted.")
-    return redirect("inventory:list")
+        messages.success(request, "Item removed successfully.")
+        return redirect("expense:list-items")
+
+    messages.error(request, "Could not remove item.")
+    return redirect("expense:list-items")
 
 
 @login_required
 def inventory_check_out(request, pk):
     item = get_object_or_404(InventoryItem, pk=pk)
+
     if request.method == "POST":
         form = InventoryTransactionForm(request.POST)
         if form.is_valid():
-            trx = form.save(commit=False)
-            trx.item = item
-            trx.transaction_type = "Check Out"
-            if not trx.check_out_date:
-                trx.check_out_date = timezone.now()
-            trx.save()
+            tx = form.save(commit=False)
+            tx.item = item
+            tx.transaction_type = "Check Out"
+            tx.checked_out_by = request.user
+            tx.save()
+
+            # Update state
             item.state = "Checked Out"
             item.save()
-            messages.success(request, f"{item.name} checked out.")
-        else:
-            messages.error(request, "Error checking out item.")
-    return redirect("inventory:list")
+
+            messages.success(request, "Item checked out successfully.")
+            return redirect("expense:list-items")
+
+    messages.error(request, "Failed to check out item.")
+    return redirect("expense:list-items")
 
 
 @login_required
 def inventory_check_in(request, pk):
     item = get_object_or_404(InventoryItem, pk=pk)
+
     if request.method == "POST":
         form = InventoryTransactionForm(request.POST)
         if form.is_valid():
-            trx = form.save(commit=False)
-            trx.item = item
-            trx.transaction_type = "Check In"
-            if not trx.check_in_date:
-                trx.check_in_date = timezone.now()
-            trx.save()
+            tx = form.save(commit=False)
+            tx.item = item
+            tx.transaction_type = "Check In"
+            tx.save()
+
+            # Update state
             item.state = "Available"
             item.save()
-            messages.success(request, f"{item.name} checked in.")
-        else:
-            messages.error(request, "Error checking in item.")
-    return redirect("inventory:list")
+
+            messages.success(request, "Item checked in successfully.")
+            return redirect("expense:list-items")
+
+    messages.error(request, "Failed to check in item.")
+    return redirect("expense:list-items")
+
 
 @login_required
 def suppliers_list(request):
@@ -2311,7 +2292,7 @@ def supplier_create(request):
             messages.success(request, "Supplier created.")
         else:
             messages.error(request, "Error creating supplier.")
-    return redirect("inventory:suppliers")
+    return redirect("expense:suppliers")
 
 
 @login_required
@@ -2324,7 +2305,7 @@ def supplier_edit(request, pk):
             messages.success(request, "Supplier updated.")
         else:
             messages.error(request, "Error updating supplier.")
-    return redirect("inventory:suppliers")
+    return redirect("expense:suppliers")
 
 
 @login_required
@@ -2334,27 +2315,33 @@ def supplier_delete(request, pk):
         sup.is_active = False
         sup.save()
         messages.success(request, "Supplier removed.")
-    return redirect("inventory:suppliers")
+    return redirect("expense:suppliers")
 
 
 # Supplier invoices
 
 @login_required
 def supplier_invoices(request, supplier_id):
-    supplier = get_object_or_404(Supplier, pk=supplier_id)
-    invoices = SupplierInvoice.objects.filter(supplier=supplier).order_by("-date_issued")
+    supplier = get_object_or_404(Supplier, id=supplier_id)
+    invoices = SupplierInvoice.objects.filter(supplier=supplier).prefetch_related('invoiceitem_set').order_by('-date_issued')
+    
+    # Existing forms...
     invoice_forms = {inv.id: SupplierInvoiceForm(instance=inv) for inv in invoices}
-    new_invoice_form = SupplierInvoiceForm(initial={"supplier": supplier, "created_by": request.user})
-    # invoice items listing via InvoiceItem model
+    new_invoice_form = SupplierInvoiceForm()
+    
+    # New: Item forms for edit/create
+    invoice_item_forms = {inv.id: InvoiceItemForm() for inv in invoices}  # For new per invoice
+    item_forms = {item.id: InvoiceItemForm(instance=item) for inv in invoices for item in inv.invoiceitem_set.all()}
+    
     context = {
-        "supplier": supplier,
-        "invoices": invoices,
-        "invoice_forms": invoice_forms,
-        "new_invoice_form": new_invoice_form,
+        'supplier': supplier,
+        'invoices': invoices,
+        'invoice_forms': invoice_forms,
+        'new_invoice_form': new_invoice_form,
+        'invoice_item_forms': invoice_item_forms,  # For new item modals
+        'item_forms': item_forms,  # For edit item modals
     }
-    return render(request, "inventory/supplier_invoices.html", context)
-
-
+    return render(request, 'inventory/supplier_invoices.html', context)
 @login_required
 def supplier_invoice_create(request, supplier_id):
     supplier = get_object_or_404(Supplier, pk=supplier_id)
@@ -2369,7 +2356,7 @@ def supplier_invoice_create(request, supplier_id):
             messages.success(request, "Invoice created.")
         else:
             messages.error(request, "Error creating invoice.")
-    return redirect("inventory:supplier_invoices", supplier_id=supplier.id)
+    return redirect("expense:supplier_invoices", supplier_id=supplier.id)
 
 
 @login_required
@@ -2382,7 +2369,7 @@ def supplier_invoice_edit(request, supplier_id, invoice_id):
             messages.success(request, "Invoice updated.")
         else:
             messages.error(request, "Error updating invoice.")
-    return redirect("inventory:supplier_invoices", supplier_id=supplier_id)
+    return redirect("expense:supplier_invoices", supplier_id=supplier_id)
 
 
 @login_required
@@ -2391,7 +2378,7 @@ def supplier_invoice_delete(request, supplier_id, invoice_id):
     if request.method == "POST":
         inv.delete()
         messages.success(request, "Invoice deleted.")
-    return redirect("inventory:supplier_invoices", supplier_id=supplier_id)
+    return redirect("expense:supplier_invoices", supplier_id=supplier_id)
 
 
 # Optional: invoice item create/edit/delete endpoints
@@ -2407,4 +2394,55 @@ def invoice_item_create(request, supplier_id, invoice_id):
             messages.success(request, "Invoice item added.")
         else:
             messages.error(request, "Error adding invoice item.")
-    return redirect("inventory:supplier_invoices", supplier_id=supplier_id)
+    return redirect("expense:supplier_invoices", supplier_id=supplier_id)
+
+@login_required
+def invoice_item_edit(request, supplier_id, invoice_id, item_id):
+    """
+    Edit an existing InvoiceItem.
+    """
+    supplier = get_object_or_404(Supplier, id=supplier_id)
+    invoice = get_object_or_404(SupplierInvoice, id=invoice_id, supplier=supplier)
+    item = get_object_or_404(InvoiceItem, id=item_id, invoice=invoice)
+    
+    if request.method == 'POST':
+        form = InvoiceItemForm(request.POST, instance=item)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Item '{item.name}' updated successfully.")
+            # Recalculate invoice total
+            invoice.update_total()  # Assume method exists
+            invoice.save()
+        else:
+            messages.error(request, "Error updating item. Please check the form.")
+        return redirect('expense:supplier_invoices', supplier_id=supplier_id)
+    
+    form = InvoiceItemForm(instance=item)
+    context = {
+        'supplier': supplier,
+        'invoice': invoice,
+        'item': item,
+        'form': form,
+        'title': f"Edit Item in Invoice {invoice.invoice_number}",
+    }
+    return render(request, 'expense/partial_invoice_item_form.html', context)  # Or redirect
+
+@login_required
+def invoice_item_delete(request, supplier_id, invoice_id, item_id):
+    """
+    Delete an InvoiceItem.
+    """
+    supplier = get_object_or_404(Supplier, id=supplier_id)
+    invoice = get_object_or_404(SupplierInvoice, id=invoice_id, supplier=supplier)
+    item = get_object_or_404(InvoiceItem, id=item_id, invoice=invoice)
+    
+    if request.method == 'POST':
+        item_name = item.name
+        item.delete()
+        messages.success(request, f"Item '{item_name}' deleted from invoice {invoice.invoice_number}.")
+        # Recalculate invoice total
+        invoice.update_total()  # Assume method exists
+        invoice.save()
+        return redirect('expense:supplier_invoices', supplier_id=supplier_id)
+    
+    return redirect('expense:supplier_invoices', supplier_id=supplier_id)
