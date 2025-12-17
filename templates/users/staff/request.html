@@ -448,6 +448,32 @@ body {
     color: var(--dark-text);
   }
 }
+@media (max-width: 768px) {
+  .card.mb-2 {
+    margin-bottom: 0.5rem !important;
+    padding: 0.5rem;
+  }
+  .card-header.py-1.px-2 {
+    padding: 0.25rem 0.5rem !important;
+  }
+  .card-body.py-1.px-2 {
+    padding: 0.25rem 0.5rem !important;
+  }
+  .card-body p.mb-0 {
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem !important;
+  }
+  .d-flex.justify-content-end.gap-2 {
+    gap: 0.25rem !important;
+  }
+  .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+  }
+  .fas.fa-eye {
+    font-size: 1rem;
+  }
+}
 </style>
 <section class="dashboard-section body-collapse">
     <div class="overlay pt-120">
@@ -789,22 +815,16 @@ body {
                                 <div class="tab-pane fade show active" id="all-expenses-mobile" role="tabpanel" aria-labelledby="all-tab">
                                     <div class="request-cards">
                                         {% for expense in pending_expenses %}
-                                        <div class="card mb-3 request-card pending-request">
-                                            <div class="card-header d-flex justify-content-between align-items-center">
+                                        <div class="card mb-2 request-card pending-request">
+                                            <div class="card-header py-1 px-2 d-flex justify-content-between align-items-center">
                                                 <span class="badge bg-warning">Pending</span>
-                                                <small>{{ expense.created_at|date:"M d, Y" }}</small>
                                             </div>
-                                            <div class="card-body">
-                                                <h6 class="card-subtitle mb-2">{{ expense.request_type }}</h6>
-                                                <p class="card-text">
-                                                    <strong>For:</strong> {% if expense.event %}{{ expense.event.name }}{% elif expense.operation %}{{ expense.operation.name }}{% elif expense.activation %}{{ expense.activation.name }}{% else %}General{% endif %}<br>
-                                                    <strong>Batch:</strong> {{ expense.batch_disbursement_type|yesno:"Yes,No" }}<br>
-                                                    <strong>Amount:</strong> {{ expense.amount|intcomma }}<br>
-                                                    <strong>Description:</strong> {{ expense.description|truncatechars:80 }}<br>
-                                                    <strong>By:</strong> {{ expense.created_by.get_full_name }}
-                                                </p>
-                                                <div class="d-flex gap-2">
-                                                    <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#viewRequestModal{{ expense.id }}">View</button>
+                                            <div class="card-body py-1 px-2">
+                                                <p class="mb-0"><strong>Item:</strong> {% if expense.event %}{{ expense.event.name }}{% elif expense.operation %}{{ expense.operation.name }}{% elif expense.activation %}{{ expense.activation.name }}{% else %}{{ expense.request_type }}{% endif %}</p>
+                                                <p class="mb-0"><strong>Category:</strong> {{ expense.expense_category }}</p>
+                                                <p class="mb-0"><strong>Amount:</strong> {{ expense.amount|intcomma }}</p>
+                                                <div class="d-flex justify-content-end gap-2">
+                                                    <i class="fas fa-eye text-success" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#viewRequestModal{{ expense.id }}"></i>
                                                     {% if is_admin %}
                                                     <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#approveModal{{ expense.id }}">Approve</button>
                                                     <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#declineModal{{ expense.id }}">Decline</button>
@@ -813,7 +833,36 @@ body {
                                             </div>
                                         </div>
                                         {% endfor %}
-                                        <!-- Approved and Declined expenses follow similar pattern -->
+                                        {% for expense in approved_expenses %}
+                                        <div class="card mb-2 request-card approved-request">
+                                            <div class="card-header py-1 px-2 d-flex justify-content-between align-items-center">
+                                                <span class="badge bg-success">Approved</span>
+                                            </div>
+                                            <div class="card-body py-1 px-2">
+                                                <p class="mb-0"><strong>Item:</strong> {% if expense.event %}{{ expense.event.name }}{% elif expense.operation %}{{ expense.operation.name }}{% elif expense.activation %}{{ expense.activation.name }}{% else %}{{ expense.request_type }}{% endif %}</p>
+                                                <p class="mb-0"><strong>Category:</strong> {{ expense.expense_category }}</p>
+                                                <p class="mb-0"><strong>Amount:</strong> {{ expense.amount|intcomma }}</p>
+                                                <div class="d-flex justify-content-end gap-2">
+                                                    <i class="fas fa-eye text-success" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#viewRequestModal{{ expense.id }}"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                        {% for expense in declined_expenses %}
+                                        <div class="card mb-2 request-card declined-request">
+                                            <div class="card-header py-1 px-2 d-flex justify-content-between align-items-center">
+                                                <span class="badge bg-danger">Declined</span>
+                                            </div>
+                                            <div class="card-body py-1 px-2">
+                                                <p class="mb-0"><strong>Item:</strong> {% if expense.event %}{{ expense.event.name }}{% elif expense.operation %}{{ expense.operation.name }}{% elif expense.activation %}{{ expense.activation.name }}{% else %}{{ expense.request_type }}{% endif %}</p>
+                                                <p class="mb-0"><strong>Category:</strong> {{ expense.expense_category }}</p>
+                                                <p class="mb-0"><strong>Amount:</strong> {{ expense.amount|intcomma }}</p>
+                                                <div class="d-flex justify-content-end gap-2">
+                                                    <i class="fas fa-eye text-success" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#viewRequestModal{{ expense.id }}"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
                                     </div>
                                 </div>
                                 <!-- Events Mobile Tab -->
@@ -821,21 +870,16 @@ body {
                                     <div class="request-cards">
                                         {% for expense in pending_expenses %}
                                         {% if expense.event %}
-                                        <div class="card mb-3 request-card pending-request">
-                                            <div class="card-header d-flex justify-content-between align-items-center">
+                                        <div class="card mb-2 request-card pending-request">
+                                            <div class="card-header py-1 px-2 d-flex justify-content-between align-items-center">
                                                 <span class="badge bg-warning">Pending</span>
-                                                <small>{{ expense.created_at|date:"M d, Y" }}</small>
                                             </div>
-                                            <div class="card-body">
-                                                <h6 class="card-subtitle mb-2">Event: {{ expense.event.name }}</h6>
-                                                <p class="card-text">
-                                                    <strong>Batch:</strong> {{ expense.batch_disbursement_type|yesno:"Yes,No" }}<br>
-                                                    <strong>Amount:</strong> {{ expense.amount|intcomma }}<br>
-                                                    <strong>Description:</strong> {{ expense.description|truncatechars:80 }}<br>
-                                                    <strong>By:</strong> {{ expense.created_by.get_full_name }}
-                                                </p>
-                                                <div class="d-flex gap-2">
-                                                    <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#viewRequestModal{{ expense.id }}">View</button>
+                                            <div class="card-body py-1 px-2">
+                                                <p class="mb-0"><strong>Item:</strong> {{ expense.event.name }}</p>
+                                                <p class="mb-0"><strong>Category:</strong> {{ expense.expense_category }}</p>
+                                                <p class="mb-0"><strong>Amount:</strong> {{ expense.amount|intcomma }}</p>
+                                                <div class="d-flex justify-content-end gap-2">
+                                                    <i class="fas fa-eye text-success" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#viewRequestModal{{ expense.id }}"></i>
                                                     {% if is_admin %}
                                                     <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#approveModal{{ expense.id }}">Approve</button>
                                                     <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#declineModal{{ expense.id }}">Decline</button>
@@ -845,7 +889,40 @@ body {
                                         </div>
                                         {% endif %}
                                         {% endfor %}
-                                        <!-- Approved and Declined event expenses follow similar pattern -->
+                                        {% for expense in approved_expenses %}
+                                        {% if expense.event %}
+                                        <div class="card mb-2 request-card approved-request">
+                                            <div class="card-header py-1 px-2 d-flex justify-content-between align-items-center">
+                                                <span class="badge bg-success">Approved</span>
+                                            </div>
+                                            <div class="card-body py-1 px-2">
+                                                <p class="mb-0"><strong>Item:</strong> {{ expense.event.name }}</p>
+                                                <p class="mb-0"><strong>Category:</strong> {{ expense.expense_category }}</p>
+                                                <p class="mb-0"><strong>Amount:</strong> {{ expense.amount|intcomma }}</p>
+                                                <div class="d-flex justify-content-end gap-2">
+                                                    <i class="fas fa-eye text-success" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#viewRequestModal{{ expense.id }}"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                        {% endfor %}
+                                        {% for expense in declined_expenses %}
+                                        {% if expense.event %}
+                                        <div class="card mb-2 request-card declined-request">
+                                            <div class="card-header py-1 px-2 d-flex justify-content-between align-items-center">
+                                                <span class="badge bg-danger">Declined</span>
+                                            </div>
+                                            <div class="card-body py-1 px-2">
+                                                <p class="mb-0"><strong>Item:</strong> {{ expense.event.name }}</p>
+                                                <p class="mb-0"><strong>Category:</strong> {{ expense.expense_category }}</p>
+                                                <p class="mb-0"><strong>Amount:</strong> {{ expense.amount|intcomma }}</p>
+                                                <div class="d-flex justify-content-end gap-2">
+                                                    <i class="fas fa-eye text-success" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#viewRequestModal{{ expense.id }}"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                        {% endfor %}
                                     </div>
                                 </div>
                                 <!-- Operations Mobile Tab -->
@@ -853,21 +930,16 @@ body {
                                     <div class="request-cards">
                                         {% for expense in pending_expenses %}
                                         {% if expense.operation %}
-                                        <div class="card mb-3 request-card pending-request">
-                                            <div class="card-header d-flex justify-content-between align-items-center">
+                                        <div class="card mb-2 request-card pending-request">
+                                            <div class="card-header py-1 px-2 d-flex justify-content-between align-items-center">
                                                 <span class="badge bg-warning">Pending</span>
-                                                <small>{{ expense.created_at|date:"M d, Y" }}</small>
                                             </div>
-                                            <div class="card-body">
-                                                <h6 class="card-subtitle mb-2">Operation: {{ expense.operation.name }}</h6>
-                                                <p class="card-text">
-                                                    <strong>Batch:</strong> {{ expense.batch_disbursement_type|yesno:"Yes,No" }}<br>
-                                                    <strong>Amount:</strong> {{ expense.amount|intcomma }}<br>
-                                                    <strong>Description:</strong> {{ expense.description|truncatechars:80 }}<br>
-                                                    <strong>By:</strong> {{ expense.created_by.get_full_name }}
-                                                </p>
-                                                <div class="d-flex gap-2">
-                                                    <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#viewRequestModal{{ expense.id }}">View</button>
+                                            <div class="card-body py-1 px-2">
+                                                <p class="mb-0"><strong>Item:</strong> {{ expense.operation.name }}</p>
+                                                <p class="mb-0"><strong>Category:</strong> {{ expense.expense_category }}</p>
+                                                <p class="mb-0"><strong>Amount:</strong> {{ expense.amount|intcomma }}</p>
+                                                <div class="d-flex justify-content-end gap-2">
+                                                    <i class="fas fa-eye text-success" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#viewRequestModal{{ expense.id }}"></i>
                                                     {% if is_admin %}
                                                     <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#approveModal{{ expense.id }}">Approve</button>
                                                     <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#declineModal{{ expense.id }}">Decline</button>
@@ -877,7 +949,40 @@ body {
                                         </div>
                                         {% endif %}
                                         {% endfor %}
-                                        <!-- Approved and Declined operation expenses follow similar pattern -->
+                                        {% for expense in approved_expenses %}
+                                        {% if expense.operation %}
+                                        <div class="card mb-2 request-card approved-request">
+                                            <div class="card-header py-1 px-2 d-flex justify-content-between align-items-center">
+                                                <span class="badge bg-success">Approved</span>
+                                            </div>
+                                            <div class="card-body py-1 px-2">
+                                                <p class="mb-0"><strong>Item:</strong> {{ expense.operation.name }}</p>
+                                                <p class="mb-0"><strong>Category:</strong> {{ expense.expense_category }}</p>
+                                                <p class="mb-0"><strong>Amount:</strong> {{ expense.amount|intcomma }}</p>
+                                                <div class="d-flex justify-content-end gap-2">
+                                                    <i class="fas fa-eye text-success" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#viewRequestModal{{ expense.id }}"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                        {% endfor %}
+                                        {% for expense in declined_expenses %}
+                                        {% if expense.operation %}
+                                        <div class="card mb-2 request-card declined-request">
+                                            <div class="card-header py-1 px-2 d-flex justify-content-between align-items-center">
+                                                <span class="badge bg-danger">Declined</span>
+                                            </div>
+                                            <div class="card-body py-1 px-2">
+                                                <p class="mb-0"><strong>Item:</strong> {{ expense.operation.name }}</p>
+                                                <p class="mb-0"><strong>Category:</strong> {{ expense.expense_category }}</p>
+                                                <p class="mb-0"><strong>Amount:</strong> {{ expense.amount|intcomma }}</p>
+                                                <div class="d-flex justify-content-end gap-2">
+                                                    <i class="fas fa-eye text-success" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#viewRequestModal{{ expense.id }}"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                        {% endfor %}
                                     </div>
                                 </div>
                                 <!-- Activations Mobile Tab -->
@@ -885,21 +990,16 @@ body {
                                     <div class="request-cards">
                                         {% for expense in pending_expenses %}
                                         {% if expense.activation %}
-                                        <div class="card mb-3 request-card pending-request">
-                                            <div class="card-header d-flex justify-content-between align-items-center">
+                                        <div class="card mb-2 request-card pending-request">
+                                            <div class="card-header py-1 px-2 d-flex justify-content-between align-items-center">
                                                 <span class="badge bg-warning">Pending</span>
-                                                <small>{{ expense.created_at|date:"M d, Y" }}</small>
                                             </div>
-                                            <div class="card-body">
-                                                <h6 class="card-subtitle mb-2">Activation: {{ expense.activation.name }}</h6>
-                                                <p class="card-text">
-                                                    <strong>Batch:</strong> {{ expense.batch_disbursement_type|yesno:"Yes,No" }}<br>
-                                                    <strong>Amount:</strong> {{ expense.amount|intcomma }}<br>
-                                                    <strong>Description:</strong> {{ expense.description|truncatechars:80 }}<br>
-                                                    <strong>By:</strong> {{ expense.created_by.get_full_name }}
-                                                </p>
-                                                <div class="d-flex gap-2">
-                                                    <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#viewRequestModal{{ expense.id }}">View</button>
+                                            <div class="card-body py-1 px-2">
+                                                <p class="mb-0"><strong>Item:</strong> {{ expense.activation.name }}</p>
+                                                <p class="mb-0"><strong>Category:</strong> {{ expense.expense_category }}</p>
+                                                <p class="mb-0"><strong>Amount:</strong> {{ expense.amount|intcomma }}</p>
+                                                <div class="d-flex justify-content-end gap-2">
+                                                    <i class="fas fa-eye text-success" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#viewRequestModal{{ expense.id }}"></i>
                                                     {% if is_admin %}
                                                     <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#approveModal{{ expense.id }}">Approve</button>
                                                     <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#declineModal{{ expense.id }}">Decline</button>
@@ -909,7 +1009,40 @@ body {
                                         </div>
                                         {% endif %}
                                         {% endfor %}
-                                        <!-- Approved and Declined activation expenses follow similar pattern -->
+                                        {% for expense in approved_expenses %}
+                                        {% if expense.activation %}
+                                        <div class="card mb-2 request-card approved-request">
+                                            <div class="card-header py-1 px-2 d-flex justify-content-between align-items-center">
+                                                <span class="badge bg-success">Approved</span>
+                                            </div>
+                                            <div class="card-body py-1 px-2">
+                                                <p class="mb-0"><strong>Item:</strong> {{ expense.activation.name }}</p>
+                                                <p class="mb-0"><strong>Category:</strong> {{ expense.expense_category }}</p>
+                                                <p class="mb-0"><strong>Amount:</strong> {{ expense.amount|intcomma }}</p>
+                                                <div class="d-flex justify-content-end gap-2">
+                                                    <i class="fas fa-eye text-success" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#viewRequestModal{{ expense.id }}"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                        {% endfor %}
+                                        {% for expense in declined_expenses %}
+                                        {% if expense.activation %}
+                                        <div class="card mb-2 request-card declined-request">
+                                            <div class="card-header py-1 px-2 d-flex justify-content-between align-items-center">
+                                                <span class="badge bg-danger">Declined</span>
+                                            </div>
+                                            <div class="card-body py-1 px-2">
+                                                <p class="mb-0"><strong>Item:</strong> {{ expense.activation.name }}</p>
+                                                <p class="mb-0"><strong>Category:</strong> {{ expense.expense_category }}</p>
+                                                <p class="mb-0"><strong>Amount:</strong> {{ expense.amount|intcomma }}</p>
+                                                <div class="d-flex justify-content-end gap-2">
+                                                    <i class="fas fa-eye text-success" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#viewRequestModal{{ expense.id }}"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                        {% endfor %}
                                     </div>
                                 </div>
                             </div>
@@ -977,7 +1110,7 @@ body {
                             {{ expense_form.batch_file }}
                             <div class="invalid-feedback">Please upload a valid CSV file.</div>
                         </div>
-                       
+                      
                         <!-- CSV Preview Section (Full Block - Ensure This Is Here) -->
                         <div class="mb-3" id="batch-preview" style="display: none;">
                             <label class="form-label fw-bold">Preview Recipients</label>
@@ -1001,7 +1134,7 @@ body {
                                 <div id="validationErrors" class="mt-2 small text-danger"></div> <!-- Critical: This fixes the null error -->
                             </div>
                         </div>
-                       
+                      
                         <!-- Hidden field for batch data (JSON serialized) -->
                         <textarea name="batch_data" id="batchData" class="d-none" readonly></textarea>
                     </div>
@@ -1038,7 +1171,7 @@ body {
         </div>
     </div>
 </div>
-<!-- View Request Modal -->
+<!-- View Request Modals -->
 {% for expense in pending_expenses %}
 <div class="modal fade" id="viewRequestModal{{ expense.id }}" tabindex="-1" aria-labelledby="viewRequestModalLabel{{ expense.id }}" aria-hidden="true">
     <div class="modal-dialog">
@@ -1051,23 +1184,84 @@ body {
                 <div class="card">
                     <div class="card-body">
                         <h6 class="card-subtitle mb-3 text-muted">Request ID: {{ expense.id }}</h6>
-                        <p><strong>Status:</strong> <span class="badge {% if expense.approved %}bg-success{% elif expense.declined %}bg-danger{% else %}bg-warning{% endif %}">{{ expense.status }}</span></p>
+                        <p><strong>Status:</strong> <span class="badge bg-warning">Pending</span></p>
                         <p><strong>Request Type:</strong> {{ expense.request_type }}</p>
-                        <p><strong>For:</strong> {% if expense.event %}{{ expense.event.name }}{% elif expense.operation %}{{ expense.operation.name }}{% elif expense.activation %}{{ expense.activation.name }}{% else %}General{% endif %}</p>
+                        <p><strong>Item:</strong> {% if expense.event %}{{ expense.event.name }}{% elif expense.operation %}{{ expense.operation.name }}{% elif expense.activation %}{{ expense.activation.name }}{% else %}General{% endif %}</p>
                         <p><strong>Batch:</strong> {{ expense.batch_disbursement_type|yesno:"Yes,No" }}</p>
                         <p><strong>Category:</strong> {{ expense.expense_category }}</p>
                         <p><strong>Amount:</strong> KES {{ expense.amount|intcomma }}</p>
                         <p><strong>Description:</strong> {{ expense.description }}</p>
                         <p><strong>Submitted By:</strong> {{ expense.created_by.get_full_name }}</p>
                         <p><strong>Submitted On:</strong> {{ expense.created_at|date:"M d, Y" }}</p>
-                        {% if expense.approved_by %}
-                        <div id="reviewSection">
-                            <hr>
-                            <p><strong>Reviewed By:</strong> {{ expense.approved_by.get_full_name|default:"-" }}</p>
-                            <p><strong>Reviewed On:</strong> {{ expense.updated_at|date:"M d, Y" }}</p>
-                            <p><strong>Comments:</strong> {{ expense.review_comments|default:"None" }}</p>
-                        </div>
-                        {% endif %}
+                        <p><strong>Reviewed By:</strong> -</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% for expense in approved_expenses %}
+<div class="modal fade" id="viewRequestModal{{ expense.id }}" tabindex="-1" aria-labelledby="viewRequestModalLabel{{ expense.id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title" id="viewRequestModalLabel{{ expense.id }}">Request Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-3 text-muted">Request ID: {{ expense.id }}</h6>
+                        <p><strong>Status:</strong> <span class="badge bg-success">Approved</span></p>
+                        <p><strong>Request Type:</strong> {{ expense.request_type }}</p>
+                        <p><strong>Item:</strong> {% if expense.event %}{{ expense.event.name }}{% elif expense.operation %}{{ expense.operation.name }}{% elif expense.activation %}{{ expense.activation.name }}{% else %}General{% endif %}</p>
+                        <p><strong>Batch:</strong> {{ expense.batch_disbursement_type|yesno:"Yes,No" }}</p>
+                        <p><strong>Category:</strong> {{ expense.expense_category }}</p>
+                        <p><strong>Amount:</strong> KES {{ expense.amount|intcomma }}</p>
+                        <p><strong>Description:</strong> {{ expense.description }}</p>
+                        <p><strong>Submitted By:</strong> {{ expense.created_by.get_full_name }}</p>
+                        <p><strong>Submitted On:</strong> {{ expense.created_at|date:"M d, Y" }}</p>
+                        <p><strong>Reviewed By:</strong> {{ expense.approved_by.get_full_name|default:"-" }}</p>
+                        <p><strong>Reviewed On:</strong> {{ expense.updated_at|date:"M d, Y" }}</p>
+                        <p><strong>Comments:</strong> {{ expense.review_comments|default:"None" }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% for expense in declined_expenses %}
+<div class="modal fade" id="viewRequestModal{{ expense.id }}" tabindex="-1" aria-labelledby="viewRequestModalLabel{{ expense.id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title" id="viewRequestModalLabel{{ expense.id }}">Request Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-3 text-muted">Request ID: {{ expense.id }}</h6>
+                        <p><strong>Status:</strong> <span class="badge bg-danger">Declined</span></p>
+                        <p><strong>Request Type:</strong> {{ expense.request_type }}</p>
+                        <p><strong>Item:</strong> {% if expense.event %}{{ expense.event.name }}{% elif expense.operation %}{{ expense.operation.name }}{% elif expense.activation %}{{ expense.activation.name }}{% else %}General{% endif %}</p>
+                        <p><strong>Batch:</strong> {{ expense.batch_disbursement_type|yesno:"Yes,No" }}</p>
+                        <p><strong>Category:</strong> {{ expense.expense_category }}</p>
+                        <p><strong>Amount:</strong> KES {{ expense.amount|intcomma }}</p>
+                        <p><strong>Description:</strong> {{ expense.description }}</p>
+                        <p><strong>Submitted By:</strong> {{ expense.created_by.get_full_name }}</p>
+                        <p><strong>Submitted On:</strong> {{ expense.created_at|date:"M d, Y" }}</p>
+                        <p><strong>Reviewed By:</strong> {{ expense.approved_by.get_full_name|default:"-" }}</p>
+                        <p><strong>Reviewed On:</strong> {{ expense.updated_at|date:"M d, Y" }}</p>
+                        <p><strong>Comments:</strong> {{ expense.review_comments|default:"None" }}</p>
                     </div>
                 </div>
             </div>
@@ -1079,16 +1273,15 @@ body {
 </div>
 {% endfor %}
 <!-- JavaScript -->
-<!-- JavaScript -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded, initializing expense modal');
-    
+   
     // Check for expenses
     let hasEventExpenses = false;
     let hasOperationExpenses = false;
     let hasActivationExpenses = false;
-    
+   
     document.querySelectorAll('#eventsRequestsTable tbody tr').forEach(row => {
         if (!row.querySelector('td[colspan]')) hasEventExpenses = true;
     });
@@ -1098,7 +1291,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('#activationsRequestsTable tbody tr').forEach(row => {
         if (!row.querySelector('td[colspan]')) hasActivationExpenses = true;
     });
-    
+   
     if (!hasEventExpenses) {
         document.querySelector('#eventsRequestsTable tbody').innerHTML =
             '<tr><td colspan="9" class="text-center">No event requests found.</td></tr>';
@@ -1111,7 +1304,6 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelector('#activationsRequestsTable tbody').innerHTML =
             '<tr><td colspan="9" class="text-center">No activation requests found.</td></tr>';
     }
-
     // Sync desktop and mobile tabs
     document.querySelectorAll('#expenseTypeTabs .nav-link').forEach(tab => {
         tab.addEventListener('click', function() {
@@ -1126,13 +1318,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-
     // Filter functionality
     const filterButtons = document.querySelectorAll('[data-filter]');
     const searchInput = document.getElementById('requestSearch');
     const requestRows = document.querySelectorAll('.request-row');
     const requestCards = document.querySelectorAll('.request-card');
-
     filterButtons.forEach(button => {
         button.addEventListener('click', function() {
             filterButtons.forEach(btn => btn.classList.remove('active'));
@@ -1148,7 +1338,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     });
-
     searchInput.addEventListener('input', function() {
         const searchTerm = this.value.toLowerCase();
         requestRows.forEach(row => {
@@ -1158,7 +1347,6 @@ document.addEventListener('DOMContentLoaded', function() {
             card.style.display = card.textContent.toLowerCase().includes(searchTerm) ? '' : 'none';
         });
     });
-
     // Modal initialization
     const submitExpenseModal = document.getElementById('submitExpenseModal');
     if (submitExpenseModal) {
@@ -1170,7 +1358,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 toggleBatchFields();
             }, 300);
         });
-
         submitExpenseModal.addEventListener('hidden.bs.modal', function() {
             const form = document.getElementById('expense-form');
             if (form) {
@@ -1182,7 +1369,6 @@ document.addEventListener('DOMContentLoaded', function() {
             resetCsvPreview();
         });
     }
-
     // Form validation
     const expenseForm = document.getElementById('expense-form');
     const batchCheckbox = document.getElementById('id_batch_disbursement_type');
@@ -1197,7 +1383,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 batchFile.classList.remove('is-invalid');
                 batchFile.removeAttribute('required');
             }
-
             if (!this.checkValidity()) {
                 event.preventDefault();
                 event.stopPropagation();
@@ -1205,17 +1390,14 @@ document.addEventListener('DOMContentLoaded', function() {
             this.classList.add('was-validated');
         });
     }
-
     // Attach CSV batch file listener (integrated here to avoid duplicates)
     attachBatchFileListener();
 });
-
 // Initialize expense fields to hidden state
 function initializeExpenseFields() {
     const eventField = document.getElementById('event-field');
     const operationField = document.getElementById('operation-field');
     const activationField = document.getElementById('activation-field');
-
     if (eventField && operationField && activationField) {
         eventField.classList.add('hidden');
         operationField.classList.add('hidden');
@@ -1228,7 +1410,6 @@ function initializeExpenseFields() {
         console.warn('Expense fields not found during initialization');
     }
 }
-
 // Attach event listeners for expense fields
 function attachExpenseFieldListeners() {
     const requestTypeSelect = document.getElementById('id_request_type');
@@ -1237,26 +1418,21 @@ function attachExpenseFieldListeners() {
         requestTypeSelect: !!requestTypeSelect,
         batchCheckbox: !!batchCheckbox
     });
-
     if (requestTypeSelect) {
         // Replace existing listeners
         const newSelect = requestTypeSelect.cloneNode(true);
         requestTypeSelect.parentNode.replaceChild(newSelect, requestTypeSelect);
-
         newSelect.addEventListener('change', function() {
             console.log('Request type changed to:', this.value, 'Text:', this.options[this.selectedIndex]?.text);
             toggleExpenseFields();
         });
-
         // Enhanced Nice Select listener logic
         const modalElement = document.getElementById('submitExpenseModal');
-
         const attachNiceSelectListener = () => {
             const niceSelect = modalElement.querySelector('.nice-select');
             if (niceSelect && !niceSelect.hasAttribute('data-listener-attached')) {
                 niceSelect.setAttribute('data-listener-attached', 'true');
                 console.log('Nice Select detected, attaching click listener');
-
                 niceSelect.addEventListener('click', function(e) {
                     const option = e.target.closest('.option');
                     if (option) {
@@ -1272,15 +1448,12 @@ function attachExpenseFieldListeners() {
                 });
             }
         };
-
         // Attach immediately if already rendered
         attachNiceSelectListener();
-
         // Fallback if created later
         const observer = new MutationObserver(() => attachNiceSelectListener());
         observer.observe(modalElement, { childList: true, subtree: true });
     }
-
     if (batchCheckbox) {
         batchCheckbox.addEventListener('change', function() {
             console.log('Batch checkbox changed to:', this.checked);
@@ -1288,7 +1461,6 @@ function attachExpenseFieldListeners() {
         });
     }
 }
-
 // Toggle expense form fields
 function toggleExpenseFields() {
     const requestTypeSelect =
@@ -1297,12 +1469,10 @@ function toggleExpenseFields() {
     const eventField = document.getElementById('event-field');
     const operationField = document.getElementById('operation-field');
     const activationField = document.getElementById('activation-field');
-
     if (!requestTypeSelect) {
         console.error('Request type select not found');
         return;
     }
-
     if (!eventField || !operationField || !activationField) {
         console.warn('Form fields not found during toggle:', {
             eventField: !!eventField,
@@ -1311,17 +1481,14 @@ function toggleExpenseFields() {
         });
         return;
     }
-
     const selectedValue = requestTypeSelect.value;
     const selectedText =
         requestTypeSelect.options[requestTypeSelect.selectedIndex]?.text?.toLowerCase().trim() || '';
     console.log('Toggling fields - Value:', selectedValue, 'Text:', selectedText);
-
     [eventField, operationField, activationField].forEach(f => f.classList.add('hidden'));
     document.querySelectorAll('#id_event, #id_operation, #id_activation').forEach(field => {
         if (field) field.removeAttribute('required');
     });
-
     if (selectedText.includes('event') || selectedValue.includes('event')) {
         eventField.classList.remove('hidden');
         const eventSelect = document.getElementById('id_event');
@@ -1341,13 +1508,11 @@ function toggleExpenseFields() {
         console.log('ℹ No specific field shown for:', selectedText);
     }
 }
-
 // Toggle batch disbursement fields
 function toggleBatchFields() {
     const batchCheckbox = document.getElementById('id_batch_disbursement_type');
     const batchFields = document.getElementById('batch-fields');
     const batchFile = document.getElementById('batch_file') || document.getElementById('id_batch_file');
-
     if (!batchCheckbox || !batchFields) {
         console.warn('Batch elements not found:', {
             batchCheckbox: !!batchCheckbox,
@@ -1356,7 +1521,6 @@ function toggleBatchFields() {
         });
         return;
     }
-
     if (batchCheckbox.checked) {
         batchFields.classList.remove('hidden');
         if (batchFile) batchFile.setAttribute('required', 'required');
@@ -1371,41 +1535,35 @@ function toggleBatchFields() {
         console.log('✓ Batch fields hidden');
     }
 }
-
 // CSV Preview Functionality (New: Integrated with safeguards)
 function handleBatchFileUpload(fileInput) {
     const file = fileInput.files[0];
     if (!file) return;
-
     // Validate file type
     if (!file.name.toLowerCase().endsWith('.csv')) {
         alert('Please upload a valid CSV file.');
         fileInput.value = '';
         return;
     }
-
     const reader = new FileReader();
     reader.onload = function(e) {
         const csvContent = e.target.result;
-        const rows = parseCsvContent(csvContent);  // Renamed to avoid any potential conflicts
-        renderCsvPreview(rows);  // Renamed for clarity
+        const rows = parseCsvContent(csvContent); // Renamed to avoid any potential conflicts
+        renderCsvPreview(rows); // Renamed for clarity
         updateBatchData(rows); // Set all rows for submission
     };
     reader.readAsText(file);
 }
-
-function parseCsvContent(csv) {  // Renamed from parseCSV to avoid global conflicts
+function parseCsvContent(csv) { // Renamed from parseCSV to avoid global conflicts
     const lines = csv.split('\n').filter(line => line.trim() !== '');
     if (lines.length < 2) {
         alert('CSV must have at least a header row and one data row.');
         return [];
     }
-
     // Parse and normalize headers
-    let headers = lines[0].split(',').map(h => normalizeCsvHeader(h.trim().toLowerCase()));  // Renamed helper
+    let headers = lines[0].split(',').map(h => normalizeCsvHeader(h.trim().toLowerCase())); // Renamed helper
     console.log('Detected raw headers:', lines[0].split(',').map(h => h.trim())); // Debug
     console.log('Normalized headers:', headers); // Debug
-
     // Check for required fields after normalization
     const requiredMapped = ['name', 'amount', 'mobile', 'id_number'];
     const hasAllRequired = requiredMapped.every(req => headers.includes(req));
@@ -1414,7 +1572,6 @@ function parseCsvContent(csv) {  // Renamed from parseCSV to avoid global confli
         alert(`CSV headers mismatch. Detected: "${detected}". Expected (or similar): name, amount, mobile, id_number. Update your CSV to match.`);
         return [];
     }
-
     // Parse data rows
     const dataRows = lines.slice(1).map((line, rowIndex) => {
         if (!line.trim()) return null; // Skip empty rows
@@ -1425,19 +1582,15 @@ function parseCsvContent(csv) {  // Renamed from parseCSV to avoid global confli
         });
         return rowObj;
     }).filter(row => row !== null);
-
     // Filter rows with all required fields populated
-    const validRows = dataRows.filter(row => 
+    const validRows = dataRows.filter(row =>
         row.name && row.amount && row.mobile && row.id_number
     );
-
     if (validRows.length === 0 && dataRows.length > 0) {
         alert('No valid data rows found. Ensure all rows have values for name, amount, mobile, and id_number.');
     }
-
     return validRows;
 }
-
 // Normalize CSV header variations to standard names (Renamed helper)
 function normalizeCsvHeader(header) {
     // Trim and lowercase already done in parseCsvContent
@@ -1448,13 +1601,11 @@ function normalizeCsvHeader(header) {
     // If no match, keep as-is (will fail validation)
     return header;
 }
-
-function renderCsvPreview(rows) {  // Renamed from renderPreviewTable
+function renderCsvPreview(rows) { // Renamed from renderPreviewTable
     const tbody = document.getElementById('csvPreviewBody');
     const previewDiv = document.getElementById('batch-preview');
     const summaryDiv = document.getElementById('previewSummary');
     const errorsDiv = document.getElementById('validationErrors');
-
     // Null checks with fallbacks
     if (!tbody) {
         console.error('Element #csvPreviewBody not found. Check HTML.');
@@ -1470,27 +1621,22 @@ function renderCsvPreview(rows) {  // Renamed from renderPreviewTable
         console.error('Element #previewSummary not found. Check HTML.');
         // Continue without summary (non-critical)
     }
-
     if (rows.length === 0) {
         tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No valid recipients found in CSV. Check headers and data.</td></tr>';
         previewDiv.style.display = 'block';
         if (summaryDiv) summaryDiv.style.display = 'none';
         return;
     }
-
     let html = '';
     let validationErrors = [];
-
     rows.forEach((row, index) => {
         const amount = parseFloat(row.amount);
         const isValidAmount = !isNaN(amount) && amount > 0;
         const isValidMobile = /^\d{10,15}$/.test(row.mobile.replace(/\D/g, '')); // 10-15 digits, strip non-digits
         const isValidId = /^\d{7,10}$/.test(row.id_number.replace(/\D/g, '')); // 7-10 digits for ID
-
         if (!isValidAmount) validationErrors.push(`Row ${index + 2}: Invalid amount "${row.amount}" (must be positive number)`);
         if (!isValidMobile) validationErrors.push(`Row ${index + 2}: Invalid mobile "${row.mobile}" (10-15 digits)`);
         if (!isValidId) validationErrors.push(`Row ${index + 2}: Invalid ID "${row.id_number}" (7-10 digits)`);
-
         html += `
             <tr>
                 <td>${row.name || 'N/A'}</td>
@@ -1500,18 +1646,15 @@ function renderCsvPreview(rows) {  // Renamed from renderPreviewTable
             </tr>
         `;
     });
-
     tbody.innerHTML = html;
     previewDiv.style.display = 'block';
-
     // Safe summary and errors update
     if (summaryDiv) {
         summaryDiv.style.display = 'block';
-        updateCsvSummary(rows);  // Renamed
+        updateCsvSummary(rows); // Renamed
     } else {
         console.warn('Summary div not available; skipping summary display.');
     }
-
     if (errorsDiv) {
         errorsDiv.innerHTML = validationErrors.length > 0 ? validationErrors.join('<br>') : '<span class="text-success">All rows valid!</span>';
     } else {
@@ -1519,27 +1662,21 @@ function renderCsvPreview(rows) {  // Renamed from renderPreviewTable
         // Optional: Alert if critical, or just log
     }
 }
-
-function updateCsvSummary(rows) {  // Renamed from updateSummary
+function updateCsvSummary(rows) { // Renamed from updateSummary
     const totalCountEl = document.getElementById('totalCount');
     const totalAmountEl = document.getElementById('totalAmount');
-
     if (!totalCountEl || !totalAmountEl) {
         console.error('Summary elements (#totalCount or #totalAmount) not found.');
         return;
     }
-
     const totalCount = rows.length;
     let totalAmount = 0;
-
     rows.forEach(row => {
         totalAmount += parseFloat(row.amount) || 0;
     });
-
     totalCountEl.textContent = totalCount;
     totalAmountEl.textContent = totalAmount.toLocaleString();
 }
-
 function updateBatchData(rows) {
     const batchDataEl = document.getElementById('batchData');
     if (batchDataEl) {
@@ -1548,11 +1685,10 @@ function updateBatchData(rows) {
         console.error('Element #batchData not found. Batch data won\'t be submitted.');
     }
 }
-
 // Attach batch file listener (New: Dedicated function to avoid duplicates)
 function attachBatchFileListener() {
     const batchFileInput = document.getElementById('id_batch_file') || document.querySelector('input[name="batch_file"]');
-    if (batchFileInput && !batchFileInput.hasAttribute('data-csv-listener')) {  // Prevent multiple attachments
+    if (batchFileInput && !batchFileInput.hasAttribute('data-csv-listener')) { // Prevent multiple attachments
         batchFileInput.setAttribute('data-csv-listener', 'true');
         batchFileInput.addEventListener('change', function() {
             handleBatchFileUpload(this);
@@ -1562,7 +1698,6 @@ function attachBatchFileListener() {
         console.error('Batch file input not found. Check form field ID/name.');
     }
 }
-
 // Reset CSV preview (New: For modal hide)
 function resetCsvPreview() {
     const previewDiv = document.getElementById('batch-preview');
@@ -1576,7 +1711,6 @@ function resetCsvPreview() {
     if (tbody) tbody.innerHTML = '';
 }
 </script>
-
 <style>
     .hidden {
         display: none !important;

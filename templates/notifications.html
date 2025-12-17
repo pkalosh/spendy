@@ -1,163 +1,257 @@
-
 {% extends "partials/dashboard-base.html" %}
-
-{% load static %}
 {% load humanize %}
-
 {% block content %}
-<section class="dashboard-section body-collapse">
-    <div class="overlay pt-120">
-        <div class="container-fluid">
-            <div class="row justify-content-center">
-                <div class="col-lg-11">
-                    <h4 class="mb-4">Notifications</h4>
+<style>
+:root {
+    --accent: #7ab82c;
+}
+/* Layout fix for sidebar */
+.dashboard-content {
+    margin-left: 260px;
+    padding: 24px;
+    padding-top: 70px; /* top padding */
+    background: #f9fafb;
+    min-height: 100vh;
+    margin-top: 80px; /* Added as requested */
+}
 
-                    <!-- Alert Table -->
-                    <div class="card shadow-sm border-0">
-                        <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table table-hover mb-0">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>#</th>
-                                            <th>Title</th>
-                                            <th>Message</th>
-                                            <th>Type</th>
-                                            <th>Read</th>
-                                            <th>Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="alertTableBody">
-                                        {% for alert in alerts %}
-                                        <tr class="alert-row {% if alert.is_read %}table-active{% endif %}" 
-                                            data-id="{{ alert.id }}" 
-                                            data-type="{{ alert.alert_type }}" 
-                                            data-is-read="{{ alert.is_read|yesno:"true,false" }}">
-                                            <td>{{ forloop.counter0|add:alerts.start_index }}</td>
-                                            <td class="fw-semibold">{{ alert.title }}</td>
-                                            <td>{{ alert.message|truncatechars:80 }}</td>
-                                            <td><span class="badge bg-{{ alert.alert_type|default:'secondary' }}">{{ alert.notification_type|title }}</span></td>
-                                            <td>
-                                                {% if alert.is_read %}
-                                                    <i class="text-success">Yes</i>
-                                                {% else %}
-                                                    <i class="text-muted">No</i>
-                                                {% endif %}
-                                            </td>
-                                            <td>
-                                                <button 
-                                                    class="btn btn-sm btn-outline-primary"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#alertModal"
-                                                    data-title="{{ alert.title|escapejs }}"
-                                                    data-message="{{ alert.message|escapejs }}"
-                                                    data-type="{{ alert.alert_type }}"
-                                                    data-time="{{ alert.created_at|naturaltime }}">
-                                                    View
-                                                </button>
-                                            </td>
-                                        </tr>
-                                        {% empty %}
-                                        <tr>
-                                            <td colspan="6" class="text-center text-muted">No notifications found.</td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
+/* Mobile override: remove sidebar margin */
+@media (max-width: 768px) {
+    .dashboard-content {
+        margin-left: 0 !important;
+        padding: 16px; /* Optional: slightly reduce padding on mobile for more space */
+    }
+}
 
-                    <!-- Pagination -->
-                    {% if alerts.has_other_pages %}
-                    <nav class="mt-4">
-                        <ul class="pagination justify-content-center">
-                            {% if alerts.has_previous %}
-                            <li class="page-item">
-                                <a class="page-link" href="?page={{ alerts.previous_page_number }}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}">Previous</a>
-                            </li>
-                            {% else %}
-                            <li class="page-item disabled"><span class="page-link">Previous</span></li>
-                            {% endif %}
-
-                            {% for num in alerts.paginator.page_range %}
-                            <li class="page-item {% if num == alerts.number %}active{% endif %}">
-                                <a class="page-link" href="?page={{ num }}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}">{{ num }}</a>
-                            </li>
-                            {% endfor %}
-
-                            {% if alerts.has_next %}
-                            <li class="page-item">
-                                <a class="page-link" href="?page={{ alerts.next_page_number }}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}">Next</a>
-                            </li>
-                            {% else %}
-                            <li class="page-item disabled"><span class="page-link">Next</span></li>
-                            {% endif %}
-                        </ul>
-                    </nav>
-                    {% endif %}
-
-                    <!-- Modal -->
-                    <div class="modal fade" id="alertModal" tabindex="-1" aria-labelledby="alertModalLabel" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered modal-lg">
-                            <div class="modal-content">
-                                <div class="modal-header bg-light">
-                                    <h5 class="modal-title" id="alertModalLabel">Alert Details</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <h5 id="modalTitle" class="fw-bold mb-2"></h5>
-                                    <p id="modalMessage"></p>
-                                    <div class="mt-3">
-                                        <span id="modalType" class="badge"></span>
-                                        <small class="text-muted ms-3" id="modalTime"></small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
+/* Accent utilities */
+.text-accent { color: var(--accent); }
+.bg-accent { background-color: var(--accent) !important; }
+.btn-accent {
+    background-color: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+}
+.btn-accent:hover {
+    background-color: #6aa424;
+    border-color: #6aa424;
+}
+.badge-accent {
+    background-color: var(--accent);
+}
+.table td, .table th {
+    vertical-align: middle;
+}
+.notification-card {
+    border-radius: 8px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.1);
+    margin-bottom: 12px;
+    padding: 12px;
+    background-color: #fff;
+    width: 100%;
+}
+.notification-card .title {
+    font-weight: 600;
+}
+.notification-card .badge {
+    font-size: 0.8rem;
+}
+.mobile-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+@media (max-width: 768px) {
+    .table-responsive {
+        display: none;
+    }
+}
+@media (min-width: 769px) {
+    .mobile-cards {
+        display: none;
+    }
+    /* Cards far right alignment on desktop */
+    .mobile-cards {
+        align-items: flex-end;
+    }
+    .mobile-cards .notification-card {
+        width: auto;
+        max-width: 400px;
+        margin-left: auto;
+    }
+}
+</style>
+<div class="dashboard-content">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="fw-semibold mb-0">Notifications</h4>
+    </div>
+    <!-- Filters -->
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body py-2">
+            <form class="row g-2 align-items-center" id="filterForm">
+                <div class="col-md-3">
+                    <select id="typeFilter" class="form-select form-select-sm">
+                        <option value="">All Types</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                        <option value="info">Info</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select id="statusFilter" class="form-select form-select-sm">
+                        <option value="">All Status</option>
+                        <option value="read">Read</option>
+                        <option value="unread">Unread</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button type="button"
+                            id="applyFilter"
+                            class="btn btn-sm btn-accent rounded-pill px-3">
+                        Filter
+                    </button>
+                    <button type="button"
+                            id="resetFilter"
+                            class="btn btn-sm btn-outline-secondary rounded-pill px-3 ms-2">
+                        Reset
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- Desktop Table -->
+    <div class="card border-0 shadow-sm table-responsive">
+        <table class="table align-middle mb-0">
+            <thead class="table-light small text-muted">
+                <tr>
+                    <th>#</th>
+                    <th>Title</th>
+                    <th>Message</th>
+                    <th>Type</th>
+                    <th class="text-end">Action</th>
+                </tr>
+            </thead>
+            <tbody id="notificationTable">
+            {% for alert in alerts %}
+                <tr
+                    data-type="{{ alert.notification_type|default:'info'|lower }}"
+                    data-status="{% if alert.is_read %}read{% else %}unread{% endif %}"
+                    class="{% if alert.is_read %}bg-light{% endif %}">
+                    <td class="text-muted">{{ forloop.counter0|add:alerts.start_index }}</td>
+                    <td class="fw-semibold">{{ alert.title }}</td>
+                    <td class="text-muted">{{ alert.message|truncatechars:80 }}</td>
+                    <td><span class="badge badge-accent rounded-pill">{{ alert.notification_type|default:"Info"|title }}</span></td>
+                    
+                    <td class="text-end">
+                        <button
+                            class="btn btn-sm btn-accent rounded-pill px-3"
+                            data-bs-toggle="modal"
+                            data-bs-target="#alertModal"
+                            data-alert-id="{{ alert.id }}"
+                            data-title="{{ alert.title|escapejs }}"
+                            data-message="{{ alert.message|escapejs }}"
+                            data-type="{{ alert.notification_type|default:'info' }}"
+                            data-time="{{ alert.created_at|naturaltime }}">
+                            <i class="fas fa-eye"></i> View
+                        </button>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr class="no-data">
+                    <td colspan="6" class="text-center py-4 text-muted">No notifications found</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <!-- Mobile Cards -->
+    <div class="mobile-cards">
+    {% for alert in alerts %}
+        <div class="notification-card"
+             data-type="{{ alert.notification_type|default:'info'|lower }}"
+             data-status="{% if alert.is_read %}read{% else %}unread{% endif %}">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="title">{{ alert.title }}</div>
+                <span class="badge badge-accent">{{ alert.notification_type|default:'Info'|title }}</span>
+            </div>
+            <div class="text-end mt-2">
+                <button
+                    class="btn btn-sm btn-accent rounded-pill px-3"
+                    data-bs-toggle="modal"
+                    data-bs-target="#alertModal"
+                    data-alert-id="{{ alert.id }}"
+                    data-title="{{ alert.title|escapejs }}"
+                    data-message="{{ alert.message|escapejs }}"
+                    data-type="{{ alert.notification_type|default:'info' }}"
+                    data-time="{{ alert.created_at|naturaltime }}">
+                    <i class="fas fa-eye"></i> View
+                </button>
+            </div>
+        </div>
+    {% empty %}
+        <div class="notification-card text-center text-muted">No notifications found</div>
+    {% endfor %}
+    </div>
+    <!-- Pagination -->
+    {% if alerts.has_other_pages %}
+    <nav class="mt-4">
+        <ul class="pagination pagination-sm justify-content-center">
+            {% for num in alerts.paginator.page_range %}
+            <li class="page-item {% if num == alerts.number %}active{% endif %}">
+                <a class="page-link rounded-pill border-0" href="?page={{ num }}">{{ num }}</a>
+            </li>
+            {% endfor %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+<!-- Modal -->
+<div class="modal fade" id="alertModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-semibold">Notification Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6 id="modalTitle" class="fw-bold mb-2"></h6>
+                <p id="modalMessage" class="text-muted"></p>
+                <div class="d-flex align-items-center mt-3">
+                    <span id="modalType" class="badge badge-accent rounded-pill me-2"></span>
+                    <small id="modalTime" class="text-muted"></small>
                 </div>
             </div>
         </div>
     </div>
-</section>
-
+</div>
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-    const getCookie = name => {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let cookie of cookies) {
-                cookie = cookie.trim();
-                if (cookie.startsWith(name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.slice(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    };
+document.addEventListener('DOMContentLoaded', function () {
+    const csrfToken = '{{ csrf_token }}';
+    let currentAlertId = null;
+    let currentRow = null;
+    let currentCard = null;
+    const modal = document.getElementById('alertModal');
 
-    const csrfToken = getCookie('csrftoken');
-    const alertModal = document.getElementById('alertModal');
+    // Open modal: populate content
+    modal.addEventListener('show.bs.modal', function (event) {
+        const btn = event.relatedTarget;
+        currentAlertId = btn.dataset.alertId;
+        currentRow = btn.closest('tr');
+        currentCard = btn.closest('.notification-card');
 
-    alertModal.addEventListener('show.bs.modal', event => {
-        const button = event.relatedTarget;
-        const row = button.closest('tr');
-        const alertId = row.dataset.id;
-        const isRead = row.dataset.isRead === 'true';
+        document.getElementById('modalTitle').innerText = btn.dataset.title;
+        document.getElementById('modalMessage').innerText = btn.dataset.message;
 
-        // Fill modal content
-        document.getElementById('modalTitle').textContent = button.dataset.title;
-        document.getElementById('modalMessage').textContent = button.dataset.message;
-        document.getElementById('modalType').textContent = button.dataset.type.toUpperCase();
-        document.getElementById('modalType').className = 'badge bg-' + button.dataset.type;
-        document.getElementById('modalTime').textContent = button.dataset.time;
+        const badge = document.getElementById('modalType');
+        badge.innerText = btn.dataset.type.replace('_',' ').toUpperCase();
+        badge.className = 'badge badge-accent rounded-pill me-2';
 
-        // Skip POST if already read
-        if (isRead) return;
+        document.getElementById('modalTime').innerText = btn.dataset.time;
+    });
+
+    // Close modal: mark as read via AJAX
+    modal.addEventListener('hidden.bs.modal', function () {
+        if (!currentAlertId) return;
 
         fetch("{% url 'wallet:mark_alert_as_read' %}", {
             method: "POST",
@@ -165,15 +259,56 @@ document.addEventListener('DOMContentLoaded', () => {
                 'X-CSRFToken': csrfToken,
                 'Content-Type': 'application/x-www-form-urlencoded',
             },
-            body: `alert_id=${alertId}`
+            body: `alert_id=${currentAlertId}`
         }).then(res => res.json())
           .then(data => {
               if (data.success) {
-                  row.dataset.isRead = 'true';
-                  row.classList.add('table-active');
-                  row.querySelector('td:nth-child(5)').innerHTML = '<i class="text-success">Yes</i>';
+                  // Update desktop table row
+                  if (currentRow) {
+                      currentRow.dataset.status = 'read';
+                      currentRow.classList.add('bg-light');
+                      currentRow.querySelector('td:nth-child(5)').innerHTML = '<span class="badge rounded-pill bg-secondary">Read</span>';
+                  }
+
+                  // Update mobile card
+                  if (currentCard) {
+                      const statusBadge = currentCard.querySelector('.badge.badge-accent');
+                      if (statusBadge) {
+                          statusBadge.className = 'badge rounded-pill bg-secondary';
+                          statusBadge.textContent = 'Read';
+                      }
+                  }
               }
           });
+
+        currentAlertId = null;
+        currentRow = null;
+        currentCard = null;
+    });
+
+    // Client-side filtering (desktop only, but harmless)
+    const typeFilter = document.getElementById('typeFilter');
+    const statusFilter = document.getElementById('statusFilter');
+    const applyBtn = document.getElementById('applyFilter');
+    const resetBtn = document.getElementById('resetFilter');
+    const rows = document.querySelectorAll('#notificationTable tr[data-type]');
+
+    applyBtn.addEventListener('click', function () {
+        const type = typeFilter.value.toLowerCase();
+        const status = statusFilter.value.toLowerCase();
+
+        rows.forEach(row => {
+            let show = true;
+            if (type && row.dataset.type !== type) show = false;
+            if (status && row.dataset.status !== status) show = false;
+            row.style.display = show ? '' : 'none';
+        });
+    });
+
+    resetBtn.addEventListener('click', function () {
+        typeFilter.value = '';
+        statusFilter.value = '';
+        rows.forEach(row => row.style.display = '');
     });
 });
 </script>

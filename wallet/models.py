@@ -163,7 +163,8 @@ class Transaction(models.Model):
     sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="sent_transactions")
     receiver_wallet = models.ForeignKey('Wallet', on_delete=models.SET_NULL, null=True, blank=True, related_name="received_transactions")
     sender_wallet = models.ForeignKey('Wallet', on_delete=models.SET_NULL, null=True, blank=True, related_name="sent_transactions")
-    
+    receiver_party_public_name = models.CharField(max_length=255, blank=True, null=True)
+    sender_party_public_name = models.CharField(max_length=255, blank=True, null=True)
     # Transaction state
     mpesa_code = models.CharField(max_length=255, blank=True, null=True, help_text="M-Pesa transaction code")
     status = models.CharField(choices=TRANSACTION_STATUS, max_length=100, default="pending")

@@ -55,12 +55,9 @@
                            
                              <div class="single-item notifications-area">
                                 <div class="notifications-btn">
-                                    <img src="{% static 'assets1/images/icon/bell.png' %}" class="bell-icon" alt="icon">
+                                    <a href="{% url 'wallet:staff-notifications' %}"><img src="{% static 'assets1/images/icon/bell.png' %}" class="bell-icon" alt="icon"></a>
                                 </div>
-                                <div class="main-area notifications-content">
-                                        <a  class="head-area d-flex justify-content-between" href="{% url 'wallet:staff-notifications' %}">you have {{ pending }} new notifications</a> 
-                                  
-                                </div>
+                              
                             </div>
                             <div class="single-item user-area">
                                 <div class="profile-area d-flex align-items-center">

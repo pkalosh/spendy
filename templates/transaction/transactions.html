@@ -396,7 +396,7 @@ body {
                                     {% for txn in transactions %}
 <tr>
 <td data-label="Initiated By">{{ txn.user.get_full_name|default:txn.user.username }}</td>
-<td data-label="Recipient">{{ txn.receiver.get_full_name|default:"-" }}</td>
+<td data-label="Recipient">{{ txn.sender_party_public_name }} {{ txn.receiver_party_public_name}}</td>
 <td data-label="Amount">{{ txn.sender_wallet.currency|default:"KES" }} {{ txn.amount|floatformat:2|intcomma }}</td>
 <td data-label="Mpesa Code">{{ txn.mpesa_code }}</td>
 <td data-label="Type">
@@ -589,10 +589,10 @@ body {
 </div>
 <div class="card-body" id="paymentDetails{{ txn.id }}">
 <div class="payment-details">
-                                    Reference: {{ txn.transaction_id }}<br>
+                                    Reference: {{ txn.mpesa_code }}<br>
                                     Amount: {{ txn.sender_wallet.currency|default:"KES" }} {{ txn.amount|floatformat:2|intcomma }}<br>
                                     From: {{ txn.user.get_full_name|default:txn.user.username }}<br>
-                                    To: {{ txn.receiver.get_full_name|default:"N/A" }}<br>
+                                    To: {{ txn.sender_party_public_name}} {{txn.receiver_party_public_name}}<br>
                                     Date: {{ txn.date|date:"Y-m-d H:i:s" }}<br>
                                     Status: {{ txn.status|title }}<br>
                                     Type: {{ txn.transaction_type|default:"N/A"|title }}<br>

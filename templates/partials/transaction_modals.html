@@ -7,7 +7,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p><strong>Recipient:</strong> {{ transaction.reciever.kyc.full_name }}</p>
+                <p><strong>Recipient:</strong> {{ transaction.receiver_party_public_name }} {{transaction.sender_party_public_name}}</p>
                 <p><strong>Type:</strong> {{ transaction.transaction_type|title }}</p>
                 <p><strong>Amount:</strong> KES {{ transaction.amount }}</p>
                 <p><strong>Status:</strong> {{ transaction.status|title }}</p>

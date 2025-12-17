@@ -633,8 +633,8 @@ def expense_detail(request, id, item_type=None):
         expenses = Expense.objects.filter(activation=item, **expense_filters).order_by('-created_at')
         approved_expenses = expenses.filter(approved=True, declined=False)
         item_form = ActivationExpenseForm(instance=item)
-        start_date = item.start_date  # Assuming Activation has start_date
-        end_date = item.end_date  # Assuming Activation has end_date
+        start_date = item.created_at  # Assuming Activation has start_date
+        end_date = '' # Assuming Activation has end_date
         expense_list_name = "Activation Expenses"
         expense_list_desc = "Activation Expense Requests"
     else:
