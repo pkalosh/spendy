@@ -1,275 +1,187 @@
 {% extends "partials/dashboard-base.html" %}
 {% load static %}
+{% load humanize %}
 {% block content %}
 <style>
 :root {
-  --primary-color: #98e23f;
-  --secondary-color: #7ab82c;
-  --success-color: #10b981;
-  --warning-color: #f59e0b;
-  --danger-color: #ef4444;
-  --info-color: #06b6d4;
-  --light-bg: #f8fafc;
-  --dark-text: #1f2937;
-  --muted-text: #6b7280;
-  --border-color: #e5e7eb;
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --border-radius: 12px;
-  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+--primary-color: #98e23f;
+--secondary-color: #7ab82c;
+--success-color: #10b981;
+--warning-color: #f59e0b;
+--danger-color: #ef4444;
+--info-color: #06b6d4;
+--light-bg: #f8fafc;
+--dark-text: #1f2937;
+--muted-text: #6b7280;
+--border-color: #e5e7eb;
+--shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+--shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+--shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+--border-radius: 12px;
+--transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 body {
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 .dashboard-section {
-  min-height: 100vh;
-  background: transparent;
+min-height: 100vh;
+background: transparent;
 }
 .main-content {
-  padding: 2rem 0;
+padding: 2rem 0;
 }
 .card {
-  transition: var(--transition);
-  border: 1px solid var(--border-color);
-  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
-  position: relative;
-  overflow: hidden;
+transition: var(--transition);
+border: 1px solid var(--border-color);
+background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+position: relative;
+overflow: hidden;
 }
 .card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 4px;
-  height: 100%;
-  background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
-  z-index: 1;
+content: '';
+position: absolute;
+top: 0;
+left: 0;
+width: 4px;
+height: 100%;
+background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
+z-index: 1;
 }
 .card:hover {
-  transform: translateY(-4px) scale(1.02);
-  box-shadow: var(--shadow-lg);
-  border-color: var(--primary-color);
+transform: translateY(-4px) scale(1.02);
+box-shadow: var(--shadow-lg);
+border-color: var(--primary-color);
 }
 .section-title {
-  position: relative;
-  display: inline-block;
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--dark-text);
-  margin-bottom: 0.5rem;
+position: relative;
+display: inline-block;
+font-size: 1.25rem;
+font-weight: 700;
+color: var(--dark-text);
+margin-bottom: 0.5rem;
 }
-.section-title::after {
-  content: '';
-  position: absolute;
-  bottom: -0.25rem;
-  left: 0;
-  width: 100%;
-  height: 3px;
-  background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
-  border-radius: 2px;
-  opacity: 0;
-  transition: var(--transition);
-}
-.section-title:hover::after {
-  opacity: 1;
-}
-.section-subtitle {
-  color: var(--muted-text);
-  font-size: 0.875rem;
-  margin-bottom: 0;
+.text-gradient {
+background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+background-clip: text;
 }
 /* Button Enhancements */
 .btn-primary {
-  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-  border: none;
-  border-radius: var(--border-radius);
-  font-weight: 600;
-  transition: var(--transition);
-  box-shadow: var(--shadow-sm);
+background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+border: none;
+border-radius: var(--border-radius);
+font-weight: 600;
+transition: var(--transition);
+box-shadow: var(--shadow-sm);
 }
 .btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-  color: white;
+transform: translateY(-2px);
+box-shadow: var(--shadow-md);
+color: white;
 }
 .btn-success {
-  background: linear-gradient(135deg, var(--success-color), #059669);
-  border: none;
-  border-radius: var(--border-radius);
-  font-weight: 600;
-  transition: var(--transition);
-  box-shadow: var(--shadow-sm);
+background: linear-gradient(135deg, var(--success-color), #059669);
+border: none;
+border-radius: var(--border-radius);
+font-weight: 600;
+transition: var(--transition);
+box-shadow: var(--shadow-sm);
 }
 .btn-success:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-  color: white;
-}
-.btn-outline-primary {
-  border: 1px solid var(--primary-color);
-  color: var(--primary-color);
-  background: transparent;
-  border-radius: var(--border-radius);
-  font-weight: 600;
-  transition: var(--transition);
-}
-.btn-outline-primary:hover {
-  background: var(--primary-color);
-  color: white;
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
+transform: translateY(-2px);
+box-shadow: var(--shadow-md);
+color: white;
 }
 /* Badge Enhancements */
 .badge {
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.025em;
-  padding: 0.5rem 0.75rem;
+border-radius: 20px;
+font-size: 0.75rem;
+font-weight: 600;
+text-transform: uppercase;
+letter-spacing: 0.025em;
+padding: 0.5rem 0.75rem;
 }
 .bg-success {
-  background: rgba(16, 185, 129, 0.1) !important;
-  color: var(--success-color) !important;
-  border: 1px solid rgba(16, 185, 129, 0.2);
+background: rgba(16, 185, 129, 0.1) !important;
+color: var(--success-color) !important;
+border: 1px solid rgba(16, 185, 129, 0.2);
 }
 .bg-warning {
-  background: rgba(245, 158, 11, 0.1) !important;
-  color: var(--warning-color) !important;
-  border: 1px solid rgba(245, 158, 11, 0.2);
+background: rgba(245, 158, 11, 0.1) !important;
+color: var(--warning-color) !important;
+border: 1px solid rgba(245, 158, 11, 0.2);
 }
 .bg-danger {
-  background: rgba(239, 68, 68, 0.1) !important;
-  color: var(--danger-color) !important;
-  border: 1px solid rgba(239, 68, 68, 0.2);
+background: rgba(239, 68, 68, 0.1) !important;
+color: var(--danger-color) !important;
+border: 1px solid rgba(239, 68, 68, 0.2);
 }
 /* Table Enhancements */
 .table-responsive {
-  border-radius: var(--border-radius);
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
+border-radius: var(--border-radius);
+overflow: hidden;
+box-shadow: var(--shadow-sm);
 }
 .table {
-  margin-bottom: 0;
+margin-bottom: 0;
 }
 .table thead th {
-  border-bottom: 2px solid var(--border-color);
-  font-weight: 600;
-  color: var(--dark-text);
-  padding: 1rem 0.75rem;
-  background: var(--light-bg);
+border-bottom: 2px solid var(--border-color);
+font-weight: 600;
+color: var(--dark-text);
+padding: 1rem 0.75rem;
+background: var(--light-bg);
 }
 .table tbody td {
-  padding: 1rem 0.75rem;
-  border-bottom: 1px solid #f1f5f9;
-  vertical-align: middle;
+padding: 1rem 0.75rem;
+border-bottom: 1px solid #f1f5f9;
+vertical-align: middle;
 }
 .table tbody tr:hover {
-  background: var(--light-bg);
-  transition: var(--transition);
-  transform: scale(1.01);
-}
-.transaction-row {
-  cursor: pointer;
-  transition: var(--transition);
+background: var(--light-bg);
+transition: var(--transition);
 }
 .transaction-row:hover {
-  background-color: rgba(152, 226, 63, 0.05) !important;
+background-color: rgba(152, 226, 63, 0.05) !important;
 }
-/* Form Elements */
-.form-control, .form-select {
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  transition: var(--transition);
+/* Mobile Transfer Cards */
+.mobile-transfer-card {
+border: 1px solid var(--border-color);
+border-radius: var(--border-radius);
+box-shadow: var(--shadow-sm);
+transition: var(--transition);
+overflow: hidden;
 }
-.form-control:focus, .form-select:focus {
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 0.2rem rgba(152, 226, 63, 0.25);
+.mobile-transfer-card:hover {
+transform: translateY(-2px);
+box-shadow: var(--shadow-md);
+}
+.mobile-transfer-card .card-body {
+padding: 0.9rem;
+}
+.mobile-transfer-card .status-badge {
+font-size: 0.7rem;
+padding: 0.35rem 0.6rem;
+}
+.mobile-transfer-card .view-btn {
+padding: 0.35rem 0.6rem;
+font-size: 0.8rem;
+min-width: 36px;
 }
 /* Modal Enhancements */
 .modal-content {
-  border: none;
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow-lg);
+border: none;
+border-radius: var(--border-radius);
+box-shadow: var(--shadow-lg);
 }
 .modal-header {
-  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-  color: black;
-  border-radius: var(--border-radius) var(--border-radius) 0 0;
+background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+color: white;
 }
-.modal-footer {
-  border-top: 1px solid var(--border-color);
-}
-/* Pagination */
-.pagination .page-link {
-  border: 1px solid var(--border-color);
-  color: var(--dark-text);
-  padding: 0.5rem 0.75rem;
-  margin: 0 0.125rem;
-  border-radius: 6px;
-  transition: var(--transition);
-}
-.pagination .page-link:hover {
-  background: var(--primary-color);
-  color: white;
-  border-color: var(--primary-color);
-  transform: translateY(-1px);
-}
-.pagination .page-item.active .page-link {
-  background: var(--primary-color);
-  border-color: var(--primary-color);
-  box-shadow: var(--shadow-sm);
-}
-/* Empty States */
-.text-center.py-4 {
-  padding: 3rem 2rem !important;
-  border-radius: var(--border-radius);
-  background: linear-gradient(135deg, rgba(152, 226, 63, 0.05) 0%, rgba(122, 184, 44, 0.05) 100%);
-  border: 1px solid rgba(152, 226, 63, 0.2);
-}
-/* Responsive Design */
-@media (max-width: 768px) {
-  .main-content {
-    padding: 1rem 0;
-  }
-  .card {
-    margin-bottom: 1rem;
-  }
-  .table thead {
-    display: none;
-  }
-  .table tbody tr {
-    display: block;
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    margin-bottom: 1rem;
-    padding: 1rem;
-    background: white;
-    box-shadow: var(--shadow-sm);
-  }
-  .table tbody td {
-    display: block;
-    border: none;
-    padding: 0.25rem 0;
-    text-align: left;
-  }
-  .table tbody td:before {
-    content: attr(data-label) ": ";
-    font-weight: 600;
-    color: var(--dark-text);
-  }
-}
-/* Utility Classes */
-.text-gradient {
-  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-.gradient-primary {
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+.modal-body {
+background: #f8fafc;
 }
 </style>
 <section class="dashboard-section body-collapse">
@@ -280,7 +192,7 @@ body {
 <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
 <div>
 <h5 class="section-title mb-0 text-gradient">{{ kyc.company_name|title }} Wallets</h5>
-<p class="section-subtitle mb-0">View and manage your wallets, balances, and transactions.</p>
+<p class="text-muted mb-0">View and manage your wallets, balances, and transactions.</p>
 </div>
 <div class="d-flex gap-2 mt-2 mt-md-0">
 <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newWalletModal">+ New Wallet</button>
@@ -288,66 +200,47 @@ body {
 <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#fundWalletModal">Fund Wallet</button>
 </div>
 </div>
-                      {% for wallet in wallets %}
+
+<!-- Wallets Grid -->
+{% for wallet in wallets %}
 <div class="col-md-3 mb-4">
 <div class="card h-100 shadow-sm rounded-3 border-0">
 <div class="card-body d-flex flex-column justify-content-between text-center position-relative">
-<!-- Dropdown Menu -->
 <div class="dropdown position-absolute" style="top: 10px; right: 10px;">
-<button class="btn btn-link p-0 text-muted" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+<button class="btn btn-link p-0 text-muted" type="button" data-bs-toggle="dropdown">
 <i class="fas fa-ellipsis-v"></i>
 </button>
 <ul class="dropdown-menu dropdown-menu-end">
-<li>
-<a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editWalletModal{{wallet.id}}">
-<i class="fas fa-edit me-2"></i>Edit
-</a>
-</li>
-<li>
-<a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#fundWalletModal{{wallet.id}}" data-wallet-id="{{ wallet.id }}">
-<i class="fas fa-plus-circle me-2"></i>Fund
-</a>
-</li>
-<!-- <li>
-                                          <a class="dropdown-item text-danger delete-wallet-btn" href="#"
-                                             data-bs-toggle="modal"
-                                             data-bs-target="#deleteWalletModal{{wallet.id}}">
-                                              <i class="fas fa-minus-circle me-2"></i>Delete
-                                          </a>
-                                      </li> -->
+<li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editWalletModal{{wallet.id}}"><i class="fas fa-edit me-2"></i>Edit</a></li>
+<li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#fundWalletModal{{wallet.id}}" data-wallet-id="{{ wallet.id }}"><i class="fas fa-plus-circle me-2"></i>Fund</a></li>
 </ul>
 </div>
-<!-- Wallet Icon (Optional) -->
-<div class="mb-3">
-<i class="fas fa-wallet fa-2x" style="color: var(--primary-color);"></i>
-</div>
-<!-- Wallet Name -->
+<div class="mb-3"><i class="fas fa-wallet fa-2x" style="color: var(--primary-color);"></i></div>
 <h6 class="fw-bold text-uppercase text-muted mb-1">{{ wallet.wallet_name }}</h6>
-<!-- Wallet Balance -->
-<p class="fs-5 fw-semibold text-dark mb-0">{{ wallet.currency }} {{ wallet.balance|floatformat:2 }}</p>
+<p class="fs-5 fw-semibold text-dark mb-0">{{ wallet.currency }} {{ wallet.balance|floatformat:2|intcomma }}</p>
 </div>
 </div>
 </div>
-<!-- Edit Wallet Modal -->
-<div class="modal fade" id="editWalletModal{{ wallet.id }}" tabindex="-1" aria-labelledby="editWalletModalLabel{{ wallet.id }}" aria-hidden="true">
+
+<!-- Per-Wallet Edit Modal -->
+<div class="modal fade" id="editWalletModal{{ wallet.id }}" tabindex="-1">
 <div class="modal-dialog">
 <div class="modal-content">
 <div class="modal-header text-black">
-<h5 class="modal-title" id="editWalletModalLabel{{ wallet.id }}">Edit Wallet</h5>
-<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+<h5 class="modal-title">Edit Wallet</h5>
+<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 </div>
-<form id="editWalletForm{{ wallet.id }}" method="post" action="{% url 'wallet:edit_wallet' wallet.id %}">
+<form method="post" action="{% url 'wallet:edit_wallet' wallet.id %}">
+{% csrf_token %}
 <div class="modal-body">
-                              {% csrf_token %}
 <input type="hidden" name="wallet_id" value="{{ wallet.id }}">
 <div class="mb-3">
-<label for="editWalletName{{ wallet.id }}" class="form-label">Wallet Name</label>
-<input type="text" class="form-control" id="editWalletName{{ wallet.id }}" name="wallet_name"
-value="{{ wallet.wallet_name }}" required>
+<label class="form-label">Wallet Name</label>
+<input type="text" class="form-control" name="wallet_name" value="{{ wallet.wallet_name }}" required>
 </div>
 <div class="mb-3">
-<label for="editWalletType{{ wallet.id }}" class="form-label">Wallet Type</label>
-<select class="form-control" id="editWalletType{{ wallet.id }}" name="wallet_type" required>
+<label class="form-label">Wallet Type</label>
+<select class="form-select" name="wallet_type" required>
 <option value="">Select wallet type</option>
 <option value="EVENT" {% if wallet.wallet_type == "EVENT" %}selected{% endif %}>Event</option>
 <option value="OPERATIONS" {% if wallet.wallet_type == "OPERATIONS" %}selected{% endif %}>Operations</option>
@@ -363,86 +256,37 @@ value="{{ wallet.wallet_name }}" required>
 </div>
 </div>
 </div>
-<!-- Delete Wallet Modal -->
-<div class="modal fade" id="deleteWalletModal{{wallet.id}}" tabindex="-1" aria-labelledby="deleteWalletModalLabel{{wallet.id}}" aria-hidden="true">
-<div class="modal-dialog modal-dialog-centered">
-<div class="modal-content">
-<div class="modal-header border-0 text-black">
-<h5 class="modal-title text-danger" id="deleteWalletModalLabel{{wallet.id}}">
-<i class="fas fa-exclamation-triangle me-2"></i>Delete Wallet
-</h5>
-<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-</div>
-<form id="deleteWalletForm" method="post" action="{% url 'wallet:delete_wallet' wallet.id %}">
-                                {% csrf_token %}
-<div class="modal-body">
-<!-- Wallet Details Display -->
-<div class="card p-2 mb-4">
-<h6 class="mb-3"><strong>Wallet Details:</strong></h6>
-<div class="row">
-<div class="col-6">
-<small class="text-muted">Wallet Name:</small>
-<p class="mb-2" id="delete-wallet-name">{{wallet.wallet_name}}</p>
-</div>
-<div class="col-6">
-<small class="text-muted">Company:</small>
-<p class="mb-2" id="delete-company-name">{{wallet.company.company_name}}</p>
-</div>
-<div class="col-6">
-<small class="text-muted">Type:</small>
-<p class="mb-2" id="delete-wallet-type">{{wallet.wallet_type}}</p>
-</div>
-<div class="col-6">
-<small class="text-muted">Balance:</small>
-<p class="mb-0" id="delete-wallet-balance">{{wallet.balance}}</p>
-</div>
-</div>
-</div>
-</div>
-<div class="modal-footer border-0">
-<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-<button class="btn btn-danger" id="confirmDeleteBtn" type="submit" >
-<i class="fas fa-trash me-1"></i>Delete Wallet
-</button>
-</div>
-</form>
-</div>
-</div>
-</div>
-<!-- Fund Wallet Modal -->
-<div class="modal fade" id="fundWalletModal{{wallet.id}}" tabindex="-1" aria-labelledby="fundWalletModalLabel{{wallet.id}}" aria-hidden="true">
+
+<!-- Per-Wallet Fund Modal -->
+<div class="modal fade" id="fundWalletModal{{wallet.id}}" tabindex="-1">
 <div class="modal-dialog">
-<form method="POST" action="{% url 'wallet:fund-wallet' %}" id="fundWalletForm">
-          {% csrf_token %}
+<form method="POST" action="{% url 'wallet:fund-wallet' %}">
+{% csrf_token %}
 <div class="modal-content">
 <div class="modal-header text-black">
-<h5 class="modal-title" id="fundWalletModalLabel{{wallet.id}}">Fund Wallet Via M-Pesa</h5>
-<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+<h5 class="modal-title">Fund Wallet Via M-Pesa</h5>
+<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 </div>
 <div class="modal-body">
-<!-- Wallet Details Display -->
 <div class="alert alert-light border">
 <h6 class="fw-bold mb-2">Wallet Details</h6>
 <div class="row">
 <div class="col-6">
 <small class="text-muted">Wallet Name:</small>
-<div id="displayWalletName" class="fw-semibold">-</div>
+<div class="fw-semibold">{{ wallet.wallet_name }}</div>
 </div>
 <div class="col-6">
 <small class="text-muted">Current Balance:</small>
-<div id="displayWalletBalance" class="fw-semibold text-success">-</div>
+<div class="fw-semibold text-success">{{ wallet.currency }} {{ wallet.balance|floatformat:2|intcomma }}</div>
 </div>
 </div>
 </div>
-<!-- Hidden wallet ID field -->
-<input type="hidden" name="wallet_id" id="fundWalletId" value="{{wallet.id}}">
-<!-- Mobile Number -->
+<input type="hidden" name="wallet_id" value="{{ wallet.id }}">
 <div class="mb-3">
 <label class="form-label">Mobile Number</label>
 <input type="text" name="business_id" class="form-control" placeholder="Enter M-Pesa mobile number" required>
 <small class="text-muted">Enter your M-Pesa registered mobile number</small>
 </div>
-<!-- Amount -->
 <div class="mb-3">
 <label class="form-label">Amount</label>
 <input type="number" name="amount" class="form-control" placeholder="Enter amount" required min="1" step="0.01">
@@ -457,24 +301,23 @@ value="{{ wallet.wallet_name }}" required>
 </form>
 </div>
 </div>
-                      {% empty %}
-<div class="col-12 text-center">
-<p>No wallets available.</p>
-</div>
-                      {% endfor %}
+{% empty %}
+<div class="col-12 text-center"><p>No wallets available.</p></div>
+{% endfor %}
+
 <!-- Filters Section -->
 <div class="col-12 mb-4">
 <div class="bg-white rounded-3 p-4 shadow-sm">
 <h6 class="section-title mb-3"><i class="fa fa-filter me-2"></i>Filter Transfers</h6>
 <form id="filterForm">
 <div class="row g-3">
-<div class="col-md-3 ">
+<div class="col-md-3">
 <label for="userFilter" class="form-label">User/Recipient</label>
-<select class="form-select mt-4" id="userFilter" >
+<select class="form-select" id="userFilter">
 <option value="">All Users</option>
-                        {% for user in all_users %}
+{% for user in all_users %}
 <option value="{{ user.id }}">{{ user.name }}</option>
-                        {% endfor %}
+{% endfor %}
 </select>
 </div>
 <div class="col-md-3">
@@ -487,7 +330,7 @@ value="{{ wallet.wallet_name }}" required>
 </div>
 <div class="col-md-3">
 <label for="statusFilter" class="form-label">Status</label>
-<select class="form-select mt-4" id="statusFilter">
+<select class="form-select" id="statusFilter">
 <option value="">All Status</option>
 <option value="completed">Completed</option>
 <option value="pending">Pending</option>
@@ -497,70 +340,62 @@ value="{{ wallet.wallet_name }}" required>
 </div>
 <div class="row mt-3">
 <div class="col-12">
-<button type="button" class="btn btn-primary me-2" onclick="applyFilters()">
-<i class="fa fa-search me-1"></i>Apply Filters
-</button>
-<button type="button" class="btn btn-outline-secondary" onclick="clearFilters()">
-<i class="fa fa-times me-1"></i>Clear
-</button>
+<button type="button" class="btn btn-primary me-2" onclick="applyFilters()"><i class="fa fa-search me-1"></i>Apply Filters</button>
+<button type="button" class="btn btn-outline-secondary" onclick="clearFilters()"><i class="fa fa-times me-1"></i>Clear</button>
 </div>
 </div>
 </form>
 </div>
 </div>
-<!-- Recent Payments -->
+
+<!-- Transfers Section -->
 <div class="col-12 mb-4">
 <div class="bg-white rounded-3 p-4 shadow-sm">
 <div class="d-flex justify-content-between align-items-center mb-4">
 <h5 class="section-title mb-0">Transfers</h5>
-<small class="text-muted">
-                Showing <span id="showingFrom">1</span>-<span id="showingTo">10</span> of <span id="totalRecords">{{ transactions.count }}</span> transfers
-</small>
+<small class="text-muted">Showing <span id="showingFrom">1</span>-<span id="showingTo">10</span> of <span id="totalRecords">{{ transactions.count }}</span> transfers</small>
 </div>
-<div class="table-responsive">
+
+<!-- Desktop Table View -->
+<div class="table-responsive d-none d-lg-block">
 <table class="table align-middle">
 <thead>
 <tr>
 <th>Recipient</th>
 <th>Date & Time</th>
 <th>From Wallet</th>
-<th>Reference</th>
+<th>Mpesa Code</th>
 <th>Amount</th>
 <th>Status</th>
 <th>Action</th>
 </tr>
 </thead>
-<tbody id="transfersTableBody">
-                    {% for transaction in transactions %}
+<tbody>
+{% for transaction in transactions %}
 <tr class="transaction-row" style="cursor: pointer;" onclick="showTransactionDetails('{{ transaction.id }}')">
 <td>
 <div class="d-flex align-items-center">
 <i class="fa fa-arrow-right text-danger me-2"></i>
 <div>
-<p class="mb-0">{{ transaction.recipient_name}}</p>
-<small class="text-muted">To: {{ transaction.receiver_wallet }}</small>
+<p class="mb-0">{{ transaction.receiver.get_full_name|default:transaction.receiver_party_public_name|default:"-" }}</p>
+<small class="text-muted">To: {{ transaction.receiver_wallet.wallet_name|default:"-" }}</small>
 </div>
 </div>
 </td>
+<td>{{ transaction.date|date:"d M Y" }}<br><small class="text-muted">{{ transaction.date|time:"g:i A" }}</small></td>
 <td>
-                            {{ transaction.created_at|date:"d M Y" }}<br>
-<small class="text-muted">{{ transaction.created_at|time:"g:i A" }}</small>
-</td>
-<td>
-<div>
-<p class="mb-0">{{ transaction.from_wallet.wallet_name|default:"Primary Wallet" }}</p>
-<small class="text-muted">{{ transaction.from_wallet.wallet_id }}</small>
-</div>
+<p class="mb-0">{{ transaction.sender_wallet.wallet_name|default:"Primary Wallet" }}</p>
+<small class="text-muted">{{ transaction.sender_wallet.wallet_id }}</small>
 </td>
 <td>
 <span style="font-family: 'Courier New', monospace; font-weight: bold; color: var(--primary-color);">
-                                {{ transaction.transaction_id }}
+{{ transaction.mpesa_code|default:transaction.transaction_id }}
 </span>
 </td>
-<td>KES {{ transaction.amount|floatformat:2 }}</td>
+<td>KES {{ transaction.amount|floatformat:2|intcomma }}</td>
 <td>
 <span class="badge {% if transaction.status == 'completed' %}bg-success{% elif transaction.status == 'pending' %}bg-warning{% else %}bg-danger{% endif %}">
-                                {{ transaction.status|title }}
+{{ transaction.status|title }}
 </span>
 </td>
 <td>
@@ -569,53 +404,94 @@ value="{{ wallet.wallet_name }}" required>
 </button>
 </td>
 </tr>
-                    {% empty %}
-<tr>
-<td colspan="7" class="text-center py-4">
-<i class="fa fa-inbox fa-2x text-muted mb-2"></i>
-<div>No recent transactions</div>
-</td>
-</tr>
-                    {% endfor %}
+{% empty %}
+<tr><td colspan="7" class="text-center py-4">No recent transactions</td></tr>
+{% endfor %}
 </tbody>
 </table>
 </div>
+
+<!-- Mobile Cards View -->
+<div class="d-block d-lg-none">
+{% for transaction in transactions %}
+<div class="card mobile-transfer-card mb-3">
+<div class="card-body">
+<div class="d-flex justify-content-between align-items-start mb-2">
+<div>
+<h6 class="mb-1 fw-bold">KES {{ transaction.amount|floatformat:2|intcomma }}</h6>
+<small class="text-muted">Mpesa: {{ transaction.mpesa_code|default:transaction.transaction_id }}</small>
+</div>
+<div>
+{% if transaction.status == 'completed' %}
+<span class="badge bg-success status-badge">{{ transaction.status|title }}</span>
+{% elif transaction.status == 'failed' or transaction.status == 'cancelled' %}
+<span class="badge bg-danger status-badge">{{ transaction.status|title }}</span>
+{% else %}
+<span class="badge bg-warning status-badge text-dark">{{ transaction.status|title }}</span>
+{% endif %}
+</div>
+</div>
+<div class="mb-2">
+<strong>Recipient:</strong> {{ transaction.receiver.get_full_name|default:transaction.receiver_party_public_name|default:"-" }}<br>
+<small class="text-muted">{{ transaction.date|date:"M d, Y H:i" }}</small>
+</div>
+<div class="d-flex justify-content-between align-items-center">
+<div>
+<small class="text-muted">From: {{ transaction.sender_wallet.wallet_name|default:"Primary Wallet" }}</small>
+</div>
+<div>
+<button class="btn btn-primary btn-sm view-btn" data-bs-toggle="modal" data-bs-target="#transactionModal" onclick="showTransactionDetails('{{ transaction.id }}')">
+<i class="fas fa-eye"></i>
+</button>
+</div>
+</div>
+</div>
+</div>
+{% empty %}
+<div class="alert alert-info text-center my-4">No transfers found</div>
+{% endfor %}
+</div>
+
 <!-- Pagination -->
 <nav aria-label="Transfers pagination" class="mt-4">
-<ul class="pagination justify-content-center mb-0" id="paginationControls">
-<!-- Pagination will be generated by JavaScript -->
-</ul>
+<ul class="pagination justify-content-center mb-0" id="paginationControls"></ul>
 </nav>
 </div>
 </div>
+
 <!-- Transaction Details Modal -->
-<div class="modal fade" id="transactionModal" tabindex="-1" aria-labelledby="transactionModalLabel" aria-hidden="true">
+<div class="modal fade" id="transactionModal" tabindex="-1">
 <div class="modal-dialog modal-lg">
 <div class="modal-content">
-<div class="modal-header text-black">
-<h5 class="modal-title" id="transactionModalLabel">
-<i class="fa fa-receipt me-2"></i>Transfer Details
-</h5>
-<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+<div class="modal-header">
+<h5 class="modal-title"><i class="fa fa-receipt me-2"></i>Transfer Details</h5>
+<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 </div>
 <div class="modal-body">
 <div class="row">
 <div class="col-md-6">
 <div class="mb-3 pb-3 border-bottom">
-<strong class="text-muted">Reference Code</strong>
-<div class="fw-bold text-primary" id="modalReference" style="font-family: 'Courier New', monospace;">-</div>
+<strong class="text-muted">Transaction ID</strong>
+<div class="fw-bold text-primary" id="modalTransactionId" style="font-family: 'Courier New', monospace;">-</div>
+</div>
+<div class="mb-3 pb-3 border-bottom">
+<strong class="text-muted">Mpesa Code</strong>
+<div class="fw-bold text-primary" id="modalMpesaCode" style="font-family: 'Courier New', monospace;">-</div>
 </div>
 <div class="mb-3 pb-3 border-bottom">
 <strong class="text-muted">Recipient</strong>
-<div id="modalRecipient" class="fw-medium">-</div>
-<small class="text-muted" id="modalRecipientWallet">Wallet: -</small>
+<div id="modalRecipient">-</div>
+</div>
+<div class="mb-3 pb-3 border-bottom">
+<strong class="text-muted">Recipient Wallet</strong>
+<div id="modalRecipientWallet">-</div>
 </div>
 <div class="mb-3 pb-3 border-bottom">
 <strong class="text-muted">From Wallet</strong>
 <div id="modalFromWallet">-</div>
-<small class="text-muted" id="modalFromWalletId">ID: -</small>
+<small class="text-muted d-block" id="modalFromWalletId">-</small>
 </div>
-<div class="mb-3">
+<div class="mb-3 pb-3 border-bottom">
 <strong class="text-muted">Date & Time</strong>
 <div id="modalDateTime">-</div>
 </div>
@@ -623,19 +499,17 @@ value="{{ wallet.wallet_name }}" required>
 <div class="col-md-6">
 <div class="mb-3 pb-3 border-bottom">
 <strong class="text-muted">Amount</strong>
-<div class="fs-4 fw-bold text-success" id="modalAmount">KES 0.00</div>
+<div class="fs-4 fw-bold text-success" id="modalAmount">-</div>
 </div>
 <div class="mb-3 pb-3 border-bottom">
 <strong class="text-muted">Status</strong>
-<div id="modalStatus">
-<span class="badge bg-secondary">-</span>
+<div id="modalStatus">-</div>
 </div>
+<div class="mb-3 pb-3 border-bottom">
+<strong class="text-muted">Transaction Type</strong>
+<div id="modalType">-</div>
 </div>
-<div class="mb-3 pb-3 border-bottom" id="modalCategorySection" style="display: none;">
-<strong class="text-muted">Category</strong>
-<div id="modalCategory">-</div>
-</div>
-<div class="mb-3" id="modalDescriptionSection" style="display: none;">
+<div class="mb-3">
 <strong class="text-muted">Description</strong>
 <div id="modalDescription">-</div>
 </div>
@@ -644,402 +518,59 @@ value="{{ wallet.wallet_name }}" required>
 </div>
 <div class="modal-footer">
 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-<button type="button" class="btn btn-primary" onclick="downloadReceipt()">
-<i class="fa fa-download me-1"></i>Download Receipt
-</button>
 </div>
 </div>
 </div>
 </div>
-</div> <!-- Row End -->
-</div> <!-- Main Content End -->
-</div> <!-- Container End -->
-</div> <!-- Overlay End -->
+
+</div>
+</div>
+</div>
+</div>
 </section>
-<script>
-// Function to open fund modal with wallet details
-function openFundModal(walletId, walletName, walletCurrency, walletBalance) {
-// Set wallet details in the modal
-document.getElementById('fundWalletId').value = walletId;
-document.getElementById('displayWalletName').textContent = walletName;
-document.getElementById('displayWalletBalance').textContent = walletCurrency + ' ' + parseFloat(walletBalance).toFixed(2);
-// Show the modal
-const modal = new bootstrap.Modal(document.getElementById('fundWalletModal'));
-modal.show();
-  }
-// Reset form when modal is closed
-document.getElementById('fundWalletModal').addEventListener('hidden.bs.modal', function() {
-document.getElementById('fundWalletForm').reset();
-document.getElementById('displayWalletName').textContent = '-';
-document.getElementById('displayWalletBalance').textContent = '-';
-  });
-</script>
-<script>
-function handleSendTypeChange() {
-const sendType = document.getElementById('sendType').value;
-const sendFields = document.getElementById('sendFields');
-let html = '';
-if (sendType === 'mobile') {
-html = `
-              <div class="mb-3">
-                <label for="mobileNumber" class="form-label">Mobile Number</label>
-                <input type="text" class="form-control" id="mobileNumber" placeholder="Enter mobile number">
-              </div>`;
-        } else if (sendType === 'till') {
-html = `
-              <div class="mb-3">
-                <label for="tillNumber" class="form-label">Till Number</label>
-                <input type="text" class="form-control" id="tillNumber" placeholder="Enter till number">
-              </div>`;
-        } else if (sendType === 'paybill') {
-html = `
-              <div class="mb-3">
-                <label for="paybillNumber" class="form-label">Paybill Number</label>
-                <input type="text" class="form-control" id="paybillNumber" placeholder="Enter paybill number">
-              </div>
-              <div class="mb-3">
-                <label for="accountNumber" class="form-label">Account Number</label>
-                <input type="text" class="form-control" id="accountNumber" placeholder="Enter account number">
-              </div>`;
-        } else if (sendType === 'bank') {
-html = `
-              <div class="mb-3">
-                <label for="bankName" class="form-label">Bank Name</label>
-                <input type="text" class="form-control" id="bankName" placeholder="Enter bank name">
-              </div>
-              <div class="mb-3">
-                <label for="bankAccount" class="form-label">Bank Account Number</label>
-                <input type="text" class="form-control" id="bankAccount" placeholder="Enter bank account number">
-              </div>`;
-        } else if (sendType === 'wallet') {
-html = `
-              <div class="mb-3">
-                <label for="walletId" class="form-label">Wallet ID</label>
-                <input type="text" class="form-control" id="walletId" placeholder="Enter wallet ID">
-              </div>`;
-        }
-sendFields.innerHTML = html;
-    }
-function handleFundTypeChange() {
-const fundType = document.getElementById('fundType').value;
-const fundFields = document.getElementById('fundFields');
-let html = '';
-if (fundType === 'mobile') {
-html = `
-              <div class="mb-3">
-                <label for="fundMobileNumber" class="form-label">Mobile Number</label>
-                <input type="text" class="form-control" id="fundMobileNumber" placeholder="Enter mobile number">
-              </div>`;
-        } else if (fundType === 'bank') {
-html = `
-              <div class="mb-3">
-                <label for="fundBankName" class="form-label">Bank Name</label>
-                <input type="text" class="form-control" id="fundBankName" placeholder="Enter bank name">
-              </div>
-              <div class="mb-3">
-                <label for="fundBankAccount" class="form-label">Bank Account Number</label>
-                <input type="text" class="form-control" id="fundBankAccount" placeholder="Enter bank account number">
-              </div>`;
-        } else if (fundType === 'card') {
-html = `
-              <div class="mb-3">
-                <label for="cardNumber" class="form-label">Card Number</label>
-                <input type="text" class="form-control" id="cardNumber" placeholder="Enter card number">
-              </div>
-              <div class="mb-3">
-                <label for="cardExpiry" class="form-label">Expiry Date</label>
-                <input type="text" class="form-control" id="cardExpiry" placeholder="MM/YY">
-              </div>
-              <div class="mb-3">
-                <label for="cardCVC" class="form-label">CVC</label>
-                <input type="text" class="form-control" id="cardCVC" placeholder="CVC">
-              </div>`;
-        }
-fundFields.innerHTML = html;
-    }
-</script>
-<script>
-// Transfer management functionality
-let currentPage = 1;
-const itemsPerPage = 10;
-let allTransactions = [];
-let filteredTransactions = [];
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
-loadTransactions();
-initializePagination();
-});
-// Load transactions from backend
-function loadTransactions() {
-// Get transactions from your Django template context
-allTransactions = [
-        {% for transaction in all_transactions %}
-        {
-id: '{{ transaction.id }}',
-recipient_name: '{{ transaction.receiver }}',
-recipient_wallet: '{{ transaction.receiver_wallet.wallet_name }}-{{ transaction.receiver_wallet.wallet_number }}',
-from_wallet_name: '{{ transaction.sender_wallet.wallet_name }}',
-from_wallet_id: '{{ transaction.sender_wallet.wallet_number }}',
-date: '{{ transaction.date|date:"d M Y" }}',
-time: '{{ transaction.date|time:"g:i A" }}',
-datetime: '{{ transaction.created_at|date:"Y-m-d H:i" }}',
-reference: 'SPNDY{{ transaction.created_at|date:"ymd" }}{{ transaction.id|stringformat:"03d" }}',
-amount: {{ transaction.amount }},
-status: '{{ transaction.status }}',
-transaction_type: '{{ transaction.transaction_type|default:"wallet_transfer" }}',
-category: '{{ transaction.category|default:"" }}',
-description: '{{ transaction.description|default:"" }}'
-        },
-        {% endfor %}
-    ];
-filteredTransactions = [...allTransactions];
-renderTransactions();
-}
-// Apply filters
-function applyFilters() {
-const userFilter = document.getElementById('userFilter').value;
-const dateFrom = document.getElementById('dateFrom').value;
-const dateTo = document.getElementById('dateTo').value;
-const statusFilter = document.getElementById('statusFilter').value;
-filteredTransactions = allTransactions.filter(transaction => {
-// User filter
-if (userFilter && !transaction.recipient_name.toLowerCase().includes(userFilter.toLowerCase()) &&
-            !transaction.recipient_wallet.includes(userFilter)) {
-return false;
-        }
-// Date filters
-if (dateFrom) {
-const transactionDate = new Date(transaction.datetime);
-const filterFromDate = new Date(dateFrom);
-if (transactionDate < filterFromDate) return false;
-        }
-if (dateTo) {
-const transactionDate = new Date(transaction.datetime);
-const filterToDate = new Date(dateTo);
-filterToDate.setHours(23, 59, 59, 999); // End of day
-if (transactionDate > filterToDate) return false;
-        }
-// Status filter
-if (statusFilter && transaction.status !== statusFilter) {
-return false;
-        }
-return true;
-    });
-currentPage = 1;
-renderTransactions();
-}
-// Clear all filters
-function clearFilters() {
-document.getElementById('userFilter').value = '';
-document.getElementById('dateFrom').value = '';
-document.getElementById('dateTo').value = '';
-document.getElementById('statusFilter').value = '';
-filteredTransactions = [...allTransactions];
-currentPage = 1;
-renderTransactions();
-}
-// Render transactions table
-function renderTransactions() {
-const tbody = document.getElementById('transfersTableBody');
-const startIndex = (currentPage - 1) * itemsPerPage;
-const endIndex = startIndex + itemsPerPage;
-const pageTransactions = filteredTransactions.slice(startIndex, endIndex);
-if (pageTransactions.length === 0) {
-tbody.innerHTML = `
-            <tr>
-                <td colspan="7" class="text-center py-4">
-                    <i class="fa fa-inbox fa-2x text-muted mb-2"></i>
-                    <div>No transfers found</div>
-                </td>
-            </tr>
-        `;
-    } else {
-tbody.innerHTML = pageTransactions.map(transaction => {
-const statusClass = transaction.status === 'completed' ? 'bg-success' :
-transaction.status === 'pending' ? 'bg-warning' : 'bg-danger';
-return `
-                <tr class="transaction-row" style="cursor: pointer;" onclick="showTransactionDetails('${transaction.id}')">
-                    <td>
-                        <div class="d-flex align-items-center">
-                            <i class="fa fa-arrow-right text-danger me-2"></i>
-                            <div>
-                                <p class="mb-0">${transaction.recipient_name || transaction.recipient_wallet}</p>
-                                <small class="text-muted">To: ${transaction.recipient_wallet}</small>
-                            </div>
-                        </div>
-                    </td>
-                    <td>
-${transaction.date}<br>
-                        <small class="text-muted">${transaction.time}</small>
-                    </td>
-                    <td>
-                        <div>
-                            <p class="mb-0">${transaction.from_wallet_name}</p>
-                            <small class="text-muted">${transaction.from_wallet_id}</small>
-                        </div>
-                    </td>
-                    <td>
-                        <span style="font-family: 'Courier New', monospace; font-weight: bold; color: var(--primary-color);">
-${transaction.reference}
-                        </span>
-                    </td>
-                    <td>KES ${parseFloat(transaction.amount).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
-                    <td>
-                        <span class="badge ${statusClass}">
-${transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
-                        </span>
-                    </td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation(); showTransactionDetails('${transaction.id}')">
-                            <i class="fa fa-eye"></i>
-                        </button>
-                    </td>
-                </tr>
-            `;
-        }).join('');
-    }
-updatePaginationInfo();
-renderPagination();
-}
-// Update pagination info
-function updatePaginationInfo() {
-const startIndex = (currentPage - 1) * itemsPerPage + 1;
-const endIndex = Math.min(currentPage * itemsPerPage, filteredTransactions.length);
-document.getElementById('showingFrom').textContent = filteredTransactions.length > 0 ? startIndex : 0;
-document.getElementById('showingTo').textContent = endIndex;
-document.getElementById('totalRecords').textContent = filteredTransactions.length;
-}
-// Initialize pagination
-function initializePagination() {
-renderPagination();
-}
-// Render pagination controls
-function renderPagination() {
-const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
-const paginationControls = document.getElementById('paginationControls');
-if (totalPages <= 1) {
-paginationControls.innerHTML = '';
-return;
-    }
-let paginationHTML = '';
-// Previous button
-paginationHTML += `
-        <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
-            <a class="page-link" href="#" onclick="changePage(${currentPage - 1}); return false;">
-                <i class="fa fa-chevron-left"></i>
-            </a>
-        </li>
-    `;
-// Page numbers
-const startPage = Math.max(1, currentPage - 2);
-const endPage = Math.min(totalPages, currentPage + 2);
-if (startPage > 1) {
-paginationHTML += `
-            <li class="page-item">
-                <a class="page-link" href="#" onclick="changePage(1); return false;">1</a>
-            </li>
-        `;
-if (startPage > 2) {
-paginationHTML += '<li class="page-item disabled"><span class="page-link">...</span></li>';
-        }
-    }
-for (let i = startPage; i <= endPage; i++) {
-paginationHTML += `
-            <li class="page-item ${i === currentPage ? 'active' : ''}">
-                <a class="page-link" href="#" onclick="changePage(${i}); return false;">${i}</a>
-            </li>
-        `;
-    }
-if (endPage < totalPages) {
-if (endPage < totalPages - 1) {
-paginationHTML += '<li class="page-item disabled"><span class="page-link">...</span></li>';
-        }
-paginationHTML += `
-            <li class="page-item">
-                <a class="page-link" href="#" onclick="changePage(${totalPages}); return false;">${totalPages}</a>
-            </li>
-        `;
-    }
-// Next button
-paginationHTML += `
-        <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
-            <a class="page-link" href="#" onclick="changePage(${currentPage + 1}); return false;">
-                <i class="fa fa-chevron-right"></i>
-            </a>
-        </li>
-    `;
-paginationControls.innerHTML = paginationHTML;
-}
-// Change page
-function changePage(page) {
-const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
-if (page >= 1 && page <= totalPages) {
-currentPage = page;
-renderTransactions();
-    }
-}
-// Show transaction details in modal
-function showTransactionDetails(transactionId) {
-const transaction = allTransactions.find(t => t.id === transactionId);
-if (!transaction) return;
-// Populate modal fields
-document.getElementById('modalReference').textContent = transaction.reference;
-document.getElementById('modalRecipient').textContent = transaction.recipient_name || transaction.recipient_wallet;
-document.getElementById('modalRecipientWallet').textContent = `Wallet: ${transaction.recipient_wallet}`;
-document.getElementById('modalFromWallet').textContent = transaction.from_wallet_name;
-document.getElementById('modalFromWalletId').textContent = `ID: ${transaction.from_wallet_id}`;
-document.getElementById('modalDateTime').textContent = `${transaction.date}, ${transaction.time}`;
-document.getElementById('modalAmount').textContent = `KES ${parseFloat(transaction.amount).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-// Status badge
-const statusClass = transaction.status === 'completed' ? 'bg-success' :
-transaction.status === 'pending' ? 'bg-warning' : 'bg-danger';
-document.getElementById('modalStatus').innerHTML = `
-        <span class="badge ${statusClass}">
-${transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
-        </span>
-    `;
-// Show/hide category and description for non-wallet transfers
-const categorySection = document.getElementById('modalCategorySection');
-const descriptionSection = document.getElementById('modalDescriptionSection');
-if (transaction.transaction_type !== 'wallet_transfer' && (transaction.category || transaction.description)) {
-if (transaction.category) {
-document.getElementById('modalCategory').textContent = transaction.category;
-categorySection.style.display = 'block';
-        } else {
-categorySection.style.display = 'none';
-        }
-if (transaction.description) {
-document.getElementById('modalDescription').textContent = transaction.description;
-descriptionSection.style.display = 'block';
-        } else {
-descriptionSection.style.display = 'none';
-        }
-    } else {
-categorySection.style.display = 'none';
-descriptionSection.style.display = 'none';
-    }
-// Show modal
-const modal = new bootstrap.Modal(document.getElementById('transactionModal'));
-modal.show();
-}
-// Download receipt function
-function downloadReceipt() {
-// Implement receipt download logic here
-alert('Receipt download functionality to be implemented');
-}
-// Add hover effects for transaction rows
-document.addEventListener('DOMContentLoaded', function() {
-const style = document.createElement('style');
-style.textContent = `
-        .transaction-row:hover {
-            background-color: rgba(152, 226, 63, 0.05) !important;
-            transition: background-color 0.2s ease;
-        }
-    `;
-document.head.appendChild(style);
-});
-</script>
+
+<!-- Include the partial modals -->
 {% include 'partials/transfer.html' %}
 {% include 'partials/new_wallet.html' %}
 {% include 'partials/fund.html' %}
-{% endblock content %}
+
+<script>
+let allTransactions = [
+    {% for transaction in transactions %}
+    {
+        id: '{{ transaction.id }}',
+        transaction_id: '{{ transaction.transaction_id }}',
+        mpesa_code: '{{ transaction.mpesa_code|default:"-"|escapejs }}',
+        recipient_name: '{{ transaction.receiver.get_full_name|default:transaction.receiver_party_public_name|default:"-"|escapejs }}',
+        recipient_wallet: '{{ transaction.receiver_wallet.wallet_name|default:"-"|escapejs }}',
+        from_wallet_name: '{{ transaction.sender_wallet.wallet_name|default:"Primary Wallet"|escapejs }}',
+        from_wallet_id: '{{ transaction.sender_wallet.wallet_id|default:"-" }}',
+        date: '{{ transaction.date|date:"d M Y" }}',
+        time: '{{ transaction.date|time:"g:i A" }}',
+        amount: {{ transaction.amount }},
+        status: '{{ transaction.status }}',
+        type: '{{ transaction.transaction_type|default:"Wallet Transfer"|escapejs }}',
+        description: '{{ transaction.description|default:"No description"|escapejs }}'
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+];
+
+function showTransactionDetails(id) {
+    const txn = allTransactions.find(t => t.id === id);
+    if (!txn) return;
+    document.getElementById('modalTransactionId').textContent = txn.transaction_id;
+    document.getElementById('modalMpesaCode').textContent = txn.mpesa_code;
+    document.getElementById('modalRecipient').textContent = txn.recipient_name;
+    document.getElementById('modalRecipientWallet').textContent = txn.recipient_wallet;
+    document.getElementById('modalFromWallet').textContent = txn.from_wallet_name;
+    document.getElementById('modalFromWalletId').textContent = 'ID: ' + txn.from_wallet_id;
+    document.getElementById('modalDateTime').textContent = txn.date + ', ' + txn.time;
+    document.getElementById('modalAmount').textContent = 'KES ' + parseFloat(txn.amount).toLocaleString('en-US', {minimumFractionDigits: 2});
+    const statusClass = txn.status === 'completed' ? 'bg-success' : txn.status === 'pending' ? 'bg-warning' : 'bg-danger';
+    document.getElementById('modalStatus').innerHTML = `<span class="badge ${statusClass}">${txn.status.charAt(0).toUpperCase() + txn.status.slice(1)}</span>`;
+    document.getElementById('modalType').textContent = txn.type;
+    document.getElementById('modalDescription').textContent = txn.description;
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('transactionModal')).show();
+}
+</script>
+{% endblock %}

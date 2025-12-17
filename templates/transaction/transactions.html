@@ -4,301 +4,276 @@
 {% block content %}
 <style>
 :root {
-  --primary-color: #98e23f;
-  --secondary-color: #7ab82c;
-  --success-color: #10b981;
-  --warning-color: #f59e0b;
-  --danger-color: #ef4444;
-  --info-color: #06b6d4;
-  --light-bg: #f8fafc;
-  --dark-text: #1f2937;
-  --muted-text: #6b7280;
-  --border-color: #e5e7eb;
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --border-radius: 12px;
-  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+--primary-color: #98e23f;
+--secondary-color: #7ab82c;
+--success-color: #10b981;
+--warning-color: #f59e0b;
+--danger-color: #ef4444;
+--info-color: #06b6d4;
+--light-bg: #f8fafc;
+--dark-text: #1f2937;
+--muted-text: #6b7280;
+--border-color: #e5e7eb;
+--shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+--shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+--shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+--border-radius: 12px;
+--transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 body {
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 .dashboard-section {
-  min-height: 100vh;
-  background: transparent;
+min-height: 100vh;
+background: transparent;
 }
 /* Section Header */
 .section-header {
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-  border-radius: var(--border-radius);
-  padding: 2rem;
-  margin-bottom: 2rem;
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-color);
-  position: relative;
-  overflow: hidden;
+background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+border-radius: var(--border-radius);
+padding: 2rem;
+margin-bottom: 2rem;
+box-shadow: var(--shadow-sm);
+border: 1px solid var(--border-color);
+position: relative;
+overflow: hidden;
 }
 .section-header::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 4px;
-  height: 100%;
-  background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
-  z-index: 1;
+content: '';
+position: absolute;
+top: 0;
+left: 0;
+width: 4px;
+height: 100%;
+background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
+z-index: 1;
 }
 .section-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--dark-text);
-  margin-bottom: 0.5rem;
-  position: relative;
-  z-index: 2;
+font-size: 1.25rem;
+font-weight: 700;
+color: var(--dark-text);
+margin-bottom: 0.5rem;
+position: relative;
+z-index: 2;
 }
 .section-title.text-gradient {
-  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+background-clip: text;
 }
 .section-subtitle {
-  color: var(--muted-text);
-  font-size: 0.875rem;
-  position: relative;
-  z-index: 2;
+color: var(--muted-text);
+font-size: 0.875rem;
+position: relative;
+z-index: 2;
 }
 /* Button Enhancements */
 .btn-primary {
-  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-  border: none;
-  color: white;
-  border-radius: var(--border-radius);
-  font-weight: 600;
-  transition: var(--transition);
-  box-shadow: var(--shadow-sm);
-  padding: 0.75rem 1.5rem;
+background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+border: none;
+color: white;
+border-radius: var(--border-radius);
+font-weight: 600;
+transition: var(--transition);
+box-shadow: var(--shadow-sm);
+padding: 0.75rem 1.5rem;
 }
 .btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-  color: white;
+transform: translateY(-2px);
+box-shadow: var(--shadow-md);
+color: white;
 }
 .btn-success {
-  background: linear-gradient(135deg, var(--success-color), #059669);
-  border: none;
-  border-radius: var(--border-radius);
-  font-weight: 600;
-  transition: var(--transition);
-  box-shadow: var(--shadow-sm);
+background: linear-gradient(135deg, var(--success-color), #059669);
+border: none;
+border-radius: var(--border-radius);
+font-weight: 600;
+transition: var(--transition);
+box-shadow: var(--shadow-sm);
 }
 .btn-success:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-  color: white;
+transform: translateY(-2px);
+box-shadow: var(--shadow-md);
+color: white;
 }
 .btn-outline-primary {
-  border: 1px solid var(--primary-color);
-  color: var(--primary-color);
-  background: transparent;
-  border-radius: var(--border-radius);
-  font-weight: 600;
-  transition: var(--transition);
+border: 1px solid var(--primary-color);
+color: var(--primary-color);
+background: transparent;
+border-radius: var(--border-radius);
+font-weight: 600;
+transition: var(--transition);
 }
 .btn-outline-primary:hover {
-  background: var(--primary-color);
-  color: white;
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
+background: var(--primary-color);
+color: white;
+transform: translateY(-1px);
+box-shadow: var(--shadow-sm);
 }
 .btn-outline-secondary {
-  border: 1px solid var(--border-color);
-  color: var(--muted-text);
-  background: transparent;
-  border-radius: var(--border-radius);
-  font-weight: 600;
-  transition: var(--transition);
+border: 1px solid var(--border-color);
+color: var(--muted-text);
+background: transparent;
+border-radius: var(--border-radius);
+font-weight: 600;
+transition: var(--transition);
 }
 .btn-outline-secondary:hover {
-  background: var(--light-bg);
-  color: var(--dark-text);
-  transform: translateY(-1px);
+background: var(--light-bg);
+color: var(--dark-text);
+transform: translateY(-1px);
 }
 /* Badge Enhancements */
 .badge {
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.025em;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid;
+border-radius: 20px;
+font-size: 0.75rem;
+font-weight: 600;
+text-transform: uppercase;
+letter-spacing: 0.025em;
+padding: 0.5rem 0.75rem;
+border: 1px solid;
 }
 .bg-info {
-  background: rgba(6, 182, 212, 0.1) !important;
-  color: var(--info-color) !important;
-  border-color: rgba(6, 182, 212, 0.2);
+background: rgba(6, 182, 212, 0.1) !important;
+color: var(--info-color) !important;
+border-color: rgba(6, 182, 212, 0.2);
 }
 .bg-success {
-  background: rgba(16, 185, 129, 0.1) !important;
-  color: var(--success-color) !important;
-  border-color: rgba(16, 185, 129, 0.2);
+background: rgba(16, 185, 129, 0.1) !important;
+color: var(--success-color) !important;
+border-color: rgba(16, 185, 129, 0.2);
 }
 .bg-warning {
-  background: rgba(245, 158, 11, 0.1) !important;
-  color: var(--warning-color) !important;
-  border-color: rgba(245, 158, 11, 0.2);
+background: rgba(245, 158, 11, 0.1) !important;
+color: var(--warning-color) !important;
+border-color: rgba(245, 158, 11, 0.2);
 }
 .bg-danger {
-  background: rgba(239, 68, 68, 0.1) !important;
-  color: var(--danger-color) !important;
-  border-color: rgba(239, 68, 68, 0.2);
+background: rgba(239, 68, 68, 0.1) !important;
+color: var(--danger-color) !important;
+border-color: rgba(239, 68, 68, 0.2);
 }
 /* Filter Card */
 .card {
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow-sm);
-  transition: var(--transition);
+border: 1px solid var(--border-color);
+border-radius: var(--border-radius);
+box-shadow: var(--shadow-sm);
+transition: var(--transition);
 }
 .card:hover {
-  box-shadow: var(--shadow-md);
+box-shadow: var(--shadow-md);
 }
 /* Table Enhancements */
 .table-responsive {
-  border-radius: var(--border-radius);
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
-  background: white;
+border-radius: var(--border-radius);
+overflow: hidden;
+box-shadow: var(--shadow-sm);
+background: white;
 }
 .table {
-  margin-bottom: 0;
+margin-bottom: 0;
 }
 .table thead th {
-  border-bottom: 2px solid var(--border-color);
-  font-weight: 600;
-  color: var(--dark-text);
-  padding: 1rem 0.75rem;
-  background: var(--light-bg);
+border-bottom: 2px solid var(--border-color);
+font-weight: 600;
+color: var(--dark-text);
+padding: 1rem 0.75rem;
+background: var(--light-bg);
 }
 .table tbody td {
-  padding: 1rem 0.75rem;
-  border-bottom: 1px solid #f1f5f9;
-  vertical-align: middle;
+padding: 1rem 0.75rem;
+border-bottom: 1px solid #f1f5f9;
+vertical-align: middle;
 }
 .table tbody tr:hover {
-  background: rgba(152, 226, 63, 0.05);
-  transition: var(--transition);
-  transform: scale(1.01);
+background: rgba(152, 226, 63, 0.05);
+transition: var(--transition);
 }
 .text-truncate {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+white-space: nowrap;
 }
-/* Mobile Cards */
-.card.mb-3 {
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  transition: var(--transition);
-  box-shadow: var(--shadow-sm);
+/* Mobile Cards - Compact & No Overflow */
+.mobile-txn-card {
+border: 1px solid var(--border-color);
+border-radius: var(--border-radius);
+transition: var(--transition);
+box-shadow: var(--shadow-sm);
+overflow: hidden;
+margin-left: auto;
+margin-right: auto;
+max-width: 100%;
 }
-.card.mb-3:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+.mobile-txn-card:hover {
+transform: translateY(-2px);
+box-shadow: var(--shadow-md);
+}
+.mobile-txn-card .card-body {
+padding: 0.9rem;
+}
+.mobile-txn-card .status-badge {
+font-size: 0.7rem;
+padding: 0.35rem 0.6rem;
+}
+.mobile-txn-card .view-btn,
+.mobile-txn-card .copy-btn {
+padding: 0.35rem 0.6rem;
+font-size: 0.8rem;
+min-width: 36px;
 }
 /* Pagination */
 .pagination .page-link {
-  border: 1px solid var(--border-color);
-  color: var(--dark-text);
-  padding: 0.5rem 0.75rem;
-  margin: 0 0.125rem;
-  border-radius: 6px;
-  transition: var(--transition);
+border: 1px solid var(--border-color);
+color: var(--dark-text);
+padding: 0.5rem 0.75rem;
+margin: 0 0.125rem;
+border-radius: 6px;
+transition: var(--transition);
 }
 .pagination .page-link:hover {
-  background: var(--primary-color);
-  color: white;
-  border-color: var(--primary-color);
-  transform: translateY(-1px);
+background: var(--primary-color);
+color: white;
+border-color: var(--primary-color);
+transform: translateY(-1px);
 }
 .pagination .page-item.active .page-link {
-  background: var(--primary-color);
-  border-color: var(--primary-color);
-  box-shadow: var(--shadow-sm);
+background: var(--primary-color);
+border-color: var(--primary-color);
+box-shadow: var(--shadow-sm);
 }
 /* Modal Enhancements */
 .modal-content {
-  border: none;
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow-lg);
+border: none;
+border-radius: var(--border-radius);
+box-shadow: var(--shadow-lg);
 }
 .modal-header {
-  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-  color: white;
-  border-radius: var(--border-radius) var(--border-radius) 0 0;
+background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+color: white;
+border-radius: var(--border-radius) var(--border-radius) 0 0;
 }
 .modal-body {
-  background: #f8fafc;
-}
-.modal-footer {
-  border-top: 1px solid var(--border-color);
+background: #f8fafc;
 }
 /* Toast */
 .toast {
-  background: white;
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow-lg);
+background: white;
+border: 1px solid var(--border-color);
+border-radius: var(--border-radius);
+box-shadow: var(--shadow-lg);
 }
 /* Form Elements */
 .form-control, .form-select {
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  transition: var(--transition);
+border: 1px solid var(--border-color);
+border-radius: 8px;
+transition: var(--transition);
 }
 .form-control:focus, .form-select:focus {
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 0.2rem rgba(152, 226, 63, 0.25);
-}
-/* Empty States */
-.text-center {
-  text-align: center;
-  padding: 3rem 2rem;
-  border-radius: var(--border-radius);
-  background: linear-gradient(135deg, rgba(152, 226, 63, 0.05) 0%, rgba(122, 184, 44, 0.05) 100%);
-  border: 1px solid rgba(152, 226, 63, 0.2);
-}
-/* Responsive Design */
-@media (max-width: 768px) {
-  .section-header {
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-  }
-  .table thead {
-    display: none;
-  }
-  .table tbody tr {
-    display: block;
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    margin-bottom: 1rem;
-    padding: 1rem;
-    background: white;
-    box-shadow: var(--shadow-sm);
-  }
-  .table tbody td {
-    display: block;
-    border: none;
-    padding: 0.25rem 0;
-    text-align: left;
-  }
-  .table tbody td:before {
-    content: attr(data-label) ": ";
-    font-weight: 600;
-    color: var(--dark-text);
-  }
+border-color: var(--primary-color);
+box-shadow: 0 0 0 0.2rem rgba(152, 226, 63, 0.25);
 }
 </style>
 <section class="dashboard-section body-collapse">
@@ -309,44 +284,44 @@ body {
 <!-- Transactions Section -->
 <div id="transactions" class="content-section mb-4">
 <div class="section-header">
-  <div class="d-flex justify-content-between align-items-center flex-wrap mb-4">
-    <div>
-      <h5 class="section-title text-gradient mb-0">Transactions</h5>
-      <p class="section-subtitle mb-0">View all payment transactions with filtering options.</p>
-    </div>
-    <div class="d-flex align-items-center gap-2">
-      <!-- Export Buttons -->
-      <div class="btn-group">
-        <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-          <i class="fas fa-download"></i> Export
-        </button>
-        <ul class="dropdown-menu">
-          <li><a class="dropdown-item" href="?{% if base_query_string %}{{ base_query_string }}&{% endif %}export=csv">Export as CSV</a></li>
-          <li><a class="dropdown-item" href="?{% if base_query_string %}{{ base_query_string }}&{% endif %}export=pdf">Export as PDF</a></li>
-        </ul>
-      </div>
-      <!-- Filter Toggle Button -->
-      <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#filterSection" aria-expanded="false" aria-controls="filterSection">
-        <i class="fas fa-filter"></i> Filters
-      </button>
-    </div>
-  </div>
+<div class="d-flex justify-content-between align-items-center flex-wrap mb-4">
+<div>
+<h5 class="section-title text-gradient mb-0">Transactions</h5>
+<p class="section-subtitle mb-0">View all payment transactions with filtering options.</p>
+</div>
+<div class="d-flex align-items-center gap-2">
+<!-- Export Buttons -->
+<div class="btn-group">
+<button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+<i class="fas fa-download"></i> Export
+</button>
+<ul class="dropdown-menu">
+<li><a class="dropdown-item" href="?{% if base_query_string %}{{ base_query_string }}&{% endif %}export=csv">Export as CSV</a></li>
+<li><a class="dropdown-item" href="?{% if base_query_string %}{{ base_query_string }}&{% endif %}export=pdf">Export as PDF</a></li>
+</ul>
+</div>
+<!-- Filter Toggle Button -->
+<button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#filterSection" aria-expanded="false" aria-controls="filterSection">
+<i class="fas fa-filter"></i> Filters
+</button>
+</div>
+</div>
 </div>
 <!-- Filter Section -->
 <div class="collapse mb-4" id="filterSection">
 <div class="card">
 <div class="card-body">
 <form method="GET" id="filterForm">
-<div class="row">
+<div class="row g-3">
 <div class="col-md-3">
 <label for="user_filter" class="form-label">User</label>
 <select name="user" id="user_filter" class="form-select">
 <option value="">All Users</option>
-                                                {% for user in users %}
+{% for user in users %}
 <option value="{{ user.id }}" {% if request.GET.user == user.id|stringformat:"s" %}selected{% endif %}>
-                                                        {{ user.get_full_name|default:user.username }}
+{{ user.get_full_name|default:user.username }}
 </option>
-                                                {% endfor %}
+{% endfor %}
 </select>
 </div>
 <div class="col-md-3">
@@ -376,9 +351,10 @@ body {
 </div>
 </div>
 </div>
+
 <!-- Desktop Table View -->
-<div class="table-responsive d-md-block">
-<table class="table table-bordered table-hover">
+<div class="table-responsive d-none d-lg-block">
+<table class="table table-hover">
 <thead class="bg-light">
 <tr>
 <th>Initiated By</th>
@@ -393,210 +369,176 @@ body {
 </tr>
 </thead>
 <tbody>
-                                    {% for txn in transactions %}
+{% for txn in transactions %}
 <tr>
-<td data-label="Initiated By">{{ txn.user.get_full_name|default:txn.user.username }}</td>
-<td data-label="Recipient">{{ txn.sender_party_public_name }} {{ txn.receiver_party_public_name}}</td>
-<td data-label="Amount">{{ txn.sender_wallet.currency|default:"KES" }} {{ txn.amount|floatformat:2|intcomma }}</td>
-<td data-label="Mpesa Code">{{ txn.mpesa_code }}</td>
-<td data-label="Type">
-<span class="badge bg-info">{{ txn.transaction_type|title }}</span>
-</td>
-<td data-label="Status">
-                                                {% if txn.status == 'completed' %}
+<td>{{ txn.user.get_full_name|default:txn.user.username }}</td>
+<td>{{ txn.sender_party_public_name }} {{ txn.receiver_party_public_name }}</td>
+<td>{{ txn.sender_wallet.currency|default:"KES" }} {{ txn.amount|floatformat:2|intcomma }}</td>
+<td>{{ txn.mpesa_code }}</td>
+<td><span class="badge bg-info">{{ txn.transaction_type|title }}</span></td>
+<td>
+{% if txn.status == 'completed' %}
 <span class="badge bg-success">{{ txn.status|title }}</span>
-                                                {% elif txn.status == 'failed' or txn.status == 'cancelled' %}
+{% elif txn.status == 'failed' or txn.status == 'cancelled' %}
 <span class="badge bg-danger">{{ txn.status|title }}</span>
-                                                {% else %}
+{% else %}
 <span class="badge bg-warning">{{ txn.status|title }}</span>
-                                                {% endif %}
+{% endif %}
 </td>
-<td data-label="Date & Time">{{ txn.date|date:"M d, Y H:i" }}</td>
-<td data-label="Description">
-<span class="text-truncate d-inline-block" style="max-width: 150px;" title="{{ txn.description }}">
-                                                    {{ txn.description|default:"-" }}
-</span>
-</td>
-<td data-label="Action">
-<div class="btn-group btn-group-sm" role="group">
+<td>{{ txn.date|date:"M d, Y H:i" }}</td>
+<td><span class="text-truncate d-inline-block" style="max-width: 150px;" title="{{ txn.description }}">{{ txn.description|default:"-" }}</span></td>
+<td>
+<div class="btn-group btn-group-sm">
 <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#viewTransactionModal{{ txn.id }}">View</button>
-<button class="btn btn-outline-secondary" onclick="copyPaymentDetails('{{ txn.id }}')">
-<i class="fas fa-copy"></i>
-</button>
+<button class="btn btn-outline-secondary" onclick="copyPaymentDetails('{{ txn.id }}')"><i class="fas fa-copy"></i></button>
 </div>
 </td>
 </tr>
-                                    {% empty %}
-<tr>
-<td colspan="9" class="text-center">No transactions found matching your criteria.</td>
-</tr>
-                                    {% endfor %}
+{% empty %}
+<tr><td colspan="9" class="text-center">No transactions found matching your criteria.</td></tr>
+{% endfor %}
 </tbody>
 </table>
 </div>
-<!-- Mobile-only transaction cards -->
-<div class="d-md-none">
-                        {% for txn in transactions %}
-<div class="card mb-3">
+
+<!-- Mobile Cards View (visible on < lg, i.e., < 992px) -->
+<div class="d-block d-lg-none">
+{% for txn in transactions %}
+<div class="card mobile-txn-card mb-3">
 <div class="card-body">
 <div class="d-flex justify-content-between align-items-start mb-2">
-<h6 class="card-subtitle text-muted mb-0">{{ txn.transaction_id }}</h6>
-<button class="btn btn-sm btn-outline-secondary" onclick="copyPaymentDetails('{{ txn.id }}')">
+<div>
+<h6 class="mb-1 fw-bold">{{ txn.sender_wallet.currency|default:"KES" }} {{ txn.amount|floatformat:2|intcomma }}</h6>
+<small class="text-muted">Mpesa: {{ txn.mpesa_code|default:"-" }}</small>
+</div>
+<div>
+{% if txn.status == 'completed' %}
+<span class="badge bg-success status-badge">{{ txn.status|title }}</span>
+{% elif txn.status == 'failed' or txn.status == 'cancelled' %}
+<span class="badge bg-danger status-badge">{{ txn.status|title }}</span>
+{% else %}
+<span class="badge bg-warning status-badge text-dark">{{ txn.status|title }}</span>
+{% endif %}
+</div>
+</div>
+
+<div class="mb-2">
+<strong>Recipient:</strong> {{ txn.sender_party_public_name }} {{ txn.receiver_party_public_name|default:"-" }}<br>
+<small class="text-muted">{{ txn.date|date:"M d, Y H:i" }}</small>
+</div>
+
+<div class="d-flex justify-content-between align-items-center">
+<div>
+<small class="text-muted">By: {{ txn.user.get_full_name|default:txn.user.username }}</small>
+</div>
+<div class="d-flex gap-1">
+<button class="btn btn-primary btn-sm view-btn" data-bs-toggle="modal" data-bs-target="#viewTransactionModal{{ txn.id }}">
+<i class="fas fa-eye"></i>
+</button>
+<button class="btn btn-outline-secondary btn-sm copy-btn" onclick="copyPaymentDetails('{{ txn.id }}')">
 <i class="fas fa-copy"></i>
 </button>
 </div>
-<p class="card-text">
-<strong>Initiated By:</strong> {{ txn.user.get_full_name|default:txn.user.username }}<br>
-<strong>Recipient:</strong> {{ txn.receiver.get_full_name|default:"-" }}<br>
-<strong>Amount:</strong> {{ txn.sender_wallet.currency|default:"KES" }} {{ txn.amount|floatformat:2|intcomma }}<br>
-<strong>Type:</strong> <span class="badge bg-info">{{ txn.transaction_type|default:"N/A"|title }}</span><br>
-<strong>Status:</strong>
-                                        {% if txn.status == 'completed' %}
-<span class="badge bg-success">{{ txn.status|title }}</span>
-                                        {% elif txn.status == 'failed' or txn.status == 'cancelled' %}
-<span class="badge bg-danger">{{ txn.status|title }}</span>
-                                        {% else %}
-<span class="badge bg-warning">{{ txn.status|title }}</span>
-                                        {% endif %}<br>
-<strong>Date:</strong> {{ txn.date|date:"M d, Y H:i" }}
-</p>
-<div class="d-flex">
-<button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#viewTransactionModal{{ txn.id }}">View Details</button>
 </div>
 </div>
 </div>
-                        {% empty %}
-<div class="alert alert-info text-center">No transactions found matching your criteria.</div>
-                        {% endfor %}
+{% empty %}
+<div class="alert alert-info text-center my-4">No transactions found matching your criteria.</div>
+{% endfor %}
 </div>
+
 <!-- Pagination -->
-                        {% if transactions.has_other_pages %}
+{% if transactions.has_other_pages %}
 <nav aria-label="Transaction pagination" class="mt-4">
 <ul class="pagination justify-content-center">
-                                {% if transactions.has_previous %}
-<li class="page-item">
-<a class="page-link" href="?{% if base_query_string %}{{ base_query_string }}&{% endif %}page={{ transactions.previous_page_number }}">Previous</a>
-</li>
-                                {% else %}
-<li class="page-item disabled">
-<span class="page-link">Previous</span>
-</li>
-                                {% endif %}
-                                {% for num in transactions.paginator.page_range %}
-                                    {% if transactions.number == num %}
-<li class="page-item active" aria-current="page">
-<span class="page-link">{{ num }}</span>
-</li>
-                                    {% elif num > transactions.number|add:'-3' and num < transactions.number|add:'3' %}
-<li class="page-item">
-<a class="page-link" href="?{% if base_query_string %}{{ base_query_string }}&{% endif %}page={{ num }}">{{ num }}</a>
-</li>
-                                    {% endif %}
-                                {% endfor %}
-                                {% if transactions.has_next %}
-<li class="page-item">
-<a class="page-link" href="?{% if base_query_string %}{{ base_query_string }}&{% endif %}page={{ transactions.next_page_number }}">Next</a>
-</li>
-                                {% else %}
-<li class="page-item disabled">
-<span class="page-link">Next</span>
-</li>
-                                {% endif %}
+{% if transactions.has_previous %}
+<li class="page-item"><a class="page-link" href="?{% if base_query_string %}{{ base_query_string }}&{% endif %}page={{ transactions.previous_page_number }}">Previous</a></li>
+{% else %}
+<li class="page-item disabled"><span class="page-link">Previous</span></li>
+{% endif %}
+{% for num in transactions.paginator.page_range %}
+{% if transactions.number == num %}
+<li class="page-item active"><span class="page-link">{{ num }}</span></li>
+{% elif num > transactions.number|add:'-3' and num < transactions.number|add:'3' %}
+<li class="page-item"><a class="page-link" href="?{% if base_query_string %}{{ base_query_string }}&{% endif %}page={{ num }}">{{ num }}</a></li>
+{% endif %}
+{% endfor %}
+{% if transactions.has_next %}
+<li class="page-item"><a class="page-link" href="?{% if base_query_string %}{{ base_query_string }}&{% endif %}page={{ transactions.next_page_number }}">Next</a></li>
+{% else %}
+<li class="page-item disabled"><span class="page-link">Next</span></li>
+{% endif %}
 </ul>
 </nav>
-                        {% endif %}
+{% endif %}
 </div>
 </div>
 </div>
 </div>
 </div>
 </section>
-<!-- Modals for each transaction -->
+
+<!-- Modals -->
 {% for txn in transactions %}
 <div class="modal fade" id="viewTransactionModal{{ txn.id }}" tabindex="-1" aria-labelledby="viewTransactionModalLabel{{ txn.id }}" aria-hidden="true">
-<div class="modal-dialog modal-lg" style="margin-top: 80px;">
+<div class="modal-dialog modal-lg">
 <div class="modal-content">
-<div class="modal-header bg-light">
+<div class="modal-header">
 <h5 class="modal-title" id="viewTransactionModalLabel{{ txn.id }}">Transaction Details</h5>
-<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 </div>
 <div class="modal-body">
+<!-- Full details here (unchanged for brevity, same as previous version) -->
 <div class="row mb-3">
-<div class="col-md-6">
-<strong>Reference Code:</strong> {{ txn.transaction_id }}
-</div>
-<div class="col-md-6">
-<strong>Amount:</strong> {{ txn.sender_wallet.currency|default:"KES" }} {{ txn.amount|floatformat:2|intcomma }}
-</div>
+<div class="col-md-6"><strong>Reference Code:</strong> {{ txn.transaction_id }}</div>
+<div class="col-md-6"><strong>Mpesa Code:</strong> {{ txn.mpesa_code|default:"-" }}</div>
 </div>
 <div class="row mb-3">
-<div class="col-md-6">
-<strong>Initiated By:</strong> {{ txn.user.get_full_name|default:txn.user.username }}
-</div>
-<div class="col-md-6">
-<strong>Recipient:</strong> {{ txn.receiver.get_full_name|default:"-" }}
-</div>
+<div class="col-md-6"><strong>Amount:</strong> {{ txn.sender_wallet.currency|default:"KES" }} {{ txn.amount|floatformat:2|intcomma }}</div>
+<div class="col-md-6"><strong>Initiated By:</strong> {{ txn.user.get_full_name|default:txn.user.username }}</div>
 </div>
 <div class="row mb-3">
-<div class="col-md-6">
-<strong>Sender Wallet:</strong> {{ txn.sender_wallet.wallet_id }}
-</div>
-<div class="col-md-6">
-<strong>Receiver Wallet:</strong> {{ txn.receiver_wallet.wallet_id|default:"-" }}
-</div>
+<div class="col-md-6"><strong>Sender Party:</strong> {{ txn.sender_party_public_name|default:"-" }}</div>
+<div class="col-md-6"><strong>Receiver Party:</strong> {{ txn.receiver_party_public_name|default:"-" }}</div>
 </div>
 <div class="row mb-3">
-<div class="col-md-6">
-<strong>Status:</strong>
-                        {% if txn.status == 'completed' %}
-<span class="badge bg-success">{{ txn.status|title }}</span>
-                        {% elif txn.status == 'failed' or txn.status == 'cancelled' %}
-<span class="badge bg-danger">{{ txn.status|title }}</span>
-                        {% else %}
-<span class="badge bg-warning">{{ txn.status|title }}</span>
-                        {% endif %}
-</div>
-<div class="col-md-6">
-<strong>Transaction Type:</strong>
-                        {{ txn.transaction_type|default:"N/A"|title }}
-</div>
+<div class="col-md-6"><strong>Sender Wallet:</strong> {{ txn.sender_wallet.wallet_id }}</div>
+<div class="col-md-6"><strong>Receiver Wallet:</strong> {{ txn.receiver_wallet.wallet_id|default:"-" }}</div>
 </div>
 <div class="row mb-3">
-<div class="col-md-12">
-<strong>Description:</strong><br>
-<div class="p-2 bg-light rounded">
-                            {{ txn.description|default:"No description provided." }}
+<div class="col-md-6"><strong>Status:</strong>
+{% if txn.status == 'completed' %}<span class="badge bg-success">{{ txn.status|title }}</span>
+{% elif txn.status == 'failed' or txn.status == 'cancelled' %}<span class="badge bg-danger">{{ txn.status|title }}</span>
+{% else %}<span class="badge bg-warning">{{ txn.status|title }}</span>{% endif %}
 </div>
-</div>
+<div class="col-md-6"><strong>Type:</strong> {{ txn.transaction_type|default:"N/A"|title }}</div>
 </div>
 <div class="row mb-3">
-<div class="col-md-6">
-<strong>Date Created:</strong> {{ txn.date|date:"Y-m-d H:i:s" }}
+<div class="col-md-12"><strong>Description:</strong><div class="p-2 bg-light rounded mt-1">{{ txn.description|default:"No description provided." }}</div></div>
 </div>
-<div class="col-md-6">
-<strong>Last Updated:</strong> {{ txn.updated|date:"Y-m-d H:i:s" }}
+<div class="row mb-3">
+<div class="col-md-6"><strong>Date Created:</strong> {{ txn.date|date:"Y-m-d H:i:s" }}</div>
+<div class="col-md-6"><strong>Last Updated:</strong> {{ txn.updated|date:"Y-m-d H:i:s" }}</div>
 </div>
-</div>
-<!-- Payment Details for Copying -->
 <div class="row">
 <div class="col-12">
 <div class="card bg-light">
 <div class="card-header d-flex justify-content-between align-items-center">
 <strong>Payment Proof Details</strong>
-<button class="btn btn-sm btn-outline-primary" onclick="copyPaymentDetails('{{ txn.id }}')">
-<i class="fas fa-copy"></i> Copy Details
-</button>
+<button class="btn btn-sm btn-outline-primary" onclick="copyPaymentDetails('{{ txn.id }}')"><i class="fas fa-copy"></i> Copy</button>
 </div>
 <div class="card-body" id="paymentDetails{{ txn.id }}">
 <div class="payment-details">
-                                    Reference: {{ txn.mpesa_code }}<br>
-                                    Amount: {{ txn.sender_wallet.currency|default:"KES" }} {{ txn.amount|floatformat:2|intcomma }}<br>
-                                    From: {{ txn.user.get_full_name|default:txn.user.username }}<br>
-                                    To: {{ txn.sender_party_public_name}} {{txn.receiver_party_public_name}}<br>
-                                    Date: {{ txn.date|date:"Y-m-d H:i:s" }}<br>
-                                    Status: {{ txn.status|title }}<br>
-                                    Type: {{ txn.transaction_type|default:"N/A"|title }}<br>
-                                    Description: {{ txn.description|default:"No description provided." }}
+Reference: {{ txn.transaction_id }}<br>
+Mpesa Code: {{ txn.mpesa_code|default:"-" }}<br>
+Amount: {{ txn.sender_wallet.currency|default:"KES" }} {{ txn.amount|floatformat:2|intcomma }}<br>
+From: {{ txn.user.get_full_name|default:txn.user.username }}<br>
+Sender: {{ txn.sender_party_public_name|default:"-" }}<br>
+Receiver: {{ txn.receiver_party_public_name|default:"-" }}<br>
+Date: {{ txn.date|date:"Y-m-d H:i:s" }}<br>
+Status: {{ txn.status|title }}<br>
+Type: {{ txn.transaction_type|default:"N/A"|title }}<br>
+Description: {{ txn.description|default:"No description provided." }}
 </div>
 </div>
 </div>
@@ -607,54 +549,35 @@ body {
 </div>
 </div>
 {% endfor %}
-<!-- Toast notification for copy success -->
+
+<!-- Toast -->
 <div class="toast-container position-fixed bottom-0 end-0 p-3">
-<div id="copyToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+<div id="copyToast" class="toast" role="alert">
 <div class="toast-header">
 <strong class="me-auto">Success</strong>
-<button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+<button type="button" class="btn-close" data-bs-dismiss="toast"></button>
 </div>
-<div class="toast-body">
-            Payment details copied to clipboard!
-</div>
+<div class="toast-body">Payment details copied to clipboard!</div>
 </div>
 </div>
+
 <style>
-.payment-details {
-font-family: monospace;
-font-size: 0.9em;
-line-height: 1.6;
-    }
+.payment-details {font-family: monospace; font-size: 0.9em; line-height: 1.6;}
 </style>
+
 <script>
-function copyPaymentDetails(transactionId) {
-const paymentDetailsElement = document.getElementById('paymentDetails' + transactionId);
-if (!paymentDetailsElement) return;
-const paymentText = paymentDetailsElement.querySelector('.payment-details').innerText;
-// Use the modern clipboard API if available, with a fallback
-if (navigator.clipboard) {
-navigator.clipboard.writeText(paymentText).then(() => {
-const toast = new bootstrap.Toast(document.getElementById('copyToast'));
-toast.show();
-        }).catch(err => {
-console.error('Failed to copy text: ', err);
-        });
-    } else {
-// Fallback for older browsers
-const textarea = document.createElement('textarea');
-textarea.value = paymentText;
-textarea.style.position = 'fixed'; // Prevent scrolling to bottom of page in MS Edge.
-document.body.appendChild(textarea);
-textarea.select();
-try {
-document.execCommand('copy');
-const toast = new bootstrap.Toast(document.getElementById('copyToast'));
-toast.show();
-        } catch (err) {
-console.error('Fallback: Oops, unable to copy', err);
-        }
-document.body.removeChild(textarea);
-    }
+function copyPaymentDetails(id) {
+const el = document.getElementById('paymentDetails' + id);
+if (!el) return;
+const text = el.querySelector('.payment-details').innerText;
+navigator.clipboard ? navigator.clipboard.writeText(text).then(() => bootstrap.Toast.getOrCreateInstance(document.getElementById('copyToast')).show())
+: fallbackCopy(text);
+}
+function fallbackCopy(text) {
+const ta = document.createElement('textarea');
+ta.value = text; ta.style.position = 'fixed'; document.body.appendChild(ta); ta.select();
+document.execCommand('copy'); document.body.removeChild(ta);
+bootstrap.Toast.getOrCreateInstance(document.getElementById('copyToast')).show();
 }
 </script>
 {% endblock %}
