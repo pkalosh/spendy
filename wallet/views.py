@@ -2061,7 +2061,7 @@ def stk_push_callback(request):
                 mpesa_transaction.status = 'COMPLETED'
                 mpesa_transaction.mpesa_receipt_number = metadata_dict.get('MpesaReceiptNumber')
                 mpesa_transaction.transaction_date = timezone.now()
-                mpesa_transaction.phone_number = metadata_dict.get('PhoneNumber')
+                mpesa_transaction.phone_number =  metadata_dict.get('ReceiverPartyPublicName', '').split('-', 1)[0].strip() or None
                 mpesa_transaction.amount = metadata_dict.get('Amount', mpesa_transaction.amount)
                 mpesa_transaction.result_code = result_code
                 mpesa_transaction.result_desc = result_desc
@@ -2074,8 +2074,8 @@ def stk_push_callback(request):
                 # Update wallet funding Transaction record if found
                 if funding_transaction:
                     funding_transaction.status = "COMPLETED"
-                    funding_transaction.mpesa_code = metadata_dict.get('MpesaReceiptNumber')
-                    funding_transaction.sender_party_public_name = metadata_dict.get('SenderPartyPublicName')
+                    funding_transaction.mpesa_code = metadata_dict.get('TransactionReceipt')
+                    funding_transaction.receiver_party_public_name = metadata_dict.get('ReceiverPartyPublicName', '').split('-', 1)[1].strip() or None
                     logger.info(f"Updating wallet funding transaction {funding_transaction.sender_party_public_name} with mpesa code {funding_transaction.mpesa_code}")
                     funding_transaction.completed_at = timezone.now()
                     funding_transaction.payment_completed = True
