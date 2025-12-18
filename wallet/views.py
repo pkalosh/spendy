@@ -2075,6 +2075,8 @@ def stk_push_callback(request):
                 if funding_transaction:
                     funding_transaction.status = "COMPLETED"
                     funding_transaction.mpesa_code = metadata_dict.get('MpesaReceiptNumber')
+                    funding_transaction.sender_party_public_name = metadata_dict.get('SenderPartyPublicName')
+                    logger.info(f"Updating wallet funding transaction {funding_transaction.sender_party_public_name} with mpesa code {funding_transaction.mpesa_code}")
                     funding_transaction.completed_at = timezone.now()
                     funding_transaction.payment_completed = True
                     funding_transaction.paid_at = timezone.now()
@@ -2526,6 +2528,14 @@ def b2c_result_callback(request):
                 elif key == 'ReceiverPartyPublicName':
                     # Store receiver name (individual or registered)
                     transaction_record.receiver_party_public_name = value
+                    logger.debug(f"Receiver name: {value}")
+                elif key == 'SenderPartyPublicName':
+                    # Store receiver phone number
+                    transaction_record.sender_party_public_name = value
+                    logger.debug(f"Receiver phone number: {value}")
+                elif key == 'MpesaReceiptNumber':
+                    transaction_record.mpesa_code = value
+                    logger.debug(f"Mpesa receipt number: {value}")
                 # Update MpesaTransaction status
                 if result_code == 0:  # Success
                     mpesa_transaction.status = 'COMPLETED'
