@@ -99,15 +99,39 @@ def format_phone_number(phone_number):
     else:
         raise ValueError(f"Invalid phone number format: {phone_number}")
 def is_admin(user):
-    """Check if user is admin either through Django admin or through StaffProfile"""
-    if user.is_staff or user.is_superuser:
-        return True
-    
-    # Check if user has StaffProfile with is_admin=True
-    try:
-        return user.staffprofile.role.is_admin
-    except (AttributeError, Exception):
+    if not user.is_authenticated:
         return False
+
+    if user.is_admin:
+        return True
+
+    staff_profile = getattr(user, "staffprofile", None)
+
+    return (
+        staff_profile
+        and staff_profile.role
+        and staff_profile.role.is_admin
+    )
+
+def get_user_company_kyc(user):
+    if not user.is_authenticated:
+        return None
+
+    # Case 1: Direct admin user
+    if user.is_admin:
+        return CompanyKYC.objects.filter(user=user).first()
+
+    # Case 2: Staff admin
+    staff_profile = getattr(user, "staffprofile", None)
+
+    if (
+        staff_profile
+        and staff_profile.role
+        and staff_profile.role.is_admin
+    ):
+        return staff_profile.company
+
+    return None
 
 @login_required
 def dashboard(request):
@@ -257,310 +281,190 @@ def download_batch_template(request):
 #             messages.error(request, 'Error creating event.')
 #     return redirect('expenses:expense')
 
-
 @login_required
 def create_event(request):
+    """
+    Handles creation of Event via the EventExpenseForm
+    """
     if request.method == "POST":
-        form = EventExpenseForm(request.POST)
-        print(form)
+        form = EventExpenseForm(request.POST, request.FILES)
         if form.is_valid():
             event = form.save(commit=False)
             event.created_by = request.user
-            event.company = get_object_or_404(CompanyKYC, user=request.user)
+            event.company = get_user_company_kyc(request.user)
+            if not event.company:
+                messages.error(request, "No company associated with your account.")
+                return redirect('wallet:expenses')
             event.save()
-            # Notify expense workflow
             notify_expense_workflow(expense=event, action='created', send_sms=True)
             messages.success(request, 'Event created successfully.')
-            return redirect('expenses:expense')
         else:
             messages.error(request, 'Error creating event.')
-    return redirect('expenses:expense')
+    return redirect('wallet:expenses')
 
 
 @login_required
 def event_operation(request):
-    if request.method == "POST":
-        request_type = request.POST.get('request_type')
-        
-        try:
-            company = get_object_or_404(CompanyKYC, user=request.user)
-            
-            if request_type == 'event':
-                # Validate required fields
-                name = request.POST.get('event_name', '').strip()
-                if not name:
-                    raise ValidationError("Event name is required")
-                    
-                # Get and validate category
-                try:
-                    category_id = request.POST.get('event_category')
-                    if not category_id:
-                        raise ValidationError("Event category is required")
-                    category = EventCategory.objects.get(id=category_id)
-                except (EventCategory.DoesNotExist, ValueError):
-                    raise ValidationError("Invalid event category")
+    """
+    Handles creation of Event, Operation, or Activation based on request_type
+    """
+    if request.method != "POST":
+        return redirect('wallet:expenses')
 
-                # Get and validate client (optional)
-                client = None
-                client_id = request.POST.get('event_client')
-                if client_id:
-                    try:
-                        client = Client.objects.get(id=client_id)
-                    except (Client.DoesNotExist, ValueError):
-                        raise ValidationError("Invalid event client")
+    company = get_user_company_kyc(request.user)
+    if not company:
+        messages.error(request, "No company associated with your account.")
+        return redirect('wallet:expenses')
 
-                # Validate dates
-                start_date = request.POST.get('event_start_date')
-                end_date = request.POST.get('event_end_date')
-                if not start_date or not end_date:
-                    raise ValidationError("Start and end dates are required")
-                
-                try:
-                    start_date_obj = datetime.strptime(start_date, '%Y-%m-%d').date()
-                    end_date_obj = datetime.strptime(end_date, '%Y-%m-%d').date()
-                    
-                    if start_date_obj > end_date_obj:
-                        raise ValidationError("End date must be after start date")
-                except ValueError:
-                    raise ValidationError("Invalid date format")
-                
-                # Validate budget
-                budget = None
-                budget_str = request.POST.get('event_budget')
-                if not budget_str:
-                    raise ValidationError("Event budget is required")
-                
-                try:
-                    budget = Decimal(budget_str)
-                    if budget < 0:
-                        raise ValidationError("Budget cannot be negative")
-                except (InvalidOperation, ValueError):
-                    raise ValidationError("Invalid budget value")
-                
-                # Get other required fields
-                project_lead = request.POST.get('event_project_lead', '').strip()
-                if not project_lead:
-                    raise ValidationError("Project lead is required")
-                    
-                location = request.POST.get('event_location', '').strip()
-                if not location:
-                    raise ValidationError("Location is required")
-                
-                # Handle budget file upload
-                budget_file = request.FILES.get('event_budget_file')
-                
-                # Create and save event
-                event = Event(
-                    name=name,
-                    category=category,
-                    client=client,
-                    company=company,
-                    start_date=start_date,
-                    end_date=end_date,
-                    budget=budget,
-                    budget_file=budget_file,
-                    project_lead=project_lead,
-                    location=location,
-                    created_by=request.user
-                )
-                
-                # Run model validation
-                event.full_clean()
-                event.save()
-                
-                messages.success(request, 'Event created successfully.')
-                return redirect('wallet:expenses')
-                
-            elif request_type == 'operation':
-                # Validate required fields
-                name = request.POST.get('operation_name', '').strip()
-                if not name:
-                    raise ValidationError("Operation name is required")
-                    
-                # Get and validate category
-                
-                # Get and validate client (optional)
-                client = None
-                client_id = request.POST.get('operation_client')
-                if client_id:
-                    try:
-                        client = Client.objects.get(id=client_id)
-                    except (Client.DoesNotExist, ValueError):
-                        raise ValidationError("Invalid operation client")
+    request_type = request.POST.get('request_type')
+    try:
+        if request_type == 'event':
+            # Extract fields
+            name = request.POST.get('event_name', '').strip()
+            category_id = request.POST.get('event_category')
+            client_id = request.POST.get('event_client')
+            start_date = request.POST.get('event_start_date')
+            end_date = request.POST.get('event_end_date')
+            budget_str = request.POST.get('event_budget')
+            project_lead = request.POST.get('event_project_lead', '').strip()
+            location = request.POST.get('event_location', '').strip()
+            budget_file = request.FILES.get('event_budget_file')
 
-                # Validate budget
-                budget = None
-                budget_str = request.POST.get('operation_budget')
-                if not budget_str:
-                    raise ValidationError("Operation budget is required")
-                
-                try:
-                    budget = Decimal(budget_str)
-                    if budget < 0:
-                        raise ValidationError("Budget cannot be negative")
-                except (InvalidOperation, ValueError):
-                    raise ValidationError("Invalid budget value")
-                
-                # Get project lead (required for operations)
-                project_lead = request.POST.get('operation_project_lead', '').strip()
-                if not project_lead:
-                    raise ValidationError("Project lead is required")
-                
-                # Handle budget file upload
-                budget_file = request.FILES.get('operation_budget_file')
-                
-                # Create and save operation
-                operation = Operation(
-                    name=name,
-                    client=client,
-                    company=company,
-                    budget=budget,
-                    budget_file=budget_file,
-                    project_lead=project_lead,
-                    created_by=request.user
-                )
-                
-                # Run model validation
-                operation.full_clean()
-                operation.save()
-                
-                messages.success(request, 'Operation created successfully.')
-                return redirect('wallet:expenses')
-                
-            elif request_type == 'activation':
-                # Validate required fields
-                name = request.POST.get('activation_name', '').strip()
-                if not name:
-                    raise ValidationError("Activation name is required")
-                    
-                # Get and validate category
-                try:
-                    category_id = request.POST.get('activation_category')
-                    if not category_id:
-                        raise ValidationError("Activation category is required")
-                    category = ActivationCategory.objects.get(id=category_id)
-                except (ActivationCategory.DoesNotExist, ValueError):
-                    raise ValidationError("Invalid activation category")
+            # Validation
+            if not all([name, category_id, start_date, end_date, budget_str, project_lead, location]):
+                raise ValidationError("All required fields must be provided.")
 
-                # Get and validate client (optional)
-                client = None
-                client_id = request.POST.get('activation_client')
-                if client_id:
-                    try:
-                        client = Client.objects.get(id=client_id)
-                    except (Client.DoesNotExist, ValueError):
-                        raise ValidationError("Invalid activation client")
+            category = get_object_or_404(EventCategory, id=category_id, company=company)
+            client = Client.objects.filter(id=client_id, company=company, is_active=True).first() if client_id else None
+            start_date_obj = datetime.strptime(start_date, '%Y-%m-%d').date()
+            end_date_obj = datetime.strptime(end_date, '%Y-%m-%d').date()
+            if start_date_obj > end_date_obj:
+                raise ValidationError("End date must be after start date.")
+            budget = Decimal(budget_str)
+            if budget < 0:
+                raise ValidationError("Budget cannot be negative.")
 
-                # Validate budget (optional for activations based on your model)
-                budget = None
-                budget_str = request.POST.get('activation_budget')
-                if budget_str:
-                    try:
-                        budget = Decimal(budget_str)
-                        if budget < 0:
-                            raise ValidationError("Budget cannot be negative")
-                    except (InvalidOperation, ValueError):
-                        raise ValidationError("Invalid budget value")
-                
-                # Get project lead (optional for activations based on your model)
-                project_lead = request.POST.get('activation_project_lead', '').strip()
-                
-                # Get description (optional)
-                description = request.POST.get('activation_description', '').strip()
-                
-                # Handle budget file upload
-                budget_file = request.FILES.get('activation_budget_file')
-                
-                # Create and save activation
-                activation = Activation(
-                    name=name,
-                    category=category,
-                    client=client,
-                    company=company,
-                    budget=budget,
-                    budget_file=budget_file,
-                    description=description,
-                    project_lead=project_lead,
-                    created_by=request.user
-                )
-                
-                # Run model validation
-                activation.full_clean()
-                activation.save()
-                
-                messages.success(request, 'Activation created successfully.')
-                return redirect('wallet:expenses')
-            
-            else:
-                raise ValidationError("Invalid request type")
-                
-        except ValidationError as e:
-            # Handle ValidationError properly
-            if hasattr(e, 'message_dict'):
-                # Field-specific errors
-                error_messages = []
-                for field, messages_list in e.message_dict.items():
-                    for msg in messages_list:
-                        error_messages.append(f"{field}: {msg}")
-                error_message = "; ".join(error_messages)
-            elif hasattr(e, 'messages'):
-                # Multiple error messages
-                error_message = "; ".join(e.messages)
-            else:
-                # Single error message
-                error_message = str(e)
-            
-            messages.error(request, f'Validation Error: {error_message}')
-            return redirect('wallet:expenses')
-            
-        except Exception as e:
-            messages.error(request, f'An unexpected error occurred: {str(e)}')
-            return redirect('wallet:expenses')
-    
-    # Handle GET request
+            # Save event
+            event = Event(
+                name=name, category=category, client=client, company=company,
+                start_date=start_date_obj, end_date=end_date_obj, budget=budget,
+                budget_file=budget_file, project_lead=project_lead,
+                location=location, created_by=request.user
+            )
+            event.full_clean()
+            event.save()
+            messages.success(request, 'Event created successfully.')
+
+        elif request_type == 'operation':
+            # Extract and validate
+            name = request.POST.get('operation_name', '').strip()
+            client_id = request.POST.get('operation_client')
+            budget_str = request.POST.get('operation_budget')
+            project_lead = request.POST.get('operation_project_lead', '').strip()
+            budget_file = request.FILES.get('operation_budget_file')
+
+            if not all([name, budget_str, project_lead]):
+                raise ValidationError("All required fields must be provided.")
+
+            client = Client.objects.filter(id=client_id, company=company, is_active=True).first() if client_id else None
+            budget = Decimal(budget_str)
+            if budget < 0:
+                raise ValidationError("Budget cannot be negative.")
+
+            operation = Operation(
+                name=name, client=client, company=company, budget=budget,
+                budget_file=budget_file, project_lead=project_lead,
+                created_by=request.user
+            )
+            operation.full_clean()
+            operation.save()
+            messages.success(request, 'Operation created successfully.')
+
+        elif request_type == 'activation':
+            # Extract and validate
+            name = request.POST.get('activation_name', '').strip()
+            category_id = request.POST.get('activation_category')
+            client_id = request.POST.get('activation_client')
+            budget_str = request.POST.get('activation_budget')
+            project_lead = request.POST.get('activation_project_lead', '').strip()
+            description = request.POST.get('activation_description', '').strip()
+            budget_file = request.FILES.get('activation_budget_file')
+
+            if not all([name, category_id]):
+                raise ValidationError("Activation name and category are required.")
+
+            category = get_object_or_404(ActivationCategory, id=category_id, company=company)
+            client = Client.objects.filter(id=client_id, company=company, is_active=True).first() if client_id else None
+            budget = Decimal(budget_str) if budget_str else None
+            if budget is not None and budget < 0:
+                raise ValidationError("Budget cannot be negative.")
+
+            activation = Activation(
+                name=name, category=category, client=client, company=company,
+                budget=budget, budget_file=budget_file, description=description,
+                project_lead=project_lead, created_by=request.user
+            )
+            activation.full_clean()
+            activation.save()
+            messages.success(request, 'Activation created successfully.')
+
+        else:
+            raise ValidationError("Invalid request type")
+
+    except ValidationError as e:
+        error_message = "; ".join(e.messages) if hasattr(e, 'messages') else str(e)
+        messages.error(request, f'Validation Error: {error_message}')
+
+    except Exception as e:
+        messages.error(request, f'An unexpected error occurred: {str(e)}')
+
     return redirect('wallet:expenses')
+
 
 @login_required
 def activation_expense_detail(request, pk):
-    activation = get_object_or_404(Activation, pk=pk, company__user=request.user)
-    # Add your expense detail logic here
+    """
+    View for displaying details of a single activation expense
+    """
+    company = get_user_company_kyc(request.user)
+    activation = get_object_or_404(Activation, pk=pk, company=company)
     context = {
-        'activation': activation,
-        # Add other context variables as needed
+        'activation': activation
     }
     return render(request, 'expenses/activation_detail.html', context)
 
-
-def is_admin(user):
-    # Replace with your logic to check if the user is an admin
-    return user.is_staff or user.has_perm('expense.can_approve_expense')
 
 @login_required
 def expense_detail(request, id, item_type=None):
     user = request.user
     company = getattr(user, 'company', None) or getattr(user, 'companykyc', None)
-    # Initialize context variables
+
     context = {
         'is_admin': is_admin(user),
         'user': StaffProfile.objects.filter(company=company),
-        'expense_category_choices': ExpenseCategory.objects.filter(company=company, is_active=True).order_by('name'),
+        'expense_category_choices': ExpenseCategory.objects.filter(
+            company=company, is_active=True
+        ).order_by('name'),
     }
-    # Handle query parameters for expense filters
+
+    # EXPENSE FILTERS
     expense_filters = {}
     if request.GET.get('expense_user'):
         expense_filters['created_by_id'] = request.GET['expense_user']
     if request.GET.get('expense_category'):
         expense_filters['expense_category_id'] = request.GET['expense_category']
     if request.GET.get('expense_status'):
-        if request.GET['expense_status'] == 'pending':
+        status = request.GET['expense_status']
+        if status == 'pending':
             expense_filters['approved'] = False
             expense_filters['declined'] = False
-        elif request.GET['expense_status'] == 'approved':
+        elif status == 'approved':
             expense_filters['approved'] = True
             expense_filters['declined'] = False
-        elif request.GET['expense_status'] == 'declined':
+        elif status == 'declined':
             expense_filters['declined'] = True
-    # Handle query parameters for transaction filters
+
+    # TRANSACTION FILTERS
     txn_filters = {}
     if request.GET.get('txn_user'):
         txn_filters['user_id'] = request.GET['txn_user']
@@ -570,448 +474,362 @@ def expense_detail(request, id, item_type=None):
         txn_filters['date__gte'] = request.GET['txn_date_from']
     if request.GET.get('txn_date_to'):
         txn_filters['date__lte'] = request.GET['txn_date_to']
-    # Determine if we're looking at an event, operation, activation, or specific expense
+
+    # INITIALIZE VARIABLES
     item = None
-    start_date = None
-    end_date = None
     expenses = None
     approved_expenses = None
+    start_date = None
+    end_date = None
     item_form = None
     expense_list_name = None
     expense_list_desc = None
-    if item_type == 'event':
-        # Try UUID first since your model likely uses UUIDField as primary key
-        try:
+
+    try:
+        # FETCH ITEM BASED ON TYPE
+        if item_type == 'event':
             item = get_object_or_404(Event, id=id)
-        except ValueError:
-            # If UUID parsing fails, try string lookup
-            try:
-                item = get_object_or_404(Event, pk=id)
-            except (Event.DoesNotExist, ValueError):
-                return HttpResponse(f"Event with ID {id} not found.", status=404)
-        if company and item.company != company:
-            return HttpResponseForbidden("You don't have permission to view this event")
-        expenses = Expense.objects.filter(event=item, **expense_filters).order_by('-created_at')
-        approved_expenses = expenses.filter(approved=True, declined=False)
-        item_form = EventExpenseForm(instance=item)
-        start_date = item.start_date
-        end_date = item.end_date
-        expense_list_name = "Event Expenses"
-        expense_list_desc = "Event Expense Requests"
-    elif item_type == 'operation':
-        # Try UUID first since your model likely uses UUIDField as primary key
-        try:
-            item = get_object_or_404(Operation, id=id)
-        except ValueError:
-            # If UUID parsing fails, try string lookup
-            try:
-                item = get_object_or_404(Operation, pk=id)
-            except (Operation.DoesNotExist, ValueError):
-                return HttpResponse(f"Operation with ID {id} not found.", status=404)
-        if company and item.company != company:
-            return HttpResponseForbidden("You don't have permission to view this operation")
-        expenses = Expense.objects.filter(operation=item, **expense_filters).order_by('-created_at')
-        approved_expenses = expenses.filter(approved=True, declined=False)
-        item_form = OperationExpenseForm(instance=item)
-        # start_date = item.start_date  # Assuming Operation has start_date
-        # end_date = item.end_date  # Assuming Operation has end_date
-        expense_list_name = "Operation Expenses"
-        expense_list_desc = "Operation Expense Requests"
-    elif item_type == 'activation':
-        # Try UUID first since your model uses UUIDField as primary key
-        try:
-            item = get_object_or_404(Activation, id=id)
-            print(f"Found activation by UUID: {item}")
-        except ValueError:
-            # If UUID parsing fails, try string lookup
-            try:
-                item = get_object_or_404(Activation, pk=id)
-            except (Activation.DoesNotExist, ValueError):
-                return HttpResponse(f"Activation with ID {id} not found.", status=404)
-        if company and item.company != company:
-            return HttpResponseForbidden("You don't have permission to view this activation")
-        expenses = Expense.objects.filter(activation=item, **expense_filters).order_by('-created_at')
-        approved_expenses = expenses.filter(approved=True, declined=False)
-        item_form = ActivationExpenseForm(instance=item)
-        start_date = item.created_at  # Assuming Activation has start_date
-        end_date = '' # Assuming Activation has end_date
-        expense_list_name = "Activation Expenses"
-        expense_list_desc = "Activation Expense Requests"
-    else:
-        expense = None
-        expense_queryset = Expense.objects.filter(id=id)
-        if expense_queryset.exists():
-            expense = expense_queryset.first()
-        else:
-            if hasattr(Expense, 'uuid'):
-                expense_queryset = Expense.objects.filter(uuid=id)
-                if expense_queryset.exists():
-                    expense = expense_queryset.first()
-        if not expense:
-            return HttpResponse(f"Expense with ID {id} not found.", status=404)
-        if not is_admin(user) and expense.created_by != user:
-            return HttpResponseForbidden("You don't have permission to view this expense")
-        event = expense.event if hasattr(expense, 'event') and expense.event else None
-        operation = expense.operation if hasattr(expense, 'operation') and expense.operation else None
-        activation = expense.activation if hasattr(expense, 'activation') and expense.activation else None
-        item = event or operation or activation
-        if item:
+            if company and item.company != company:
+                return HttpResponseForbidden("You don't have permission to view this event")
+            expenses = Expense.objects.filter(event=item, **expense_filters).order_by('-created_at')
+            approved_expenses = expenses.filter(approved=True, declined=False)
+            item_form = EventExpenseForm(instance=item)
             start_date = item.start_date
             end_date = item.end_date
-            expense_list_name = "Related Expenses"
-            expense_list_desc = "Related Expense Requests"
-        related_expenses = Expense.objects.none()
-        if event:
-            related_expenses = Expense.objects.filter(event=event, **expense_filters).exclude(id=expense.id).order_by('-created_at')
-        elif operation:
-            related_expenses = Expense.objects.filter(operation=operation, **expense_filters).exclude(id=expense.id).order_by('-created_at')
-        elif activation:
-            related_expenses = Expense.objects.filter(activation=activation, **expense_filters).exclude(id=expense.id).order_by('-created_at')
-        # Paginate related expenses
-        expense_paginator = Paginator(related_expenses, 10)
-        expense_page_number = request.GET.get('page', 1)
-        expenses_page = expense_paginator.get_page(expense_page_number)
-        approval_form = ExpenseApprovalForm(instance=expense) if is_admin(user) and not expense.approved and not expense.declined else None
-        payment_form = PaymentForm(user=user, company=company, initial={'expense': expense}) if expense.approved and not expense.declined else None
-        expense_requests = []
-        if event:
-            expense_categories = Expense.objects.filter(
-                event=event, approved=True, declined=False
-            ).values('expense_category').annotate(amount=Sum('amount')).order_by('-amount')
-            expense_requests = [{'category': cat['expense_category'], 'amount': cat['amount']} for cat in expense_categories]
-        elif operation:
-            expense_categories = Expense.objects.filter(
-                operation=operation, approved=True, declined=False
-            ).values('expense_category').annotate(amount=Sum('amount')).order_by('-amount')
-            expense_requests = [{'category': cat['expense_category'], 'amount': cat['amount']} for cat in expense_categories]
-        elif activation:
-            expense_categories = Expense.objects.filter(
-                activation=activation, approved=True, declined=False
-            ).values('expense_category').annotate(amount=Sum('amount')).order_by('-amount')
-            expense_requests = [{'category': cat['expense_category'], 'amount': cat['amount']} for cat in expense_categories]
-        total_amount = sum(request['amount'] for request in expense_requests) if expense_requests else 0
-        summaries = [{'status': 'Current Status', 'amount': expense.amount}]
-        approved_requests = []
-        if event:
-            approved_requests = Expense.objects.filter(
-                event=event, approved=True, declined=False
-            ).values('created_by__first_name', 'created_by__last_name', 'expense_category', 'amount')
-        elif operation:
-            approved_requests = Expense.objects.filter(
-                operation=operation, approved=True, declined=False
-            ).values('created_by__first_name', 'created_by__last_name', 'expense_category', 'amount')
-        elif activation:
-            approved_requests = Expense.objects.filter(
-                activation=activation, approved=True, declined=False
-            ).values('created_by__first_name', 'created_by__last_name', 'expense_category', 'amount')
-        formatted_approved_requests = [
-            {
-                'created_by': f"{req['created_by__first_name']} {req['created_by__last_name']}",
-                'expense_type': req['expense_category'],
-                'status': 'Approved',
-                'amount': req['amount']
-            } for req in approved_requests
-        ]
-        # Get transactions for the expense
-        expense_transactions = Transaction.objects.filter(expense=expense, **txn_filters).order_by('-created_at')
-        txn_paginator = Paginator(expense_transactions, 10)
-        txn_page_number = request.GET.get('txn_page', 1)
-        txn_page = txn_paginator.get_page(txn_page_number)
-        context.update({
-            'expense': expense,
-            'approval_form': approval_form,
-            'payment_form': payment_form,
-            'related_expenses': expenses_page,
-            'event': event,
-            'operation': operation,
-            'activation': activation,
-            'summaries': summaries,
-            'expense_requests': expense_requests,
-            'total_amount': total_amount,
-            'approved_requests': formatted_approved_requests,
-            'expense_transactions': txn_page,
-            'expense_query_string': request.GET.urlencode().replace('page=', ''),
-            'txn_query_string': request.GET.urlencode().replace('txn_page=', ''),
-        })
-    # Common logic for item_type cases (event, operation, activation)
-    if item_type:
-        # Paginate expenses
-        expense_paginator = Paginator(expenses, 10)
-        expense_page_number = request.GET.get('page', 1)
-        expenses_page = expense_paginator.get_page(expense_page_number)
-        # Get transactions
-        approved_paid_expenses = expenses.filter(approved=True, declined=False, paid=True)
-        expense_transactions_list = []
-        for expense_item in approved_paid_expenses:
-            transactions = Transaction.objects.filter(expense=expense_item, **txn_filters).order_by('-created_at')
-            expense_transactions_list.extend(transactions)
-        # Paginate transactions
-        txn_paginator = Paginator(expense_transactions_list, 10)
-        txn_page_number = request.GET.get('txn_page', 1)
-        txn_page = txn_paginator.get_page(txn_page_number)
-        expense_summary = {
-            'pending': expenses.filter(approved=False, declined=False).aggregate(Sum('amount'))['amount__sum'] or 0,
-            'approved': expenses.filter(approved=True, declined=False).aggregate(Sum('amount'))['amount__sum'] or 0,
-            'declined': expenses.filter(declined=True).aggregate(Sum('amount'))['amount__sum'] or 0,
-        }
-        expense_categories = approved_expenses.select_related('expense_category').values(
-            'expense_category__name'
-        ).annotate(total=Sum('amount')).order_by('-total')
-        total_amount = sum(cat['total'] for cat in expense_categories) if expense_categories else 0
-        if item_type == 'event':
-            item_form_key = 'event_form'
+            expense_list_name = "Event Expenses"
+            expense_list_desc = "Event Expense Requests"
+
         elif item_type == 'operation':
-            item_form_key = 'operation_form'
-        else:  # activation
-            item_form_key = 'activation_form'
-        context.update({
-            'item': item,
-            'item_type': item_type,
-            'expenses': expenses_page,
-            'approved_expenses': approved_expenses,
-            'expense_transactions': txn_page,
-            'expense_summary': expense_summary,
-            'expense_categories': expense_categories,
-            'total_amount': total_amount,
-            item_form_key: item_form,
-            'expense_query_string': request.GET.urlencode().replace('page=', ''),
-            'txn_query_string': request.GET.urlencode().replace('txn_page=', ''),
-            'expense_list_name': expense_list_name,
-            'expense_list_desc': expense_list_desc,
-        })
-    # Common logic for supplied_items and check_out_items if item and dates exist
-    if item and start_date and end_date:
-        # Ensure dates are handled for timezone-aware queries
-        start_dt = start_date.date() if hasattr(start_date, 'date') else start_date
-        end_dt = end_date.date() if hasattr(end_date, 'date') else end_date
-        end_dt_next = end_dt + timedelta(days=1)
-        # Supplied Items: InvoiceItems from supplier invoices within date range
-        # Use gte and lte to avoid __range issues
-        supplied_qs = InvoiceItem.objects.filter(
-            invoice__date_issued__gte=start_dt,
-            invoice__date_issued__lt=end_dt_next,
-            invoice__supplier__organization=company
-        ).select_related('invoice__supplier').order_by('-invoice__date_issued')
-        supplied_items_list = [
-            {
-                'obj': supplied,
-                'total_amount': supplied.quantity * supplied.unit_price
+            item = get_object_or_404(Operation, id=id)
+            if company and item.company != company:
+                return HttpResponseForbidden("You don't have permission to view this operation")
+            expenses = Expense.objects.filter(operation=item, **expense_filters).order_by('-created_at')
+            approved_expenses = expenses.filter(approved=True, declined=False)
+            item_form = OperationExpenseForm(instance=item)
+            expense_list_name = "Operation Expenses"
+            expense_list_desc = "Operation Expense Requests"
+
+        elif item_type == 'activation':
+            item = get_object_or_404(Activation, id=id)
+            if company and item.company != company:
+                return HttpResponseForbidden("You don't have permission to view this activation")
+            expenses = Expense.objects.filter(activation=item, **expense_filters).order_by('-created_at')
+            approved_expenses = expenses.filter(approved=True, declined=False)
+            item_form = ActivationExpenseForm(instance=item)
+            start_date = item.created_at
+            end_date = ''
+            expense_list_name = "Activation Expenses"
+            expense_list_desc = "Activation Expense Requests"
+
+        else:
+            # INDIVIDUAL EXPENSE VIEW
+            expense_queryset = Expense.objects.filter(id=id)
+            expense = expense_queryset.first() if expense_queryset.exists() else None
+
+            if not expense and hasattr(Expense, 'uuid'):
+                expense_queryset = Expense.objects.filter(uuid=id)
+                expense = expense_queryset.first() if expense_queryset.exists() else None
+
+            if not expense:
+                return HttpResponse(f"Expense with ID {id} not found.", status=404)
+
+            if not is_admin(user) and expense.created_by != user:
+                return HttpResponseForbidden("You don't have permission to view this expense")
+
+            event = getattr(expense, 'event', None)
+            operation = getattr(expense, 'operation', None)
+            activation = getattr(expense, 'activation', None)
+            item = event or operation or activation
+
+            # RELATED EXPENSES
+            related_expenses = Expense.objects.none()
+            if event:
+                related_expenses = Expense.objects.filter(event=event, **expense_filters).exclude(id=expense.id).order_by('-created_at')
+            elif operation:
+                related_expenses = Expense.objects.filter(operation=operation, **expense_filters).exclude(id=expense.id).order_by('-created_at')
+            elif activation:
+                related_expenses = Expense.objects.filter(activation=activation, **expense_filters).exclude(id=expense.id).order_by('-created_at')
+
+            # PAGINATION
+            expense_paginator = Paginator(related_expenses, 10)
+            expenses_page = expense_paginator.get_page(request.GET.get('page', 1))
+
+            # FORMS
+            approval_form = ExpenseApprovalForm(instance=expense) if is_admin(user) and not expense.approved and not expense.declined else None
+            payment_form = PaymentForm(user=user, company=company, initial={'expense': expense}) if expense.approved and not expense.declined else None
+
+            # EXPENSE SUMMARIES
+            expense_requests = []
+            if item:
+                categories_qs = Expense.objects.filter(
+                    **({ 'event': item } if event else { 'operation': item } if operation else { 'activation': item }),
+                    approved=True, declined=False
+                ).values('expense_category').annotate(amount=Sum('amount')).order_by('-amount')
+                expense_requests = [{'category': cat['expense_category'], 'amount': cat['amount']} for cat in categories_qs]
+
+            total_amount = sum(req['amount'] for req in expense_requests) if expense_requests else 0
+            summaries = [{'status': 'Current Status', 'amount': expense.amount}]
+
+            # APPROVED REQUESTS
+            approved_requests_qs = Expense.objects.filter(
+                **({ 'event': item } if event else { 'operation': item } if operation else { 'activation': item }),
+                approved=True, declined=False
+            ).values('created_by__first_name', 'created_by__last_name', 'expense_category', 'amount')
+            formatted_approved_requests = [
+                {
+                    'created_by': f"{req['created_by__first_name']} {req['created_by__last_name']}",
+                    'expense_type': req['expense_category'],
+                    'status': 'Approved',
+                    'amount': req['amount']
+                } for req in approved_requests_qs
+            ]
+
+            # TRANSACTIONS
+            expense_transactions = Transaction.objects.filter(expense=expense, **txn_filters).order_by('-created_at')
+            txn_paginator = Paginator(expense_transactions, 10)
+            txn_page = txn_paginator.get_page(request.GET.get('txn_page', 1))
+
+            context.update({
+                'expense': expense,
+                'approval_form': approval_form,
+                'payment_form': payment_form,
+                'related_expenses': expenses_page,
+                'event': event,
+                'operation': operation,
+                'activation': activation,
+                'summaries': summaries,
+                'expense_requests': expense_requests,
+                'total_amount': total_amount,
+                'approved_requests': formatted_approved_requests,
+                'expense_transactions': txn_page,
+                'expense_query_string': request.GET.urlencode().replace('page=', ''),
+                'txn_query_string': request.GET.urlencode().replace('txn_page=', ''),
+            })
+
+        # COMMON LOGIC FOR EVENTS, OPERATIONS, ACTIVATIONS
+        if item_type:
+            # PAGINATION
+            expense_paginator = Paginator(expenses, 10)
+            expenses_page = expense_paginator.get_page(request.GET.get('page', 1))
+
+            # TRANSACTIONS
+            approved_paid_expenses = expenses.filter(approved=True, declined=False, paid=True)
+            expense_transactions_list = []
+            for expense_item in approved_paid_expenses:
+                transactions = Transaction.objects.filter(expense=expense_item, **txn_filters).order_by('-created_at')
+                expense_transactions_list.extend(transactions)
+            txn_paginator = Paginator(expense_transactions_list, 10)
+            txn_page = txn_paginator.get_page(request.GET.get('txn_page', 1))
+
+            # SUMMARIES & CATEGORIES
+            expense_summary = {
+                'pending': expenses.filter(approved=False, declined=False).aggregate(Sum('amount'))['amount__sum'] or 0,
+                'approved': expenses.filter(approved=True, declined=False).aggregate(Sum('amount'))['amount__sum'] or 0,
+                'declined': expenses.filter(declined=True).aggregate(Sum('amount'))['amount__sum'] or 0,
             }
-            for supplied in supplied_qs
-        ]
-        supplied_paginator = Paginator(supplied_items_list, 10)
-        supplied_page_number = request.GET.get('supplied_page', 1)
-        supplied_page = supplied_paginator.get_page(supplied_page_number)
-        supplied_query_string = request.GET.urlencode().replace('supplied_page=', '')
-        # Check-out Items: InventoryTransactions (Check Out) within date range
-        # Use gte and lt for DateTimeField
-        check_out_qs = InventoryTransaction.objects.filter(
-            item__organization=company,
-            transaction_type='Check Out',
-            transaction_date__gte=start_dt,
-            transaction_date__lt=end_dt_next
-        ).select_related('item', 'checked_out_by').order_by('-transaction_date')
-        check_out_items_list = [
-            {
-                'obj': txn,
-                'unit_price': txn.item.cost  # Assuming cost is the unit price
-            }
-            for txn in check_out_qs
-        ]
-        check_out_paginator = Paginator(check_out_items_list, 10)
-        check_out_page_number = request.GET.get('check_out_page', 1)
-        check_out_page = check_out_paginator.get_page(check_out_page_number)
-        check_out_query_string = request.GET.urlencode().replace('check_out_page=', '')
-        context.update({
-            'supplied_items': supplied_page,
-            'check_out_items': check_out_page,
-            'supplied_query_string': supplied_query_string,
-            'check_out_query_string': check_out_query_string,
-        })
-    if not item_type:
-        context.update({
-            'expense_list_name': expense_list_name,
-            'expense_list_desc': expense_list_desc,
-        })
-    return render(request, 'expenses/expense_detail.html', context)
+            expense_categories = approved_expenses.select_related('expense_category').values(
+                'expense_category__name'
+            ).annotate(total=Sum('amount')).order_by('-total')
+            total_amount = sum(cat['total'] for cat in expense_categories) if expense_categories else 0
+
+            # FORM KEY
+            item_form_key = f"{item_type}_form"
+            context.update({
+                'item': item,
+                'item_type': item_type,
+                'expenses': expenses_page,
+                'approved_expenses': approved_expenses,
+                'expense_transactions': txn_page,
+                'expense_summary': expense_summary,
+                'expense_categories': expense_categories,
+                'total_amount': total_amount,
+                item_form_key: item_form,
+                'expense_query_string': request.GET.urlencode().replace('page=', ''),
+                'txn_query_string': request.GET.urlencode().replace('txn_page=', ''),
+                'expense_list_name': expense_list_name,
+                'expense_list_desc': expense_list_desc,
+            })
+
+        # SUPPLIED ITEMS & CHECK-OUT ITEMS
+        if item and start_date and end_date:
+            start_dt = getattr(start_date, 'date', lambda: start_date)()
+            end_dt = getattr(end_date, 'date', lambda: end_date)()
+            end_dt_next = end_dt + timedelta(days=1)
+
+            # Supplied Items
+            supplied_qs = InvoiceItem.objects.filter(
+                invoice__date_issued__gte=start_dt,
+                invoice__date_issued__lt=end_dt_next,
+                invoice__supplier__organization=company
+            ).select_related('invoice__supplier').order_by('-invoice__date_issued')
+
+            supplied_items_list = [{'obj': s, 'total_amount': s.quantity * s.unit_price} for s in supplied_qs]
+            supplied_paginator = Paginator(supplied_items_list, 10)
+            supplied_page = supplied_paginator.get_page(request.GET.get('supplied_page', 1))
+            supplied_query_string = request.GET.urlencode().replace('supplied_page=', '')
+
+            # Check-Out Items
+            check_out_qs = InventoryTransaction.objects.filter(
+                item__organization=company,
+                transaction_type='Check Out',
+                transaction_date__gte=start_dt,
+                transaction_date__lt=end_dt_next
+            ).select_related('item', 'checked_out_by').order_by('-transaction_date')
+            check_out_items_list = [{'obj': txn, 'unit_price': txn.item.cost} for txn in check_out_qs]
+            check_out_paginator = Paginator(check_out_items_list, 10)
+            check_out_page = check_out_paginator.get_page(request.GET.get('check_out_page', 1))
+            check_out_query_string = request.GET.urlencode().replace('check_out_page=', '')
+
+            context.update({
+                'supplied_items': supplied_page,
+                'check_out_items': check_out_page,
+                'supplied_query_string': supplied_query_string,
+                'check_out_query_string': check_out_query_string,
+            })
+
+        if not item_type:
+            context.update({
+                'expense_list_name': expense_list_name,
+                'expense_list_desc': expense_list_desc,
+            })
+
+        return render(request, 'expenses/expense_detail.html', context)
+
+    except Exception as e:
+        messages.error(request, f"An unexpected error occurred: {str(e)}")
+        return redirect('wallet:expenses')
 @login_required
 def edit_item(request, id, item_type):
     """
     Handle editing of event or operation details (only dates can be modified)
     """
     user = request.user
-    company = getattr(user, 'company', None) or getattr(user, 'companykyc', None)
-    
+    company = get_user_company_kyc(user)  # Updated line
+
     if request.method != 'POST':
         return HttpResponseNotAllowed(['POST'])
-    
+
+    # --- HANDLE EVENT ---
     if item_type == 'event':
-        # Handle event editing
-        event = None
-        
-        # Try direct id lookup first
-        event_queryset = Event.objects.filter(id=id)
-        if event_queryset.exists():
-            event = event_queryset.first()
-        else:
-            # Check if the model has a uuid field
-            if hasattr(Event, 'uuid'):
-                event_queryset = Event.objects.filter(uuid=id)
-                if event_queryset.exists():
-                    event = event_queryset.first()
-        
+        event = Event.objects.filter(id=id).first() or (Event.objects.filter(uuid=id).first() if hasattr(Event, 'uuid') else None)
         if not event:
             messages.error(request, f"Event with ID {id} not found.")
             return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
-            
-        # Check permissions
-        if company and event.company != company:
+
+        # Permission check
+        if company and event.company != company or (not is_admin(user) and event.created_by != user):
             messages.error(request, "You don't have permission to edit this event.")
             return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
-        
-        # Check if user is admin or event creator
-        if not is_admin(user) and event.created_by != user:
-            messages.error(request, "You don't have permission to edit this event.")
-            return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
-        
-        # Get form data
+
+        # Get dates
         start_date = request.POST.get('start_date')
         end_date = request.POST.get('end_date')
-        
-        # Validate dates
         if not start_date or not end_date:
             messages.error(request, "Both start date and end date are required for events.")
             return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
-        
+
         try:
             from datetime import datetime
             start_date_obj = datetime.strptime(start_date, '%Y-%m-%d').date()
             end_date_obj = datetime.strptime(end_date, '%Y-%m-%d').date()
-            
             if start_date_obj > end_date_obj:
                 messages.error(request, "Start date cannot be later than end date.")
                 return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
-            
-            # Update the event
+
             event.start_date = start_date_obj
             event.end_date = end_date_obj
             event.save()
-            
+
             messages.success(request, "Event dates updated successfully.")
-            return redirect('expense:event_expense_detail', id=str(id),item_type=item_type)
-            
+            return redirect('expense:event_expense_detail', id=str(event.id), item_type=item_type)
+
         except ValueError:
             messages.error(request, "Invalid date format.")
             return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
-    
+
+    # --- HANDLE OPERATION ---
     elif item_type == 'operation':
-        # Handle operation editing
-        operation = None
-        
-        # Try direct id lookup first
-        operation_queryset = Operation.objects.filter(id=id)
-        if operation_queryset.exists():
-            operation = operation_queryset.first()
-        else:
-            # Check if the model has a uuid field
-            if hasattr(Operation, 'uuid'):
-                operation_queryset = Operation.objects.filter(uuid=id)
-                if operation_queryset.exists():
-                    operation = operation_queryset.first()
-        
+        operation = Operation.objects.filter(id=id).first() or (Operation.objects.filter(uuid=id).first() if hasattr(Operation, 'uuid') else None)
         if not operation:
             messages.error(request, f"Operation with ID {id} not found.")
             return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
-            
-        # Check permissions
-        if company and operation.company != company:
+
+        # Permission check
+        if company and operation.company != company or (not is_admin(user) and operation.created_by != user):
             messages.error(request, "You don't have permission to edit this operation.")
             return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
-        
-        # Check if user is admin or operation creator
-        if not is_admin(user) and operation.created_by != user:
-            messages.error(request, "You don't have permission to edit this operation.")
-            return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
-        
-        # Get form data
+
+        # Get dates
         start_date = request.POST.get('start_date')
         end_date = request.POST.get('end_date')
-        
         try:
             from datetime import datetime
-            
-            # Update dates (they can be optional for operations)
             if start_date:
-                start_date_obj = datetime.strptime(start_date, '%Y-%m-%d').date()
-                operation.start_date = start_date_obj
+                operation.start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
             else:
                 operation.start_date = None
-                
+
             if end_date:
-                end_date_obj = datetime.strptime(end_date, '%Y-%m-%d').date()
-                operation.end_date = end_date_obj
+                operation.end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
             else:
                 operation.end_date = None
-            
-            # Validate date logic if both dates are provided
+
             if operation.start_date and operation.end_date and operation.start_date > operation.end_date:
                 messages.error(request, "Start date cannot be later than end date.")
                 return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
-            
+
             operation.save()
-            
             messages.success(request, "Operation dates updated successfully.")
-            return redirect('expense:operation_expense_detail', id=str(id), item_type=item_type)
-            
+            return redirect('expense:operation_expense_detail', id=str(operation.id), item_type=item_type)
+
         except ValueError:
             messages.error(request, "Invalid date format.")
             return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
-    
+
     else:
         messages.error(request, "Invalid item type.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+
+
 @login_required
 def approve_expense(request, expense_id):
     """Handle expense approval or rejection"""
     user = request.user
-    
-    # Check if user is admin
+
+    # Check admin
     if not is_admin(user):
         return HttpResponseForbidden("You don't have permission to approve expenses")
-    
+
     expense = get_object_or_404(Expense, id=expense_id)
-    
+
     if request.method == 'POST':
         form = ExpenseApprovalForm(request.POST, instance=expense)
-        print(form)
-        
         if form.is_valid():
             with transaction.atomic():
                 approval = form.save(commit=False)
-                
-                # If not approved, mark as declined
                 if not approval.approved:
                     approval.declined = True
                     messages.success(request, 'Expense request declined.')
                 else:
                     messages.success(request, 'Expense request approved.')
-                
+
                 approval.approved_by = user
                 approval.save()
-                
-                # Notify expense workflow
+
                 notify_expense_workflow(expense, 'approved' if approval.approved else 'declined', approver_name=user.get_full_name())
-                
                 return redirect('expense:expense_detail', id=expense.id)
         else:
             messages.error(request, 'Please correct the errors below.')
-    
-    return redirect('expense:expense_detail', id=expense.id)
 
+    return redirect('expense:expense_detail', id=expense.id)
 
 @login_required
 def expense_approvals(request):
-    company = request.user.companykyc
+    user = request.user
+    if not is_admin(user):
+        return HttpResponseForbidden("You don't have permission to view expense approvals.")
+
+    company = get_user_company_kyc(user)  # Updated line
     query = request.GET.get('q', '')
     status = request.GET.get('status', 'all')
     active_tab = request.GET.get('tab', 'activation')
@@ -1024,8 +842,8 @@ def expense_approvals(request):
             Q(created_by__last_name__icontains=query) |
             Q(description__icontains=query) |
             Q(event__name__icontains=query) |
-            Q(operation__name__icontains=query) |  # Added operation name search
-            Q(activation__name__icontains=query) |  # Added activation name search
+            Q(operation__name__icontains=query) |
+            Q(activation__name__icontains=query) |
             Q(expense_category__name__icontains=query)
         )
 
@@ -1038,12 +856,12 @@ def expense_approvals(request):
             return base_queryset.filter(approved=False, declined=False)
         return base_queryset  # 'all'
 
-    # Define base querysets without status filter, with prefetch for batchpayments_set
+    # --- Base querysets ---
     base_activation = Expense.objects.filter(base_filter & Q(activation__isnull=False, approved=False, declined=False)) \
         .select_related('activation', 'expense_category', 'created_by', 'approved_by') \
         .prefetch_related('batchpayments_set') \
         .order_by('-created_at')
-    
+
     base_event = Expense.objects.filter(base_filter & Q(event__isnull=False)) \
         .select_related('event', 'expense_category', 'created_by', 'approved_by') \
         .prefetch_related('batchpayments_set') \
@@ -1059,46 +877,28 @@ def expense_approvals(request):
         .prefetch_related('batchpayments_set') \
         .order_by('-updated_at')
 
-    # Compute tab-specific summaries
-    activation_summary = {
-        'total': Expense.objects.filter(base_filter & Q(activation__isnull=False)).count(),
-        'all': Expense.objects.filter(base_filter & Q(activation__isnull=False)).count(),
-        'pending': base_activation.count(),
-        'approved': Expense.objects.filter(base_filter & Q(activation__isnull=False, approved=True)).count(),
-        'rejected': Expense.objects.filter(base_filter & Q(activation__isnull=False, declined=True)).count(),
-    }
+    # --- Summaries ---
+    def compute_summary(base_queryset, field_name):
+        return {
+            'total': base_queryset.count(),
+            'all': base_queryset.count(),
+            'pending': base_queryset.filter(approved=False, declined=False).count(),
+            'approved': base_queryset.filter(approved=True).count(),
+            'rejected': base_queryset.filter(declined=True).count(),
+        }
 
-    event_summary = {
-        'total': base_event.count(),
-        'all': base_event.count(),
-        'pending': base_event.filter(approved=False, declined=False).count(),
-        'approved': base_event.filter(approved=True).count(),
-        'rejected': base_event.filter(declined=True).count(),
-    }
+    activation_summary = compute_summary(base_activation, 'activation')
+    event_summary = compute_summary(base_event, 'event')
+    operation_summary = compute_summary(base_operation, 'operation')
+    history_summary = compute_summary(base_history, 'history')
 
-    operation_summary = {
-        'total': base_operation.count(),
-        'all': base_operation.count(),
-        'pending': base_operation.filter(approved=False, declined=False).count(),
-        'approved': base_operation.filter(approved=True).count(),
-        'rejected': base_operation.filter(declined=True).count(),
-    }
-
-    history_summary = {
-        'total': base_history.count(),
-        'all': base_history.count(),
-        'pending': base_history.filter(approved=False, declined=False).count(),  # Should be 0
-        'approved': base_history.filter(approved=True).count(),
-        'rejected': base_history.filter(declined=True).count(),
-    }
-
-    # Apply status filter for listings
+    # --- Apply status filter ---
     activation_expenses = filter_expenses(base_activation)
     event_expenses = filter_expenses(base_event)
     operation_expenses = filter_expenses(base_operation)
     past_requests = filter_expenses(base_history)
 
-    # Pagination
+    # --- Pagination ---
     activation_paginator = Paginator(activation_expenses, 10)
     event_paginator = Paginator(event_expenses, 10)
     operation_paginator = Paginator(operation_expenses, 10)
@@ -1109,16 +909,11 @@ def expense_approvals(request):
     op_page = request.GET.get('op_page', 1)
     history_page = request.GET.get('history_page', 1)
 
-    activation_requests = activation_paginator.get_page(activation_page)
-    event_requests = event_paginator.get_page(event_page)
-    operation_requests = operation_paginator.get_page(op_page)
-    past_requests_page = history_paginator.get_page(history_page)
-
     context = {
-        'activation_requests': activation_requests,
-        'event_requests': event_requests,
-        'operation_requests': operation_requests,
-        'past_requests': past_requests_page,
+        'activation_requests': activation_paginator.get_page(activation_page),
+        'event_requests': event_paginator.get_page(event_page),
+        'operation_requests': operation_paginator.get_page(op_page),
+        'past_requests': history_paginator.get_page(history_page),
         'query': query,
         'status': status,
         'active_tab': active_tab,
@@ -1134,26 +929,24 @@ def expense_approvals(request):
 @require_POST
 @login_required
 def approve_expenses(request, expense_id):
+    user = request.user
+    if not is_admin(user):
+        return JsonResponse({'error': "You don't have permission to approve expenses."}, status=403)
+
     try:
         expense = get_object_or_404(Expense, id=expense_id)
         if expense.approved or expense.declined:
-            return JsonResponse(
-                {'error': 'This expense has already been processed.'},
-                status=400
-            )
+            return JsonResponse({'error': 'This expense has already been processed.'}, status=400)
         if expense.wallet.balance < expense.amount:
-            return JsonResponse(
-                {'error': 'Insufficient funds in the wallet.'},
-                status=400
-            )
+            return JsonResponse({'error': 'Insufficient funds in the wallet.'}, status=400)
 
-        # Deduct from wallet (for both single and batch - batch total is expense.amount)
+        # Deduct from wallet
         expense.wallet.balance -= expense.amount
         expense.wallet.save()
 
-        # Mark expense as approved (no batch processing here - preview only)
+        # Approve expense
         expense.approved = True
-        expense.approved_by = request.user
+        expense.approved_by = user
         expense.approved_at = timezone.now()
         expense.declined = False
         expense.decline_reason = None
@@ -1161,20 +954,18 @@ def approve_expenses(request, expense_id):
 
         # Notification
         notify_expense_workflow(
-            expense=expense, 
-            action='approved', 
-            approver_name=expense.approved_by.get_full_name()
+            expense=expense,
+            action='approved',
+            approver_name=user.get_full_name()
         )
 
-        message = 'Expense approved successfully.'
         return JsonResponse({
-            'message': message,
-            'approved_by_name': request.user.get_full_name() or request.user.username
+            'message': 'Expense approved successfully.',
+            'approved_by_name': user.get_full_name() or user.username
         }, status=200)
 
     except Exception as e:
         return JsonResponse({'error': f'Failed to approve expense: {str(e)}'}, status=500)
-
 
 @login_required
 def preview_expense_csv(request, expense_id):
@@ -1807,54 +1598,6 @@ def initiate_mpesa_payment(payment_method, amount, payment_details, transaction_
         logger.error(f"M-Pesa payment initiation error: {str(e)}", exc_info=True)
         return {'ResponseCode': '1', 'ResponseDescription': 'Payment service temporarily unavailable'}
 
-# def initiate_mpesa_payment(payment_method, amount, payment_details, transaction_ref, expense, transaction_record):
-#     """Initiate M-Pesa payment based on method type"""
-    
-#     try:
-#         # Get access token
-#         mpesa = MpesaDaraja()
-#         access_token = mpesa.get_access_token()
-#         if not access_token:
-#             return {'ResponseCode': '1', 'ResponseDescription': 'Failed to authenticate with M-Pesa API'}
-
-#         # Common payment parameters
-#         callback_url = f"{settings.BASE_URL}{reverse('wallet:b2c_result')}"
-#         timeout_url = f"{settings.BASE_URL}{reverse('wallet:b2c_timeout')}"
-        
-#         if payment_method == 'mpesa_number':
-#             # B2C Payment - Pass the transaction_record
-#             response = initiate_b2c_payment(
-#                 mpesa=mpesa,
-#                 amount=amount,
-#                 phone_number=payment_details['phone_number'],
-#                 wallet=expense.wallet,
-#                 transaction=transaction_record  # Pass the transaction record
-#             )
-            
-#         elif payment_method in ['paybill_number', 'till_number']:
-#             # B2B Payment
-#             if payment_method == 'paybill_number':
-#                 receiver_shortcode = payment_details['paybill_number']
-#                 account_reference = payment_details['account_number']
-#             else:  # till_number
-#                 receiver_shortcode = payment_details['till_number']
-#                 account_reference = transaction_ref
-            
-#             response = initiate_b2b_payment(
-#                 mpesa=mpesa,
-#                 amount=amount,
-#                 business_id=receiver_shortcode,
-#                 wallet=expense.wallet,
-#                 transaction=transaction_record  # Pass the transaction record
-#             )
-#         else:
-#             return {'ResponseCode': '1', 'ResponseDescription': 'Unsupported payment method'}
-
-#         return response
-
-#     except Exception as e:
-#         logger.error(f"M-Pesa payment initiation error: {str(e)}", exc_info=True)
-#         return {'ResponseCode': '1', 'ResponseDescription': 'Payment service temporarily unavailable'}
 
 @login_required
 def get_expense_options(request):

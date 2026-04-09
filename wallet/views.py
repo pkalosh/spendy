@@ -37,36 +37,92 @@ from .mpesa_service import MpesaDaraja
 from django.utils import timezone
 from decimal import Decimal
 from django.db.models import Sum
+from django.db import transaction as db_transaction
 
 logger = logging.getLogger(__name__)
 
 def is_admin(user):
-    return user.is_authenticated and user.is_admin
+    if not user.is_authenticated:
+        return False
+
+    if user.is_admin:
+        return True
+
+    staff_profile = getattr(user, "staffprofile", None)
+
+    return (
+        staff_profile
+        and staff_profile.role
+        and staff_profile.role.is_admin
+    )
+
+def get_user_company_kyc(user):
+    if not user.is_authenticated:
+        return None
+
+    # Case 1: Direct admin user
+    if user.is_admin:
+        return CompanyKYC.objects.filter(user=user).first()
+
+    # Case 2: Staff admin
+    staff_profile = getattr(user, "staffprofile", None)
+
+    if (
+        staff_profile
+        and staff_profile.role
+        and staff_profile.role.is_admin
+    ):
+        return staff_profile.company
+
+    return None
+
 
 @login_required
 def settings_view(request):
     """View for system settings page"""
-    company = get_object_or_404(CompanyKYC, user=request.user)
-    
-    # Fetch clients and their related brands, plus all categories for the current company
-    clients = Client.objects.filter(company=company, is_active=True).prefetch_related('brands').order_by('name')
+
+    # ✅ Check admin (covers both user + staff role admin)
+    if not is_admin(request.user):
+        messages.warning(request, "Only admin users can access settings.")
+        return redirect("wallet:staff-dashboard")
+
+    # ✅ Get company via helper
+    company = get_user_company_kyc(request.user)
+
+    if not company:
+        messages.warning(request, "Company KYC not found.")
+        return redirect("wallet:kyc-reg")
+
+    # Fetch clients + related brands
+    clients = Client.objects.filter(
+        company=company,
+        is_active=True
+    ).prefetch_related('brands').order_by('name')
 
     context = {
         'expense_categories': ExpenseCategory.objects.filter(company=company, is_active=True).order_by('name'),
         'operation_categories': OperationCategory.objects.filter(company=company, is_active=True).order_by('name'),
         'event_categories': EventCategory.objects.filter(company=company, is_active=True).order_by('name'),
-        'activation_categories': ActivationCategory.objects.filter(company=company, is_active=True).order_by('name'),  # New
+        'activation_categories': ActivationCategory.objects.filter(company=company, is_active=True).order_by('name'),
         'clients': clients,
     }
-    return render(request, 'settings.html', context)
 
+    return render(request, 'settings.html', context)
+# --- Activation Category ---
 @login_required
 def add_activation_category(request):
-    """Add a new activation category"""
+    if not is_admin(request.user):
+        messages.warning(request, "Only admin users can perform this action.")
+        return redirect('wallet:staff-dashboard')
+
+    company = get_user_company_kyc(request.user)
+    if not company:
+        messages.warning(request, "Company KYC not found.")
+        return redirect("wallet:kyc-reg")
+
     if request.method == 'POST':
         name = request.POST.get('name')
         if name:
-            company = get_object_or_404(CompanyKYC, user=request.user)
             ActivationCategory.objects.create(
                 name=name,
                 company=company,
@@ -75,17 +131,27 @@ def add_activation_category(request):
             messages.success(request, 'Activation category added successfully')
         else:
             messages.error(request, 'Category name is required')
+
     return redirect('wallet:settings_view')
+
 
 # --- Client Views ---
 @login_required
 @require_POST
 def add_client(request):
-    company = get_object_or_404(CompanyKYC, user=request.user)
+    if not is_admin(request.user):
+        messages.warning(request, "Only admin users can perform this action.")
+        return redirect('wallet:staff-dashboard')
+
+    company = get_user_company_kyc(request.user)
+    if not company:
+        messages.warning(request, "Company KYC not found.")
+        return redirect("wallet:kyc-reg")
+
     name = request.POST.get('name')
     if name:
         Client.objects.create(
-            company=company, 
+            company=company,
             name=name,
             contact_person=request.POST.get('contact_person'),
             contact_email=request.POST.get('contact_email'),
@@ -97,15 +163,26 @@ def add_client(request):
             industry=request.POST.get('industry'),
             notes=request.POST.get('notes'),
         )
-        # Consider adding a success message here
-    return redirect('wallet:settings_view') # Redirect back to the settings page
+        messages.success(request, "Client added successfully")
+
+    return redirect('wallet:settings_view')
+
 
 @login_required
 @require_POST
 def edit_client(request):
+    if not is_admin(request.user):
+        messages.warning(request, "Only admin users can perform this action.")
+        return redirect('wallet:staff-dashboard')
+
+    company = get_user_company_kyc(request.user)
+    if not company:
+        messages.warning(request, "Company KYC not found.")
+        return redirect("wallet:kyc-reg")
+
     client_id = request.POST.get('client_id')
-    client = get_object_or_404(Client, id=client_id, company__user=request.user)
-    
+    client = get_object_or_404(Client, id=client_id, company=company)
+
     client.name = request.POST.get('name')
     client.contact_person = request.POST.get('contact_person')
     client.contact_email = request.POST.get('contact_email')
@@ -117,28 +194,50 @@ def edit_client(request):
     client.industry = request.POST.get('industry')
     client.notes = request.POST.get('notes')
     client.save()
-    # Consider adding a success message here
+
+    messages.success(request, "Client updated successfully")
     return redirect('wallet:settings_view')
+
 
 @login_required
 @require_POST
 def delete_client(request):
+    if not is_admin(request.user):
+        messages.warning(request, "Only admin users can perform this action.")
+        return redirect('wallet:staff-dashboard')
+
+    company = get_user_company_kyc(request.user)
+    if not company:
+        messages.warning(request, "Company KYC not found.")
+        return redirect("wallet:kyc-reg")
+
     client_id = request.POST.get('client_id')
-    client = get_object_or_404(Client, id=client_id, company__user=request.user)
-    client.delete() # This will also delete all related brands due to CASCADE
-    # Consider adding a success message here
+    client = get_object_or_404(Client, id=client_id, company=company)
+    client.delete()
+
+    messages.success(request, "Client deleted successfully")
     return redirect('wallet:settings_view')
+
 
 # --- Brand Views ---
 @login_required
 @require_POST
 def add_brand(request):
+    if not is_admin(request.user):
+        messages.warning(request, "Only admin users can perform this action.")
+        return redirect('wallet:staff-dashboard')
+
+    company = get_user_company_kyc(request.user)
+    if not company:
+        messages.warning(request, "Company KYC not found.")
+        return redirect("wallet:kyc-reg")
+
     client_id = request.POST.get('client_id')
-    print(client_id)
-    client = get_object_or_404(Client, id=client_id, company__user=request.user)
+    client = get_object_or_404(Client, id=client_id, company=company)
+
     name = request.POST.get('name')
-    logo = request.FILES.get('logo') # For file uploads
-    
+    logo = request.FILES.get('logo')
+
     if name:
         Brand.objects.create(
             client=client,
@@ -147,84 +246,141 @@ def add_brand(request):
             description=request.POST.get('description'),
             website=request.POST.get('website'),
         )
-        # Consider adding a success message here
+        messages.success(request, "Brand added successfully")
+
     return redirect('wallet:settings_view')
+
 
 @login_required
 @require_POST
 def edit_brand(request):
+    if not is_admin(request.user):
+        messages.warning(request, "Only admin users can perform this action.")
+        return redirect('wallet:staff-dashboard')
+
+    company = get_user_company_kyc(request.user)
+    if not company:
+        messages.warning(request, "Company KYC not found.")
+        return redirect("wallet:kyc-reg")
+
     brand_id = request.POST.get('brand_id')
-    brand = get_object_or_404(Brand, id=brand_id, client__company__user=request.user)
-    
+    brand = get_object_or_404(Brand, id=brand_id, client__company=company)
+
     brand.name = request.POST.get('name')
     brand.description = request.POST.get('description')
     brand.website = request.POST.get('website')
-    if 'logo' in request.FILES: # Handle logo update
+
+    if 'logo' in request.FILES:
         brand.logo = request.FILES['logo']
-    elif 'clear_logo' in request.POST: # Optional: add a checkbox in modal to clear logo
+    elif 'clear_logo' in request.POST:
         brand.logo = None
+
     brand.save()
-    # Consider adding a success message here
+
+    messages.success(request, "Brand updated successfully")
     return redirect('wallet:settings_view')
+
 
 @login_required
 @require_POST
 def delete_brand(request):
+    if not is_admin(request.user):
+        messages.warning(request, "Only admin users can perform this action.")
+        return redirect('wallet:staff-dashboard')
+
+    company = get_user_company_kyc(request.user)
+    if not company:
+        messages.warning(request, "Company KYC not found.")
+        return redirect("wallet:kyc-reg")
+
     brand_id = request.POST.get('brand_id')
-    brand = get_object_or_404(Brand, id=brand_id, client__company__user=request.user)
+    brand = get_object_or_404(Brand, id=brand_id, client__company=company)
     brand.delete()
-    # Consider adding a success message here
+
+    messages.success(request, "Brand deleted successfully")
     return redirect('wallet:settings_view')
 
 @login_required
 def add_expense_category(request):
     """Add a new expense category"""
+
+    if not is_admin(request.user):
+        messages.warning(request, "Only admin users can perform this action.")
+        return redirect('wallet:staff-dashboard')
+
+    company = get_user_company_kyc(request.user)
+    if not company:
+        messages.warning(request, "Company KYC not found.")
+        return redirect("wallet:kyc-reg")
+
     if request.method == 'POST':
         name = request.POST.get('name')
         if name:
-            company = get_object_or_404(CompanyKYC,user=request.user)
             ExpenseCategory.objects.create(
                 name=name,
-                company  = company,
+                company=company,
                 created_by=request.user
             )
             messages.success(request, 'Expense category added successfully')
         else:
             messages.error(request, 'Category name is required')
+
     return redirect('wallet:settings_view')
+
 
 @login_required
 def add_operation_category(request):
     """Add a new operation category"""
+
+    if not is_admin(request.user):
+        messages.warning(request, "Only admin users can perform this action.")
+        return redirect('wallet:staff-dashboard')
+
+    company = get_user_company_kyc(request.user)
+    if not company:
+        messages.warning(request, "Company KYC not found.")
+        return redirect("wallet:kyc-reg")
+
     if request.method == 'POST':
         name = request.POST.get('name')
         if name:
-            company = get_object_or_404(CompanyKYC,user=request.user)
             OperationCategory.objects.create(
                 name=name,
-                company  = company,
+                company=company,
                 created_by=request.user
             )
             messages.success(request, 'Operation category added successfully')
         else:
             messages.error(request, 'Category name is required')
+
     return redirect('wallet:settings_view')
+
 
 @login_required
 def add_event_category(request):
     """Add a new event category"""
+
+    if not is_admin(request.user):
+        messages.warning(request, "Only admin users can perform this action.")
+        return redirect('wallet:staff-dashboard')
+
+    company = get_user_company_kyc(request.user)
+    if not company:
+        messages.warning(request, "Company KYC not found.")
+        return redirect("wallet:kyc-reg")
+
     if request.method == 'POST':
         name = request.POST.get('name')
         if name:
-            company = get_object_or_404(CompanyKYC,user=request.user)
             EventCategory.objects.create(
                 name=name,
-                company  = company,
+                company=company,
                 created_by=request.user
             )
             messages.success(request, 'Event category added successfully')
         else:
             messages.error(request, 'Category name is required')
+
     return redirect('wallet:settings_view')
 
 @login_required
@@ -383,13 +539,21 @@ def delete_category(request):
 @login_required
 @user_passes_test(is_admin)
 def list_staff_profiles(request):
-    staff_list = StaffProfile.objects.filter(company=request.user.companykyc).all()
+    #  Get the company via helper
+    company = get_user_company_kyc(request.user)
+    if not company:
+        messages.warning(request, "Company KYC not found.")
+        return redirect("wallet:kyc-reg")
+
+    #  Fetch staff profiles for this company only
+    staff_list = StaffProfile.objects.filter(company=company).all()
+
+    # Pagination
     paginator = Paginator(staff_list, 10)  # 10 per page
     page_number = request.GET.get('page')
     staffs = paginator.get_page(page_number)
+
     return render(request, 'users/staff/list.html', {'staffs': staffs})
-
-
 
 @login_required
 def get_staff_profile(request, pk):
@@ -416,36 +580,50 @@ random_password = get_random_string(length=12)
 @login_required
 @user_passes_test(is_admin)
 def create_staff_profile(request):
-    company  = request.user.companykyc
+    # ✅ Get company from helper
+    company = get_user_company_kyc(request.user)
+    if not company:
+        messages.warning(request, "Company KYC not found.")
+        return redirect("wallet:kyc-reg")
+
     if request.method == 'POST':
         user_form = UserForm(request.POST)
         profile_form = StaffProfileForm(request.POST, request.FILES)
+
         if user_form.is_valid() and profile_form.is_valid():
             user = user_form.save(commit=False)
 
-            # Generate and set random password
-            
-            user.set_password(user_form.cleaned_data['password'])
-            # Assign appropriate user flags for staff
+            # ✅ Generate a random password if none provided
+            random_password = user_form.cleaned_data.get('password') or secrets.token_urlsafe(8)
+            user.set_password(random_password)
+
+            # Assign appropriate flags for staff
             user.is_staff = True
-            user.company_name = company.company_name
             user.is_org_staff = True
             user.is_verified = True
+            user.company_name = company.company_name
             user.save()
 
+            # Create staff profile
             staff = profile_form.save(commit=False)
             staff.user = user
-            staff.company  = company
+            staff.company = company
             staff.save()
             profile_form.save_m2m()
 
-            # Optional: log password, send via email, or display once
+            # Optional: log password (or send via email)
             print(f"Generated password for {user.email}: {random_password}")
 
+            messages.success(request, f"Staff profile created for {user.email}")
             return redirect('wallet:staff-list')
+
+        else:
+            messages.error(request, "Please correct the errors below.")
+
     else:
         user_form = UserForm()
         profile_form = StaffProfileForm()
+
     return render(request, 'users/staff/create.html', {
         'user_form': user_form,
         'profile_form': profile_form
@@ -665,53 +843,48 @@ def create_wallet(request):
         wallet_name = request.POST.get('wallet_name', '').strip()
         balance = request.POST.get('balance', '0').strip()
         wallet_type = request.POST.get('wallet_type')
-        
-        # Sanitize input
+
         wallet_name = escape(wallet_name)
-        
+
+        # ✅ Get company from helper
+        company = get_user_company_kyc(request.user)
+        if not company:
+            messages.warning(request, "Company KYC not found.")
+            return redirect('wallet:wallet')
+
         try:
             balance = float(balance)
             if balance < 0:
                 balance = 0
         except ValueError:
             balance = 0
-        
-        # Validation checks
+
         if not wallet_name:
             messages.error(request, "Wallet name is required.")
             return redirect('wallet:wallet')
-        
-        # Deny PRIMARY wallet type creation
+
         if wallet_type == 'PRIMARY':
             messages.error(request, "PRIMARY wallet type cannot be created.")
             return redirect('wallet:wallet')
-        
-        # Check if similar wallet_type already exists for the company
-        existing_wallet = Wallet.objects.filter(
-            wallet_type=wallet_type,
-            company=request.user.companykyc
-        ).first()
-        
-        if existing_wallet:
+
+        # Check if wallet type already exists
+        if Wallet.objects.filter(wallet_type=wallet_type, company=company).exists():
             messages.error(request, f"A wallet of type '{wallet_type}' already exists for your company.")
             return redirect('wallet:wallet')
-        
-        # Create the wallet if all validations pass
-        wallet = Wallet(
+
+        Wallet.objects.create(
             wallet_name=wallet_name,
             balance=balance,
             user=request.user,
             wallet_type=wallet_type,
             currency='KES',
-            company=request.user.companykyc
+            company=company
         )
-        wallet.save()
-        messages.success(request, f"Wallet '{wallet.wallet_name}' created successfully!")
+        messages.success(request, f"Wallet '{wallet_name}' created successfully!")
         return redirect('wallet:wallet')
-    
+
     return redirect('wallet:wallet')
 
-from django.db import transaction as db_transaction
 
 @login_required
 @user_passes_test(is_admin)
@@ -720,16 +893,16 @@ def wallet_transfer(request):
         from_wallet_id = request.POST.get('from_wallet_id')
         to_wallet_id = request.POST.get('to_wallet_id')
         amount_str = request.POST.get('amount')
-        description = request.POST.get('description', '').strip()  # Optional description
-        
+        description = request.POST.get('description', '').strip()
+
         if not all([from_wallet_id, to_wallet_id, amount_str]):
             messages.error(request, "All fields are required.")
             return redirect('wallet:wallet')
-        
+
         if from_wallet_id == to_wallet_id:
             messages.error(request, "Source and destination wallets must be different.")
             return redirect('wallet:wallet')
-        
+
         try:
             amount = Decimal(amount_str)
             if amount <= 0:
@@ -737,49 +910,49 @@ def wallet_transfer(request):
         except:
             messages.error(request, "Amount must be a positive number.")
             return redirect('wallet:wallet')
-        
-        # Fetch wallets by ID
-        from_wallet = get_object_or_404(Wallet, id=from_wallet_id, company=request.user.companykyc)
-        to_wallet = get_object_or_404(Wallet, id=to_wallet_id, company=request.user.companykyc)
-        
+
+        company = get_user_company_kyc(request.user)
+        if not company:
+            messages.warning(request, "Company KYC not found.")
+            return redirect('wallet:wallet')
+
+        from_wallet = get_object_or_404(Wallet, id=from_wallet_id, company=company)
+        to_wallet = get_object_or_404(Wallet, id=to_wallet_id, company=company)
+
         if from_wallet.balance < amount:
             messages.error(request, "Insufficient balance in the source wallet.")
             return redirect('wallet:wallet')
-        
-        # Use database transaction for atomicity
+
         try:
             with db_transaction.atomic():
-                # Perform wallet balance updates
                 from_wallet.balance -= amount
                 to_wallet.balance += amount
                 from_wallet.save()
                 to_wallet.save()
-                
-                # Create transaction record
+
                 transaction_record = Transaction.objects.create(
-                    company=request.user.companykyc,
-                    user=request.user,  # Admin who performed the transfer
+                    company=company,
+                    user=request.user,
                     amount=amount,
                     description=description or f"Transfer from {from_wallet.wallet_name} to {to_wallet.wallet_name}",
-                    sender=request.user,  # Admin as sender
-                    receiver=request.user,  # Same company transfer, so same user context
+                    sender=request.user,
+                    receiver=request.user,
                     sender_wallet=from_wallet,
                     receiver_wallet=to_wallet,
-                    status="completed",  # Internal transfer is immediately completed
+                    status="completed",
                     transaction_type="transfer"
                 )
-                
+
                 messages.success(
                     request,
-                    f"Transferred KES {amount} from {from_wallet.wallet_name.title()} to {to_wallet.wallet_name.title()}. Transaction ID: {transaction_record.transaction_id}"
+                    f"Transferred KES {amount} from {from_wallet.wallet_name} to {to_wallet.wallet_name}. Transaction ID: {transaction_record.transaction_id}"
                 )
-                
         except Exception as e:
             messages.error(request, f"Transfer failed: {str(e)}")
             return redirect('wallet:wallet')
-        
+
         return redirect('wallet:wallet')
-    
+
     messages.error(request, "Invalid request method.")
     return redirect('wallet:wallet')
 
@@ -787,179 +960,162 @@ def wallet_transfer(request):
 @login_required
 @user_passes_test(is_admin)
 def fund_wallet(request):
-    if request.method == 'POST':
-        # Get form data matching your template field names
-        amount_str = request.POST.get('amount')
-        wallet_number = request.POST.get('wallet_number')  # Changed from wallet_id
-        payment_method = request.POST.get('payment_method')
-        
-        # Get payment method specific fields
-        mpesa_number = request.POST.get('mpesa_number')  # For direct M-Pesa payment
-        paybill_number = request.POST.get('paybill_number')  # For paybill payment
-        till_number = request.POST.get('till_number')  # For till payment
-        account_reference = request.POST.get('account_reference')  # For paybill
-        till_reference = request.POST.get('till_reference')  # For till
-        
-        # Basic validation
-        if not all([amount_str, wallet_number, payment_method]):
-            messages.error(request, "All fields are required.")
+    if request.method != 'POST':
+        messages.error(request, "Invalid request method.")
+        return redirect('wallet:wallet')
+
+    # --- Fetch POST data ---
+    amount_str = request.POST.get('amount')
+    wallet_number = request.POST.get('wallet_number')
+    payment_method = request.POST.get('payment_method')
+    
+    mpesa_number = request.POST.get('mpesa_number')       # direct M-Pesa
+    paybill_number = request.POST.get('paybill_number')   # Paybill
+    till_number = request.POST.get('till_number')         # Till
+    account_reference = request.POST.get('account_reference')
+    till_reference = request.POST.get('till_reference')
+
+    if not all([amount_str, wallet_number, payment_method]):
+        messages.error(request, "All fields are required.")
+        return redirect('wallet:wallet')
+
+    # --- Validate amount ---
+    try:
+        amount = Decimal(amount_str)
+        if amount <= 0:
+            raise ValueError("Amount must be positive")
+    except (ValueError, TypeError):
+        messages.error(request, "Amount must be a positive number.")
+        return redirect('wallet:wallet')
+
+    # --- Get company via helper ---
+    company = get_user_company_kyc(request.user)
+    if not company:
+        messages.warning(request, "Company KYC not found.")
+        return redirect('wallet:wallet')
+
+    # --- Get wallet ---
+    try:
+        wallet = get_object_or_404(Wallet, wallet_number=wallet_number, company=company)
+    except Exception as e:
+        messages.error(request, f"Invalid wallet number: {wallet_number}")
+        return redirect('wallet:wallet')
+
+    # --- Payment method validation ---
+    business_id = None
+    payment_details = {}
+    
+    if payment_method == 'mpesa_number':
+        if not mpesa_number:
+            messages.error(request, "M-Pesa number is required for direct payment.")
             return redirect('wallet:wallet')
-        
-        # Validate amount
-        try:
-            amount = Decimal(amount_str)
-            if amount <= 0:
-                raise ValueError("Amount must be positive")
-        except (ValueError, TypeError):
-            messages.error(request, "Amount must be a positive number.")
+        if not mpesa_number.startswith('254') or len(mpesa_number) != 12:
+            messages.error(request, "Please enter a valid M-Pesa number (254XXXXXXXXX).")
             return redirect('wallet:wallet')
-        
-        # Get wallet by wallet_number instead of id
-        try:
-            wallet = get_object_or_404(Wallet, wallet_number=wallet_number, company=request.user.companykyc)
-        except Exception as e:
-            messages.error(request, f"Invalid wallet number: {wallet_number}")
+        business_id = mpesa_number
+        actual_payment_method = 'stk'
+        payment_details = {'mpesa_number': mpesa_number}
+
+    elif payment_method == 'paybill_number':
+        if not paybill_number or not account_reference:
+            messages.error(request, "Paybill details are missing.")
             return redirect('wallet:wallet')
-        
-        # Validate payment method specific fields
-        business_id = None
-        payment_details = {}
-        
-        if payment_method == 'mpesa_number':
-            if not mpesa_number:
-                messages.error(request, "M-Pesa number is required for direct payment.")
-                return redirect('wallet:wallet')
-            
-            # Validate phone number format (should start with 254)
-            if not mpesa_number.startswith('254') or len(mpesa_number) != 12:
-                messages.error(request, "Please enter a valid M-Pesa number (254XXXXXXXXX).")
-                return redirect('wallet:wallet')
-            
-            business_id = mpesa_number
-            actual_payment_method = 'stk'  # STK push for direct M-Pesa
-            payment_details = {'mpesa_number': mpesa_number}
-            
-        elif payment_method == 'paybill_number':
-            if not paybill_number or not account_reference:
-                messages.error(request, "Paybill details are missing.")
-                return redirect('wallet:wallet')
-            
-            business_id = paybill_number
-            actual_payment_method = 'b2b'  # B2B for paybill
-            payment_details = {
-                'paybill_number': paybill_number,
-                'account_reference': account_reference,  # This will be the wallet_number
-                'wallet_number': wallet_number  # Store wallet number for reference
-            }
-            
-        elif payment_method == 'till_number':
-            if not till_number or not till_reference:
-                messages.error(request, "Till number details are missing.")
-                return redirect('wallet:wallet')
-            
-            business_id = till_number
-            actual_payment_method = 'b2b'  # B2B for till
-            payment_details = {
-                'till_number': till_number,
-                'till_reference': till_reference,  # This will be the wallet_number
-                'wallet_number': wallet_number  # Store wallet number for reference
-            }
-            
-        else:
-            messages.error(request, "Invalid payment method selected.")
+        business_id = paybill_number
+        actual_payment_method = 'b2b'
+        payment_details = {
+            'paybill_number': paybill_number,
+            'account_reference': account_reference,
+            'wallet_number': wallet_number
+        }
+
+    elif payment_method == 'till_number':
+        if not till_number or not till_reference:
+            messages.error(request, "Till number details are missing.")
             return redirect('wallet:wallet')
-        
-        # Create initial transaction record
-        transaction = Transaction.objects.create(
-            sender_wallet=wallet,
-            user=request.user,
-            company=request.user.companykyc,
-            transaction_type='FUNDING',
-            amount=amount,
-            status='PENDING',
-            payment_method=payment_method,
-            sender=request.user,
-            description=f"Wallet funding via {payment_method} for wallet {wallet_number}",
-            payment_details={
-                'payment_details': payment_details,
-                'business_id': business_id,
-                'actual_payment_method': actual_payment_method,
-                'wallet_number': wallet_number,
-                'initiated_at': timezone.now().isoformat()
-            }
-        )
-        
-        # Initialize M-Pesa client
-        mpesa = MpesaDaraja()
-        
-        try:
-            if actual_payment_method == 'stk':
-                # STK Push - Customer pays to business (M-Pesa direct payment)
-                response = initiate_stk_push(mpesa, business_id, amount, wallet, transaction)
-                success_message = "Payment request sent to your phone. Please check your M-Pesa and enter your PIN to complete the transaction."
-                
-            elif actual_payment_method == 'b2b':
-                # B2B - Business to business payment (Paybill/Till)
-                if payment_method == 'paybill_number':
-                    success_message = f"Payment instructions provided. Please use Paybill {paybill_number} with account number {wallet_number} to complete your payment of KES {amount}."
-                else:  # till_number
-                    success_message = f"Payment instructions provided. Please use Till {till_number} with reference {wallet_number} to complete your payment of KES {amount}."
-                
-                # For manual payments (paybill/till), you might want to create a pending transaction
-                # that gets confirmed via callback when the user actually pays
-                response = initiate_b2b_payment(mpesa, business_id, amount, wallet, transaction)
-            
-            # Handle response and update transaction
-            if response and response.get('ResponseCode') == '0':
-                # Update transaction with success details
-                transaction.status = 'PROCESSING'
-                transaction.external_reference = response.get('MerchantRequestID') or response.get('ConversationID')
-                transaction.checkout_request_id = response.get('CheckoutRequestID')
-                transaction.payment_details.update({
-                    'mpesa_response': response,
-                    'response_code': response.get('ResponseCode'),
-                    'response_description': response.get('ResponseDescription'),
-                    'updated_at': timezone.now().isoformat()
-                })
-                transaction.save()
-                
-                messages.success(request, success_message)
-                logger.info(f"Payment initiated for wallet {wallet_number}, Transaction ID: {transaction.id}, Response: {response}")
-                
+        business_id = till_number
+        actual_payment_method = 'b2b'
+        payment_details = {
+            'till_number': till_number,
+            'till_reference': till_reference,
+            'wallet_number': wallet_number
+        }
+    else:
+        messages.error(request, "Invalid payment method selected.")
+        return redirect('wallet:wallet')
+
+    # --- Create transaction record ---
+    transaction = Transaction.objects.create(
+        sender_wallet=wallet,
+        user=request.user,
+        company=company,
+        transaction_type='FUNDING',
+        amount=amount,
+        status='PENDING',
+        payment_method=payment_method,
+        sender=request.user,
+        description=f"Wallet funding via {payment_method} for wallet {wallet_number}",
+        payment_details={
+            'payment_details': payment_details,
+            'business_id': business_id,
+            'actual_payment_method': actual_payment_method,
+            'wallet_number': wallet_number,
+            'initiated_at': timezone.now().isoformat()
+        }
+    )
+
+    mpesa = MpesaDaraja()
+
+    try:
+        if actual_payment_method == 'stk':
+            response = initiate_stk_push(mpesa, business_id, amount, wallet, transaction)
+            success_message = "Payment request sent to your phone. Please check your M-Pesa and enter your PIN to complete the transaction."
+        elif actual_payment_method == 'b2b':
+            response = initiate_b2b_payment(mpesa, business_id, amount, wallet, transaction)
+            if payment_method == 'paybill_number':
+                success_message = f"Payment instructions provided. Please use Paybill {paybill_number} with account number {wallet_number} to complete your payment of KES {amount}."
             else:
-                # Update transaction with failure details
-                error_msg = response.get('errorMessage', 'Payment initiation failed') if response else 'No response from payment gateway'
-                transaction.status = 'FAILED'
-                transaction.failure_reason = error_msg
-                transaction.payment_details.update({
-                    'mpesa_response': response,
-                    'error_message': error_msg,
-                    'failed_at': timezone.now().isoformat()
-                })
-                transaction.save()
-                
-                messages.error(request, f"Payment failed: {error_msg}")
-                logger.error(f"Payment failed for wallet {wallet_number}, Transaction ID: {transaction.id}, Response: {response}")
-                
-        except Exception as e:
-            # Update transaction with exception details
-            transaction.status = 'FAILED'
-            transaction.failure_reason = f"Exception: {str(e)}"
+                success_message = f"Payment instructions provided. Please use Till {till_number} with reference {wallet_number} to complete your payment of KES {amount}."
+
+        # --- Handle response ---
+        if response and response.get('ResponseCode') == '0':
+            transaction.status = 'PROCESSING'
+            transaction.external_reference = response.get('MerchantRequestID') or response.get('ConversationID')
+            transaction.checkout_request_id = response.get('CheckoutRequestID')
             transaction.payment_details.update({
-                'exception': str(e),
-                'exception_type': type(e).__name__,
+                'mpesa_response': response,
+                'response_code': response.get('ResponseCode'),
+                'response_description': response.get('ResponseDescription'),
+                'updated_at': timezone.now().isoformat()
+            })
+            transaction.save()
+            messages.success(request, success_message)
+            logger.info(f"Payment initiated for wallet {wallet_number}, Transaction ID: {transaction.id}, Response: {response}")
+        else:
+            error_msg = response.get('errorMessage', 'Payment initiation failed') if response else 'No response from payment gateway'
+            transaction.status = 'FAILED'
+            transaction.failure_reason = error_msg
+            transaction.payment_details.update({
+                'mpesa_response': response,
+                'error_message': error_msg,
                 'failed_at': timezone.now().isoformat()
             })
             transaction.save()
-            
-            logger.error(f"Error processing payment: {str(e)}, Transaction ID: {transaction.id}")
-            messages.error(request, f"Payment processing error: {str(e)}")
-        
-        return redirect('wallet:wallet')
-    
-    else:
-        messages.error(request, "Invalid request method.")
-        return redirect('wallet:wallet')
+            messages.error(request, f"Payment failed: {error_msg}")
+            logger.error(f"Payment failed for wallet {wallet_number}, Transaction ID: {transaction.id}, Response: {response}")
+
+    except Exception as e:
+        transaction.status = 'FAILED'
+        transaction.failure_reason = f"Exception: {str(e)}"
+        transaction.payment_details.update({
+            'exception': str(e),
+            'exception_type': type(e).__name__,
+            'failed_at': timezone.now().isoformat()
+        })
+        transaction.save()
+        logger.error(f"Error processing payment: {str(e)}, Transaction ID: {transaction.id}")
+        messages.error(request, f"Payment processing error: {str(e)}")
+
+    return redirect('wallet:wallet')
 
 def initiate_stk_push(mpesa, phone_number, amount, wallet, transaction=None):
     """
@@ -1097,110 +1253,61 @@ def initiate_b2b_payment(mpesa, business_id, amount, wallet, account_reference=N
     
     return response
 
-# def initiate_b2b_payment(mpesa, business_id, amount, wallet, transaction=None):
-#     """
-#     Initiate B2B payment
-#     Business to business payment
-#     """
-#     account_reference = f"{wallet.company.company_name}-{wallet.wallet_number}"
-#     remarks = f"Wallet funding for {wallet.company.company_name}"
-    
-#     if transaction:
-#         account_reference = account_reference
-#         remarks = f"{remarks} (Ref: {transaction.id})"
-    
-#     response = mpesa.b2b_payment(
-#         amount=float(amount),
-#         receiver_shortcode=business_id,
-#         account_reference=account_reference,
-#         remarks=remarks,
-#         command_id='BusinessPayBill'  # or 'BusinessBuyGoods' for till numbers
-#     )
-    
-#     # Log B2B payment initiation
-#     if transaction:
-#         transaction.payment_details.update({
-#             'b2b_payment_details': {
-#                 'receiver_shortcode': business_id,
-#                 'account_reference': account_reference,
-#                 'remarks': remarks,
-#                 'initiated_at': timezone.now().isoformat()
-#             }
-#         })
-#         transaction.conversation_id = response.get('ConversationID')
-#         print(f"conversation_id: {transaction.conversation_id}")  # Print the value of transaction.mpesa_checkout_request_id)
-#         transaction.originator_conversation_id = response.get('OriginatorConversationID')
-#         transaction.save()
-    
-#     return response
-
 
 @login_required
 def wallet(request):
-    if request.user.is_authenticated:
-        try:
-            kyc = CompanyKYC.objects.get(user=request.user)
-            
-            # Check if all required fields are filled
-            required_fields = [
-                kyc.company_name,
-                kyc.logo,
-                kyc.kra_pin,
-                kyc.registration_certificate,
-                kyc.country,
-                kyc.county,
-                kyc.city,
-                kyc.address,
-                kyc.mobile
-            ]
-            
-            if not all(required_fields) or not kyc.kyc_submitted:
-                messages.warning(request, "Your KYC is incomplete. Please fill all required fields.")
-                return redirect("wallet:kyc-reg")
-
-            if not kyc.kyc_confirmed:
-                messages.warning(request, "Your KYC is Under Review.")
-                return redirect("wallet:kyc-reg")
-
-            # Get wallets
-            wallets = Wallet.objects.filter(user=request.user, is_active=True, company=kyc)
-            primary_wallet = Wallet.objects.get(user=request.user, wallet_type="PRIMARY", company=kyc)
-            
-            # Get all transactions for the company
-            all_transactions = Transaction.objects.filter(company=kyc).order_by('-date')
-            
-            # Get recent transactions for initial display (limit 20 for performance)
-            recent_txns = all_transactions[:20]
-            
-            # Get all unique users for filter dropdown
-            all_users = Transaction.objects.filter(company=kyc).values_list(
-                'receiver', 'receiver_wallet'
-            ).distinct()
-            
-            # Format users for dropdown
-            unique_users = []
-            for name, wallet in all_users:
-                if name:
-                    unique_users.append({'id': wallet, 'name': name})
-                else:
-                    unique_users.append({'id': wallet, 'name': wallet})
-
-        except CompanyKYC.DoesNotExist:
+    """Dashboard view showing wallets and transactions"""
+    try:
+        kyc = get_user_company_kyc(request.user)
+        if not kyc:
             messages.warning(request, "You need to submit your KYC")
             return redirect("wallet:kyc-reg")
-        except Wallet.DoesNotExist:
-            messages.error(request, "Wallet not found")
-            return redirect("userauths:sign-up")
-    else:
-        messages.warning(request, "You need to login to access the dashboard")
-        return redirect("userauths:sign-in")
+
+        # Check if all required KYC fields are filled
+        required_fields = [
+            kyc.company_name,
+            kyc.logo,
+            kyc.kra_pin,
+            kyc.registration_certificate,
+            kyc.country,
+            kyc.county,
+            kyc.city,
+            kyc.address,
+            kyc.mobile
+        ]
+
+        if not all(required_fields) or not kyc.kyc_submitted:
+            messages.warning(request, "Your KYC is incomplete. Please fill all required fields.")
+            return redirect("wallet:kyc-reg")
+
+        if not kyc.kyc_confirmed:
+            messages.warning(request, "Your KYC is Under Review.")
+            return redirect("wallet:kyc-reg")
+
+        # Get wallets
+        wallets = Wallet.objects.filter(user=request.user, is_active=True, company=kyc)
+        primary_wallet = Wallet.objects.get(user=request.user, wallet_type="PRIMARY", company=kyc)
+
+        # Get all transactions
+        all_transactions = Transaction.objects.filter(company=kyc).order_by('-date')
+
+        # Recent transactions
+        recent_txns = all_transactions[:20]
+
+        # Unique users for filter dropdown
+        all_users = Transaction.objects.filter(company=kyc).values_list('receiver', 'receiver_wallet').distinct()
+        unique_users = [{'id': wallet, 'name': name or wallet} for name, wallet in all_users]
+
+    except Wallet.DoesNotExist:
+        messages.error(request, "Wallet not found")
+        return redirect("userauths:sign-up")
 
     context = {
         "kyc": kyc,
         "wallets": wallets,
         "primary_wallet": primary_wallet,
         "transactions": recent_txns,
-        "all_transactions": all_transactions,  # For JavaScript processing
+        "all_transactions": all_transactions,
         "all_users": unique_users,
     }
     return render(request, "account/account.html", context)
@@ -1210,12 +1317,11 @@ def wallet(request):
 def get_transaction_details(request, transaction_id):
     """API endpoint to get detailed transaction information"""
     try:
-        kyc = CompanyKYC.objects.get(user=request.user)
+        kyc = get_user_company_kyc(request.user)
         transaction = Transaction.objects.get(id=transaction_id, company=kyc)
-        
-        # Generate reference code
+
         reference_code = f"SPNDY{transaction.created_at.strftime('%y%m%d')}{transaction.id:03d}"
-        
+
         transaction_data = {
             'id': transaction.id,
             'reference': reference_code,
@@ -1231,103 +1337,100 @@ def get_transaction_details(request, transaction_id):
             'category': transaction.category or '',
             'description': transaction.description or '',
         }
-        
+
         return JsonResponse(transaction_data)
-    
-    except (Transaction.DoesNotExist, CompanyKYC.DoesNotExist):
+
+    except (Transaction.DoesNotExist, AttributeError):
         return JsonResponse({'error': 'Transaction not found'}, status=404)
 
 
 @login_required
 def filter_transactions(request):
-    """API endpoint to filter transactions"""
-    if request.method == 'GET':
-        try:
-            kyc = CompanyKYC.objects.get(user=request.user)
-            
-            # Get filter parameters
-            user_filter = request.GET.get('user', '')
-            date_from = request.GET.get('date_from', '')
-            date_to = request.GET.get('date_to', '')
-            status_filter = request.GET.get('status', '')
-            page = int(request.GET.get('page', 1))
-            
-            # Start with all transactions
-            transactions = Transaction.objects.filter(company=kyc)
-            
-            # Apply filters
-            if user_filter:
-                transactions = transactions.filter(
-                    Q(recipient_name__icontains=user_filter) |
-                    Q(recipient_wallet__icontains=user_filter)
-                )
-            
-            if date_from:
-                date_from_obj = datetime.strptime(date_from, '%Y-%m-%d').date()
-                transactions = transactions.filter(created_at__date__gte=date_from_obj)
-            
-            if date_to:
-                date_to_obj = datetime.strptime(date_to, '%Y-%m-%d').date()
-                transactions = transactions.filter(created_at__date__lte=date_to_obj)
-            
-            if status_filter:
-                transactions = transactions.filter(status=status_filter)
-            
-            # Order by date
-            transactions = transactions.order_by('-created_at')
-            
-            # Paginate
-            paginator = Paginator(transactions, 10)  # 10 transactions per page
-            page_obj = paginator.get_page(page)
-            
-            # Prepare response data
-            transaction_list = []
-            for transaction in page_obj:
-                reference_code = f"SPNDY{transaction.created_at.strftime('%y%m%d')}{transaction.id:03d}"
-                
-                transaction_list.append({
-                    'id': transaction.id,
-                    'recipient_name': transaction.recipient_name or '',
-                    'recipient_wallet': transaction.recipient_wallet,
-                    'from_wallet_name': transaction.from_wallet.wallet_name if transaction.from_wallet else 'Primary Wallet',
-                    'from_wallet_id': transaction.from_wallet.wallet_id if transaction.from_wallet else '',
-                    'date': transaction.created_at.strftime('%d %b %Y'),
-                    'time': transaction.created_at.strftime('%I:%M %p'),
-                    'datetime': transaction.created_at.strftime('%Y-%m-%d %H:%M'),
-                    'reference': reference_code,
-                    'amount': float(transaction.amount),
-                    'status': transaction.status,
-                    'transaction_type': transaction.transaction_type or 'wallet_transfer',
-                    'category': transaction.category or '',
-                    'description': transaction.description or '',
-                })
-            
-            return JsonResponse({
-                'transactions': transaction_list,
-                'has_next': page_obj.has_next(),
-                'has_previous': page_obj.has_previous(),
-                'current_page': page_obj.number,
-                'total_pages': paginator.num_pages,
-                'total_count': paginator.count,
-            })
-            
-        except CompanyKYC.DoesNotExist:
+    """API endpoint to filter transactions with pagination"""
+    if request.method != 'GET':
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+    try:
+        kyc = get_user_company_kyc(request.user)
+        if not kyc:
             return JsonResponse({'error': 'KYC not found'}, status=404)
-    
-    return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+        user_filter = request.GET.get('user', '')
+        date_from = request.GET.get('date_from', '')
+        date_to = request.GET.get('date_to', '')
+        status_filter = request.GET.get('status', '')
+        page = int(request.GET.get('page', 1))
+
+        transactions = Transaction.objects.filter(company=kyc)
+
+        if user_filter:
+            transactions = transactions.filter(
+                Q(recipient_name__icontains=user_filter) |
+                Q(recipient_wallet__icontains=user_filter)
+            )
+
+        if date_from:
+            date_from_obj = datetime.strptime(date_from, '%Y-%m-%d').date()
+            transactions = transactions.filter(created_at__date__gte=date_from_obj)
+
+        if date_to:
+            date_to_obj = datetime.strptime(date_to, '%Y-%m-%d').date()
+            transactions = transactions.filter(created_at__date__lte=date_to_obj)
+
+        if status_filter:
+            transactions = transactions.filter(status=status_filter)
+
+        transactions = transactions.order_by('-created_at')
+
+        paginator = Paginator(transactions, 10)
+        page_obj = paginator.get_page(page)
+
+        transaction_list = []
+        for txn in page_obj:
+            reference_code = f"SPNDY{txn.created_at.strftime('%y%m%d')}{txn.id:03d}"
+            transaction_list.append({
+                'id': txn.id,
+                'recipient_name': txn.recipient_name or '',
+                'recipient_wallet': txn.recipient_wallet,
+                'from_wallet_name': txn.from_wallet.wallet_name if txn.from_wallet else 'Primary Wallet',
+                'from_wallet_id': txn.from_wallet.wallet_id if txn.from_wallet else '',
+                'date': txn.created_at.strftime('%d %b %Y'),
+                'time': txn.created_at.strftime('%I:%M %p'),
+                'datetime': txn.created_at.strftime('%Y-%m-%d %H:%M'),
+                'reference': reference_code,
+                'amount': float(txn.amount),
+                'status': txn.status,
+                'transaction_type': txn.transaction_type or 'wallet_transfer',
+                'category': txn.category or '',
+                'description': txn.description or '',
+            })
+
+        return JsonResponse({
+            'transactions': transaction_list,
+            'has_next': page_obj.has_next(),
+            'has_previous': page_obj.has_previous(),
+            'current_page': page_obj.number,
+            'total_pages': paginator.num_pages,
+            'total_count': paginator.count,
+        })
+
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
 @login_required
 def kyc_registration(request):
+    """KYC registration view - only accessible by admin users"""
     user = request.user
-    
-    # Only admin users should access the KYC registration
-    if not user.is_admin:
+
+    # Only admin users should access KYC registration
+    if not is_admin(user):
         messages.error(request, "Only admin users can submit KYC information.")
-        return redirect("wallet:staff-dashboard")  # Redirect non-admin users back to wallet
-    
-    all_fields = False  # Default to False
-    
-    try:
-        kyc = CompanyKYC.objects.get(user=user)
+        return redirect("wallet:staff-dashboard")
+
+    kyc = get_user_company_kyc(user)
+    all_fields = False
+
+    if kyc:
         required_fields = [
             kyc.company_name,
             kyc.organization_type,
@@ -1342,10 +1445,8 @@ def kyc_registration(request):
         ]
         if all(required_fields) and kyc.kyc_submitted:
             all_fields = True
-    except CompanyKYC.DoesNotExist:
-        kyc = None
-        all_fields = False
-    wallet = Wallet.objects.filter(company=kyc,wallet_type="PRIMARY",is_active=True).first()
+
+    wallet = Wallet.objects.filter(company=kyc, wallet_type="PRIMARY", is_active=True).first()
 
     if request.method == "POST":
         form = KYCForm(request.POST, request.FILES, instance=kyc)
@@ -1353,83 +1454,81 @@ def kyc_registration(request):
             new_form = form.save(commit=False)
             new_form.user = user
             new_form.status = "pending"
-            new_form.kyc_submitted = True  # Mark as submitted
+            new_form.kyc_submitted = True
             new_form.save()
             messages.success(request, "KYC Form submitted successfully, In review now.")
             return redirect("wallet:wallet")
     else:
         form = KYCForm(instance=kyc)
-        
+
     context = {
         "account": wallet,
         "form": form,
         "kyc": kyc,
         "all_fields": all_fields
     }
-    
-    return render(request, "account/kyc-form.html", context)
 
+    return render(request, "account/kyc-form.html", context)
 
 
 @login_required
 def transactions(request):
-    """
-    Display transactions with filtering, pagination, and export capabilities.
-    """
-    # Get all transactions for the user's company
-    company = get_object_or_404(CompanyKYC, user=request.user)
+    """Display transactions with filtering, pagination, and export capabilities"""
+    company = get_user_company_kyc(request.user)
+    if not company:
+        messages.error(request, "Your company KYC is not found.")
+        return redirect("wallet:wallet")
+
     txn_queryset = Transaction.objects.filter(company=company).select_related(
         'user', 'receiver', 'sender_wallet', 'receiver_wallet'
     ).order_by('-date')
-    
-    # Get filter parameters from request
+
+    # Filters
     user_filter = request.GET.get('user', '')
     status_filter = request.GET.get('status', '')
     date_from = request.GET.get('date_from', '')
     date_to = request.GET.get('date_to', '')
-    
-    # Apply filters
+
     if user_filter:
         txn_queryset = txn_queryset.filter(
             Q(user__id=user_filter) | Q(receiver__id=user_filter)
         )
-    
+
     if status_filter:
         txn_queryset = txn_queryset.filter(status=status_filter)
-    
+
     if date_from:
         try:
             date_from_obj = datetime.strptime(date_from, '%Y-%m-%d').date()
             txn_queryset = txn_queryset.filter(date__date__gte=date_from_obj)
         except ValueError:
-            pass  # Invalid date format, ignore filter
-    
+            pass
+
     if date_to:
         try:
             date_to_obj = datetime.strptime(date_to, '%Y-%m-%d').date()
             txn_queryset = txn_queryset.filter(date__date__lte=date_to_obj)
         except ValueError:
-            pass  # Invalid date format, ignore filter
+            pass
 
-    # Handle Exporting Data before pagination
+    # Export handling
     export_format = request.GET.get('export')
     if export_format:
         if export_format == 'csv':
             return export_to_csv(txn_queryset)
         elif export_format == 'pdf':
             return export_to_pdf(txn_queryset)
-    
-    # Get all users associated with transactions for the filter dropdown
+
+    # Users for filter dropdown
     transaction_user_ids = set()
-    all_company_transactions = Transaction.objects.filter(company=company)
-    for txn in all_company_transactions:
+    for txn in Transaction.objects.filter(company=company):
         transaction_user_ids.add(txn.user.id)
         if txn.receiver:
             transaction_user_ids.add(txn.receiver.id)
-    
+
     users = User.objects.filter(id__in=transaction_user_ids).order_by('first_name', 'last_name', 'email')
-    
-    # Count transactions by status for dashboard stats before pagination
+
+    # Status counts for dashboard
     status_counts = {
         'total': txn_queryset.count(),
         'completed': txn_queryset.filter(status='completed').count(),
@@ -1437,24 +1536,22 @@ def transactions(request):
         'failed': txn_queryset.filter(status='failed').count(),
         'cancelled': txn_queryset.filter(status='cancelled').count(),
     }
-    
+
     # Pagination
-    paginator = Paginator(txn_queryset, 10)  # Show 20 transactions per page
+    paginator = Paginator(txn_queryset, 10)
     page_number = request.GET.get('page', 1)
     transactions_page = paginator.get_page(page_number)
-    
-    # Create query parameters for pagination links to preserve filters
+
     query_params = request.GET.copy()
     if 'page' in query_params:
         del query_params['page']
     base_query_string = query_params.urlencode()
-    
+
     context = {
         "transactions": transactions_page,
         "users": users,
         "status_counts": status_counts,
         "base_query_string": base_query_string,
-        # Preserve filter values for the form
         "current_filters": {
             "user": user_filter,
             "status": status_filter,
@@ -1462,10 +1559,8 @@ def transactions(request):
             "date_to": date_to,
         }
     }
-    
+
     return render(request, "transaction/transactions.html", context)
-
-
 # --- Export Functions ---
 
 def export_to_csv(queryset):
@@ -1531,7 +1626,6 @@ def export_to_pdf(queryset):
     doc.build(elements)
     
     return response
-
 @login_required
 def transaction_export(request):
     """
@@ -1539,49 +1633,52 @@ def transaction_export(request):
     """
     import csv
     from django.http import HttpResponse
-    
+
     user = request.user
-    company = get_object_or_404(CompanyKYC, user=request.user)
-    
+    company = get_user_company_kyc(user)
+    if not company:
+        messages.error(request, "Your company KYC is not found.")
+        return redirect("wallet:wallet")
+
     # Apply same filters as the main view
     txn_queryset = Transaction.objects.filter(company=company).select_related(
         'user', 'receiver', 'sender_wallet', 'receiver_wallet'
     ).order_by('-date')
-    
+
     # Apply filters from GET parameters (same logic as main view)
     user_filter = request.GET.get('user', '')
     status_filter = request.GET.get('status', '')
     date_from = request.GET.get('date_from', '')
     date_to = request.GET.get('date_to', '')
-    
+
     if user_filter:
         txn_queryset = txn_queryset.filter(
             Q(user__id=user_filter) | Q(receiver__id=user_filter)
         )
-    
+
     if status_filter:
         txn_queryset = txn_queryset.filter(status=status_filter)
-    
+
     if date_from:
         try:
             date_from_obj = datetime.strptime(date_from, '%Y-%m-%d').date()
             txn_queryset = txn_queryset.filter(date__date__gte=date_from_obj)
         except ValueError:
             pass
-    
+
     if date_to:
         try:
             date_to_obj = datetime.strptime(date_to, '%Y-%m-%d').date()
             txn_queryset = txn_queryset.filter(date__date__lte=date_to_obj)
         except ValueError:
             pass
-    
+
     # Create HTTP response with CSV content type
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="transactions.csv"'
-    
+
     writer = csv.writer(response)
-    
+
     # Write CSV header
     writer.writerow([
         'Reference Code',
@@ -1596,7 +1693,7 @@ def transaction_export(request):
         'Sender Wallet',
         'Receiver Wallet'
     ])
-    
+
     # Write transaction data
     for txn in txn_queryset:
         # Format transaction type
@@ -1609,7 +1706,7 @@ def transaction_export(request):
             txn_type = 'Paybill'
         else:
             txn_type = txn_type.title()
-        
+
         writer.writerow([
             txn.transaction_id,
             txn.user.get_full_name() or txn.user.username,
@@ -1623,31 +1720,41 @@ def transaction_export(request):
             txn.sender_wallet.wallet_id if txn.sender_wallet else '',
             txn.receiver_wallet.wallet_id if txn.receiver_wallet else ''
         ])
-    
+
     return response
 
 
 @login_required
 def expenses(request):
+    """
+    Display all expenses (events, activations, operations) for the user's company
+    """
     user = request.user
-    company = get_object_or_404(CompanyKYC, user=user)
+    company = get_user_company_kyc(user)
+    if not company:
+        messages.error(request, "Your company KYC is not found.")
+        return redirect("wallet:wallet")
+
     events = Event.objects.filter(company=company, is_active=True)
     activations = Activation.objects.filter(company=company, is_active=True)
     operations = Operation.objects.filter(company=company, is_active=True)
+
     event_form = EventExpenseForm()
     activation_form = ActivationExpenseForm()
-
     operation_form = OperationExpenseForm()
-    all_items =  list(events) + list(operations) + list(activations)
+
+    all_items = list(events) + list(operations) + list(activations)
+
     context = {
-        'all_items': all_items ,
+        'all_items': all_items,
         'event_form': event_form,
         'operation_form': operation_form,
         'activation_form': activation_form,
-        'event_categories': EventCategory.objects.filter(company=company,is_active=True),
-        'activation_categories': ActivationCategory.objects.filter(company=company,is_active=True),
-        'clients': Client.objects.filter(company=company,is_active=True),
+        'event_categories': EventCategory.objects.filter(company=company, is_active=True),
+        'activation_categories': ActivationCategory.objects.filter(company=company, is_active=True),
+        'clients': Client.objects.filter(company=company, is_active=True),
     }
+
     return render(request, "expenses/expense.html", context)
 
 def create_expenses(request):
@@ -1679,19 +1786,33 @@ def create_roles(request):
 
 @login_required
 def dashboard(request):
-    # Redirect if user is not an admin
-    if not request.user.is_admin:
-        messages.warning(request, "Only admin users can access the dashboard.")
-        return redirect("wallet:staff-dashboard")
-
     form = KYCForm()
     wallet_form = WalletForm()
+    user = request.user
 
-    try:
-        kyc = CompanyKYC.objects.get(user=request.user)
-    except CompanyKYC.DoesNotExist:
-        messages.warning(request, "You need to submit your KYC")
-        return redirect("wallet:kyc-reg")
+    # Determine company KYC
+    if is_admin(user):
+        kyc = get_user_company_kyc(user)
+        if not kyc:
+            messages.warning(request, "You need to submit your KYC")
+            return redirect("wallet:kyc-reg")
+    else:
+        # Staff user
+        try:
+            staff_profile = user.staffprofile
+        except StaffProfile.DoesNotExist:
+            messages.warning(request, "You are not authorized to access the dashboard.")
+            return redirect("wallet:staff-dashboard")
+
+        if not staff_profile.role or not staff_profile.role.is_admin:
+            messages.warning(request, "Only admin users can access the dashboard.")
+            return redirect("wallet:staff-dashboard")
+
+        if not staff_profile.company:
+            messages.warning(request, "No company assigned to your profile.")
+            return redirect("wallet:staff-dashboard")
+
+        kyc = staff_profile.company
 
     # Check required KYC fields
     required_fields = [
@@ -1713,19 +1834,18 @@ def dashboard(request):
         messages.warning(request, "Your KYC is under review.")
         return redirect("wallet:kyc-reg")
 
-    # Fetch transactions and wallets
-    # transactions = Transaction.objects.filter(company=kyc).order_by("-id")
+    # Fetch transactions
     transactions_queryset = Transaction.objects.filter(company=kyc).order_by("-id")
-
-    paginator = Paginator(transactions_queryset, 10)  # Show 10 per page
+    paginator = Paginator(transactions_queryset, 10)
     page_number = request.GET.get("page")
     transactions = paginator.get_page(page_number)
 
+    # Wallets & balances
     primary_wallets = Wallet.objects.filter(company=kyc, wallet_type="PRIMARY").order_by("-id").first()
     if primary_wallets:
         now = timezone.now()
         month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        
+
         total_deposits = Transaction.objects.filter(
             receiver_wallet=primary_wallets,
             company=kyc,
@@ -1733,29 +1853,28 @@ def dashboard(request):
             status="completed",
             date__gte=month_start
         ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
-        
+
         total_withdrawals = Transaction.objects.filter(
             transaction_type="withdraw",
             status="completed",
             company=kyc,
             date__gte=month_start
         ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
-        print(f"total_withdrawals: {total_withdrawals}")  # Print the value of total_withdrawals)
     else:
         total_deposits = Decimal('0.00')
         total_withdrawals = Decimal('0.00')
+
     wallets = Wallet.objects.filter(company=kyc).exclude(wallet_type="PRIMARY").order_by("-id")
     account_balance = Wallet.objects.filter(company=kyc).aggregate(total_balance=Sum('balance'))['total_balance'] or 0
-    # Combine wallets for utilization tracking
-    all_wallets = list(wallets)
 
+    # Wallet utilization
+    all_wallets = list(wallets)
     for wallet in all_wallets:
         approved_paid_tx = Transaction.objects.filter(
             company=kyc,
             sender_wallet=wallet,
-            status = "completed"
+            status="completed"
         )
-
         total_utilized = approved_paid_tx.aggregate(total=Sum('amount'))['total'] or 0
 
         if wallet.balance and wallet.balance > 0:
@@ -1763,7 +1882,6 @@ def dashboard(request):
         else:
             utilization = None
 
-        # Attach data to each wallet instance
         wallet.utilization = utilization
         wallet.total_utilized = total_utilized
 
@@ -1982,9 +2100,10 @@ def get_pending_approved_expense_sum(user):
     and belonging to the user's company.
     """
     try:
-        company = user.staffprofile.company
-    except AttributeError:
-        # If the user has no staff profile or company
+        company = get_user_company_kyc(user)
+        if not company:
+            return Decimal('0.00')
+    except CompanyKYC.DoesNotExist:
         return Decimal('0.00')
 
     result = Expense.objects.filter(
@@ -1995,9 +2114,6 @@ def get_pending_approved_expense_sum(user):
     ).aggregate(total=Sum('amount'))
 
     return result['total'] or Decimal('0.00')
-
-
-
 
 #Mpesa c2b, b2b, b2c callbacks
 
@@ -3108,8 +3224,10 @@ def get_brands_by_client(request):
         return JsonResponse({'error': 'Client ID is required'}, status=400)
     
     try:
-        # Get the user's company
-        company = get_object_or_404(CompanyKYC, user=request.user)
+        # Get the user's company (works for admin or staff)
+        company = get_user_company_kyc(request.user)
+        if not company:
+            return JsonResponse({'error': 'Company not found for user'}, status=404)
         
         # Verify the client belongs to the user's company
         client = get_object_or_404(Client, id=client_id, company=company, is_active=True)
