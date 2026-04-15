@@ -1285,8 +1285,8 @@ def wallet(request):
             return redirect("wallet:kyc-reg")
 
         # Get wallets
-        wallets = Wallet.objects.filter(user=request.user, is_active=True, company=kyc)
-        primary_wallet = Wallet.objects.get(user=request.user, wallet_type="PRIMARY", company=kyc)
+        wallets = Wallet.objects.filter(is_active=True, company=kyc)
+        primary_wallet = Wallet.objects.get(wallet_type="PRIMARY", company=kyc)
 
         # Get all transactions
         all_transactions = Transaction.objects.filter(company=kyc).order_by('-date')
